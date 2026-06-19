@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0D0A0B" />
+<title>帧10 · 出租车后座 — 样板</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300&display=swap" rel="stylesheet" />
+<style>
+  :root{ --ivory:#E8DFD3; --gold:#B89664; --seal:#F5EBD8; --serif:"Noto Serif SC","Songti SC",serif; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; margin:0; background:#000; overflow:hidden; touch-action:none; user-select:none; }
+  #app{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #frame{ position:relative; height:100dvh; width:min(100vw,58vh); overflow:hidden;
+    background:#06060a; container-type:size; box-shadow:0 0 120px rgba(0,0,0,.9); }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; }
+  #scene{ z-index:1; } #grain{ z-index:6; mix-blend-mode:soft-light; opacity:.85; pointer-events:none; }
+  #vig{ position:absolute; inset:0; z-index:4; pointer-events:none;
+    background:radial-gradient(120% 85% at 38% 46%, transparent 40%, rgba(6,5,8,.6) 80%, rgba(3,2,4,.95)); }
+  .bar{ position:absolute; left:0; right:0; height:4.2cqh; background:#000; z-index:7; }
+  #barT{ top:0; } #barB{ bottom:0; }
+  #subs{ position:absolute; left:0; right:0; bottom:12%; z-index:5; text-align:center; padding:0 6cqw; pointer-events:none; }
+  #subs .l{ font-family:var(--serif); font-weight:300; color:var(--ivory); letter-spacing:.09em;
+    font-size:clamp(15px,4.7cqw,23px); line-height:1.9; margin:.12em 0; opacity:0; transform:translateY(12px);
+    filter:blur(5px); transition:opacity 1.3s ease, transform 1.4s cubic-bezier(.2,.7,.2,1), filter 1.3s ease;
+    text-shadow:0 2px 26px rgba(0,0,0,.85); }
+  #subs .l.show{ opacity:1; transform:none; filter:none; }
+  #subs .l.seal{ color:var(--seal); font-weight:200; letter-spacing:.13em; }
+  #tap{ position:absolute; inset:0; z-index:9; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:1em; background:rgba(4,4,8,.82); cursor:pointer; transition:opacity 1s ease; }
+  #tap .t{ font-family:var(--serif); font-weight:200; color:var(--ivory); letter-spacing:.3em; font-size:clamp(14px,4.4cqw,20px); }
+  #tap .s{ font-family:monospace; color:rgba(184,150,100,.7); letter-spacing:.22em; font-size:clamp(10px,2.8cqw,12px); }
+  #tap.hide{ opacity:0; pointer-events:none; }
+  #cap{ position:absolute; left:6cqw; top:5.6cqh; z-index:5; font-family:monospace; font-size:10px;
+    letter-spacing:.18em; color:rgba(232,223,211,.3); }
+</style>
+</head>
+<body>
+<div id="app"><div id="frame">
+  <canvas id="scene"></canvas>
+  <canvas id="grain"></canvas>
+  <div id="vig"></div>
+  <div class="bar" id="barT"></div><div class="bar" id="barB"></div>
+  <div id="cap">帧10 · 出租车后座 · LOOP</div>
+  <div id="subs"><div class="l" data-i="0">直到窗外那些流动的灯火，</div><div class="l" data-i="1">都像他的侧脸，</div><div class="l seal" data-i="2">她才知道完了。</div></div>
+  <div id="tap"><div class="t">出租车后座</div><div class="s">点按开始 · 建议佩戴耳机</div></div>
+</div></div>
+<script>
+"use strict";
+(function(){
+  const DPR=Math.min(devicePixelRatio||1,2);
+  const rnd=(a=1,b)=>b===undefined?Math.random()*a:a+Math.random()*(b-a);
+  const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>v<a?a:v>b?b:v, TAU=Math.PI*2;
+  const smooth=t=>t*t*(3-2*t);
+  const $=s=>document.querySelector(s);
+  const frame=$("#frame"), scene=$("#scene"), grain=$("#grain");
+  const sc=scene.getContext("2d"), gc=grain.getContext("2d");
+  const subs=[...document.querySelectorAll("#subs .l")];
+  let W=0,H=0, winX=0;
+  // offscreen fog
+  const fog=document.createElement("canvas"); const fc=fog.getContext("2d");
+  function resize(){ const r=frame.getBoundingClientRect(); W=r.width; H=r.height; winX=W*0.40;
+    for(const cv of [scene,grain,fog]){ cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR); }
+    sc.setTransform(DPR,0,0,DPR,0,0); gc.setTransform(DPR,0,0,DPR,0,0); fc.setTransform(DPR,0,0,DPR,0,0);
+  }
+  addEventListener("resize",resize); resize();
+
+  // grain tiles
+  const tiles=[]; for(let n=0;n<3;n++){ const c=document.createElement("canvas"); c.width=c.height=128;
+    const x=c.getContext("2d"), im=x.createImageData(128,128), d=im.data;
+    for(let i=0;i<d.length;i+=4){ const v=Math.random()*255; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255; } x.putImageData(im,0,0); tiles.push(c); }
+
+  // pointer parallax
+  let pmx=0,pmy=0,px=0,py=0;
+  addEventListener("pointermove",e=>{ const r=frame.getBoundingClientRect();
+    pmx=((e.clientX-r.left)/r.width-.5)*2; pmy=((e.clientY-r.top)/r.height-.5)*2; },{passive:true});
+  addEventListener("deviceorientation",e=>{ if(e.gamma!=null){ pmx=clamp(e.gamma/28,-1,1); pmy=clamp((e.beta-45)/28,-1,1);} },{passive:true});
+
+  /* ---------- bokeh (city lights) ---------- */
+  const NEON=[ [255,150,150],[255,190,120],[120,170,235],[210,150,235],[150,225,210],[245,225,160] ];
+  function mkBokeh(n,near){ const a=[]; for(let i=0;i<n;i++) a.push({
+    x:rnd(), y:rnd(near?.05:.12, near?.95:.7), r: near?rnd(10,30):rnd(2,9),
+    sp:(near?rnd(.06,.12):rnd(.02,.045)), a:(near?rnd(.45,.9):rnd(.25,.6)),
+    c:NEON[(Math.random()*NEON.length)|0], tw:rnd(TAU), ts:rnd(.5,1.6), str:(near?rnd(2.2,3.6):rnd(1.4,2.2)) }); return a; }
+  let far=mkBokeh(46,false), near=mkBokeh(20,true);
+  function drawBokeh(list,t,depth){
+    sc.save(); sc.globalCompositeOperation="lighter";
+    const par = depth* (px*10);
+    for(const b of list){ b.x-=b.sp*0.016*(depth*0.6+0.7); if(b.x<-.1) b.x=1.1;
+      const x=(winX) + b.x*(W-winX) + par, y=b.y*H + py*6*depth, tw=.6+.4*Math.sin(t*b.ts+b.tw);
+      const rr=b.r*tw, ca=depth*1.4; // chromatic aberration offset
+      const [cr,cg,cb]=b.c, al=b.a*tw;
+      // stretched (motion-blurred) bokeh via scaled radial, 3 channel-ish passes
+      drawDisc(x-ca,y,rr,b.str, `rgba(${cr},${Math.round(cg*.2)},${Math.round(cb*.2)},${al})`);
+      drawDisc(x,y,rr,b.str, `rgba(${Math.round(cr*.3)},${cg},${Math.round(cb*.3)},${al})`);
+      drawDisc(x+ca,y,rr,b.str, `rgba(${Math.round(cr*.2)},${Math.round(cg*.2)},${cb},${al})`);
+    }
+    sc.restore();
+  }
+  function drawDisc(x,y,r,stretch,col){ sc.save(); sc.translate(x,y); sc.scale(stretch,1);
+    const g=sc.createRadialGradient(0,0,0,0,0,r); g.addColorStop(0,col); g.addColorStop(1,"transparent");
+    sc.fillStyle=g; sc.beginPath(); sc.arc(0,0,r,0,TAU); sc.fill(); sc.restore(); }
+
+  /* ---------- her profile (generative, side, never frontal) ---------- */
+  // smooth side profile: front edge built from gaussian bumps (forehead/nose/lips/chin),
+  // back is a soft hair mass. dir=1 faces right. never frontal.
+  function faceOffset(yt){ const g=(mu,sig,amp)=>amp*Math.exp(-((yt-mu)*(yt-mu))/(2*sig*sig));
+    return g(0.17,0.12,0.10) - g(0.31,0.05,0.05) + g(0.42,0.034,0.135)
+         - g(0.50,0.03,0.06) + g(0.575,0.035,0.085) - g(0.64,0.05,0.045); }
+  function drawProfile(cx,cy,h,dir,opt){
+    const top=cy-h*0.52, faceX=cx+h*0.12*dir, chinYt=0.80;
+    sc.save(); if(opt.blur) sc.filter=`blur(${opt.blur}px)`; sc.globalAlpha=opt.alpha;
+    const N=64;
+    // silhouette path
+    sc.beginPath();
+    for(let i=0;i<=N;i++){ const yt=i/N*chinYt, y=top+yt*h, x=faceX+faceOffset(yt)*h*dir;
+      if(i===0) sc.moveTo(x,y); else sc.lineTo(x,y); }
+    const chinX=faceX+faceOffset(chinYt)*h*dir, chinY=top+chinYt*h;
+    sc.quadraticCurveTo(chinX-h*0.04*dir, chinY+h*0.07, cx-h*0.02*dir, chinY+h*0.12);   // jaw->neck
+    sc.lineTo(cx-h*0.05*dir, cy+h*0.60);                                                 // neck
+    sc.lineTo(cx+h*0.52*dir, cy+h*0.84);                                                 // shoulder front
+    sc.lineTo(cx-h*0.95*dir, cy+h*0.90);                                                 // shoulder back
+    sc.lineTo(cx-h*0.62*dir, cy+h*0.12);                                                 // up the back
+    sc.quadraticCurveTo(cx-h*0.66*dir, top+h*0.06, cx-h*0.22*dir, top-h*0.03);           // crown back
+    sc.quadraticCurveTo(cx+h*0.02*dir, top-h*0.05, faceX+faceOffset(0)*h*dir, top);      // crown front
+    sc.closePath();
+    const g=sc.createLinearGradient(cx-h*0.45*dir,top,cx+h*0.4*dir,cy+h*0.5);
+    g.addColorStop(0,opt.hair); g.addColorStop(0.55,opt.face); g.addColorStop(1,opt.faceLow);
+    sc.fillStyle=g; sc.fill();
+    // hair sheen strands
+    sc.globalCompositeOperation="lighter"; sc.strokeStyle=opt.hairlit||"rgba(120,90,70,0.18)"; sc.lineWidth=Math.max(1,h*0.006);
+    for(let s=0;s<3;s++){ const o=(s-1)*h*0.12; sc.beginPath();
+      sc.moveTo(cx-h*0.2*dir+o, top+h*0.02); sc.quadraticCurveTo(cx-h*0.5*dir+o, top+h*0.3, cx-h*0.4*dir+o, cy+h*0.05); sc.stroke(); }
+    // rim light along front edge
+    sc.beginPath();
+    for(let i=0;i<=N;i++){ const yt=i/N*chinYt, y=top+yt*h, x=faceX+faceOffset(yt)*h*dir;
+      if(i===0) sc.moveTo(x,y); else sc.lineTo(x,y); }
+    sc.lineWidth=Math.max(1.4,h*0.014); sc.lineCap="round"; sc.lineJoin="round";
+    sc.strokeStyle=opt.rim; sc.shadowColor=opt.rim; sc.shadowBlur=h*0.06; sc.stroke(); sc.shadowBlur=0;
+    // closed eye + long lashes (yt~0.36, set back from front edge)
+    sc.globalCompositeOperation="source-over";
+    const eyY=top+0.36*h, eyX=faceX+(faceOffset(0.36)-0.11)*h*dir;
+    sc.strokeStyle=opt.lash; sc.lineWidth=Math.max(1,h*0.009); sc.lineCap="round";
+    sc.beginPath(); sc.moveTo(eyX,eyY); sc.quadraticCurveTo(eyX+h*0.10*dir,eyY+h*0.022,eyX+h*0.15*dir,eyY+h*0.004); sc.stroke();
+    for(let l=0;l<4;l++){ const f=l/4, lx=lerp(eyX+h*0.05*dir,eyX+h*0.145*dir,f), ly=lerp(eyY+h*0.018,eyY+h*0.006,f);
+      sc.beginPath(); sc.moveTo(lx,ly); sc.lineTo(lx+h*0.022*dir,ly+h*0.038); sc.stroke(); }
+    // brow
+    sc.lineWidth=Math.max(1,h*0.007); sc.strokeStyle=opt.lash;
+    sc.beginPath(); sc.moveTo(eyX-h*0.01*dir,eyY-h*0.05); sc.quadraticCurveTo(eyX+h*0.08*dir,eyY-h*0.07,eyX+h*0.16*dir,eyY-h*0.04); sc.stroke();
+    // lips (yt~0.575)
+    const liY=top+0.578*h, liX=faceX+(faceOffset(0.578)-0.03)*h*dir;
+    sc.strokeStyle=opt.lips; sc.lineWidth=Math.max(1,h*0.013);
+    sc.beginPath(); sc.moveTo(liX-h*0.03*dir,liY); sc.quadraticCurveTo(liX+h*0.04*dir,liY+h*0.014,liX-h*0.05*dir,liY+h*0.024); sc.stroke();
+    sc.restore();
+  }
+
+  /* ---------- rain on glass ---------- */
+  function mkDrop(){ return { x:rnd(winX/W,1)*W, y:rnd(-.1,1)*H, r:rnd(1.2,3.4), v:0, hold:rnd(0,90),
+    c:NEON[(Math.random()*NEON.length)|0] }; }
+  let drops=[]; for(let i=0;i<70;i++) drops.push(mkDrop());
+  function drawRain(t){
+    sc.save(); sc.globalCompositeOperation="lighter";
+    for(const d of drops){
+      if(d.hold>0){ d.hold-=1; }
+      else { d.v=Math.min(d.v+0.05,2.6); d.y+=d.v;
+        // trail
+        sc.strokeStyle=`rgba(180,205,225,0.05)`; sc.lineWidth=d.r*0.7;
+        sc.beginPath(); sc.moveTo(d.x,d.y); sc.lineTo(d.x,d.y-d.v*6); sc.stroke();
+      }
+      if(d.y>H+10){ Object.assign(d, mkDrop()); d.y=-10; }
+      // bead: refracted city point
+      const [cr,cg,cb]=d.c;
+      sc.fillStyle=`rgba(${cr},${cg},${cb},0.5)`;
+      sc.beginPath(); sc.arc(d.x,d.y,d.r*0.7,0,TAU); sc.fill();
+      sc.fillStyle="rgba(255,255,255,0.6)";
+      sc.beginPath(); sc.arc(d.x-d.r*0.2,d.y-d.r*0.2,d.r*0.28,0,TAU); sc.fill();
+    }
+    sc.restore();
+  }
+
+  /* ---------- fog + 金句 reveal ---------- */
+  const POEM="良辰美景奈何天";
+  function drawFogAndPoem(reveal){
+    fc.clearRect(0,0,W,H);
+    // condensation only over window
+    fc.fillStyle="rgba(196,212,224,0.14)"; fc.fillRect(winX,0,W-winX,H);
+    // clear fog where rain beads are (subtle)
+    fc.globalCompositeOperation="destination-out";
+    for(const d of drops){ fc.beginPath(); fc.arc(d.x,d.y,d.r*1.1,0,TAU); fc.fillStyle="rgba(0,0,0,.5)"; fc.fill(); }
+    // clear fog in the shape of the poem (written on glass), top->bottom by reveal
+    const fs=Math.min(H*0.075, (W-winX)*0.22);
+    fc.font=`200 ${fs}px 'Noto Serif SC', serif`; fc.textAlign="center"; fc.textBaseline="middle";
+    const cx=winX + (W-winX)*0.80, y0=H*0.20, step=fs*1.22;
+    const shown=Math.floor(reveal*POEM.length + 0.0001);
+    const frac=(reveal*POEM.length)-shown;
+    for(let i=0;i<POEM.length;i++){
+      const yy=y0+i*step; if(i>shown) break;
+      fc.save(); fc.globalAlpha = i<shown?1:smooth(frac);
+      fc.shadowColor="rgba(0,0,0,1)"; fc.shadowBlur=fs*0.5;
+      fc.fillStyle="rgba(0,0,0,1)"; fc.fillText(POEM[i], cx, yy); // destination-out: punch hole
+      fc.restore();
+    }
+    fc.globalCompositeOperation="source-over";
+    sc.drawImage(fog,0,0,W,H);
+    // faint seal stroke of revealed glyphs on top
+    sc.save(); sc.font=`200 ${fs}px 'Noto Serif SC', serif`; sc.textAlign="center"; sc.textBaseline="middle";
+    for(let i=0;i<POEM.length;i++){ if(i>shown) break; const yy=y0+i*step;
+      sc.globalAlpha=(i<shown?0.9:smooth(frac))*0.9; sc.fillStyle="rgba(245,235,216,0.85)";
+      sc.shadowColor="rgba(245,235,216,0.5)"; sc.shadowBlur=10; sc.fillText(POEM[i],cx,yy); }
+    sc.restore();
+  }
+
+  /* ---------- cabin foreground ---------- */
+  function drawCabin(){
+    sc.save();
+    // window frame pillar between cabin & glass
+    let g=sc.createLinearGradient(winX-W*0.05,0,winX+W*0.02,0);
+    g.addColorStop(0,"rgba(8,7,9,0)"); g.addColorStop(1,"rgba(6,5,7,0.85)");
+    sc.fillStyle=g; sc.fillRect(winX-W*0.06,0,W*0.08,H);
+    sc.fillStyle="rgba(5,4,6,0.9)"; sc.fillRect(winX-2,0,3,H);
+    // bottom door line
+    g=sc.createLinearGradient(0,H*0.82,0,H); g.addColorStop(0,"transparent"); g.addColorStop(1,"rgba(3,2,4,0.95)");
+    sc.fillStyle=g; sc.fillRect(0,H*0.7,W,H*0.3);
+    // top headliner shadow
+    g=sc.createLinearGradient(0,0,0,H*0.18); g.addColorStop(0,"rgba(3,2,4,0.8)"); g.addColorStop(1,"transparent");
+    sc.fillStyle=g; sc.fillRect(0,0,W,H*0.2);
+    sc.restore();
+  }
+
+  /* ---------- pass-events (a bright sign sweeps the cab) ---------- */
+  const passes=[{at:3.0},{at:6.6},{at:10.2},{at:13.6}];
+  let passGlow=0, passHue=0;
+  function updatePasses(phase,L){
+    passGlow=0;
+    for(let i=0;i<passes.length;i++){ const dt=phase-passes[i].at;
+      if(dt>-0.6 && dt<1.4){ const e=clamp(1-Math.abs(dt-0.4)/1.0,0,1); if(e>passGlow){ passGlow=e; passHue=i%2; } } }
+  }
+  function drawPassWash(){
+    if(passGlow<=0.01) return;
+    sc.save(); sc.globalCompositeOperation="lighter";
+    const col = passHue? "120,160,230":"235,170,110";
+    const g=sc.createLinearGradient(W*0.2,0,W,H); g.addColorStop(0,`rgba(${col},0)`);
+    g.addColorStop(0.6,`rgba(${col},${0.16*passGlow})`); g.addColorStop(1,`rgba(${col},0)`);
+    sc.fillStyle=g; sc.fillRect(0,0,W,H);
+    sc.restore();
+  }
+
+  /* ---------- audio ---------- */
+  const A={on:true,ctx:null,master:null};
+  function audioStart(){ if(A.ctx) return; try{ const AC=AudioContext||webkitAudioContext; A.ctx=new AC(); }catch(e){ return; }
+    const ctx=A.ctx; A.master=ctx.createGain(); A.master.gain.value=0; A.master.connect(ctx.destination);
+    A.master.gain.linearRampToValueAtTime(0.85, ctx.currentTime+2.5);
+    // road hum
+    const buf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate); const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    const road=ctx.createBufferSource(); road.buffer=buf; road.loop=true;
+    const rlp=ctx.createBiquadFilter(); rlp.type="lowpass"; rlp.frequency.value=150;
+    const rg=ctx.createGain(); rg.gain.value=0.5; road.connect(rlp); rlp.connect(rg); rg.connect(A.master); road.start();
+    // rain hiss
+    const rain=ctx.createBufferSource(); rain.buffer=buf; rain.loop=true;
+    const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=3500;
+    const hg=ctx.createGain(); hg.gain.value=0.04; rain.connect(hp); hp.connect(hg); hg.connect(A.master); rain.start();
+    // drone pad
+    [110,164.81,220].forEach((f,i)=>{ const o=ctx.createOscillator(); o.type=i?"sine":"triangle"; o.frequency.value=f;
+      const g=ctx.createGain(); g.gain.value=i?0.05:0.08; const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=700;
+      o.connect(lp); lp.connect(g); g.connect(A.master); o.start(); });
+    A.whoosh=()=>{ if(!A.on)return; const t=ctx.currentTime; const n=ctx.createBufferSource(); n.buffer=buf; n.loop=true;
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.setValueAtTime(300,t); bp.frequency.exponentialRampToValueAtTime(2200,t+0.5); bp.Q.value=0.7;
+      const g=ctx.createGain(); g.gain.value=0; g.gain.linearRampToValueAtTime(0.10,t+0.25); g.gain.exponentialRampToValueAtTime(0.001,t+1.1);
+      n.connect(bp); bp.connect(g); g.connect(A.master); n.start(t); n.stop(t+1.2); };
+  }
+  let lastPass=-1;
+
+  /* ---------- subtitles timeline ---------- */
+  const SUBT=[ {i:0,in:2.4,out:7.2},{i:1,in:4.0,out:8.0},{i:2,in:5.8,out:9.6} ];
+  function updateSubs(phase){ for(const s of SUBT){ const on=phase>=s.in && phase<s.out; subs[s.i].classList.toggle("show",on); } }
+
+  /* ---------- main loop ---------- */
+  const L=17.5; let t0=0, started=false;
+  function render(now){
+    const t=now/1000; const phase=started? ((now-t0)/1000)%L : 0;
+    // global fade in/out across loop
+    const fadeIn=smooth(clamp(phase/1.6,0,1)); const fadeOut=smooth(clamp((L-phase)/1.8,0,1));
+    const dim=Math.min(fadeIn,fadeOut);
+
+    // base
+    sc.clearRect(0,0,W,H);
+    const bgg=sc.createLinearGradient(0,0,0,H); bgg.addColorStop(0,"#070810"); bgg.addColorStop(1,"#05050a");
+    sc.fillStyle=bgg; sc.fillRect(0,0,W,H);
+
+    // outside city through window (clip)
+    sc.save(); sc.beginPath(); sc.rect(winX,0,W-winX,H); sc.clip();
+    // far skyline silhouette
+    sc.fillStyle="rgba(10,12,22,0.7)";
+    sc.beginPath(); sc.moveTo(winX,H*0.62);
+    for(let x=winX;x<=W;x+=W*0.06){ sc.lineTo(x, H*0.5 + Math.sin(x*0.05)*H*0.05 + ((x/W*7|0)%3)*H*0.04); }
+    sc.lineTo(W,H); sc.lineTo(winX,H); sc.closePath(); sc.fill();
+    drawBokeh(far,t,1.0);
+    drawBokeh(near,t,1.8);
+    // her reflection on the glass (dim, cool, flipped, faces left)
+    updatePasses(phase,L);
+    drawProfile(winX+(W-winX)*0.42, H*0.52+py*4, H*0.5, -1, {
+      alpha:0.16*dim, blur:2.2, hair:"rgba(30,40,55,0.6)", face:"rgba(70,95,120,0.5)", faceLow:"rgba(40,55,75,0.4)",
+      rim:"rgba(150,185,220,0.5)", lash:"rgba(120,150,180,0.5)", lips:"rgba(120,140,170,0.4)" });
+    sc.restore();
+
+    // fog + poem reveal (over glass)
+    const reveal=smooth(clamp((phase-8.4)/3.2,0,1));
+    drawFogAndPoem(reveal);
+
+    // rain on glass
+    sc.save(); sc.beginPath(); sc.rect(winX,0,W-winX,H); sc.clip(); drawRain(t); sc.restore();
+
+    // pass wash across cabin
+    drawPassWash();
+
+    // HER — real profile, near, warm, rim-lit by neon (left, faces right toward window)
+    const rimWarm = passGlow>0 && passHue===0;
+    const rimCol = rimWarm? `rgba(255,${180+50*passGlow|0},${120},${0.6+0.4*passGlow})`
+                          : `rgba(${150+60*passGlow|0},185,225,${0.45+0.45*passGlow})`;
+    drawProfile(W*0.30 + px*4, H*0.50 + py*3, H*0.56, 1, {
+      alpha:0.95*dim, blur:0, hair:"rgba(22,18,24,0.96)", face:"rgba(60,48,46,0.9)", faceLow:"rgba(30,24,26,0.92)",
+      rim:rimCol, lash:"rgba(20,16,18,0.9)", lips:"rgba(150,70,70,0.7)" });
+
+    // cabin foreground
+    drawCabin();
+
+    // grain
+    gc.clearRect(0,0,W,H);
+    const tile=tiles[(now/90|0)%tiles.length]; gc.globalAlpha=0.06;
+    gc.drawImage(tile,(now*0.6%128)-128,(now*0.4%128)-128,W+128,H+128); gc.globalAlpha=1;
+    if(Math.random()<0.01){ gc.strokeStyle="rgba(255,255,255,0.05)"; gc.lineWidth=rnd(.4,1);
+      const xx=rnd(0,W); gc.beginPath(); gc.moveTo(xx,0); gc.lineTo(xx+rnd(-2,2),H); gc.stroke(); }
+
+    // global dim overlay for loop fade
+    if(dim<1){ sc.fillStyle=`rgba(3,3,6,${1-dim})`; sc.fillRect(0,0,W,H); }
+
+    // subtitles + audio events
+    if(started){
+      updateSubs(phase);
+      const pIdx=passes.findIndex(p=>Math.abs(phase-p.at)<0.05);
+      if(pIdx>=0 && pIdx!==lastPass){ lastPass=pIdx; if(A.whoosh) A.whoosh(); }
+      if(phase<0.1) lastPass=-1;
+    }
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+
+  // start
+  $("#tap").addEventListener("click",()=>{ started=true; t0=performance.now(); audioStart(); $("#tap").classList.add("hide"); });
+  // expose for self-test: jump to a phase
+  window.__seek=(s)=>{ started=true; t0=performance.now()-s*1000; };
+})();
+</script>
+</body>
+</html>
