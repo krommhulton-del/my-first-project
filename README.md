@@ -1,4 +1,15 @@
-# 地球 Online · 副本 #047 · 北京 · 北京  — v4 (cinematic)
+# 地球 Online · 副本 #047 · 北京 · 北京
+
+## 仓库里有两样东西
+
+1. **`unity/` —— Unity 交互 VR 大作业（要交的、被评分的那个）。** 全程序生成、零美术资源；满足 UI(Overlay+WorldSpace)/第一人称漫游/手柄交互/背景音乐/交互音效/粒子系统。**怎么打开、怎么跑、怎么录屏，看 [`unity/SETUP.md`](unity/SETUP.md)。**
+2. **`index.html` —— 网页电影短片（pre-vis）。** 定义美术与节奏的天花板，也可当 VR 里的过场叙事 / WorldSpace UI 母版。`shot10_taxi.html` 是单镜头「做到极致」的样板。
+
+> 文案全部 DS 定稿；工程 = Claude；视觉规范 = Gemini；导演 = 你。
+
+---
+
+# 网页 pre-vis — v4 (cinematic)
 
 一个**单文件、自播放的网页交互短片**。不是 PPT，不是游戏 HUD —— 是一段"被载入又被清除"的人生切片，按电影的方式放映。
 
