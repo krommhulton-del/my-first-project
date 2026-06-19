@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0D0A0B" />
+<title>地球 Online · 副本 #047 · 北京·北京</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400;1,500&family=Noto+Serif+SC:wght@200;300;400&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --base:#0D0A0B; --wine:#7A2A35; --ivory:#E8DFD3; --gold:#B89664;
+    --mist:#2C3A47; --seal:#F5EBD8;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --serif: "Noto Serif SC", "Songti SC", serif;
+    --latin: "Cormorant Garamond", serif;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; margin:0; background:#000; overflow:hidden;
+    overscroll-behavior:none; touch-action:none; -webkit-user-select:none; user-select:none; }
+  #app{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:#000; }
+
+  /* the vertical film stage, capped to a portrait reel on wide screens */
+  #frame{
+    position:relative; height:100dvh; width:min(100vw, 58vh);
+    background:var(--base); overflow:hidden;
+    container-type:size;
+    box-shadow:0 0 120px rgba(0,0,0,.9);
+  }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #bg{ z-index:1; }
+  #presence{ position:absolute; z-index:2; transform:translate(-50%,-50%);
+    filter:blur(7px) saturate(1.04); mix-blend-mode:screen; opacity:0;
+    transition:opacity 1.4s ease; pointer-events:none; will-change:transform,opacity; }
+  #presence .glint{ position:absolute; left:34%; top:60%; width:5cqw; height:5cqw;
+    border-radius:50%; background:radial-gradient(circle, #ffe9b0, #d8a23a 40%, transparent 70%);
+    filter:blur(1px); opacity:0; transition:opacity 1.6s ease; }
+  #fx{ z-index:7; pointer-events:none; mix-blend-mode:soft-light; opacity:.9; }
+
+  /* vignette + grade */
+  #vignette{ position:absolute; inset:0; z-index:5; pointer-events:none;
+    background:
+      radial-gradient(120% 80% at 50% 42%, transparent 42%, rgba(8,5,6,.55) 78%, rgba(5,3,4,.92) 100%),
+      linear-gradient(rgba(122,42,53,.05), rgba(44,58,71,.06)); }
+
+  /* cinemascope bars */
+  .bar{ position:absolute; left:0; right:0; height:0; background:#000; z-index:8;
+    transition:height 1.6s cubic-bezier(.6,0,.2,1); pointer-events:none; }
+  #barT{ top:0; } #barB{ bottom:0; }
+  body.rolling .bar{ height:4.2cqh; }
+
+  /* text layers */
+  #text{ position:absolute; left:0; right:0; bottom:13%; z-index:6; padding:0 6cqw;
+    text-align:center; pointer-events:none; }
+  .line{ font-family:var(--serif); font-weight:300; color:var(--ivory);
+    font-size:clamp(14px, 4.6cqw, 22px); line-height:2.0; letter-spacing:.09em;
+    margin:.1em 0; opacity:0; transform:translateY(14px); filter:blur(5px);
+    text-shadow:0 2px 30px rgba(0,0,0,.85), 0 0 1px rgba(0,0,0,.9); }
+  .line.show{ opacity:1; transform:none; filter:none;
+    transition:opacity 1.5s ease, transform 1.6s cubic-bezier(.2,.7,.2,1), filter 1.6s ease; }
+  .line.seal{ color:var(--seal); font-weight:200; letter-spacing:.14em; }
+  .line.q{ font-style:italic; }
+
+  /* vertical classical line (竖排金句) */
+  #vert{ position:absolute; right:8cqw; top:16%; z-index:6;
+    writing-mode:vertical-rl; font-family:var(--serif); font-weight:200;
+    font-size:clamp(20px, 7cqw, 38px); letter-spacing:.34em; color:var(--seal);
+    opacity:0; transform:translateY(-18px); filter:blur(6px);
+    text-shadow:0 0 30px rgba(0,0,0,.9); pointer-events:none; }
+  #vert.show{ opacity:.96; transform:none; filter:none;
+    transition:opacity 2.4s ease, transform 2.6s cubic-bezier(.2,.7,.2,1), filter 2.4s ease; }
+
+  /* terminal / system */
+  #term{ position:absolute; inset:0; z-index:6; display:flex; flex-direction:column;
+    align-items:flex-start; justify-content:center; padding:0 13cqw; gap:.55em;
+    pointer-events:none; }
+  #term.center{ align-items:center; text-align:center; }
+  .term{ font-family:var(--mono); font-size:clamp(11px, 3.5cqw, 15px);
+    letter-spacing:.16em; color:var(--gold); white-space:pre-wrap; line-height:1.7;
+    text-shadow:0 0 18px rgba(184,150,100,.35); }
+  .term.dim{ color:rgba(232,223,211,.55); }
+  .term.seal{ color:var(--seal); text-shadow:0 0 24px rgba(245,235,216,.4); }
+  .glyph{ display:inline-block; white-space:pre; will-change:transform,opacity,filter; }
+  .caret{ display:inline-block; width:.6em; height:1.05em; vertical-align:-.16em;
+    background:var(--gold); margin-left:.12em; animation:blink 1.05s steps(1) infinite;
+    box-shadow:0 0 12px rgba(184,150,100,.7); }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* couplet (ending seal lines, centered) */
+  #seal{ position:absolute; inset:0; z-index:6; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:.9em; pointer-events:none; }
+  #seal .s{ font-family:var(--serif); font-weight:200; color:var(--seal);
+    font-size:clamp(17px, 5.6cqw, 30px); letter-spacing:.18em; opacity:0;
+    transform:translateY(10px); filter:blur(8px); text-shadow:0 0 40px rgba(0,0,0,.8); }
+  #seal .s.show{ opacity:1; transform:none; filter:none; transition:all 2.6s ease; }
+  #backHall{ margin-top:2.4em; font-family:var(--mono); font-size:clamp(11px,3.3cqw,14px);
+    letter-spacing:.22em; color:rgba(232,223,211,.5); opacity:0; pointer-events:auto;
+    cursor:pointer; padding:.7em 1.2em; border:1px solid rgba(184,150,100,.18);
+    background:transparent; transition:opacity 2s ease, color .5s, border-color .5s; }
+  #backHall.show{ opacity:1; }
+  #backHall:hover{ color:var(--gold); border-color:rgba(184,150,100,.5); }
+
+  /* choice */
+  #choice{ position:absolute; inset:0; z-index:6; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:0 11cqw; }
+  #choice .q{ font-family:var(--serif); font-weight:300; color:var(--ivory);
+    font-size:clamp(16px,5cqw,26px); letter-spacing:.1em; margin-bottom:2.2em;
+    opacity:0; transform:translateY(12px); filter:blur(5px); text-align:center; }
+  #choice .q.show{ opacity:1; transform:none; filter:none; transition:all 1.4s ease; }
+  .opt{ width:100%; display:flex; align-items:baseline; gap:1.1em; padding:.62em .2em;
+    font-family:var(--serif); font-weight:300; color:rgba(232,223,211,.82);
+    font-size:clamp(14px,4.4cqw,21px); letter-spacing:.08em; cursor:pointer;
+    border:0; background:transparent; text-align:left; position:relative;
+    opacity:0; transform:translateY(10px); transition:color .5s, transform .9s ease, opacity .9s ease; }
+  .opt::after{ content:""; position:absolute; left:0; right:60%; bottom:.28em; height:1px;
+    background:linear-gradient(90deg, rgba(184,150,100,.5), transparent);
+    transform:scaleX(.4); transform-origin:left; transition:transform .6s ease, right .6s ease; }
+  .opt.in{ opacity:1; transform:none; }
+  .opt .k{ font-family:var(--latin); font-style:italic; color:var(--gold);
+    font-size:1.05em; min-width:1.2em; }
+  .opt:hover, .opt:focus-visible{ color:var(--seal); outline:none; }
+  .opt:hover::after, .opt:focus-visible::after{ transform:scaleX(1); right:8%; }
+  .opt.chosen{ color:var(--seal); }
+  .opt.faded{ opacity:.12 !important; }
+
+  /* interaction hint + wish point */
+  #hint{ position:absolute; left:0; right:0; bottom:24%; z-index:6; text-align:center;
+    font-family:var(--mono); font-size:clamp(10px,3cqw,13px); letter-spacing:.2em;
+    color:rgba(232,223,211,.5); opacity:0; transition:opacity 1.2s ease; pointer-events:none; }
+  #hint.show{ opacity:1; }
+  .wish{ position:absolute; z-index:6; width:10px; height:10px; border-radius:50%;
+    background:radial-gradient(circle, #fff, #ffd9a0 40%, transparent 72%);
+    transform:translate(-50%,-50%); pointer-events:none; filter:blur(.5px);
+    box-shadow:0 0 26px 8px rgba(255,210,150,.7); }
+
+  /* transition overlays */
+  #dissolve{ position:absolute; inset:0; z-index:9; background:#050304; opacity:0;
+    pointer-events:none; }
+  #bloom{ position:absolute; inset:0; z-index:9; opacity:0; pointer-events:none;
+    background:radial-gradient(60% 45% at 50% 45%, rgba(245,235,216,.5), transparent 70%);
+    mix-blend-mode:screen; }
+
+  /* gate */
+  #gate{ position:absolute; inset:0; z-index:12; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:1.4em; cursor:pointer;
+    background:radial-gradient(80% 60% at 50% 42%, rgba(122,42,53,.10), transparent 60%), var(--base);
+    transition:opacity 1.6s ease; }
+  #gate .eyebrow{ font-family:var(--mono); font-size:clamp(10px,3cqw,13px);
+    letter-spacing:.4em; color:rgba(184,150,100,.7); }
+  #gate h1{ font-family:var(--latin); font-weight:400; font-style:italic; margin:0;
+    font-size:clamp(34px,12cqw,64px); letter-spacing:.06em; color:var(--ivory);
+    text-shadow:0 0 50px rgba(122,42,53,.4); }
+  #gate .sub{ font-family:var(--serif); font-weight:200; letter-spacing:.32em;
+    font-size:clamp(13px,4cqw,18px); color:rgba(232,223,211,.78); margin-top:-.3em; }
+  #gate .play{ width:62px; height:62px; border:1px solid rgba(184,150,100,.5);
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    margin-top:1.2em; color:var(--gold); animation:pulse 2.6s ease-in-out infinite; }
+  #gate .play svg{ margin-left:3px; }
+  #gate .tip{ font-family:var(--mono); font-size:clamp(10px,2.8cqw,12px);
+    letter-spacing:.22em; color:rgba(232,223,211,.4); }
+  @keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(184,150,100,.0);} 50%{ box-shadow:0 0 30px 4px rgba(184,150,100,.25);} }
+  #gate.hidden{ opacity:0; pointer-events:none; }
+
+  /* HUD */
+  #hud{ position:absolute; left:0; right:0; bottom:0; z-index:11; padding:0 7cqw 3.2cqh;
+    display:flex; align-items:center; gap:3cqw; opacity:0; transition:opacity .6s ease; }
+  #hud.show{ opacity:1; }
+  #hud button{ background:transparent; border:0; color:rgba(232,223,211,.62); cursor:pointer;
+    padding:6px; display:flex; align-items:center; }
+  #hud button:hover{ color:var(--gold); }
+  #strip{ flex:1; display:flex; gap:1.1cqw; align-items:center; }
+  #strip .seg{ flex:1; height:2px; background:rgba(232,223,211,.16); cursor:pointer; position:relative; }
+  #strip .seg i{ position:absolute; inset:0; width:0; background:var(--gold); transition:width .2s linear; }
+  #strip .seg.done i{ width:100%; }
+  #strip .seg.cur i{ box-shadow:0 0 8px rgba(184,150,100,.7); }
+
+  .credit{ position:absolute; left:7cqw; bottom:3.2cqh; z-index:11; font-family:var(--mono);
+    font-size:9px; letter-spacing:.18em; color:rgba(232,223,211,.22); opacity:0; transition:opacity .6s; }
+  .credit.show{ opacity:1; }
+
+  @media (prefers-reduced-motion: reduce){
+    #gate .play{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="frame">
+    <canvas id="bg"></canvas>
+    <div id="presence"><div class="glint"></div></div>
+    <canvas id="fx"></canvas>
+    <div id="vignette"></div>
+
+    <div id="vert"></div>
+    <div id="text"></div>
+    <div id="term"></div>
+    <div id="seal">
+      <div class="s" data-i="0"></div>
+      <div class="s" data-i="1"></div>
+      <button id="backHall">〈 返回 LV.18 中央大厅 〉</button>
+    </div>
+    <div id="choice"></div>
+    <div id="hint"></div>
+
+    <div class="bar" id="barT"></div>
+    <div class="bar" id="barB"></div>
+    <div id="dissolve"></div>
+    <div id="bloom"></div>
+
+    <div id="hud">
+      <button id="btnPlay" aria-label="play/pause"></button>
+      <div id="strip"></div>
+      <button id="btnSound" aria-label="sound"></button>
+    </div>
+    <div class="credit">EARTH·OS &nbsp;·&nbsp; #047</div>
+
+    <div id="gate">
+      <div class="eyebrow">EARTH · OS &nbsp; v.∞</div>
+      <h1>地球 Online</h1>
+      <div class="sub">副本 #047 — 北京 · 北京</div>
+      <div class="play"><svg width="22" height="24" viewBox="0 0 22 24"><path d="M2 2 L20 12 L2 22 Z" fill="currentColor"/></svg></div>
+      <div class="tip">建议佩戴耳机 &nbsp;·&nbsp; 点按任意处进入</div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+  const RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const DPR = Math.min(window.devicePixelRatio||1, 2);
+  const rand=(a=1,b)=> b===undefined ? Math.random()*a : a+Math.random()*(b-a);
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const TAU=Math.PI*2;
+
+  const $ = s=>document.querySelector(s);
+  const frame=$("#frame"), bg=$("#bg"), fx=$("#fx");
+  const bgc=bg.getContext("2d"), fxc=fx.getContext("2d");
+  const elPresence=$("#presence"), elGlint=elPresence.querySelector(".glint");
+  const elText=$("#text"), elTerm=$("#term"), elChoice=$("#choice"),
+        elHint=$("#hint"), elVert=$("#vert"), elSeal=$("#seal"),
+        elDissolve=$("#dissolve"), elBloom=$("#bloom"), elGate=$("#gate"),
+        elHud=$("#hud"), elStrip=$("#strip"), elCredit=$(".credit"),
+        elBackHall=$("#backHall");
+
+  let W=0,H=0;
+  function resize(){
+    const r=frame.getBoundingClientRect(); W=r.width; H=r.height;
+    for(const cv of [bg,fx]){ cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR); }
+    bgc.setTransform(DPR,0,0,DPR,0,0); fxc.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener("resize",resize); resize();
+
+  /* ---------- film grain tiles ---------- */
+  const tiles=[];
+  (function(){
+    for(let n=0;n<4;n++){
+      const c=document.createElement("canvas"); c.width=c.height=128;
+      const x=c.getContext("2d"), img=x.createImageData(128,128), d=img.data;
+      for(let i=0;i<d.length;i+=4){ const v=Math.random()*255; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255; }
+      x.putImageData(img,0,0); tiles.push(c);
+    }
+  })();
+  let scratchTimer=0, scratches=[];
+
+  /* ---------- AUDIO (generative, self-contained) ---------- */
+  const Audio={ on:true, ctx:null, master:null, droneG:null, lp:null, voices:[], noiseG:null, delay:null,
+    init(){
+      if(this.ctx) return;
+      try{
+        const AC=window.AudioContext||window.webkitAudioContext; this.ctx=new AC();
+      }catch(e){ this.on=false; return; }
+      const ctx=this.ctx;
+      this.master=ctx.createGain(); this.master.gain.value=0.0; this.master.connect(ctx.destination);
+      // feedback delay for space
+      this.delay=ctx.createDelay(1.2); this.delay.delayTime.value=0.42;
+      const fb=ctx.createGain(); fb.gain.value=0.34;
+      const dlp=ctx.createBiquadFilter(); dlp.type="lowpass"; dlp.frequency.value=1800;
+      this.delay.connect(dlp); dlp.connect(fb); fb.connect(this.delay);
+      const wet=ctx.createGain(); wet.gain.value=0.5; this.delay.connect(wet); wet.connect(this.master);
+      this.send=ctx.createGain(); this.send.gain.value=0.5; this.send.connect(this.delay);
+      // drone bus
+      this.lp=ctx.createBiquadFilter(); this.lp.type="lowpass"; this.lp.frequency.value=520; this.lp.Q.value=0.6;
+      this.droneG=ctx.createGain(); this.droneG.gain.value=0.5;
+      this.lp.connect(this.droneG); this.droneG.connect(this.master); this.droneG.connect(this.send);
+      // chord: a low minor-ish drone
+      const freqs=[55, 82.41, 110, 164.81];
+      freqs.forEach((f,i)=>{
+        const o=ctx.createOscillator(); o.type= i%2? "sine":"triangle"; o.frequency.value=f;
+        o.detune.value=(i-1.5)*4;
+        const g=ctx.createGain(); g.gain.value= i<2?0.22:0.07;
+        const lfo=ctx.createOscillator(); lfo.frequency.value=0.05+0.04*i;
+        const lg=ctx.createGain(); lg.gain.value= i<2?0.06:0.03;
+        lfo.connect(lg); lg.connect(g.gain);
+        o.connect(g); g.connect(this.lp); o.start(); lfo.start(); this.voices.push({o,g});
+      });
+      // air noise
+      const buf=ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);
+      const dd=buf.getChannelData(0); for(let i=0;i<dd.length;i++) dd[i]=Math.random()*2-1;
+      const noise=ctx.createBufferSource(); noise.buffer=buf; noise.loop=true;
+      const nf=ctx.createBiquadFilter(); nf.type="bandpass"; nf.frequency.value=900; nf.Q.value=0.4;
+      this.noiseG=ctx.createGain(); this.noiseG.gain.value=0.012;
+      noise.connect(nf); nf.connect(this.noiseG); this.noiseG.connect(this.master); noise.start();
+    },
+    start(){ if(!this.ctx) this.init(); if(!this.ctx) return;
+      if(this.ctx.state==="suspended") this.ctx.resume();
+      this.master.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.master.gain.linearRampToValueAtTime(this.on?0.9:0.0, this.ctx.currentTime+3.0);
+    },
+    mood(m){ if(!this.ctx) return; const t=this.ctx.currentTime;
+      // m: 0 cold/dark .. 1 warm/bright
+      this.lp.frequency.linearRampToValueAtTime(360+m*900, t+2.2);
+      this.droneG.gain.linearRampToValueAtTime(0.4+m*0.18, t+2.2);
+    },
+    swell(){ if(!this.ctx||!this.on) return; const ctx=this.ctx, t=ctx.currentTime;
+      const o=ctx.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(220,t);
+      o.frequency.exponentialRampToValueAtTime(660,t+0.5);
+      const g=ctx.createGain(); g.gain.value=0; g.gain.linearRampToValueAtTime(0.05,t+0.25);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+1.4);
+      o.connect(g); g.connect(this.send); g.connect(this.master); o.start(t); o.stop(t+1.5);
+    },
+    hit(){ if(!this.ctx||!this.on) return; const ctx=this.ctx, t=ctx.currentTime;
+      const o=ctx.createOscillator(); o.type="sine"; o.frequency.setValueAtTime(70,t);
+      o.frequency.exponentialRampToValueAtTime(28,t+1.4);
+      const g=ctx.createGain(); g.gain.value=0; g.gain.linearRampToValueAtTime(0.5,t+0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+1.8);
+      o.connect(g); g.connect(this.master); o.start(t); o.stop(t+1.9);
+      // a breath of noise
+      const nb=ctx.createBufferSource(); const b=ctx.createBuffer(1,ctx.sampleRate*0.6,ctx.sampleRate);
+      const d=b.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+      nb.buffer=b; const nf=ctx.createBiquadFilter(); nf.type="lowpass"; nf.frequency.value=1200;
+      const ng=ctx.createGain(); ng.gain.value=0.12; nb.connect(nf); nf.connect(ng); ng.connect(this.send); ng.connect(this.master); nb.start(t);
+    },
+    tick(){ if(!this.ctx||!this.on) return; const ctx=this.ctx,t=ctx.currentTime;
+      const o=ctx.createOscillator(); o.type="triangle"; o.frequency.value=1200;
+      const g=ctx.createGain(); g.gain.value=0; g.gain.linearRampToValueAtTime(0.03,t+0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
+      o.connect(g); g.connect(this.master); o.start(t); o.stop(t+0.2);
+    },
+    toggle(){ this.on=!this.on; if(this.ctx){ this.master.gain.linearRampToValueAtTime(this.on?0.9:0.0, this.ctx.currentTime+0.4);} return this.on; }
+  };
+
+  /* ====================================================================
+     SCENES — generative atmosphere. Each is a function(t) drawing on bgc.
+     All coordinates in CSS px (0..W, 0..H). Real MJ art can replace the
+     #presence plate and/or be drawn under these layers later.
+  ==================================================================== */
+  let scene="gate", sceneT0=0, S={};   // S = transient per-scene state
+  function initScene(name){
+    S={}; const N=name;
+    if(N==="cbd"){ S.cols=[]; for(let i=0;i<11;i++){ S.cols.push({x:rand(),w:rand(.02,.07),h:rand(.5,1.15),b:rand(.15,.6),win:rand(8,22)|0}); } }
+    if(N==="bridge"){ S.cars=[]; for(let i=0;i<26;i++) S.cars.push(mkCar()); }
+    if(N==="banquet"||N==="overlook"||N==="station"){ S.bok=mkBokeh(N==="overlook"?80:N==="banquet"?26:14); }
+    if(N==="overlook"){ S.bok2=mkBokeh(40); }
+    if(N==="taxi"){ S.streaks=[]; for(let i=0;i<22;i++) S.streaks.push(mkStreak()); }
+    if(N==="banquet"||N==="taxi") S.rain=mkRain(N==="banquet"?70:0);
+    S.dust=[]; const dn = (N==="set"||N==="theone")?34:18;
+    for(let i=0;i<dn;i++) S.dust.push({x:rand(),y:rand(),s:rand(.4,1.6),v:rand(.005,.02),a:rand(.1,.5),ph:rand(TAU)});
+  }
+  function mkCar(){ const dir=Math.random()<.5?1:-1, warm=Math.random()<.5;
+    return { x: dir>0? rand(-.3,0):rand(1,1.3), y: warm? rand(.5,.62):rand(.64,.76),
+      dir, warm, sp: rand(.004,.012), len: rand(.08,.2), w: rand(1.2,3.2) }; }
+  function mkBokeh(n){ const a=[]; for(let i=0;i<n;i++) a.push({x:rand(),y:rand(.35,1),r:rand(2,16),
+    a:rand(.15,.7), hue:rand(), tw:rand(TAU), tsp:rand(.4,1.4), vx:rand(-.01,.01), vy:rand(-.012,-.002)}); return a; }
+  function mkStreak(){ return { x:rand(), y:rand(.1,.95), len:rand(.05,.22), w:rand(2,7),
+    sp:rand(.01,.03), hue:rand(), a:rand(.2,.7) }; }
+  function mkRain(n){ const a=[]; for(let i=0;i<n;i++) a.push({x:rand(),y:rand(),l:rand(.02,.06),sp:rand(.01,.02),a:rand(.05,.2)}); return a; }
+
+  function fillGrad(stops, x0,y0,x1,y1){ const g=bgc.createLinearGradient(x0,y0,x1,y1);
+    stops.forEach(s=>g.addColorStop(s[0],s[1])); bgc.fillStyle=g; bgc.fillRect(0,0,W,H); }
+  function radial(cx,cy,r,stops){ const g=bgc.createRadialGradient(cx,cy,0,cx,cy,r);
+    stops.forEach(s=>g.addColorStop(s[0],s[1])); bgc.fillStyle=g; bgc.fillRect(0,0,W,H); }
+  function softCircle(x,y,r,col){ const g=bgc.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0,col); g.addColorStop(1,"transparent"); bgc.fillStyle=g; bgc.beginPath();
+    bgc.arc(x,y,r,0,TAU); bgc.fill(); }
+  function drawDust(t){ if(!S.dust) return; bgc.save(); bgc.globalCompositeOperation="lighter";
+    for(const d of S.dust){ d.y-=d.v*0.6; if(d.y<-.05){ d.y=1.05; d.x=rand(); }
+      const a=d.a*(0.5+0.5*Math.sin(t*1.2+d.ph)); softCircle(d.x*W,d.y*H,d.s*2.4,`rgba(232,223,211,${a*.5})`); }
+    bgc.restore(); }
+  function drawRain(t){ if(!S.rain||!S.rain.length) return; bgc.save(); bgc.strokeStyle="rgba(180,200,215,.5)"; bgc.lineWidth=1;
+    for(const r of S.rain){ r.y+=r.sp; r.x-=r.sp*.3; if(r.y>1){ r.y=-.1; r.x=rand(); }
+      bgc.globalAlpha=r.a; bgc.beginPath(); bgc.moveTo(r.x*W,r.y*H); bgc.lineTo((r.x-.02)*W,(r.y+r.l)*H); bgc.stroke(); }
+    bgc.globalAlpha=1; bgc.restore(); }
+
+  const SCENES={
+    gate(t){ fillGrad([[0,"#0c0809"],[1,"#080506"]],0,0,0,H);
+      radial(W*.5,H*.42,H*.6,[[0,`rgba(122,42,53,${.06+.03*Math.sin(t*.6)})`],[1,"transparent"]]);
+      drawDust(t); },
+
+    station(t){
+      fillGrad([[0,"#241a18"],[.45,"#15100f"],[1,"#0c1417"]],0,0,0,H);
+      bgc.save(); bgc.globalCompositeOperation="lighter";
+      softCircle(W*.18,H*.2,H*.45,"rgba(214,150,86,.22)");           // dawn through dome
+      softCircle(W*.5,H*.9,W*.7,"rgba(34,52,60,.18)");               // cold platform
+      bgc.restore();
+      // dome ribs
+      bgc.save(); bgc.globalAlpha=.10; bgc.strokeStyle="#caa06a"; bgc.lineWidth=1;
+      for(let i=0;i<5;i++){ bgc.beginPath(); bgc.arc(W*.5,H*-.25,H*(.55+i*.12),0.15*Math.PI,0.85*Math.PI); bgc.stroke(); }
+      bgc.restore();
+      if(S.bok){ bgc.save(); bgc.globalCompositeOperation="lighter";
+        for(const b of S.bok){ b.y+=b.vy*.3; if(b.y<.1) b.y=.6; softCircle(b.x*W,b.y*H,b.r*1.5,`rgba(214,170,110,${b.a*.3*(.6+.4*Math.sin(t*b.tsp+b.tw))})`);} bgc.restore(); }
+      // floor reflection band
+      bgc.save(); bgc.globalCompositeOperation="lighter";
+      const g=bgc.createLinearGradient(0,H*.82,0,H); g.addColorStop(0,"transparent"); g.addColorStop(1,"rgba(120,90,60,.10)");
+      bgc.fillStyle=g; bgc.fillRect(0,H*.82,W,H*.18); bgc.restore();
+      drawDust(t);
+    },
+
+    cbd(t){
+      fillGrad([[0,"#0b1016"],[.55,"#0a0d12"],[1,"#0e0b0d"]],0,0,0,H);
+      const par=pointerPar();
+      bgc.save();
+      for(const c of S.cols){
+        const x=(c.x*1.1-.05)*W + par.x*c.h*22;
+        const w=c.w*W, top=H*(1-c.h), h=c.h*H;
+        const g=bgc.createLinearGradient(x,top,x,H);
+        g.addColorStop(0,`rgba(120,160,185,${c.b*.06})`);
+        g.addColorStop(.5,`rgba(80,120,150,${c.b*.14})`);
+        g.addColorStop(1,`rgba(40,70,95,${c.b*.04})`);
+        bgc.fillStyle=g; bgc.fillRect(x,top,w,h);
+        // bright edge
+        bgc.fillStyle=`rgba(150,195,220,${c.b*.18})`; bgc.fillRect(x,top,Math.max(1,w*.06),h);
+        // warm window dots
+        bgc.globalCompositeOperation="lighter";
+        for(let k=0;k<c.win;k++){ const wy=top+ (k/c.win)*h + (Math.sin(t*.2+k)*2);
+          if(Math.random()<.02) continue;
+          bgc.fillStyle=`rgba(225,180,110,${.10+.10*Math.sin(t*.5+k+c.x*9)})`;
+          bgc.fillRect(x+w*rand(.2,.8), wy, w*.16, h/c.win*.4); }
+        bgc.globalCompositeOperation="source-over";
+      }
+      bgc.restore();
+      bgc.save(); bgc.globalCompositeOperation="lighter"; softCircle(W*.5,H,H*.4,"rgba(122,42,53,.10)"); bgc.restore();
+      drawDust(t);
+    },
+
+    set(t){
+      fillGrad([[0,"#0a0707"],[1,"#060404"]],0,0,0,H);
+      bgc.save(); bgc.globalCompositeOperation="lighter";
+      // tungsten lamp + cone
+      const lx=W*.74, ly=H*.16;
+      softCircle(lx,ly,H*.5,"rgba(255,196,120,.20)");
+      const g=bgc.createLinearGradient(lx,ly,W*.5,H*.95); g.addColorStop(0,"rgba(255,200,130,.16)"); g.addColorStop(1,"transparent");
+      bgc.fillStyle=g; bgc.beginPath(); bgc.moveTo(lx-10,ly); bgc.lineTo(W*.18,H); bgc.lineTo(W*.95,H); bgc.closePath(); bgc.fill();
+      // vanity bulbs bokeh
+      for(let i=0;i<5;i++) softCircle(W*(.12+i*.05),H*(.7+Math.sin(i)*.02),10,"rgba(255,210,150,.22)");
+      bgc.restore();
+      drawDust(t);
+    },
+
+    bridge(t){
+      fillGrad([[0,"#0b0d12"],[.6,"#0a0a0d"],[1,"#0d0a0b"]],0,0,0,H);
+      bgc.save(); bgc.globalCompositeOperation="lighter";
+      softCircle(W*.5,H*.46,W*.7,"rgba(60,50,40,.10)");
+      for(const c of S.cars){
+        c.x += c.sp*c.dir;
+        if(c.dir>0 && c.x>1.3) Object.assign(c, mkCar());
+        if(c.dir<0 && c.x<-.3) Object.assign(c, mkCar());
+        const x=c.x*W, y=c.y*H, L=c.len*W*c.dir;
+        const g=bgc.createLinearGradient(x,y,x-L,y);
+        const col=c.warm? "255,180,90":"190,225,255";
+        g.addColorStop(0,`rgba(${col},${c.warm?.85:.7})`); g.addColorStop(1,`rgba(${col},0)`);
+        bgc.strokeStyle=g; bgc.lineWidth=c.w; bgc.lineCap="round";
+        bgc.beginPath(); bgc.moveTo(x,y); bgc.lineTo(x-L,y+ c.dir*2); bgc.stroke();
+      }
+      bgc.restore();
+      drawDust(t);
+    },
+
+    banquet(t){
+      fillGrad([[0,"#11161c"],[.4,"#1a120f"],[1,"#0c0807"]],0,0,0,H);
+      bgc.save(); bgc.globalCompositeOperation="lighter";
+      radial(W*.5,H*.5,W*.8,[[0,"rgba(190,140,70,.18)"],[.6,"rgba(120,70,40,.08)"],[1,"transparent"]]);
+      // chandelier bokeh
+      if(S.bok) for(const b of S.bok){ b.tw+=0.01;
+        softCircle(b.x*W,(b.y*.5)*H, b.r*1.4, `rgba(240,200,120,${b.a*.4*(.6+.4*Math.sin(t*b.tsp+b.tw))})`); }
+      // ghost of a man (no face): a soft dark-warm column left of centre
+      const gx=W*.28, gy=H*.62;
+      softCircle(gx,gy,W*.18,"rgba(60,40,30,.5)");
+      softCircle(gx,gy-H*.12,W*.07,"rgba(90,60,40,.4)");
+      // glass glint near her (right)
+      softCircle(W*.5,H*.5,8,"rgba(255,240,210,.5)");
+      bgc.restore();
+      drawRain(t); drawDust(t);
+    },
+
+    overlook(t){
+      fillGrad([[0,"#0a0e14"],[.5,"#090a0f"],[1,"#0c0a0b"]],0,0,0,H);
+      const par=pointerPar();
+      bgc.save(); bgc.globalCompositeOperation="lighter";
+      const breathe=.7+.3*Math.sin(t*.4);
+      for(const b of S.bok){ b.x+=b.vx*.2; if(b.x<0)b.x=1; if(b.x>1)b.x=0;
+        softCircle(b.x*W+par.x*8, (.45+b.y*.5)*H+par.y*6, b.r*1.1, `rgba(225,180,120,${b.a*.5*breathe})`); }
+      for(const b of S.bok2){ softCircle(b.x*W+par.x*16,(.5+b.y*.45)*H+par.y*12,b.r*1.8,`rgba(150,190,220,${b.a*.25*breathe})`); }
+      bgc.restore();
+      // foreground tequila glass (defocused), lower-centre
+      const cx=W*.5, top=H*.6, gw=W*.34, gh=H*.42;
+      bgc.save();
+      bgc.filter="blur(2px)";
+      const gg=bgc.createLinearGradient(cx,top,cx,top+gh);
+      gg.addColorStop(0,"rgba(200,160,90,.10)"); gg.addColorStop(.5,"rgba(150,110,60,.16)"); gg.addColorStop(1,"rgba(90,60,35,.2)");
+      bgc.fillStyle=gg;
+      bgc.beginPath();
+      bgc.moveTo(cx-gw/2, top); bgc.quadraticCurveTo(cx-gw/2.4, top+gh, cx, top+gh);
+      bgc.quadraticCurveTo(cx+gw/2.4, top+gh, cx+gw/2, top); bgc.closePath(); bgc.fill();
+      bgc.globalCompositeOperation="lighter";
+      bgc.strokeStyle="rgba(220,180,110,.22)"; bgc.lineWidth=2; bgc.stroke();
+      // liquid line reflecting lights
+      bgc.fillStyle="rgba(230,190,120,.16)"; bgc.fillRect(cx-gw/2.3, top+gh*.46, gw*.86, gh*.5);
+      bgc.filter="none"; bgc.restore();
+      drawDust(t);
+    },
+
+    theone(t){
+      fillGrad([[0,"#140b0a"],[1,"#080403"]],0,0,0,H);
+      bgc.save(); bgc.globalCompositeOperation="lighter";
+      softCircle(W*.68,H*.5,W*.5,"rgba(150,70,40,.16)");            // warm pool, his side
+      softCircle(W*.66,H*.5,W*.16,"rgba(220,150,90,.18)");
+      // faint smoke
+      for(let i=0;i<3;i++) softCircle(W*(.6+.06*Math.sin(t*.3+i)),H*(.4-i*.08),W*.12,"rgba(120,70,45,.06)");
+      bgc.restore();
+      drawDust(t);
+    },
+
+    taxi(t){
+      fillGrad([[0,"#0a0b0e"],[1,"#070608"]],0,0,0,H);
+      // window on right with neon streaks
+      bgc.save(); bgc.beginPath(); bgc.rect(W*.42,0,W*.58,H); bgc.clip();
+      fillGrad([[0,"#0c1014"],[1,"#0a0a0d"]],W*.42,0,W,0);
+      bgc.globalCompositeOperation="lighter"; bgc.filter="blur(2.4px)";
+      for(const s of S.streaks){ s.x-=s.sp; if(s.x<.3){ Object.assign(s,mkStreak()); s.x=1.05; }
+        const x=s.x*W, y=s.y*H, L=s.len*W;
+        const hue=s.hue; const col = hue<.33? "210,120,120" : hue<.66? "120,150,200":"200,180,120";
+        const g=bgc.createLinearGradient(x,y,x+L,y); g.addColorStop(0,`rgba(${col},0)`); g.addColorStop(.5,`rgba(${col},${s.a*.7})`); g.addColorStop(1,`rgba(${col},0)`);
+        bgc.strokeStyle=g; bgc.lineWidth=s.w; bgc.lineCap="round"; bgc.beginPath(); bgc.moveTo(x,y); bgc.lineTo(x+L,y); bgc.stroke();
+      }
+      bgc.filter="none"; bgc.restore();
+      // her reflection on glass (faint) handled by presence; add window frame edge
+      bgc.save(); bgc.globalCompositeOperation="lighter"; bgc.fillStyle="rgba(140,170,190,.05)"; bgc.fillRect(W*.42,0,2,H); bgc.restore();
+      drawDust(t);
+    },
+
+    black(){ bgc.fillStyle="#040203"; bgc.fillRect(0,0,W,H); }
+  };
+
+  /* pointer parallax */
+  let pmx=0,pmy=0,ptx=0,pty=0;
+  function pointerPar(){ ptx+=(pmx-ptx)*.05; pty+=(pmy-pty)*.05; return {x:ptx,y:pty}; }
+  window.addEventListener("pointermove",e=>{ const r=frame.getBoundingClientRect();
+    pmx=((e.clientX-r.left)/r.width-.5)*2; pmy=((e.clientY-r.top)/r.height-.5)*2; },{passive:true});
+  window.addEventListener("deviceorientation",e=>{ if(e.gamma!=null){ pmx=clamp(e.gamma/30,-1,1); pmy=clamp((e.beta-45)/30,-1,1);} },{passive:true});
+
+  /* ---------- master render loop ---------- */
+  let weaveX=0, weaveY=0;
+  function loop(now){
+    const t=(now)/1000;
+    if(SCENES[scene]) SCENES[scene](t - sceneT0/1000); else SCENES.black();
+
+    // fx: grain + scratches over everything
+    fxc.clearRect(0,0,W,H);
+    if(!RM){
+      const tile=tiles[(now/90|0)%tiles.length];
+      fxc.globalAlpha=0.06;
+      fxc.drawImage(tile, (now*0.7%128)-128, (now*0.5%128)-128, W+128, H+128);
+      fxc.globalAlpha=1;
+      // occasional scratch
+      if(now>scratchTimer){ scratchTimer=now+rand(1400,5000);
+        scratches=[{x:rand(.1,.9),life:rand(3,8)|0,w:rand(.4,1.2)}]; }
+      for(const s of scratches){ if(s.life-->0){ fxc.strokeStyle="rgba(255,255,255,.05)"; fxc.lineWidth=s.w;
+        fxc.beginPath(); fxc.moveTo(s.x*W+rand(-1,1),0); fxc.lineTo(s.x*W+rand(-1,1),H); fxc.stroke(); } }
+    }
+    // gate weave (subtle frame jitter)
+    if(!RM && rolling){ weaveX=lerp(weaveX,rand(-.6,.6),.1); weaveY=lerp(weaveY,rand(-.5,.5),.1);
+      frame.style.transform=`translate(${weaveX}px,${weaveY}px)`; }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* ====================================================================
+     CONTENT / SEQUENCER
+  ==================================================================== */
+  const SHOTS=[
+    { id:"load", kind:"terminal", dur:8200, mood:0.15, scene:"black",
+      lines:["> EARTH · OS    v.∞","> 副本编号    #047","> 载入坐标    北京 · 北京",
+             "> 宿主等级    LV.18","> 权限开通完毕","> 记忆暂存服务器","> 载入中 . . . . . ."] },
+    { id:"station", kind:"scene", scene:"station", dur:7200, mood:0.55,
+      presence:{x:.66,y:.6,r:.24,hue:"warm",mode:"figure"},
+      text:["行李箱的轮子，","在北京站前广场，","迟疑了一下。"] },
+    { id:"cbd", kind:"scene", scene:"cbd", dur:7200, mood:0.25,
+      presence:{x:.31,y:.84,r:.075,hue:"cold",mode:"figure"},
+      text:["在举目无亲的地方，","人，才能成为另一个自己。"] },
+    { id:"set", kind:"scene", scene:"set", dur:8400, mood:0.3,
+      presence:{x:.58,y:.6,r:.15,hue:"tungsten",mode:"figure"},
+      text:[["凌晨四点，卸妆棉上是粉底、灰尘、","seal"],["和一句没说出口的台词。","seal"]] },
+    { id:"bridge", kind:"scene", scene:"bridge", dur:0, mood:0.4, interaction:"bridge",
+      presence:{x:.32,y:.55,r:.13,hue:"cold",mode:"back"},
+      text:["在这片钢铁森林里，","她把一个愿望，轻轻搁在了车来车往的桥上。"] },
+    { id:"banquet", kind:"scene", scene:"banquet", dur:7600, mood:0.7,
+      presence:{x:.52,y:.54,r:.16,hue:"gold",mode:"profile"},
+      text:["她举杯，笑意正好，","西雅图的雨，都下到了北京。"] },
+    { id:"overlook", kind:"scene", scene:"overlook", dur:8400, mood:0.5,
+      presence:null,
+      text:["龙舌兰的杯底，映着极静极美的北京。","只有被这样的繁华日夜灼烧，",["才催生出那一句：“我在这里欢笑，我在这里哭泣”。","q"]] },
+    { id:"choice", kind:"choice", dur:0, mood:0.35, scene:"black", interaction:"choice",
+      q:"你，为什么还留在北京？",
+      options:[{k:"A",t:"梦，还没做完"},{k:"B",t:"已经没有别的地方可去"},
+               {k:"C",t:"等一个人，或者等一个答案"},{k:"D",t:"记不起来了"}] },
+    { id:"theone", kind:"scene", scene:"theone", dur:7800, mood:0.45,
+      presence:{x:.66,y:.5,r:.17,hue:"ember",mode:"hand"},
+      branch:{ A:"这座城市的梦太吵了。", B:"你看，它也并没有真的留你。",
+               C:"有些人，真的，只能在北京才会遇见。", D:"趁酒杯摇曳，快乐还没过期。" } },
+    { id:"taxi", kind:"scene", scene:"taxi", dur:8800, mood:0.3,
+      presence:{x:.34,y:.5,r:.17,hue:"cold",mode:"profile"},
+      vertical:"良辰美景奈何天",
+      text:["直到窗外那些流动的灯火，","都像他的侧脸，",["她才知道完了。","seal"]] },
+    { id:"end", kind:"ending", dur:0, mood:0.0, scene:"black" }
+  ];
+
+  let cur=-1, rolling=false, playing=true, branchKey="C", busy=false;
+  let timers=[];
+  const T=(fn,ms)=>{ const id=setTimeout(fn,ms); timers.push(id); return id; };
+  function clearTimers(){ timers.forEach(clearTimeout); timers=[]; }
+
+  function clearLayers(){
+    elText.innerHTML=""; elTerm.innerHTML=""; elTerm.className="";
+    elChoice.innerHTML=""; elHint.className=""; elHint.textContent="";
+    elVert.className=""; elVert.textContent="";
+    elSeal.querySelectorAll(".s").forEach(s=>{ s.className="s"; s.textContent=""; });
+    elBackHall.className="";
+    document.querySelectorAll(".wish").forEach(w=>w.remove());
+  }
+
+  function setPresence(p){
+    if(!p){ elPresence.style.opacity=0; elGlint.style.opacity=0; return; }
+    const colors={warm:"#f3b277",cold:"#8fc0cf",tungsten:"#ffc987",gold:"#ecc879",ember:"#e3995f"};
+    const c=colors[p.hue]||"#f0c090";
+    elPresence.style.left=(p.x*100)+"%"; elPresence.style.top=(p.y*100)+"%";
+    const d=p.r*W*2;
+    elPresence.style.width=d+"px";
+    elPresence.style.height=d*(p.mode==="profile"?1.3:p.mode==="hand"?1.15:p.mode==="back"?1.1:1.18)+"px";
+    let bgcss;
+    if(p.mode==="hand"){
+      bgcss=`radial-gradient(38% 64% at 52% 46%, ${c}dd, ${c}44 38%, transparent 70%)`;
+      elGlint.style.opacity=0; T(()=>{ elGlint.style.opacity=.95; },1400);
+    } else {
+      bgcss=`radial-gradient(46% 56% at 50% 42%, ${c}d8, ${c}48 36%, transparent 72%),`+
+            `radial-gradient(30% 20% at 50% 18%, rgba(255,255,255,.45), transparent 70%)`;
+      elGlint.style.opacity=0;
+    }
+    elPresence.style.background=bgcss;
+    elPresence.style.opacity=0; T(()=>{ elPresence.style.opacity=(p.mode==="hand"?.92:.9); }, 600);
+  }
+  // gentle float
+  (function floatLoop(){ let a=0; setInterval(()=>{ a+=.02;
+    elPresence.style.marginLeft=Math.sin(a)*5+"px"; elPresence.style.marginTop=Math.cos(a*.8)*6+"px"; },40); })();
+
+  /* text choreography */
+  function showText(arr){
+    elText.innerHTML="";
+    arr.forEach((item,i)=>{
+      const txt=Array.isArray(item)?item[0]:item;
+      const cls=Array.isArray(item)?item[1]:"";
+      const d=document.createElement("div"); d.className="line "+(cls||"");
+      d.textContent=txt; elText.appendChild(d);
+      T(()=>d.classList.add("show"), 600 + i*1100);
+    });
+  }
+  function typeTerminal(lines, opts={}){
+    elTerm.className= opts.center?"center":"";
+    elTerm.innerHTML="";
+    let delay=400;
+    lines.forEach((ln,i)=>{
+      const row=document.createElement("div"); row.className="term"+(opts.dim?" dim":"")+(ln.cls?(" "+ln.cls):"");
+      const text= typeof ln==="string"?ln:ln.t;
+      elTerm.appendChild(row);
+      T(()=>{
+        let k=0; const car=document.createElement("span"); car.className="caret";
+        row.appendChild(car);
+        const step=()=>{ if(k<text.length){ row.insertBefore(document.createTextNode(text[k]), car); k++;
+            if(k%2===0) Audio.tick(); T(step, rand(28,70)); }
+          else { T(()=>{ if(car.parentNode && !opts.keepCaret) car.remove(); }, 350); } };
+        step();
+      }, delay);
+      delay += 380 + text.length*48;
+    });
+    return delay;
+  }
+
+  /* ---- the sequencer ---- */
+  function enter(i){
+    const s=SHOTS[i]; cur=i; busy=false;
+    clearTimers(); clearLayers();
+    scene=s.scene || s.id; sceneT0=performance.now();
+    if(SCENES[scene]===undefined) scene="black";
+    initScene(scene);
+    Audio.mood(s.mood!=null?s.mood:0.4);
+    updateStrip();
+
+    if(s.kind==="terminal"){
+      setPresence(null);
+      const end=typeTerminal(s.lines.map(t=>({t})));
+      if(playing) T(()=>next(), end+1600);
+    }
+    else if(s.kind==="scene"){
+      setPresence(s.presence||null);
+      if(s.vertical){ elVert.textContent=s.vertical; T(()=>elVert.classList.add("show"), 1800); }
+      if(s.branch){ // theone — line by chosen branch
+        const d=document.createElement("div"); d.className="line"; d.textContent=s.branch[branchKey]||s.branch.C;
+        elText.appendChild(d); T(()=>d.classList.add("show"),900);
+        if(playing) T(()=>next(), s.dur);
+      } else {
+        showText(s.text);
+        if(playing) T(()=>next(), s.dur);
+      }
+      if(s.interaction==="bridge") setupBridge(s);
+    }
+    else if(s.kind==="choice"){
+      setPresence(null); setupChoice(s);
+    }
+    else if(s.kind==="ending"){
+      setPresence(null); runEnding();
+    }
+  }
+
+  function transitionTo(i){
+    if(busy) return; busy=true;
+    Audio.swell();
+    elDissolve.style.transition="opacity .6s ease"; elDissolve.style.opacity=".9";
+    elBloom.style.transition="opacity .5s ease"; elBloom.style.opacity=".5";
+    // fade current text out
+    elText.querySelectorAll(".line").forEach(l=>{ l.style.transition="opacity .5s, filter .5s"; l.style.opacity="0"; l.style.filter="blur(6px)"; });
+    elVert.classList.remove("show");
+    setTimeout(()=>{ elBloom.style.opacity="0"; },350);
+    setTimeout(()=>{
+      enter(i);
+      elDissolve.style.transition="opacity 1s ease"; elDissolve.style.opacity="0";
+    }, 640);
+  }
+  function next(){ if(cur<SHOTS.length-1) transitionTo(cur+1); }
+  function go(i){ if(i>=0 && i<SHOTS.length && i!==cur) transitionTo(i); }
+
+  /* bridge interaction */
+  function setupBridge(s){
+    elHint.textContent="把一个愿望，轻轻放在桥上 —— 触碰画面";
+    T(()=>elHint.classList.add("show"), 2600);
+    let used=false;
+    const handler=(e)=>{
+      if(used) return; used=true;
+      const r=frame.getBoundingClientRect();
+      const x=(e.clientX-r.left), y=(e.clientY-r.top);
+      const w=document.createElement("div"); w.className="wish"; w.style.left=x+"px"; w.style.top=y+"px";
+      frame.appendChild(w); Audio.swell();
+      elHint.classList.remove("show");
+      // bloom then blur away + drift up, trails dim
+      requestAnimationFrame(()=>{ w.style.transition="all 2.2s cubic-bezier(.2,.6,.2,1)";
+        w.style.transform="translate(-50%,-50%) scale(2.4)"; w.style.top=(y-60)+"px"; w.style.opacity="0"; w.style.filter="blur(10px)"; });
+      // dim the scene briefly
+      elDissolve.style.transition="opacity 2.4s ease"; elDissolve.style.opacity=".28";
+      T(()=>{ elDissolve.style.opacity="0"; next(); }, 2400);
+      frame.removeEventListener("pointerdown", handler);
+    };
+    frame.addEventListener("pointerdown", handler);
+    timers.push({});  // marker; real cleanup via removeEventListener on transition (handler self-removes)
+    // also auto-proceed if left untouched a long time
+    if(playing) T(()=>{ if(!used){ used=true; elHint.classList.remove("show"); next(); } }, 12000);
+  }
+
+  /* choice interaction */
+  function setupChoice(s){
+    elChoice.innerHTML="";
+    const q=document.createElement("div"); q.className="q"; q.textContent=s.q; elChoice.appendChild(q);
+    T(()=>q.classList.add("show"), 500);
+    const opts=[];
+    s.options.forEach((o,i)=>{
+      const b=document.createElement("button"); b.className="opt";
+      b.innerHTML=`<span class="k">${o.k}</span><span>${o.t}</span>`;
+      elChoice.appendChild(b); opts.push(b);
+      T(()=>b.classList.add("in"), 1500 + i*420);
+      b.addEventListener("click",(ev)=>{
+        ev.stopPropagation();
+        branchKey=o.k; Audio.swell();
+        opts.forEach(x=>{ if(x!==b) x.classList.add("faded"); });
+        b.classList.add("chosen");
+        T(()=>next(), 1500);
+      });
+    });
+  }
+
+  /* ending */
+  function runEnding(){
+    rolling=true;
+    const lines=[
+      "> 副本 #047 · 北京 · 北京　已结束","",
+      "> 记忆封存中 . . .",
+      "> 从此刻起，你将遗忘她。",
+      "> 被你触碰过的人，也将忘记你。","",
+      "> 请回答：","> 你，带走了什么？","",
+      "> . . . . . ."
+    ].map(t=>({t}));
+    const end=typeTerminal(lines,{center:false});
+    // the clearance line, then erase
+    T(()=>{
+      const row=document.createElement("div"); row.className="term seal"; row.textContent="> > [ 数据已清除 ]";
+      elTerm.appendChild(row);
+      T(()=>shatterAndWipe(), 1400);
+    }, end+700);
+  }
+  function shatterAndWipe(){
+    Audio.hit();
+    // per-glyph scatter of all terminal lines
+    elTerm.querySelectorAll(".term").forEach(line=>{
+      const txt=line.textContent; line.textContent="";
+      for(const ch of txt){ const sp=document.createElement("span"); sp.className="glyph"; sp.textContent=ch; line.appendChild(sp); }
+    });
+    requestAnimationFrame(()=>{
+      document.querySelectorAll("#term .glyph").forEach(sp=>{
+        const dx=rand(-46,46), dy=rand(-70,-6), rot=rand(-32,32);
+        sp.style.transition=`transform ${rand(1.1,2.1)}s cubic-bezier(.2,.6,.2,1), opacity ${rand(1.1,2)}s ease, filter 1.2s ease`;
+        sp.style.transitionDelay=rand(0,.6)+"s";
+        sp.style.transform=`translate(${dx}px,${dy}px) rotate(${rot}deg)`;
+        sp.style.opacity="0"; sp.style.filter="blur(7px)";
+      });
+    });
+    // wipe scene to black
+    elDissolve.style.transition="opacity 2.2s ease"; elDissolve.style.opacity="1";
+    setPresence(null);
+    T(()=>{ scene="black"; sceneT0=performance.now();
+      elDissolve.style.transition="opacity 2.4s ease"; elDissolve.style.opacity="0";
+      revealSeal();
+    }, 2400);
+  }
+  function revealSeal(){
+    const s0=elSeal.querySelector('[data-i="0"]'), s1=elSeal.querySelector('[data-i="1"]');
+    s0.textContent="你与北京，两不相欠。"; s1.textContent="恨海情天，终付无言。";
+    T(()=>s0.classList.add("show"), 600);
+    T(()=>s1.classList.add("show"), 2600);
+    T(()=>{ elBackHall.classList.add("show"); rolling=false; document.body.classList.remove("rolling"); }, 6000);
+  }
+
+  /* HUD */
+  function buildStrip(){ elStrip.innerHTML="";
+    SHOTS.forEach((s,i)=>{ const seg=document.createElement("div"); seg.className="seg";
+      seg.innerHTML="<i></i>"; seg.addEventListener("click",e=>{ e.stopPropagation(); go(i); });
+      elStrip.appendChild(seg); }); }
+  function updateStrip(){ [...elStrip.children].forEach((seg,i)=>{
+      seg.classList.toggle("done", i<cur); seg.classList.toggle("cur", i===cur);
+      seg.querySelector("i").style.width = i<cur?"100%": i===cur?"100%":"0"; }); }
+  buildStrip();
+
+  const btnPlay=$("#btnPlay"), btnSound=$("#btnSound");
+  const icoPlay='<svg width="16" height="18" viewBox="0 0 16 18"><path d="M2 1 L15 9 L2 17 Z" fill="currentColor"/></svg>';
+  const icoPause='<svg width="16" height="18" viewBox="0 0 16 18"><rect x="2" y="1" width="4" height="16" fill="currentColor"/><rect x="10" y="1" width="4" height="16" fill="currentColor"/></svg>';
+  const icoSoundOn='<svg width="20" height="18" viewBox="0 0 20 18"><path d="M2 6 H6 L11 2 V16 L6 12 H2 Z" fill="currentColor"/><path d="M14 5 Q17 9 14 13" stroke="currentColor" fill="none" stroke-width="1.4"/></svg>';
+  const icoSoundOff='<svg width="20" height="18" viewBox="0 0 20 18"><path d="M2 6 H6 L11 2 V16 L6 12 H2 Z" fill="currentColor"/><path d="M14 6 L19 12 M19 6 L14 12" stroke="currentColor" stroke-width="1.4"/></svg>';
+  btnPlay.innerHTML=icoPause; btnSound.innerHTML=icoSoundOn;
+  btnPlay.addEventListener("click",e=>{ e.stopPropagation(); playing=!playing; btnPlay.innerHTML=playing?icoPause:icoPlay;
+    if(playing){ // resume auto from current
+      const s=SHOTS[cur]; if(s && s.kind!=="choice" && s.kind!=="ending" && s.interaction!=="bridge") T(()=>next(), 1200);
+    } else clearTimers(); });
+  btnSound.addEventListener("click",e=>{ e.stopPropagation(); const on=Audio.toggle(); btnSound.innerHTML=on?icoSoundOn:icoSoundOff; });
+
+  // HUD auto-hide
+  let hudTimer;
+  function pokeHud(){ elHud.classList.add("show"); elCredit.classList.add("show");
+    clearTimeout(hudTimer); hudTimer=setTimeout(()=>{ elHud.classList.remove("show"); elCredit.classList.remove("show"); },2800); }
+  frame.addEventListener("pointermove",pokeHud);
+
+  /* advance on tap (narrative shots only) */
+  frame.addEventListener("click",(e)=>{
+    if(!started) return;
+    if(e.target.closest("#hud")||e.target.closest(".opt")||e.target.closest("#backHall")) return;
+    const s=SHOTS[cur]; if(!s) return;
+    if(s.interaction==="bridge"||s.kind==="choice"||s.kind==="ending") { pokeHud(); return; }
+    pokeHud(); next();
+  });
+
+  elBackHall.addEventListener("click",e=>{ e.stopPropagation(); restart(); });
+
+  /* gate / start */
+  let started=false;
+  function begin(){
+    if(started) return; started=true;
+    Audio.init(); Audio.start();
+    elGate.classList.add("hidden");
+    document.body.classList.add("rolling"); rolling=true;
+    pokeHud();
+    setTimeout(()=>enter(0), 700);
+  }
+  elGate.addEventListener("click", begin);
+  window.addEventListener("keydown",e=>{ if(!started && (e.key==="Enter"||e.key===" ")) begin();
+    else if(started && (e.key==="ArrowRight")) next(); });
+
+  function restart(){
+    clearTimers(); clearLayers(); rolling=true; document.body.classList.add("rolling");
+    playing=true; btnPlay.innerHTML=icoPause; branchKey="C";
+    elDissolve.style.transition="opacity .6s"; elDissolve.style.opacity="1";
+    setTimeout(()=>{ enter(0); elDissolve.style.transition="opacity 1.2s"; elDissolve.style.opacity="0"; },650);
+  }
+
+  document.addEventListener("visibilitychange",()=>{ if(document.hidden) clearTimers(); });
+})();
+</script>
+</body>
+</html>
