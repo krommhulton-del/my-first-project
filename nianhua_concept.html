@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@300;400&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
+<style>
+  :root{ --sun:#E8C36A; --rose:#D96E8C; --ivory:#E8DFD3; --night:#2C3A47; --seal:#F5EBD8; --wine:#7A2A35;
+    --serif:"Noto Serif SC",serif; --hand:"Ma Shan Zheng","Noto Serif SC",serif; --cute:"ZCOOL KuaiLe","Noto Serif SC",serif; }
+  *{margin:0;box-sizing:border-box}
+  html,body{width:1600px;height:900px;overflow:hidden;background:#0c0810;font-family:var(--serif)}
+  .panel{position:absolute;inset:0;display:none}
+  .panel.on{display:block}
+  .tag{position:absolute;left:40px;top:34px;z-index:30;font-family:ui-monospace,monospace;letter-spacing:.22em;
+    font-size:15px;color:rgba(245,235,216,.85);background:rgba(0,0,0,.35);padding:8px 16px;border:1px solid rgba(232,195,106,.4)}
+  .credit{position:absolute;right:40px;bottom:30px;z-index:30;font-family:ui-monospace,monospace;font-size:12px;
+    letter-spacing:.18em;color:rgba(245,235,216,.4)}
+
+  /* ---------- P0 封面/卧室黄昏 ---------- */
+  #p0{background:linear-gradient(180deg,#2a1630 0%,#5e2a3e 28%,#b5536a 52%,#e89a6a 72%,#f0c98a 86%,#caa46a 100%)}
+  #p0 .room{position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(10,6,12,.5) 72%,rgba(8,4,10,.96) 100%)}
+  #p0 .win{position:absolute;left:54%;top:14%;width:40%;height:60%;border:14px solid #1a0f18;border-radius:6px;
+    background:linear-gradient(180deg,#6e3550,#c5688a 45%,#f0b07e 75%,#f6d6a0);box-shadow:0 0 80px rgba(245,200,140,.5),inset 0 0 60px rgba(255,220,170,.5)}
+  #p0 .win:before{content:"";position:absolute;left:50%;top:0;bottom:0;width:8px;margin-left:-4px;background:#1a0f18}
+  #p0 .win:after{content:"";position:absolute;top:46%;left:0;right:0;height:8px;background:#1a0f18}
+  #p0 .sun{position:absolute;left:70%;top:46%;width:120px;height:120px;border-radius:50%;
+    background:radial-gradient(circle,#fff7e0,#ffd98a 50%,transparent 72%);filter:blur(2px)}
+  #p0 .desk{position:absolute;left:0;bottom:0;width:46%;height:42%;background:linear-gradient(180deg,#1c121c,#0c0710)}
+  #p0 .crt{position:absolute;left:9%;bottom:30%;width:200px;height:160px;background:#15101a;border-radius:14px;
+    box-shadow:0 14px 40px rgba(0,0,0,.6)}
+  #p0 .crt i{position:absolute;inset:18px 22px 30px;border-radius:6px;background:linear-gradient(135deg,#3a6ea5,#7a3a8a);
+    box-shadow:0 0 30px rgba(120,160,220,.6)}
+  #p0 .poster{position:absolute;background:#120c14;border:3px solid rgba(245,235,216,.12)}
+  #p0 .p1{left:6%;top:12%;width:120px;height:160px;transform:rotate(-4deg);background:linear-gradient(160deg,#3a2a40,#1a1020)}
+  #p0 .p2{left:24%;top:8%;width:140px;height:120px;transform:rotate(3deg);background:linear-gradient(160deg,#402a34,#1a1014)}
+  #p0 .string{position:absolute;left:4%;top:40%;width:42%;height:2px;background:rgba(245,235,216,.2);transform:rotate(4deg)}
+  #p0 .photo{position:absolute;top:38%;width:46px;height:56px;background:#e8dfd3;border:4px solid #fff;transform:rotate(-6deg);box-shadow:0 6px 14px rgba(0,0,0,.5)}
+  #p0 .plush{position:absolute;left:46%;bottom:30%;width:90px;height:90px;border-radius:46% 46% 40% 40%;background:radial-gradient(circle at 40% 35%,#c98aa6,#7a4a60);box-shadow:0 10px 24px rgba(0,0,0,.5)}
+  #p0 .dust{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,235,190,.9),transparent 70%)}
+  #p0 .title{position:absolute;left:7%;top:30%;z-index:20}
+  #p0 .title h1{font-family:var(--hand);font-size:120px;color:#fff;text-shadow:0 4px 30px rgba(122,42,53,.7),0 0 60px rgba(255,200,140,.5);line-height:1}
+  #p0 .title .en{font-family:ui-monospace,monospace;letter-spacing:.5em;color:var(--seal);font-size:20px;margin-top:6px;opacity:.85}
+  #p0 .title .sub{font-family:var(--serif);font-weight:300;letter-spacing:.18em;color:var(--seal);font-size:22px;margin-top:18px;text-shadow:0 2px 16px rgba(0,0,0,.7)}
+  #p0 .hud{position:absolute;right:40px;top:30px;z-index:20;font-family:ui-monospace,monospace;color:var(--seal);font-size:18px;letter-spacing:.2em;text-shadow:0 2px 10px #000}
+
+  /* ---------- P1 QQ空间 ---------- */
+  #p1{background:#0a0710}
+  #p1 .bezel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1080px;height:720px;background:#15101a;
+    border-radius:28px;padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.7),inset 0 0 0 2px #2a2030}
+  #p1 .screen{position:absolute;inset:30px;border-radius:10px;overflow:hidden;
+    background:#0c1430 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"/>')}
+  #p1 .qbg{position:absolute;inset:0;background:
+    radial-gradient(circle at 80% 12%,rgba(217,110,140,.4),transparent 40%),
+    radial-gradient(circle at 15% 85%,rgba(90,140,220,.35),transparent 45%),
+    linear-gradient(160deg,#101a3a,#1a1030)}
+  #p1 .star{position:absolute;color:#fff;opacity:.7;font-size:14px}
+  #p1 .top{position:absolute;left:0;right:0;top:0;height:64px;background:linear-gradient(90deg,#3a6ea5,#7a3a8a);
+    display:flex;align-items:center;padding:0 22px;color:#fff;letter-spacing:.1em;font-family:var(--cute);font-size:24px;
+    box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  #p1 .ava{position:absolute;left:34px;top:96px;width:130px;height:130px;border-radius:10px;border:4px solid #fff;
+    background:linear-gradient(135deg,#f0a8c0,#a86ab0);box-shadow:0 0 24px rgba(240,150,190,.7)}
+  #p1 .shan{position:absolute;left:138px;top:100px;background:#ff3c6e;color:#fff;font-size:12px;padding:2px 7px;border-radius:8px;font-family:var(--cute)}
+  #p1 .nick{position:absolute;left:34px;top:240px;color:#ffd9ec;font-family:var(--cute);font-size:26px;text-shadow:0 0 12px rgba(255,100,160,.7)}
+  #p1 .sign{position:absolute;left:34px;top:286px;width:230px;color:#bfe0ff;font-size:18px;line-height:1.8;font-family:var(--hand)}
+  #p1 .music{position:absolute;left:34px;top:430px;width:230px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);
+    border-radius:10px;padding:12px 14px;color:#fff;font-size:15px}
+  #p1 .music .bar{height:6px;background:rgba(255,255,255,.2);border-radius:3px;margin-top:10px;position:relative}
+  #p1 .music .bar i{position:absolute;left:0;top:0;bottom:0;width:38%;background:#ff6ea0;border-radius:3px}
+  #p1 .music .bar i:after{content:"";position:absolute;right:-6px;top:-3px;width:12px;height:12px;border-radius:50%;background:#fff}
+  #p1 .board{position:absolute;left:300px;top:96px;right:30px;bottom:30px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:22px}
+  #p1 .board h3{color:#ffd9ec;font-family:var(--cute);font-size:22px;margin-bottom:16px}
+  #p1 .msg{background:rgba(255,255,255,.1);border-radius:10px;padding:14px 16px;margin-bottom:14px;color:#eaf2ff;font-size:17px;font-family:var(--hand);line-height:1.7}
+  #p1 .msg b{color:#ffc0dd;font-family:var(--cute);font-size:15px}
+
+  /* ---------- P2 杂志竖排 ---------- */
+  #p2{background:#1a1012}
+  #p2 .spread{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1120px;height:700px;display:flex;
+    box-shadow:0 30px 80px rgba(0,0,0,.7)}
+  #p2 .pg{flex:1;position:relative;background:linear-gradient(180deg,#efe6d6,#e2d4bd);overflow:hidden}
+  #p2 .pgL{box-shadow:inset -30px 0 50px rgba(120,90,60,.25)}
+  #p2 .pgR{box-shadow:inset 30px 0 50px rgba(120,90,60,.25)}
+  #p2 .port{position:absolute;inset:8%;border-radius:4px;background:
+    radial-gradient(60% 50% at 50% 38%,rgba(243,178,120,.9),rgba(180,90,70,.3) 45%,transparent 72%),
+    linear-gradient(180deg,#7a3a4a,#caa06a)}
+  #p2 .port .hair{position:absolute;left:30%;top:14%;width:40%;height:34%;border-radius:50%;background:rgba(30,18,22,.6)}
+  #p2 .port .rim{position:absolute;left:58%;top:30%;width:3px;height:40%;background:rgba(255,230,180,.7);border-radius:3px;transform:rotate(8deg);box-shadow:0 0 14px rgba(255,220,170,.8)}
+  #p2 .vmain{position:absolute;right:12%;top:11%;font-family:var(--serif);font-weight:400;font-size:56px;
+    color:#7A2A35;line-height:1.18;text-align:center}
+  #p2 .vsub{position:absolute;right:21%;top:15%;font-family:var(--serif);font-weight:300;font-size:25px;
+    color:#6a4a3e;line-height:1.28;text-align:center}
+  #p2 .stamp{position:absolute;left:12%;bottom:10%;font-family:var(--hand);color:#b0563c;font-size:28px;transform:rotate(-8deg);opacity:.8}
+
+  /* ---------- P3 结局 ---------- */
+  #p3{background:radial-gradient(120% 90% at 50% 40%,#3a2436,#160d18 60%,#0a060c)}
+  #p3 .room{position:absolute;inset:0;opacity:.32}
+  #p3 .sil{position:absolute;background:linear-gradient(180deg,#15101a,#0a060c)}
+  #p3 .b1{left:8%;bottom:0;width:24%;height:42%}
+  #p3 .b2{left:60%;bottom:0;width:30%;height:52%}
+  #p3 .b3{left:38%;bottom:0;width:18%;height:34%}
+  #p3 .moten{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,225,180,.95),transparent 70%)}
+  #p3 .couplet{position:absolute;left:0;right:0;top:42%;text-align:center;z-index:20}
+  #p3 .couplet .l{font-family:var(--serif);font-weight:300;color:var(--seal);font-size:40px;letter-spacing:.18em;
+    text-shadow:0 0 40px rgba(0,0,0,.8),0 0 30px rgba(255,210,150,.3);line-height:2}
+  #p3 .couplet .en{font-family:ui-monospace,monospace;letter-spacing:.4em;color:rgba(232,195,106,.7);font-size:16px;margin-top:18px}
+</style>
+</head>
+<body>
+<!-- P0 -->
+<section class="panel on" id="p0">
+  <div class="poster p1"></div><div class="poster p2"></div>
+  <div class="win"></div><div class="sun"></div>
+  <div class="string"></div>
+  <div class="photo" style="left:8%"></div><div class="photo" style="left:18%"></div><div class="photo" style="left:28%"></div><div class="photo" style="left:38%"></div>
+  <div class="room"></div>
+  <div class="desk"></div><div class="crt"><i></i></div><div class="plush"></div>
+  <div class="title"><h1>纸上花火</h1><div class="en">PAPER&nbsp;&nbsp;FIREWORKS</div><div class="sub">一台走得进去的青春时光机 · 古早怀旧 VR 体验</div></div>
+  <div class="hud">记忆 ★★★☆☆☆☆☆</div>
+  <div class="tag">效果呈现 01 · 关键视觉 / 卧室黄昏</div>
+  <div class="credit">《纸上花火》· 概念效果图</div>
+</section>
+
+<!-- P1 QQ空间 -->
+<section class="panel" id="p1">
+  <div class="bezel"><div class="screen"><div class="qbg">
+    <div class="star" style="left:20%;top:18%">✦</div><div class="star" style="left:70%;top:30%">✧</div><div class="star" style="left:88%;top:60%">✦</div><div class="star" style="left:30%;top:70%">✧</div>
+    <div class="top">★ 柠檬草の夏天 · QQ空间 ★</div>
+    <div class="ava"></div><div class="shan">闪</div>
+    <div class="nick">_柠檬草ぃ柒</div>
+    <div class="sign">▕▏smile、<br>是最初的伪装╮<br>__ 谁的青春不迷茫</div>
+    <div class="music">♫ 正在播放：那年的歌<div class="bar"><i></i></div></div>
+    <div class="board"><h3>﹏留言板﹏</h3>
+      <div class="msg"><b>同桌の你：</b>来踩踩~ 暑假一起去江边看烟花啊！</div>
+      <div class="msg"><b>匿名：</b>毕业了就别走散了好不好。</div>
+      <div class="msg"><b>本尊：</b>那年夏天，我们都以为来日方长……</div>
+    </div>
+  </div></div></div>
+  <div class="tag">效果呈现 02 · WorldSpace UI / 开机进 QQ 空间</div>
+  <div class="credit">《纸上花火》· 概念效果图</div>
+</section>
+
+<!-- P2 杂志 -->
+<section class="panel" id="p2">
+  <div class="spread">
+    <div class="pg pgL"><div class="port"><div class="hair"></div><div class="rim"></div></div><div class="stamp">花火 · 2008 夏</div></div>
+    <div class="pg pgR"><div class="vmain" data-v="良辰美景奈何天"></div><div class="vsub" data-v="这一年的蝉鸣，是写给青春的情书。"></div></div>
+  </div>
+  <div class="tag">效果呈现 03 · 互动旧物 / 花火杂志翻页 · 竖排</div>
+  <div class="credit">《纸上花火》· 概念效果图</div>
+</section>
+
+<!-- P3 结局 -->
+<section class="panel" id="p3">
+  <div class="room"><div class="sil b1"></div><div class="sil b2"></div><div class="sil b3"></div></div>
+  <div class="couplet"><div class="l">那年夏天，</div><div class="l">我们都以为来日方长。</div><div class="en">PAPER FIREWORKS · FIN</div></div>
+  <div class="tag">效果呈现 04 · 结局 / 褪色光化 · 告别</div>
+  <div class="credit">《纸上花火》· 概念效果图</div>
+</section>
+
+<script>
+  // motes for P0 and P3
+  function motes(parent, n, cls){ for(let i=0;i<n;i++){ const d=document.createElement('div'); d.className=cls;
+    const s=2+Math.random()*7; d.style.width=s+'px'; d.style.height=s+'px';
+    d.style.left=(Math.random()*100)+'%'; d.style.top=(Math.random()*100)+'%'; d.style.opacity=0.3+Math.random()*0.6;
+    parent.appendChild(d); } }
+  motes(document.querySelector('#p0'), 40, 'dust');
+  motes(document.querySelector('#p3'), 60, 'moten');
+  document.querySelectorAll('[data-v]').forEach(el=>{ for(const ch of el.dataset.v){ const d=document.createElement('div'); d.textContent=ch; el.appendChild(d); } });
+  window.__panel=(i)=>{ document.querySelectorAll('.panel').forEach((p,k)=>p.classList.toggle('on',k===i)); };
+  window.__ready=true;
+</script>
+</body>
+</html>
