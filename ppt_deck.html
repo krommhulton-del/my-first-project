@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<style>
+  *{margin:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  html,body{width:1920px;height:1080px;background:#0a0710;
+    font-family:"Noto Sans CJK SC","Noto Sans SC",sans-serif}
+  .slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;background:#16101A;color:#F5EBD8;display:none}
+  .slide.on{display:block}
+  .serif{font-family:"Noto Serif CJK SC","Noto Serif SC",serif}
+  .mono{font-family:"Courier New",monospace}
+  .gold{color:#E8C36A}.rose{color:#D96E8C}
+  /* shared furniture */
+  .grid{position:absolute;inset:0;pointer-events:none;opacity:.045;
+    background-image:repeating-linear-gradient(90deg,#fff 0 1px,transparent 1px 213px),
+                     repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 216px)}
+  .pageno{position:absolute;top:64px;right:96px;font-family:"Courier New",monospace;font-size:22px;letter-spacing:.22em;color:#D96E8C}
+  .label{position:absolute;top:120px;left:150px;font-family:"Courier New",monospace;font-size:23px;letter-spacing:.36em;color:#E8C36A}
+  .label:after{content:"";display:block;width:62px;height:2px;background:#E8C36A;margin-top:18px;opacity:.85}
+  .ghost{position:absolute;right:120px;bottom:-130px;font-weight:800;font-size:600px;color:rgba(245,235,216,.045);line-height:1;pointer-events:none;letter-spacing:-.02em}
+  .title{font-weight:800;font-size:80px;color:#F5EBD8;letter-spacing:.01em;line-height:1.12}
+  .bullets{position:absolute;left:154px;top:440px;right:170px;max-width:1360px}
+  .bi{font-size:33px;line-height:1.5;color:#BDB5A8;margin-bottom:30px;padding-left:48px;position:relative}
+  .bi:before{content:"✦";position:absolute;left:0;color:#D96E8C;font-size:22px;top:8px}
+  .bi b{color:#F5EBD8;font-weight:500}
+  /* layout A */
+  .A .title{position:absolute;left:150px;top:236px;}
+  /* concept hero */
+  .hero{position:absolute;left:150px;right:150px;top:50%;transform:translateY(-50%);
+    font-size:70px;line-height:1.62;color:#F5EBD8;letter-spacing:.01em}
+  /* layout B split */
+  .imgL{position:absolute;left:0;top:0;width:880px;height:1080px;background-size:cover;background-position:center}
+  .B .label{left:980px}
+  .B .title{position:absolute;left:980px;top:312px;font-size:64px}
+  .B .bullets{left:980px;top:470px;right:120px}
+  .crn{position:absolute;font-family:"Courier New",monospace;color:#D96E8C;font-size:40px;line-height:1}
+  /* layout C card */
+  .card{position:absolute;left:150px;top:150px;width:1620px;height:780px;background:#E8DFD3;
+    box-shadow:0 40px 120px rgba(0,0,0,.5)}
+  .C .title{position:absolute;left:230px;top:250px;color:#16101A;font-size:62px}
+  .C .bullets{left:234px;top:430px;right:300px}
+  .C .bi{color:#4A4248}.C .bi b{color:#16101A}.C .bi:before{color:#B0563C}
+  .cardlbl{position:absolute;left:230px;top:200px;font-family:"Courier New",monospace;font-size:22px;letter-spacing:.34em;color:#B0563C}
+  .C9img{position:absolute;right:230px;top:300px;width:760px;height:428px;background-size:cover;background-position:center;box-shadow:0 20px 50px rgba(80,50,30,.4)}
+  /* flow */
+  .flow{position:absolute;left:150px;right:150px;top:50%;transform:translateY(-50%);text-align:center}
+  .flow .step{font-size:46px;color:#F5EBD8;font-weight:700;display:inline-block;margin:0 6px}
+  .flow .ar{color:#D96E8C;font-size:40px;margin:0 22px;vertical-align:3px}
+  /* cover */
+  .full{position:absolute;inset:0;background-size:cover;background-position:center}
+  .shade-b{position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,6,12,.92) 8%,rgba(10,6,12,.4) 36%,transparent 62%)}
+  .shade-f{position:absolute;inset:0;background:rgba(12,8,16,.42)}
+  .cover-tx{position:absolute;left:150px;bottom:140px}
+  .cover-tx .eyebrow{font-family:"Courier New",monospace;font-size:24px;letter-spacing:.4em;color:#E8C36A;margin-bottom:24px}
+  .cover-tx h1{font-weight:800;font-size:140px;color:#E8C36A;line-height:1;letter-spacing:.04em;text-shadow:0 6px 50px rgba(0,0,0,.6)}
+  .cover-tx .en{font-family:"Courier New",monospace;font-size:26px;letter-spacing:.55em;color:#F5EBD8;margin:18px 0 22px}
+  .cover-tx .sub{font-size:34px;color:rgba(245,235,216,.85);letter-spacing:.06em}
+  /* ending */
+  .end-tx{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center}
+  .end-tx .q{font-weight:800;font-size:78px;color:#E8C36A;letter-spacing:.04em;text-shadow:0 0 40px rgba(0,0,0,.7)}
+  .end-tx .rule{width:300px;height:2px;background:#D96E8C;margin:40px auto}
+  .end-tx .by{font-size:30px;color:#F5EBD8;letter-spacing:.3em}
+</style>
+</head>
+<body>
+<!-- 1 cover -->
+<section class="slide on" data-i="1">
+  <div class="full" style="background-image:url('策划大作业_纸上花火/效果图/clean_room.png')"></div>
+  <div class="shade-b"></div>
+  <div class="cover-tx">
+    <div class="eyebrow">EARTH MEMORY · VR EXPERIENCE</div>
+    <h1 class="serif">纸上花火</h1>
+    <div class="en">PAPER&nbsp;&nbsp;FIREWORKS</div>
+    <div class="sub">一台走得进去的青春时光机 · 古早怀旧 VR 体验</div>
+  </div>
+</section>
+
+<!-- 2 concept -->
+<section class="slide" data-i="2">
+  <div class="grid"></div><div class="pageno">PAGE 02 / 14</div>
+  <div class="label">02 · CONCEPT</div><div class="ghost serif">念</div>
+  <div class="hero serif">回到 <span class="gold">2005–2012</span> 的 QQ 空间、非主流、花火杂志年代——<br>在一间被时光封存的少女卧室里，翻动旧物、唤醒记忆，<br>与青春做一次<span class="gold">温柔的道别</span>。</div>
+</section>
+
+<!-- 3 立意 -->
+<section class="slide A" data-i="3">
+  <div class="grid"></div><div class="pageno">PAGE 03 / 14</div>
+  <div class="label">03 · 立意 / WHY</div><div class="ghost serif">忆</div>
+  <div class="title serif">不是游戏，<span class="gold">是一座可走入的<br>时代记忆博物馆</span></div>
+  <div class="bullets">
+    <div class="bi"><b>母题</b>：美好转瞬即逝；每个人的青春，都值得被妥善收藏一次。</div>
+    <div class="bi">怀旧是这几年最强的情绪——但没人让你真正「走回去」，VR 能。</div>
+    <div class="bi">关键词：怀旧 · 治愈 · 沉浸 · 告别。</div>
+  </div>
+</section>
+
+<!-- 4 用户市场 -->
+<section class="slide A" data-i="4">
+  <div class="grid"></div><div class="pageno">PAGE 04 / 14</div>
+  <div class="label">04 · 用户与市场</div><div class="ghost serif">众</div>
+  <div class="title serif">写给<span class="gold">回不去那个夏天</span>的人</div>
+  <div class="bullets">
+    <div class="bi"><b>核心</b>：90 / 95 后——QQ 空间原住民、花火读者、非主流亲历者。</div>
+    <div class="bi"><b>扩展</b>：Y2K 美学党、情感治愈与沉浸体验玩家。</div>
+    <div class="bi"><b>场景</b>：个人头显 / 线下怀旧快闪展览 / 品牌联名（汽水·文具·音乐 App）。</div>
+  </div>
+</section>
+
+<!-- 5 世界观 B -->
+<section class="slide B" data-i="5">
+  <div class="imgL" style="background-image:url('策划大作业_纸上花火/效果图/clean_room.png')"></div>
+  <div class="pageno">PAGE 05 / 14</div>
+  <div class="label">05 · 世界观 / 场景</div>
+  <div class="title serif">12㎡，<span class="gold">装下一整个夏天</span></div>
+  <div class="bullets">
+    <div class="bi">碎花床、海报墙、CRT 电脑、卡带机、铁丝相片墙……</div>
+    <div class="bi">靠<b>道具密度</b>而非场景大小，堆出沉浸感。</div>
+    <div class="bi">窗外天幕从黄昏走向入夜，驱动室内氛围。</div>
+  </div>
+</section>
+
+<!-- 6 核心玩法 -->
+<section class="slide A" data-i="6">
+  <div class="grid"></div><div class="pageno">PAGE 06 / 14</div>
+  <div class="label">06 · 核心玩法</div><div class="ghost serif">玩</div>
+  <div class="title serif">翻 · 看 · 听，<span class="gold">把记忆一片片捡回来</span></div>
+  <div class="bullets">
+    <div class="bi">第一人称 VR 漫游 + 手柄交互。</div>
+    <div class="bi">唤醒旧物 → 收集记忆碎片 → 集齐解锁结局。</div>
+    <div class="bi">无失败、无倒计时，<b>治愈向</b>。</div>
+  </div>
+</section>
+
+<!-- 7 旧物 B + corners -->
+<section class="slide B" data-i="7">
+  <div class="imgL" style="background-image:url('策划大作业_纸上花火/效果图/clean_qq.png')"></div>
+  <div class="crn" style="left:24px;top:24px">⌜</div><div class="crn" style="left:816px;top:24px">⌝</div>
+  <div class="crn" style="left:24px;top:1000px">⌞</div><div class="crn" style="left:816px;top:1000px">⌟</div>
+  <div class="pageno">PAGE 07 / 14</div>
+  <div class="label">07 · 会说话的旧物</div>
+  <div class="title serif"><span class="gold">8 件旧物</span> = 8 片记忆</div>
+  <div class="bullets">
+    <div class="bi">台式机 → <b>QQ 空间</b>（闪图、非主流签名、自动播放空间音乐）。</div>
+    <div class="bi">卡带机 → 那年的歌；杂志 → 竖排言情；同学录 → 毕业留言。</div>
+    <div class="bi">信纸 → 写一封<b>寄不出的信</b>。集齐 8 片，解锁结局。</div>
+  </div>
+</section>
+
+<!-- 8 情感仪式 C -->
+<section class="slide C" data-i="8">
+  <div class="pageno">PAGE 08 / 14</div>
+  <div class="card"></div>
+  <div class="cardlbl">08 · 情感仪式 / RITUAL</div>
+  <div class="title serif">把「看」，变成「<span style="color:#B0563C">参与</span>」</div>
+  <div class="bullets">
+    <div class="bi"><b>① 写一封寄不出的信</b> → 信化作光，飘出窗外。</div>
+    <div class="bi"><b>② 拍立得留念</b> → 吐出做旧照片，贴上相片墙。</div>
+    <div class="bi">写信，是把没说出口的话，交给那个夏天。</div>
+  </div>
+</section>
+
+<!-- 9 美术 C9 -->
+<section class="slide C" data-i="9">
+  <div class="pageno">PAGE 09 / 14</div>
+  <div class="card"></div>
+  <div class="cardlbl">09 · 美术风格 / ART</div>
+  <div class="title serif">一张<br><span style="color:#B0563C">会动的旧照片</span></div>
+  <div class="bullets" style="right:840px">
+    <div class="bi">千禧 Y2K × 古早言情 × 非主流。</div>
+    <div class="bi">暖黄夕照 + 玫红网格 + 衬线竖排。</div>
+    <div class="bi">怀旧后处理：把「塑料 3D」压成旧照片。</div>
+  </div>
+  <div class="C9img" style="background-image:url('策划大作业_纸上花火/效果图/clean_mag.png')"></div>
+</section>
+
+<!-- 10 技术 C -->
+<section class="slide C" data-i="10">
+  <div class="pageno">PAGE 10 / 14</div>
+  <div class="card"></div>
+  <div class="cardlbl">10 · 技术方案 / TECH</div>
+  <div class="title serif">主流 VR 管线，<span style="color:#B0563C">稳</span></div>
+  <div class="bullets">
+    <div class="bi"><b>Unity + URP</b>（Bloom / 调色 / 颗粒 / 暗角）。</div>
+    <div class="bi"><b>XR Interaction Toolkit</b>（手柄射线 + 抓取）。</div>
+    <div class="bi"><b>UI 两模式</b>：Overlay（系统/进度）+ WorldSpace（QQ/杂志贴物体）。</div>
+    <div class="bi">防眩晕：瞬移 + 舒适转向 + 暗角；可出桌面演示版。</div>
+  </div>
+</section>
+
+<!-- 11 flow -->
+<section class="slide" data-i="11">
+  <div class="grid"></div><div class="pageno">PAGE 11 / 14</div>
+  <div class="label">11 · 叙事流程</div><div class="ghost serif">梦</div>
+  <div class="flow serif">
+    <span class="step">黄昏入场</span><span class="ar">→</span><span class="step">探索唤醒</span><span class="ar">→</span><span class="step">集齐记忆</span><br><br>
+    <span class="step">写信</span><span class="ar">→</span><span class="step">拍照</span><span class="ar">→</span><span class="step gold">褪色光化</span><span class="ar">→</span><span class="step">落款金句</span>
+  </div>
+</section>
+
+<!-- 12 音乐 -->
+<section class="slide A" data-i="12">
+  <div class="grid"></div><div class="pageno">PAGE 12 / 14</div>
+  <div class="label">12 · 音乐与音效</div><div class="ghost serif">声</div>
+  <div class="title serif">声音，是怀旧的<span class="gold">另一半</span></div>
+  <div class="bullets">
+    <div class="bi">原创年代主题曲（钢琴 + 卡带底噪）。</div>
+    <div class="bi">环境音：蝉鸣 / 电扇 / 拨号上网 / QQ 提示音。</div>
+    <div class="bi"><b>全部原创或免版税</b>，规避版权。</div>
+  </div>
+</section>
+
+<!-- 13 商业 -->
+<section class="slide A" data-i="13">
+  <div class="grid"></div><div class="pageno">PAGE 13 / 14</div>
+  <div class="label">13 · 商业与展览价值</div><div class="ghost serif">值</div>
+  <div class="title serif">怀旧，自带<span class="gold">传播力</span></div>
+  <div class="bullets">
+    <div class="bi">怀旧 = 强情绪流量；每帧画面可截图传播。</div>
+    <div class="bi">适配线下怀旧快闪展览 + 品牌联名。</div>
+    <div class="bi">长尾话题度与衍生传播潜力明显。</div>
+  </div>
+</section>
+
+<!-- 14 ending -->
+<section class="slide" data-i="14">
+  <div class="full" style="background-image:url('策划大作业_纸上花火/效果图/clean_end.png')"></div>
+  <div class="shade-f"></div>
+  <div class="end-tx">
+    <div class="q serif">那年夏天，我们都以为来日方长。</div>
+    <div class="rule"></div>
+    <div class="by">纸上花火 · 谢谢观看</div>
+  </div>
+</section>
+
+<script>
+  window.__n=document.querySelectorAll('.slide').length;
+  window.__panel=(i)=>document.querySelectorAll('.slide').forEach((s,k)=>s.classList.toggle('on',k===i));
+  window.__ready=true;
+</script>
+</body>
+</html>

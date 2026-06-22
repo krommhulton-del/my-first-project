@@ -102,6 +102,8 @@
   #p3 .couplet .l{font-family:var(--serif);font-weight:300;color:var(--seal);font-size:40px;letter-spacing:.18em;
     text-shadow:0 0 40px rgba(0,0,0,.8),0 0 30px rgba(255,210,150,.3);line-height:2}
   #p3 .couplet .en{font-family:ui-monospace,monospace;letter-spacing:.4em;color:rgba(232,195,106,.7);font-size:16px;margin-top:18px}
+  /* clean-plate mode: hide all baked-in text so the deck can overlay its own */
+  body.clean .tag, body.clean .credit, body.clean #p0 .title, body.clean #p0 .hud, body.clean #p3 .couplet{display:none !important}
 </style>
 </head>
 <body>
@@ -166,6 +168,7 @@
   motes(document.querySelector('#p3'), 60, 'moten');
   document.querySelectorAll('[data-v]').forEach(el=>{ for(const ch of el.dataset.v){ const d=document.createElement('div'); d.textContent=ch; el.appendChild(d); } });
   window.__panel=(i)=>{ document.querySelectorAll('.panel').forEach((p,k)=>p.classList.toggle('on',k===i)); };
+  window.__clean=()=>document.body.classList.add('clean');
   window.__ready=true;
 </script>
 </body>
