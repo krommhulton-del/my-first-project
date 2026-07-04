@@ -4,5 +4,6 @@
 
 python-docx>=1.1.0     # docx 编辑(排版机)
 python-pptx>=1.0.0     # pptx 编辑(PPT 美化机)
-playwright>=1.40.0     # HTML → PNG 封面渲染
+playwright>=1.40.0     # HTML → PNG 封面 / HTML → PDF 简历
 pillow>=10.0.0         # 图片处理/校验
+pyyaml>=6.0           # 简历生成器读取 YAML

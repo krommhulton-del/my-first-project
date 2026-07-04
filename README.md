@@ -29,6 +29,7 @@ echo 'DEEPSEEK_API_KEY=sk-你的key' > .env
 | `scripts/render_cover.py` | 小红书封面 HTML → 1242×1660 PNG | `python scripts/render_cover.py --demo` |
 | `scripts/beautify_pptx.py` | 丑 pptx → 统一品牌版式重生成 | `python scripts/beautify_pptx.py input/答辩.pptx -o output/` |
 | `scripts/gen_notes.py` | 产品资料 → DeepSeek 批量 10 篇小红书初稿 | `python scripts/gen_notes.py input/产品资料.md` |
+| `scripts/gen_resume.py` | YAML 简历数据 → 单页 PDF + 可编辑 docx | `python scripts/gen_resume.py input/简历.yaml -o output/` |
 
 ### 封面渲染器
 

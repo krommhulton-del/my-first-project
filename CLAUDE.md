@@ -42,7 +42,10 @@
       → output/notes/ 每篇一个 .md + 选题表.csv;密钥读 .env 的 DEEPSEEK_API_KEY
       用法：`python scripts/gen_notes.py input/产品资料.md`(离线验证加 `--dry-run`)
       注意：云端默认网络策略会拦 api.deepseek.com,需放行该域名或在本机运行
-- [ ] 简历生成器：结构化 YAML 简历数据 → 排版精良的单页 docx + PDF 双输出
+- [x] 简历生成器：`scripts/gen_resume.py`
+      结构化 YAML → 单页精美 PDF(playwright 打印)+ 可编辑 docx(python-docx)
+      用法：`python scripts/gen_resume.py input/简历.yaml -o output/`
+      只排版填入的真实内容,绝不编造(铁律 2);示例数据见 input/简历示例.yaml
 
 ### P2 - 有空再做
 - [ ] 接单登记表：简单 CSV/SQLite 记录订单状态（客户、品类、金额、定金、交付日期）
