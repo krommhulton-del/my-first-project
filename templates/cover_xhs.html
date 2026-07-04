@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>小红书封面模板</title>
+<style>
+  /* 设计锚点:编辑世界的"荧光笔批改"。墨蓝纸白 + 标记黄,拒绝奶油底+赤陶色的模板脸。
+     可调参数集中在 :root,换配色只改这里。 */
+  :root {
+    --ink: #16243D;        /* 墨蓝:主背景 */
+    --paper: #F7F5F0;      /* 纸白:文字 */
+    --marker: #FFD84D;     /* 荧光笔黄:强调 */
+    --stamp: #E4572E;      /* 批改红:角标 */
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1242px; height: 1660px;
+    background: var(--ink);
+    font-family: "Noto Sans SC", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "WenQuanYi Zen Hei", sans-serif;
+    color: var(--paper);
+    display: flex; flex-direction: column;
+    padding: 96px 88px;
+    position: relative; overflow: hidden;
+  }
+  .tag {
+    align-self: flex-start;
+    border: 3px solid var(--paper);
+    padding: 14px 34px; font-size: 34px; letter-spacing: 6px; font-weight: 500;
+  }
+  .title {
+    margin-top: 140px; font-weight: 900;
+    font-size: 128px; line-height: 1.22; letter-spacing: 2px;
+  }
+  /* 签名元素:荧光笔划过的关键行 */
+  .title .hl {
+    background: linear-gradient(transparent 18%, var(--marker) 18%, var(--marker) 88%, transparent 88%);
+    color: var(--ink); padding: 0 12px;
+  }
+  .sub {
+    margin-top: 64px; font-size: 44px; font-weight: 300;
+    letter-spacing: 3px; color: var(--paper); opacity: .82; line-height: 1.6;
+  }
+  /* 批改红章:右下角价格/钩子 */
+  .stamp {
+    position: absolute; right: 80px; bottom: 110px;
+    border: 6px solid var(--stamp); color: var(--stamp);
+    padding: 26px 44px; font-size: 52px; font-weight: 900;
+    transform: rotate(-6deg); letter-spacing: 4px;
+  }
+  /* 底部行:像稿纸页脚 */
+  .footer {
+    position: absolute; left: 88px; bottom: 120px;
+    font-size: 30px; letter-spacing: 8px; opacity: .5;
+  }
+  .footer::before { content: "— "; }
+</style>
+</head>
+<body>
+  <div class="tag">{{TAG}}</div>
+  <div class="title">
+    {{TITLE_LINE1}}<br>
+    <span class="hl">{{TITLE_HIGHLIGHT}}</span>
+  </div>
+  <div class="sub">{{SUBTITLE}}</div>
+  <div class="stamp">{{STAMP}}</div>
+  <div class="footer">{{FOOTER}}</div>
+</body>
+</html>
+<!--
+参数说明(渲染前替换):
+  {{TAG}}             左上角标签, 如: 论文排版急救
+  {{TITLE_LINE1}}     标题第一行, 如: 导师看了沉默的格式
+  {{TITLE_HIGHLIGHT}} 荧光笔行, 如: 10分钟救回来
+  {{SUBTITLE}}        副标题, 如: 目录·页码·参考文献 一次修好
+  {{STAMP}}           红章钩子, 如: 今日加急
+  {{FOOTER}}          页脚署名, 如: 排版急救室
+渲染: python scripts/render_cover.py (见 CLAUDE.md P0 任务,让 Claude Code 写)
+-->

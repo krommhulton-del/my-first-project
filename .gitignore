@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 环境变量(含 DEEPSEEK_API_KEY 等密钥,绝不入库)
+.env
+.env.*
+
+# 客户交付产物:input/output 里的真实客户文件不入库(测试样例除外)
+# 如需保留测试样例,用 git add -f 强制加入
+output/*.png
+output/notes/
+
+# 系统
+.DS_Store
+Thumbs.db
