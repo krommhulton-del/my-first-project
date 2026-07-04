@@ -37,8 +37,11 @@
       视觉自查:云端 LibreOffice 不可用，已用等几何 HTML 预览确认版式；成品请在 PowerPoint / WPS 终审
 
 ### P1 - 第二周
-- [ ] B 端内容机：输入产品资料 markdown → 调 DeepSeek 批量产出 10 篇笔记初稿
-      → 输出到 output/notes/，附带选题表 CSV
+- [x] B 端内容机：`scripts/gen_notes.py`
+      产品资料 markdown → 调 DeepSeek(JSON 模式)批量产出 10 篇笔记初稿
+      → output/notes/ 每篇一个 .md + 选题表.csv;密钥读 .env 的 DEEPSEEK_API_KEY
+      用法：`python scripts/gen_notes.py input/产品资料.md`(离线验证加 `--dry-run`)
+      注意：云端默认网络策略会拦 api.deepseek.com,需放行该域名或在本机运行
 - [ ] 简历生成器：结构化 YAML 简历数据 → 排版精良的单页 docx + PDF 双输出
 
 ### P2 - 有空再做

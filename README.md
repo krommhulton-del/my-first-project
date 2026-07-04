@@ -11,6 +11,15 @@ pip install -r requirements.txt
 apt-get install -y fonts-noto-cjk        # 或 fonts-wqy-zenhei
 ```
 
+B 端内容机需要 DeepSeek 密钥,放进 `.env`(已被 .gitignore 忽略,绝不入库):
+
+```bash
+echo 'DEEPSEEK_API_KEY=sk-你的key' > .env
+```
+
+> ⚠️ 云端 Claude Code 会话默认网络策略会拦截 `api.deepseek.com`。要在云端正式跑,
+> 需在环境网络策略里放行该域名;否则请在本机运行 `gen_notes.py`。先用 `--dry-run` 验证流程。
+
 ## 已完成的工具(P0)
 
 | 脚本 | 作用 | 一句话跑通 |
@@ -19,6 +28,7 @@ apt-get install -y fonts-noto-cjk        # 或 fonts-wqy-zenhei
 | `scripts/check_references.py` | GB/T 7714-2015 参考文献检查+报告 | `python scripts/check_references.py input/论文.docx` |
 | `scripts/render_cover.py` | 小红书封面 HTML → 1242×1660 PNG | `python scripts/render_cover.py --demo` |
 | `scripts/beautify_pptx.py` | 丑 pptx → 统一品牌版式重生成 | `python scripts/beautify_pptx.py input/答辩.pptx -o output/` |
+| `scripts/gen_notes.py` | 产品资料 → DeepSeek 批量 10 篇小红书初稿 | `python scripts/gen_notes.py input/产品资料.md` |
 
 ### 封面渲染器
 
