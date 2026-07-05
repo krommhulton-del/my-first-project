@@ -2,7 +2,14 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#12100d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="东玄卜卦">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <title>东玄卜卦 · 三钱起卦</title>
 <style>
   :root {
@@ -13,7 +20,10 @@
   body {
     background: var(--paper); color: var(--ink); min-height: 100vh;
     font-family: "Kaiti SC", "STKaiti", KaiTi, "Noto Serif SC", "Songti SC", serif;
-    line-height: 1.75; padding: 24px 16px 60px;
+    line-height: 1.75;
+    padding: calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+             calc(60px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+    -webkit-tap-highlight-color: transparent;
   }
   .wrap { max-width: 860px; margin: 0 auto; }
   header { text-align: center; margin-bottom: 28px; }
@@ -92,14 +102,28 @@
     border-radius: 6px; padding: 10px; margin-bottom: 10px; }
   .hidden { display: none !important; }
   footer { text-align: center; color: var(--dim); font-size: .8rem; margin-top: 30px; }
-  @media (max-width: 560px) { .arrow { display: none; } header h1 { font-size: 1.5rem; } }
+  @media (max-width: 560px) {
+    header h1 { font-size: 1.5rem; }
+    body { line-height: 1.65; }
+    section { padding: 16px 14px; }
+    .btnrow button { flex: 1 1 auto; min-height: 46px; font-size: 1.02rem; }
+    .guarea { gap: 10px; }
+    .arrow { padding-top: 30px; font-size: 1.3rem; align-self: flex-start; }
+    .guabox { min-width: 130px; }
+    .hl { width: 92px; height: 12px; }
+    .hl .mk { right: -20px; }
+    .toss { font-size: .88rem; padding: 6px 8px; gap: 8px; }
+    .toss .idx { width: 3em; }
+    .coin { width: 24px; height: 24px; line-height: 22px; margin-right: 2px; }
+    .hist .hl2 { display: none; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.1</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.2</span></p>
   </header>
 
   <section id="sec-cast">
@@ -150,7 +174,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.1 内测版 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.2 内测版 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -320,6 +344,11 @@
   });
 
   renderHistory();
+
+  // —— PWA:离线缓存(仅 http/https 下注册,file:// 与受限环境自动跳过)——
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
 })();
 </script>
 </body>

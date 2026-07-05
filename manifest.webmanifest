@@ -1,0 +1,16 @@
+{
+  "name": "东玄卜卦",
+  "short_name": "东玄卜卦",
+  "description": "三钱法起卦与解读一体的卜卦程序,密码学真随机,卦档本机存储。",
+  "lang": "zh-CN",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12100d",
+  "theme_color": "#12100d",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
