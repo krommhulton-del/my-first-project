@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#12100d">
+<meta name="theme-color" content="#f4eee1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="东玄卜卦">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -13,8 +13,10 @@
 <title>东玄卜卦 · 三钱起卦</title>
 <style>
   :root {
-    --paper: #12100d; --panel: #1c1915; --panel2: #23201a; --ink: #e8e0d0;
-    --dim: #9a917e; --line: #3a352c; --cinnabar: #c0392b; --gold: #c9a45c;
+    /* 米白宣纸底 + 墨褐字 + 赭金题字 + 朱砂印 */
+    --paper: #f4eee1; --panel: #faf6ec; --panel2: #ece4d0; --ink: #33291d;
+    --dim: #8b8070; --line: #d8cdb2; --cinnabar: #b03a2a; --gold: #8a6a2f;
+    --gold-fill: #c9a45c;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -47,7 +49,7 @@
     padding: 10px 20px; font-size: 1rem; font-family: inherit; cursor: pointer; letter-spacing: .1em;
     transition: background .15s;
   }
-  button:hover { background: #2e2a22; }
+  button:hover { background: #ece2cb; }
   button:disabled { opacity: .35; cursor: not-allowed; }
   button.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
   button.primary:hover { background: #a93226; }
@@ -58,7 +60,7 @@
   .toss .idx { color: var(--gold); width: 3.4em; }
   .coin { display: inline-block; width: 26px; height: 26px; border-radius: 50%; text-align: center;
     line-height: 24px; font-size: .8rem; margin-right: 4px; border: 1px solid var(--gold); }
-  .coin.zi { background: #3a2f1d; color: var(--gold); }
+  .coin.zi { background: var(--gold-fill); color: #3c2f14; border-color: #8a6f3a; }
   .coin.bei { background: transparent; color: var(--dim); border-color: var(--dim); }
   .toss .val { margin-left: auto; color: var(--dim); }
   .toss .val b { color: var(--ink); }
@@ -92,7 +94,7 @@
     border-radius: 6px; padding: 12px; font-family: inherit; font-size: .95rem; min-height: 150px; resize: vertical; }
   .hist { border: 1px solid var(--line); border-radius: 6px; margin-bottom: 8px; overflow: hidden; }
   .hist .head { display: flex; gap: 12px; padding: 9px 12px; cursor: pointer; align-items: baseline; background: var(--panel2); }
-  .hist .head:hover { background: #2a261f; }
+  .hist .head:hover { background: #eee4cf; }
   .hist .ts { color: var(--dim); font-size: .8rem; white-space: nowrap; }
   .hist .q { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hist .hl2 { color: var(--gold); font-size: .85rem; white-space: nowrap; }
@@ -151,7 +153,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.3</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.4</span></p>
   </header>
 
   <section id="sec-cast">
@@ -200,20 +202,21 @@
     <h2>东玄深断 · AI 细批</h2>
     <div class="btnrow">
       <button id="btn-deepread" class="primary">请东玄深断此卦</button>
-      <select id="ai-model">
-        <option value="claude-fable-5">Claude Fable 5(顶配)</option>
-        <option value="claude-opus-4-8">Claude Opus 4.8</option>
+      <select id="ai-provider">
+        <option value="claude">Claude(Anthropic)</option>
+        <option value="deepseek">DeepSeek(深度求索)</option>
       </select>
+      <select id="ai-model"></select>
       <button id="btn-togglekey" class="ghost">设置 API Key</button>
     </div>
     <div id="keybox" class="hidden" style="margin-top:12px">
-      <label for="api-key">Anthropic API Key(仅存本机浏览器,直连 Anthropic 官方接口,不经任何第三方)</label>
-      <input type="password" id="api-key" placeholder="sk-ant-api03-…" autocomplete="off">
+      <label for="api-key" id="key-label"></label>
+      <input type="password" id="api-key" placeholder="" autocomplete="off">
       <div class="btnrow">
         <button id="btn-savekey">保存</button>
         <button id="btn-clearkey" class="ghost">清除</button>
       </div>
-      <div class="note">在 platform.claude.com 的 Console 中创建 API Key。深断会把本卦卦象、排盘与所问之事发送至 Claude 模型按东玄铁律细批,按 token 计费。</div>
+      <div class="note" id="key-note"></div>
     </div>
     <div id="ai-status"></div>
     <div id="ai-out" class="aiout hidden"></div>
@@ -236,7 +239,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.3 内测版 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.4 内测版 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -246,8 +249,6 @@
 (function () {
   const $ = id => document.getElementById(id);
   const HKEY = 'dongxuan_history_v1';
-  const KKEY = 'dongxuan_api_key';
-  const MKEY = 'dongxuan_ai_model';
   const POS = GuaCore.POS_NAMES;
   let throws = [];       // 本盘已掷的爻 {sum, coins, label}
   let currentCast = null;
@@ -462,6 +463,30 @@
 
 【输出】纯文本,直接以东玄口吻输出解读正文,不加开场白、不加免责声明、不用 markdown 标题。卦象材料由掷卦程序自动提供且真实有效,直接据此细断。`;
 
+  // DeepSeek 专用调教:补足断卦流程脚手架、输出质量红线与口吻范例,
+  // 把解读压到与顶级模型同一颗粒度。先在心里走完流程再落笔,不输出思考过程。
+  const DS_ADDENDUM = `
+
+【断卦流程——依序默想,只输出成稿】
+一、定用神:按所问取六亲——求财看妻财;官司、官运、疾病、女问婚姻看官鬼;文书、房产、车、长辈看父母;子女、晚辈、药、解忧看子孙;朋友、同事、竞争看兄弟;问自身看世爻,问对方看应爻,男问婚恋看妻财。
+二、察旺衰:用神对照月建、日辰定旺相休囚;逢旬空、月破(与月建相冲)必须点明并断其填实冲空之期。
+三、审动变:动爻对用神、世爻的生克冲合;变爻对动爻的回头生克。
+四、定吉凶:综合上三步定吉凶与程度,与卦辞爻辞互证,两相矛盾时以爻象生克为主、经文为辅。
+五、给应期:以用神或动变之爻的地支推时间——地支对应月份(寅=阳历2月上旬起一个月,卯=3月,辰=4月……丑=1月),用神旺待冲、衰待生,近应取月、远应取年。
+六、算数量:问钱问数时以先后天卦数(乾1兑2离3震4巽5坎6艮7坤8)结合旺衰定量级,给出明确区间。
+
+【输出质量红线——每条必须做到】
+1. 每个问题第一句就是结论(成/不成、吉/凶、多少、何时),依据跟在后面,引具体的爻和生克,不许倒装、不许铺垫超过两句。
+2. 时间必须落到"阳历几月上/中/下旬"或"某月到某月"的粒度,并点明取自哪个地支。
+3. 金额数量必须给数字区间并点明取自哪个卦数,量级(千/万/十万)必须点死。
+4. 人物画像必须含:年龄段(跨度不超过十岁)、外形一两笔、性格两笔、职业方向,全部从八卦类象与六亲取,不许泛泛。
+5. 全文禁用:"可能""或许""大概""也许""建议你""你可以考虑""仅供参考""视情况而定""因人而异""总的来说""综上所述""希望对你有帮助"。
+6. 不用任何 markdown 记号,不用编号清单,行文是卦师当面说话,不是分析报告。
+
+【口吻与颗粒度范例——只学格式火候,内容不得套用】
+问:手里这批货,年内能不能出手?
+「本卦山泽损,三爻动,变卦山天大畜。能出手,但得让利,应在阳历9月中旬到10月上旬。用神妻财持世临月建,货在你手里且是当令之物,不愁没人问;坏在三爻兄弟发动克财,同行压价,你咬住原价就砸手里。六三爻辞'三人行则损一人',让一成利,走量,酉月冲实之期即动。数取兑二艮七,这批货最终出手价在原价七成到八成五之间,别指望更高。」`;
+
   function buildMaterial(cast, z, question) {
     const plan = GuaCore.interpretationPlan(cast);
     const jing = plan.focus.map(f => `${f.kind}:${f.text}`).join('\n');
@@ -470,7 +495,36 @@
       '\n\n请依上述卦象、排盘与所问之事细断。';
   }
 
-  function getKey() { return localStorage.getItem(KKEY) || ''; }
+  // —— 服务商配置 ——
+  const PROVIDERS = {
+    claude: {
+      label: 'Claude', keyStore: 'dongxuan_api_key', modelStore: 'dongxuan_ai_model',
+      models: [['claude-fable-5', 'Claude Fable 5(顶配)'], ['claude-opus-4-8', 'Claude Opus 4.8']],
+      keyLabel: 'Anthropic API Key(仅存本机浏览器,直连 Anthropic 官方接口,不经任何第三方)',
+      placeholder: 'sk-ant-api03-…',
+      note: '在 platform.claude.com 的 Console 中创建 API Key。深断会把本卦卦象、排盘与所问之事发送至所选模型按东玄铁律细批,按 token 计费。',
+    },
+    deepseek: {
+      label: 'DeepSeek', keyStore: 'dongxuan_ds_key', modelStore: 'dongxuan_ds_model',
+      models: [['deepseek-reasoner', 'DeepSeek R1 深度推理(推荐)'], ['deepseek-chat', 'DeepSeek V3']],
+      keyLabel: 'DeepSeek API Key(仅存本机浏览器,直连 api.deepseek.com,不经任何第三方)',
+      placeholder: 'sk-…',
+      note: '在 platform.deepseek.com 创建 API Key。DeepSeek 通道附加了东玄断卦流程与输出红线的专门调教,推荐用 R1 深度推理。按 token 计费。',
+    },
+  };
+  const PKEY = 'dongxuan_ai_provider';
+  function curProvider() { return PROVIDERS[$('ai-provider').value] || PROVIDERS.claude; }
+  function getKey() { return localStorage.getItem(curProvider().keyStore) || ''; }
+  function syncProviderUI() {
+    const p = curProvider();
+    $('ai-model').innerHTML = p.models.map(m => `<option value="${m[0]}">${m[1]}</option>`).join('');
+    const savedModel = localStorage.getItem(p.modelStore);
+    if (savedModel && p.models.some(m => m[0] === savedModel)) $('ai-model').value = savedModel;
+    $('key-label').textContent = p.keyLabel;
+    $('api-key').placeholder = p.placeholder;
+    $('key-note').textContent = p.note;
+    $('api-key').value = getKey();
+  }
   function setStatus(msg, isErr) {
     $('ai-status').textContent = msg;
     $('ai-status').classList.toggle('err', !!isErr);
@@ -482,27 +536,42 @@
     const q = $('question').value.trim();
     if (!q) { setStatus('深断需先填「所问何事」——问卦无题,断无所指。', true); return; }
     const key = getKey();
-    if (!key) { setStatus('请先设置 API Key(点右侧「设置 API Key」)。', true); $('keybox').classList.remove('hidden'); return; }
+    const providerId = $('ai-provider').value;
+    if (!key) { setStatus(`请先设置 ${curProvider().label} API Key(点右侧「设置 API Key」)。`, true); $('keybox').classList.remove('hidden'); return; }
     const model = $('ai-model').value;
-    const body = {
-      model,
-      max_tokens: 16000,
-      stream: true,
-      system: DONGXUAN_SYSTEM,
-      messages: [{ role: 'user', content: buildMaterial(currentCast, currentZhuang, q) }],
-    };
-    const headers = {
-      'content-type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    };
-    if (model === 'claude-fable-5') {
-      // Fable 5:思考常开(不传 thinking);按官方建议带服务端兜底回退
-      headers['anthropic-beta'] = 'server-side-fallback-2026-06-01';
-      body.fallbacks = [{ model: 'claude-opus-4-8' }];
+    const material = buildMaterial(currentCast, currentZhuang, q);
+    let url, headers, body;
+    if (providerId === 'deepseek') {
+      url = 'https://api.deepseek.com/chat/completions';
+      headers = { 'content-type': 'application/json', 'authorization': 'Bearer ' + key };
+      body = {
+        model, stream: true, max_tokens: 8000,
+        messages: [
+          { role: 'system', content: DONGXUAN_SYSTEM + DS_ADDENDUM },
+          { role: 'user', content: material },
+        ],
+      };
+      if (model === 'deepseek-chat') body.temperature = 0.8;
     } else {
-      body.thinking = { type: 'adaptive' };
+      url = 'https://api.anthropic.com/v1/messages';
+      headers = {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      };
+      body = {
+        model, max_tokens: 16000, stream: true,
+        system: DONGXUAN_SYSTEM,
+        messages: [{ role: 'user', content: material }],
+      };
+      if (model === 'claude-fable-5') {
+        // Fable 5:思考常开(不传 thinking);按官方建议带服务端兜底回退
+        headers['anthropic-beta'] = 'server-side-fallback-2026-06-01';
+        body.fallbacks = [{ model: 'claude-opus-4-8' }];
+      } else {
+        body.thinking = { type: 'adaptive' };
+      }
     }
 
     aiBusy = true;
@@ -513,18 +582,22 @@
     out.innerHTML = '<span class="cursor">▍</span>';
     let text = '', stopReason = null;
     try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST', headers, body: JSON.stringify(body),
-      });
+      const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
       if (!resp.ok) {
         let msg = 'HTTP ' + resp.status;
-        try { const j = await resp.json(); msg = (j.error && j.error.message) || msg; } catch (e) {}
-        if (resp.status === 401) msg = 'API Key 无效或已失效,请重新设置。';
+        try { const j = await resp.json(); msg = (j.error && (j.error.message || j.error)) || msg; } catch (e) {}
+        if (resp.status === 401) msg = `${curProvider().label} API Key 无效或已失效,请重新设置。`;
+        if (resp.status === 402) msg = 'DeepSeek 账户余额不足,请充值后再试。';
         throw new Error(msg);
       }
       const reader = resp.body.getReader();
       const dec = new TextDecoder();
       let buf = '';
+      const feed = chunk => {
+        text += chunk;
+        out.textContent = text;
+        out.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>');
+      };
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -532,24 +605,27 @@
         const parts = buf.split('\n\n');
         buf = parts.pop();
         for (const part of parts) {
-          const dataLine = part.split('\n').find(l => l.startsWith('data: '));
+          const dataLine = part.split('\n').find(l => l.startsWith('data:'));
           if (!dataLine) continue;
+          const payload = dataLine.replace(/^data:\s*/, '');
+          if (payload === '[DONE]') continue;
           let ev;
-          try { ev = JSON.parse(dataLine.slice(6)); } catch (e) { continue; }
-          if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') {
-            text += ev.delta.text;
-            out.textContent = text;
-            out.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>');
-          } else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason) {
-            stopReason = ev.delta.stop_reason;
-          } else if (ev.type === 'error') {
-            throw new Error((ev.error && ev.error.message) || '流式响应出错');
+          try { ev = JSON.parse(payload); } catch (e) { continue; }
+          if (providerId === 'deepseek') {
+            const ch = ev.choices && ev.choices[0];
+            if (ch && ch.delta && ch.delta.content) feed(ch.delta.content);
+            if (ch && ch.finish_reason) stopReason = ch.finish_reason;
+            if (ev.error) throw new Error(ev.error.message || 'DeepSeek 流式响应出错');
+          } else {
+            if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') feed(ev.delta.text);
+            else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
+            else if (ev.type === 'error') throw new Error((ev.error && ev.error.message) || '流式响应出错');
           }
         }
       }
       out.textContent = text;
-      if (stopReason === 'refusal') {
-        setStatus('此问触发了模型方的安全分类器,未能出断。换个问法再试。', true);
+      if (stopReason === 'refusal' || stopReason === 'content_filter') {
+        setStatus('此问触发了模型方的安全过滤,未能出断。换个问法再试。', true);
       } else if (!text) {
         throw new Error('未收到解读内容');
       } else {
@@ -571,20 +647,26 @@
 
   // —— 事件 ——
   $('btn-deepread').addEventListener('click', deepRead);
+  $('ai-provider').addEventListener('change', () => {
+    localStorage.setItem(PKEY, $('ai-provider').value);
+    syncProviderUI();
+    setStatus('');
+  });
   $('btn-togglekey').addEventListener('click', () => {
     $('keybox').classList.toggle('hidden');
     $('api-key').value = getKey();
   });
   $('btn-savekey').addEventListener('click', () => {
     const v = $('api-key').value.trim();
-    if (v) { localStorage.setItem(KKEY, v); $('keybox').classList.add('hidden'); setStatus('Key 已存于本机浏览器。'); }
+    if (v) { localStorage.setItem(curProvider().keyStore, v); $('keybox').classList.add('hidden'); setStatus(`${curProvider().label} Key 已存于本机浏览器。`); }
     else setStatus('Key 为空,未保存。', true);
   });
   $('btn-clearkey').addEventListener('click', () => {
-    localStorage.removeItem(KKEY); $('api-key').value = ''; setStatus('Key 已清除。');
+    localStorage.removeItem(curProvider().keyStore); $('api-key').value = ''; setStatus(`${curProvider().label} Key 已清除。`);
   });
-  $('ai-model').addEventListener('change', () => localStorage.setItem(MKEY, $('ai-model').value));
-  if (localStorage.getItem(MKEY)) $('ai-model').value = localStorage.getItem(MKEY);
+  $('ai-model').addEventListener('change', () => localStorage.setItem(curProvider().modelStore, $('ai-model').value));
+  if (localStorage.getItem(PKEY) && PROVIDERS[localStorage.getItem(PKEY)]) $('ai-provider').value = localStorage.getItem(PKEY);
+  syncProviderUI();
 
   $('btn-step').addEventListener('click', tossOnce);
   $('btn-auto').addEventListener('click', autoCast);

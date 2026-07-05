@@ -90,6 +90,22 @@ await t('AI 深断区:保存/清除 Key 走 localStorage', async () => {
   await page.click('#btn-togglekey');
 });
 
+await t('DeepSeek 通道:切换服务商、模型列表、Key 独立存储', async () => {
+  await page.selectOption('#ai-provider', 'deepseek');
+  const opts = await page.locator('#ai-model option').allTextContents();
+  ok(opts.some(o => o.includes('DeepSeek R1')), '模型列表应为 DeepSeek:' + opts.join(','));
+  await page.click('#btn-deepread');
+  ok((await page.textContent('#ai-status')).includes('DeepSeek'), '无 Key 提示应指向 DeepSeek');
+  await page.fill('#api-key', 'sk-ds-test-456');
+  await page.click('#btn-savekey');
+  ok((await page.evaluate(() => localStorage.getItem('dongxuan_ds_key'))) === 'sk-ds-test-456', 'DS Key 应独立保存');
+  ok((await page.evaluate(() => localStorage.getItem('dongxuan_api_key'))) === null, 'Claude Key 不受影响');
+  await page.selectOption('#ai-provider', 'claude');
+  const opts2 = await page.locator('#ai-model option').allTextContents();
+  ok(opts2.some(o => o.includes('Fable')), '切回 Claude 模型列表:' + opts2.join(','));
+  await page.evaluate(() => localStorage.removeItem('dongxuan_ds_key'));
+});
+
 await t('历史记录:成卦自动入档', async () => {
   ok((await page.locator('#histlist .hist').count()) === 1, '应有 1 条卦档');
 });
