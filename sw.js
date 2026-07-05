@@ -1,10 +1,11 @@
 // 东玄卜卦 Service Worker:预缓存全部静态资源,离线可用
-const CACHE = 'dongxuan-v0.2.0';
+const CACHE = 'dongxuan-v0.3.0';
 const ASSETS = [
   './',
   './index.html',
   './gua-core.js',
   './gua-data.js',
+  './najia.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',

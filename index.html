@@ -102,6 +102,32 @@
     border-radius: 6px; padding: 10px; margin-bottom: 10px; }
   .hidden { display: none !important; }
   footer { text-align: center; color: var(--dim); font-size: .8rem; margin-top: 30px; }
+  .paninfo { color: var(--dim); font-size: .92rem; margin-bottom: 10px; }
+  .paninfo b { color: var(--ink); font-weight: normal; }
+  .panwrap { overflow-x: auto; }
+  table.pan { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  table.pan th { color: var(--gold); font-weight: normal; letter-spacing: .1em; border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: center; }
+  table.pan td { padding: 7px 8px; text-align: center; border-bottom: 1px dashed var(--line); white-space: nowrap; }
+  table.pan tr:last-child td { border-bottom: none; }
+  table.pan .sy { color: var(--cinnabar); font-weight: bold; }
+  table.pan .kongmark { color: var(--dim); font-size: .8rem; }
+  table.pan .mv { color: var(--cinnabar); }
+  select {
+    background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+    padding: 10px 12px; font-family: inherit; font-size: .95rem;
+  }
+  input[type=password] {
+    width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px 12px; font-size: .95rem; font-family: inherit;
+  }
+  input[type=password]:focus { outline: none; border-color: var(--gold); }
+  .note { color: var(--dim); font-size: .82rem; margin-top: 6px; line-height: 1.6; }
+  #ai-status { color: var(--dim); font-size: .9rem; margin-top: 10px; }
+  #ai-status.err { color: var(--cinnabar); }
+  .aiout { background: var(--panel2); border: 1px solid var(--gold); border-radius: 8px;
+    padding: 16px; margin-top: 14px; white-space: pre-wrap; line-height: 1.9; }
+  .aiout .cursor { color: var(--gold); animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
   @media (max-width: 560px) {
     header h1 { font-size: 1.5rem; }
     body { line-height: 1.65; }
@@ -116,6 +142,8 @@
     .toss .idx { width: 3em; }
     .coin { width: 24px; height: 24px; line-height: 22px; margin-right: 2px; }
     .hist .hl2 { display: none; }
+    table.pan { font-size: .82rem; }
+    table.pan td, table.pan th { padding: 6px 3px; }
   }
 </style>
 </head>
@@ -123,7 +151,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.2</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.3</span></p>
   </header>
 
   <section id="sec-cast">
@@ -157,6 +185,40 @@
     <div class="subnote" id="number-note"></div>
   </section>
 
+  <section id="sec-pan" class="hidden">
+    <h2>纳甲排盘 · 京房法</h2>
+    <div class="paninfo" id="pan-info"></div>
+    <div class="panwrap">
+      <table class="pan">
+        <thead><tr><th>爻位</th><th>六神</th><th>六亲</th><th>纳甲</th><th>爻象</th><th>标记</th></tr></thead>
+        <tbody id="pan-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="sec-ai" class="hidden">
+    <h2>东玄深断 · AI 细批</h2>
+    <div class="btnrow">
+      <button id="btn-deepread" class="primary">请东玄深断此卦</button>
+      <select id="ai-model">
+        <option value="claude-fable-5">Claude Fable 5(顶配)</option>
+        <option value="claude-opus-4-8">Claude Opus 4.8</option>
+      </select>
+      <button id="btn-togglekey" class="ghost">设置 API Key</button>
+    </div>
+    <div id="keybox" class="hidden" style="margin-top:12px">
+      <label for="api-key">Anthropic API Key(仅存本机浏览器,直连 Anthropic 官方接口,不经任何第三方)</label>
+      <input type="password" id="api-key" placeholder="sk-ant-api03-…" autocomplete="off">
+      <div class="btnrow">
+        <button id="btn-savekey">保存</button>
+        <button id="btn-clearkey" class="ghost">清除</button>
+      </div>
+      <div class="note">在 platform.claude.com 的 Console 中创建 API Key。深断会把本卦卦象、排盘与所问之事发送至 Claude 模型按东玄铁律细批,按 token 计费。</div>
+    </div>
+    <div id="ai-status"></div>
+    <div id="ai-out" class="aiout hidden"></div>
+  </section>
+
   <section id="sec-report" class="hidden">
     <h2>卦象回报(复制后发给东玄细断)</h2>
     <textarea id="report" readonly></textarea>
@@ -174,18 +236,24 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.2 内测版 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.3 内测版 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
 <script src="gua-core.js"></script>
+<script src="najia.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
   const HKEY = 'dongxuan_history_v1';
+  const KKEY = 'dongxuan_api_key';
+  const MKEY = 'dongxuan_ai_model';
   const POS = GuaCore.POS_NAMES;
   let throws = [];       // 本盘已掷的爻 {sum, coins, label}
   let currentCast = null;
+  let currentZhuang = null;
+  let currentRecId = null;
+  let aiBusy = false;
 
   // —— 起卦 ——
   function tossOnce() {
@@ -210,19 +278,66 @@
     // 保留铜钱明细
     cast.lines.forEach((l, i) => { l.coins = throws[i].coins; });
     currentCast = cast;
+    currentZhuang = Najia.zhuangGua(cast.benId, new Date());
     const q = $('question').value.trim();
     renderGua(cast);
     renderReading(cast);
-    const report = GuaCore.buildReport(cast, q);
+    renderPan(cast, currentZhuang);
+    const report = GuaCore.buildReport(cast, q) + '\n' + panText(cast, currentZhuang);
     $('report').value = report;
-    ['sec-gua', 'sec-read', 'sec-report'].forEach(s => $(s).classList.remove('hidden'));
-    saveHistory(cast, q, report);
+    ['sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'].forEach(s => $(s).classList.remove('hidden'));
+    $('ai-out').classList.add('hidden'); $('ai-out').textContent = '';
+    $('ai-status').textContent = ''; $('ai-status').classList.remove('err');
+    currentRecId = saveHistory(cast, q, report);
   }
   function resetBoard(clearQ) {
-    throws = []; currentCast = null;
+    throws = []; currentCast = null; currentZhuang = null; currentRecId = null;
     renderTossLog();
-    ['sec-gua', 'sec-read', 'sec-report'].forEach(s => $(s).classList.add('hidden'));
+    ['sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'].forEach(s => $(s).classList.add('hidden'));
     if (clearQ) $('question').value = '';
+  }
+
+  // —— 纳甲排盘 ——
+  function fmtCastTime(cal) {
+    const d = new Date();
+    const two = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}` +
+      `(${cal.year}年 ${cal.month}月 ${cal.day}日)`;
+  }
+  function renderPan(cast, z) {
+    $('pan-info').innerHTML =
+      `<b>起卦:</b>${fmtCastTime(z.cal)}<br>` +
+      `<b>月建:</b>${z.cal.monthZhi} <b>日辰:</b>${z.cal.dayZhi} <b>旬空:</b>${z.cal.xunKong.join('、')}<br>` +
+      `<b>卦宫:</b>${z.palace}宫(${z.palaceWx})· ${z.gen},世在${GuaCore.POS_NAMES[z.shi - 1]},应在${GuaCore.POS_NAMES[z.ying - 1]}`;
+    let rows = '';
+    for (let i = 5; i >= 0; i--) {
+      const l = z.lines[i], cl = cast.lines[i];
+      const yao = cl.yang ? '▅▅▅▅▅' : '▅▅&nbsp;&nbsp;▅▅';
+      rows += `<tr>
+        <td>${GuaCore.POS_NAMES[i]}</td>
+        <td>${l.liuShen}</td>
+        <td>${l.liuQin}</td>
+        <td>${l.ganZhi}${l.wx}${l.kong ? '<span class="kongmark">(空)</span>' : ''}</td>
+        <td style="letter-spacing:1px">${yao}</td>
+        <td>${l.shi ? '<span class="sy">世</span>' : (l.ying ? '<span class="sy">应</span>' : '')}${cl.moving ? `<span class="mv">${cl.yang ? '○' : '×'}</span>` : ''}</td>
+      </tr>`;
+    }
+    $('pan-body').innerHTML = rows;
+  }
+  function panText(cast, z) {
+    const lines = z.lines.map((l, i) => {
+      const cl = cast.lines[i];
+      return `${GuaCore.POS_NAMES[i]} ${l.liuShen} ${l.liuQin}${l.ganZhi}${l.wx}` +
+        `${l.shi ? ' 世' : ''}${l.ying ? ' 应' : ''}${l.kong ? ' (旬空)' : ''}${cl.moving ? (cl.yang ? ' ○动' : ' ×动') : ''}`;
+    });
+    return [
+      '【纳甲排盘】',
+      `起卦时间:${fmtCastTime(z.cal)}`,
+      `月建:${z.cal.monthZhi} 日辰:${z.cal.dayZhi} 旬空:${z.cal.xunKong.join('、')}`,
+      `卦宫:${z.palace}宫 ${z.gen},世${GuaCore.POS_NAMES[z.shi - 1]} 应${GuaCore.POS_NAMES[z.ying - 1]}`,
+      '六爻(自下而上):',
+      ...lines,
+    ].join('\n');
   }
 
   // —— 渲染 ——
@@ -272,17 +387,29 @@
   function saveHistory(cast, q, report) {
     const r = GuaCore.interpret(cast);
     const rec = {
+      id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
       ts: Date.now(),
       question: q || '(未填写)',
       sums: cast.lines.map(l => l.sum),
       coins: cast.lines.map(l => l.coins),
       headline: r.headline, level: r.level, dx: r.dx, report,
+      aiReading: null,
     };
     const h = loadHistory();
     h.unshift(rec);
     if (h.length > 200) h.length = 200;
     localStorage.setItem(HKEY, JSON.stringify(h));
     renderHistory();
+    return rec.id;
+  }
+  function attachAiReading(recId, model, text) {
+    const h = loadHistory();
+    const rec = h.find(r => r.id === recId);
+    if (rec) {
+      rec.aiReading = { model, text, ts: Date.now() };
+      localStorage.setItem(HKEY, JSON.stringify(h));
+      renderHistory();
+    }
   }
   function renderHistory() {
     const h = loadHistory();
@@ -295,6 +422,7 @@
         <div class="body">
           <pre>${esc(rec.report)}</pre>
           <div><b style="color:var(--cinnabar)">【${esc(rec.level)}】</b> ${esc(rec.dx)}</div>
+          ${rec.aiReading ? `<div class="aiout" style="margin-top:10px"><b style="color:var(--gold)">东玄深断(${esc(rec.aiReading.model)})</b>\n${esc(rec.aiReading.text)}</div>` : ''}
           <div class="btnrow">
             <button class="ghost btn-copyrec" data-i="${i}">复制回报</button>
             <button class="ghost btn-delrec" data-i="${i}">删除此卦</button>
@@ -305,7 +433,159 @@
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
+  // —— 东玄深断(Claude API 直连)——
+  const DONGXUAN_SYSTEM = `你是一位精通《周易》的卦师,道号「东玄」。基于传统三铜钱法起卦,依六十四卦体系解读,兼用京房纳甲(六亲、世应、月建日辰、旬空)断卦,法宗《增删卜易》《卜筮正宗》。
+
+【身份与风格】
+1. 你是卦师,不是心理咨询师。根据卦象说实话,好就说好,凶就说凶,不粉饰、不回避、不免责。
+2. 说人话。不用"宜…忌…"这种黄历套话,用现代语言给出能直接执行的判断。
+3. 具体直白。问时间给时间段,问钱给数字范围,问方位给方位和距离,问人给画像。禁止"视情况而定""因人而异"这类废话。
+4. 解读必须100%基于实际掷出的卦象:卦辞、爻辞、卦象结构、变爻方向、本卦与变卦的关系、纳甲排盘,都是依据,不脱离卦象编故事。不得强行将上下卦硬凑一处,不得篡改或重掷卦象,重点解读当下这一卦。
+
+【解卦优先级】无变爻:以本卦卦辞断|一个变爻:以该变爻爻辞为核心,结合本卦变卦|二到三变爻:本卦变卦并重,综合变爻位置|四到五变爻:以变卦为主|六爻全变:以变卦卦辞断(乾用用九、坤用用六)。
+【纳甲断法】取用神依所问之事定六亲;察用神旺衰(月建日辰生克)、动静、旬空、世应关系;动爻生克用神定吉凶,应期参地支与旺衰。
+【八卦类象】乾:天/父/领导/西北/金融管理|坤:地/母/群众/西南/地产农业|震:雷/长男/正东/科技新兴|巽:风/长女/东南/传媒商贸|坎:水/中男/正北/水利交通酒|离:火/中女/正南/文化科技美|艮:山/少男/东北/教育地产蓄积|兑:泽/少女/正西/金融娱乐餐饮。
+【六爻位置】初爻起始根基|二爻内卦之主得中|三爻内外交界多变|四爻近君之位|五爻九五尊位全卦之主|上爻盛极将变。
+【推算依据】时间:地支应期(子坎丑艮寅卯震辰巳巽午离未坤申酉兑戌亥乾),结合月令旺衰,静卦取卦数动卦取变爻数。经济数量:先后天数为基数,结合卦象量级,阳爻主增阴爻主守变爻主转折。
+
+【解读结构】第一行报本卦名、几爻动、变卦名。背景铺垫最多两句。逐项回答所问,先结论后依据。必要时给综合判断。
+【解读标准】问时间→具体时间段+推算依据|问方位→具体方位+距离|问经济→数字范围+数理来源|问人物→年龄段、外形、性格、职业|问感情→谁先主动、轨迹、心态、结局|问吉凶→直说吉凶+程度+条件。
+
+【禁止】不说"仅供参考"|不把凶卦解成正面|不模棱两可|不加道德说教和鸡汤|不用"建议你""你可以考虑"的咨询师口吻|不拒绝解读,诚心问卦必从卦象给答案。
+
+【铁律】
+1. 一卦一断:只以本次卦象为依据独立断完,不带旧结论。
+2. 范围锁死:结论只覆盖本次所问之事,不升格为对问卦人性格、价值观、命运的总判。
+3. 只断事,不审人:问卦人的标准与要求一律视为正当前提,照单全收,据此断可行性、时机、画像、代价。禁止评判标准本身,禁止替问卦人预设其没说过的立场。
+4. 不脑补动机:问什么答什么,不补人生观,不贴标签。
+5. 凶卦照报凶,但凶只对所问之事,不借凶卦教育人。
+
+【输出】纯文本,直接以东玄口吻输出解读正文,不加开场白、不加免责声明、不用 markdown 标题。卦象材料由掷卦程序自动提供且真实有效,直接据此细断。`;
+
+  function buildMaterial(cast, z, question) {
+    const plan = GuaCore.interpretationPlan(cast);
+    const jing = plan.focus.map(f => `${f.kind}:${f.text}`).join('\n');
+    return GuaCore.buildReport(cast, question) + '\n' + panText(cast, z) +
+      '\n【经文取材(已按解卦优先级选定)】\n' + jing +
+      '\n\n请依上述卦象、排盘与所问之事细断。';
+  }
+
+  function getKey() { return localStorage.getItem(KKEY) || ''; }
+  function setStatus(msg, isErr) {
+    $('ai-status').textContent = msg;
+    $('ai-status').classList.toggle('err', !!isErr);
+  }
+
+  async function deepRead() {
+    if (aiBusy) return;
+    if (!currentCast) { setStatus('先起一卦。', true); return; }
+    const q = $('question').value.trim();
+    if (!q) { setStatus('深断需先填「所问何事」——问卦无题,断无所指。', true); return; }
+    const key = getKey();
+    if (!key) { setStatus('请先设置 API Key(点右侧「设置 API Key」)。', true); $('keybox').classList.remove('hidden'); return; }
+    const model = $('ai-model').value;
+    const body = {
+      model,
+      max_tokens: 16000,
+      stream: true,
+      system: DONGXUAN_SYSTEM,
+      messages: [{ role: 'user', content: buildMaterial(currentCast, currentZhuang, q) }],
+    };
+    const headers = {
+      'content-type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    };
+    if (model === 'claude-fable-5') {
+      // Fable 5:思考常开(不传 thinking);按官方建议带服务端兜底回退
+      headers['anthropic-beta'] = 'server-side-fallback-2026-06-01';
+      body.fallbacks = [{ model: 'claude-opus-4-8' }];
+    } else {
+      body.thinking = { type: 'adaptive' };
+    }
+
+    aiBusy = true;
+    $('btn-deepread').disabled = true;
+    setStatus('东玄凝神观卦……');
+    const out = $('ai-out');
+    out.classList.remove('hidden');
+    out.innerHTML = '<span class="cursor">▍</span>';
+    let text = '', stopReason = null;
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST', headers, body: JSON.stringify(body),
+      });
+      if (!resp.ok) {
+        let msg = 'HTTP ' + resp.status;
+        try { const j = await resp.json(); msg = (j.error && j.error.message) || msg; } catch (e) {}
+        if (resp.status === 401) msg = 'API Key 无效或已失效,请重新设置。';
+        throw new Error(msg);
+      }
+      const reader = resp.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const parts = buf.split('\n\n');
+        buf = parts.pop();
+        for (const part of parts) {
+          const dataLine = part.split('\n').find(l => l.startsWith('data: '));
+          if (!dataLine) continue;
+          let ev;
+          try { ev = JSON.parse(dataLine.slice(6)); } catch (e) { continue; }
+          if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') {
+            text += ev.delta.text;
+            out.textContent = text;
+            out.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>');
+          } else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason) {
+            stopReason = ev.delta.stop_reason;
+          } else if (ev.type === 'error') {
+            throw new Error((ev.error && ev.error.message) || '流式响应出错');
+          }
+        }
+      }
+      out.textContent = text;
+      if (stopReason === 'refusal') {
+        setStatus('此问触发了模型方的安全分类器,未能出断。换个问法再试。', true);
+      } else if (!text) {
+        throw new Error('未收到解读内容');
+      } else {
+        setStatus('断毕。已存入卦档。');
+        attachAiReading(currentRecId, model, text);
+      }
+    } catch (e) {
+      if (text) { out.textContent = text; }
+      const hint = /Failed to fetch|NetworkError|TypeError/.test(String(e))
+        ? '网络请求被拦截:托管版(Artifact)环境禁止外联,请在 PWA/本地版使用深断;或复制下方回报文本粘给东玄。'
+        : String(e.message || e);
+      setStatus('深断未成:' + hint, true);
+      if (!text) out.classList.add('hidden');
+    } finally {
+      aiBusy = false;
+      $('btn-deepread').disabled = false;
+    }
+  }
+
   // —— 事件 ——
+  $('btn-deepread').addEventListener('click', deepRead);
+  $('btn-togglekey').addEventListener('click', () => {
+    $('keybox').classList.toggle('hidden');
+    $('api-key').value = getKey();
+  });
+  $('btn-savekey').addEventListener('click', () => {
+    const v = $('api-key').value.trim();
+    if (v) { localStorage.setItem(KKEY, v); $('keybox').classList.add('hidden'); setStatus('Key 已存于本机浏览器。'); }
+    else setStatus('Key 为空,未保存。', true);
+  });
+  $('btn-clearkey').addEventListener('click', () => {
+    localStorage.removeItem(KKEY); $('api-key').value = ''; setStatus('Key 已清除。');
+  });
+  $('ai-model').addEventListener('change', () => localStorage.setItem(MKEY, $('ai-model').value));
+  if (localStorage.getItem(MKEY)) $('ai-model').value = localStorage.getItem(MKEY);
+
   $('btn-step').addEventListener('click', tossOnce);
   $('btn-auto').addEventListener('click', autoCast);
   $('btn-reset').addEventListener('click', () => resetBoard(true));

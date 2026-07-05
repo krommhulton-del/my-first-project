@@ -51,15 +51,43 @@ await t('一键成卦:六爻掷齐,卦象/解读/回报三区出现', async () =
   ok((await page.locator('#focus .fblock').count()) >= 1, '应有断卦依据');
 });
 
-await t('回报文本:六行齐全、格式吻合', async () => {
+await t('回报文本:六行主报 + 纳甲排盘附录', async () => {
   const rep = await page.inputValue('#report');
   const lines = rep.split('\n');
-  ok(lines.length === 6, '应为 6 行,得到 ' + lines.length);
   ok(lines[0] === '【东玄掷卦 · 卦象回报】', lines[0]);
   ok(/^六爻\(自下而上\):[6-9](、[6-9]){5}$/.test(lines[1]), lines[1]);
   ok(/^本卦:.+\(上卦. \/ 下卦.\)$/.test(lines[2]), lines[2]);
   ok(/^动爻:/.test(lines[3]) && /^变卦:/.test(lines[4]), lines[3] + '|' + lines[4]);
   ok(lines[5] === '我要问的事:内测第一问:此程序可用否?', lines[5]);
+  ok(lines[6] === '【纳甲排盘】', lines[6]);
+  ok(rep.includes('月建:') && rep.includes('旬空:') && rep.includes('卦宫:'), '排盘要素');
+  ok(/初爻 (青龙|朱雀|勾陈|螣蛇|白虎|玄武) (父母|兄弟|子孙|妻财|官鬼)[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥][金木水火土]/.test(rep), '六爻纳甲行');
+});
+
+await t('纳甲排盘区:六行、世应各一、干支合法', async () => {
+  ok(!(await page.locator('#sec-pan').evaluate(el => el.classList.contains('hidden'))), '排盘区应可见');
+  ok((await page.locator('#pan-body tr').count()) === 6, '排盘应有 6 行');
+  const shiYing = await page.locator('#pan-body .sy').allTextContents();
+  ok(shiYing.filter(s => s === '世').length === 1 && shiYing.filter(s => s === '应').length === 1, '世应各一:' + shiYing.join(','));
+  ok(/[乾兑离震巽坎艮坤]宫/.test(await page.textContent('#pan-info')), '卦宫标注');
+});
+
+await t('AI 深断区:无 Key 时点击给出设置提示', async () => {
+  ok(!(await page.locator('#sec-ai').evaluate(el => el.classList.contains('hidden'))), 'AI 区应可见');
+  await page.click('#btn-deepread');
+  const status = await page.textContent('#ai-status');
+  ok(status.includes('API Key'), '应提示设置 Key,得到:' + status);
+  ok(!(await page.locator('#keybox').evaluate(el => el.classList.contains('hidden'))), 'Key 输入框应展开');
+});
+
+await t('AI 深断区:保存/清除 Key 走 localStorage', async () => {
+  await page.fill('#api-key', 'sk-ant-test-123');
+  await page.click('#btn-savekey');
+  ok((await page.evaluate(() => localStorage.getItem('dongxuan_api_key'))) === 'sk-ant-test-123', 'Key 应已保存');
+  await page.click('#btn-togglekey');
+  await page.click('#btn-clearkey');
+  ok((await page.evaluate(() => localStorage.getItem('dongxuan_api_key'))) === null, 'Key 应已清除');
+  await page.click('#btn-togglekey');
 });
 
 await t('历史记录:成卦自动入档', async () => {
