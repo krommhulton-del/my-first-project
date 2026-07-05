@@ -1,0 +1,100 @@
+// 内测:端到端浏览器测试(node tests/e2e.mjs)
+// 静态服务 + 无头 Chromium,验证:一键成卦、逐爻掷、解读渲染、回报格式、历史持久化与删除。
+import http from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { extname, join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { chromium } from 'playwright-core';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const PORT = 8737;
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json' };
+
+const server = http.createServer(async (req, res) => {
+  const path = req.url === '/' ? '/index.html' : req.url.split('?')[0];
+  try {
+    const body = await readFile(join(ROOT, path));
+    res.writeHead(200, { 'Content-Type': MIME[extname(path)] || 'application/octet-stream' });
+    res.end(body);
+  } catch { res.writeHead(404); res.end('not found'); }
+});
+await new Promise(r => server.listen(PORT, '127.0.0.1', r));
+
+const CHROME = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
+const page = await (await browser.newContext()).newPage();
+
+let pass = 0, fail = 0;
+async function t(name, fn) {
+  try { await fn(); pass++; console.log('  ✓', name); }
+  catch (e) { fail++; console.error('  ✗', name, '——', e.message); }
+}
+const ok = (v, m) => { if (!v) throw new Error(m || '断言失败'); };
+
+const URL0 = `http://127.0.0.1:${PORT}/`;
+await page.goto(URL0);
+
+await t('页面加载:标题与起卦区可见', async () => {
+  ok(await page.title() === '东玄卜卦 · 三钱起卦', '标题不符');
+  ok(await page.locator('#btn-auto').isVisible(), '一键成卦按钮不可见');
+});
+
+await t('一键成卦:六爻掷齐,卦象/解读/回报三区出现', async () => {
+  await page.fill('#question', '内测第一问:此程序可用否?');
+  await page.click('#btn-auto');
+  await page.waitForSelector('#sec-read:not(.hidden)', { timeout: 8000 });
+  ok((await page.locator('#tosslog .toss').count()) === 6, '应有 6 条掷币记录');
+  const headline = await page.textContent('#headline');
+  ok(/^本卦.+/.test(headline), '首行断卦格式:' + headline);
+  const lv = await page.textContent('#v-lv');
+  ok(['大吉', '吉', '小吉', '平吉', '平', '谨慎', '凶', '大凶'].includes(lv), '断语等级:' + lv);
+  ok((await page.locator('#focus .fblock').count()) >= 1, '应有断卦依据');
+});
+
+await t('回报文本:六行齐全、格式吻合', async () => {
+  const rep = await page.inputValue('#report');
+  const lines = rep.split('\n');
+  ok(lines.length === 6, '应为 6 行,得到 ' + lines.length);
+  ok(lines[0] === '【东玄掷卦 · 卦象回报】', lines[0]);
+  ok(/^六爻\(自下而上\):[6-9](、[6-9]){5}$/.test(lines[1]), lines[1]);
+  ok(/^本卦:.+\(上卦. \/ 下卦.\)$/.test(lines[2]), lines[2]);
+  ok(/^动爻:/.test(lines[3]) && /^变卦:/.test(lines[4]), lines[3] + '|' + lines[4]);
+  ok(lines[5] === '我要问的事:内测第一问:此程序可用否?', lines[5]);
+});
+
+await t('历史记录:成卦自动入档', async () => {
+  ok((await page.locator('#histlist .hist').count()) === 1, '应有 1 条卦档');
+});
+
+await t('逐爻掷:清盘后手掷六次亦可成卦', async () => {
+  await page.click('#btn-reset');
+  ok(await page.locator('#sec-read').evaluate(el => el.classList.contains('hidden')), '清盘后解读区应隐藏');
+  await page.fill('#question', '内测第二问:逐爻掷可用否?');
+  for (let i = 0; i < 6; i++) await page.click('#btn-step');
+  await page.waitForSelector('#sec-read:not(.hidden)');
+  ok((await page.locator('#histlist .hist').count()) === 2, '卦档应为 2 条');
+});
+
+await t('历史持久化:刷新页面卦档仍在', async () => {
+  await page.reload();
+  ok((await page.locator('#histlist .hist').count()) === 2, '刷新后卦档应为 2 条');
+});
+
+await t('卦档展开与删除', async () => {
+  await page.click('#histlist .hist:first-child .head');
+  ok(await page.locator('#histlist .hist:first-child .body pre').isVisible(), '展开后应见回报全文');
+  await page.click('#histlist .hist:first-child .btn-delrec');
+  ok((await page.locator('#histlist .hist').count()) === 1, '删除后应剩 1 条');
+});
+
+await t('清空卦档', async () => {
+  page.once('dialog', d => d.accept());
+  await page.click('#btn-clearhist');
+  await page.waitForFunction(() => document.querySelectorAll('#histlist .hist').length === 0);
+  ok((await page.locator('#histlist .hist').count()) === 0, '应清空');
+});
+
+await browser.close();
+server.close();
+console.log(`\n结果:${pass} 通过,${fail} 失败`);
+process.exit(fail ? 1 : 0);

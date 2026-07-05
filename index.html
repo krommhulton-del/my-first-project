@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>东玄卜卦 · 三钱起卦</title>
+<style>
+  :root {
+    --paper: #12100d; --panel: #1c1915; --panel2: #23201a; --ink: #e8e0d0;
+    --dim: #9a917e; --line: #3a352c; --cinnabar: #c0392b; --gold: #c9a45c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper); color: var(--ink); min-height: 100vh;
+    font-family: "Kaiti SC", "STKaiti", KaiTi, "Noto Serif SC", "Songti SC", serif;
+    line-height: 1.75; padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 28px; }
+  header h1 { font-size: 2rem; letter-spacing: .35em; color: var(--gold); font-weight: 600; }
+  header p { color: var(--dim); font-size: .9rem; margin-top: 6px; }
+  .seal { display: inline-block; border: 2px solid var(--cinnabar); color: var(--cinnabar);
+    padding: 0 8px; border-radius: 4px; font-size: .85rem; margin-left: 8px; vertical-align: middle; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px; margin-bottom: 18px; }
+  section h2 { font-size: 1.05rem; color: var(--gold); letter-spacing: .2em; margin-bottom: 14px;
+    border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  label { color: var(--dim); font-size: .9rem; display: block; margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px 12px; font-size: 1rem; font-family: inherit;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--gold); }
+  .btnrow { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  button {
+    background: var(--panel2); color: var(--ink); border: 1px solid var(--gold); border-radius: 6px;
+    padding: 10px 20px; font-size: 1rem; font-family: inherit; cursor: pointer; letter-spacing: .1em;
+    transition: background .15s;
+  }
+  button:hover { background: #2e2a22; }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+  button.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
+  button.primary:hover { background: #a93226; }
+  button.ghost { border-color: var(--line); color: var(--dim); }
+  .tosslog { margin-top: 16px; display: flex; flex-direction: column-reverse; gap: 6px; }
+  .toss { display: flex; align-items: center; gap: 12px; background: var(--panel2);
+    border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; font-size: .95rem; }
+  .toss .idx { color: var(--gold); width: 3.4em; }
+  .coin { display: inline-block; width: 26px; height: 26px; border-radius: 50%; text-align: center;
+    line-height: 24px; font-size: .8rem; margin-right: 4px; border: 1px solid var(--gold); }
+  .coin.zi { background: #3a2f1d; color: var(--gold); }
+  .coin.bei { background: transparent; color: var(--dim); border-color: var(--dim); }
+  .toss .val { margin-left: auto; color: var(--dim); }
+  .toss .val b { color: var(--ink); }
+  .guarea { display: flex; gap: 28px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+  .guabox { text-align: center; min-width: 180px; }
+  .guabox .caption { color: var(--dim); font-size: .85rem; margin-bottom: 8px; letter-spacing: .15em; }
+  .guabox .gname { font-size: 1.25rem; color: var(--ink); margin-top: 10px; }
+  .guabox .gsym { font-size: 1.1rem; color: var(--gold); }
+  .hexlines { display: inline-flex; flex-direction: column; gap: 8px; }
+  .hl { position: relative; width: 120px; height: 14px; }
+  .hl .bar { position: absolute; top: 0; height: 100%; background: var(--ink); border-radius: 2px; }
+  .hl.yang .bar { left: 0; width: 100%; }
+  .hl.yin .bar.l { left: 0; width: 44%; }
+  .hl.yin .bar.r { right: 0; width: 44%; }
+  .hl.moving .bar { background: var(--cinnabar); }
+  .hl .mk { position: absolute; right: -26px; top: -3px; color: var(--cinnabar); font-size: .85rem; }
+  .arrow { align-self: center; color: var(--gold); font-size: 1.6rem; padding-top: 30px; }
+  .headline { font-size: 1.15rem; color: var(--gold); text-align: center; margin-bottom: 12px; letter-spacing: .05em; }
+  .verdict { text-align: center; margin-bottom: 16px; }
+  .verdict .lv { display: inline-block; border: 1.5px solid var(--cinnabar); color: var(--cinnabar);
+    border-radius: 6px; padding: 2px 14px; font-size: 1.05rem; letter-spacing: .2em; }
+  .verdict .dx { margin-top: 10px; font-size: 1.02rem; }
+  .verdict .src { color: var(--dim); font-size: .8rem; margin-top: 4px; }
+  .fblock { background: var(--panel2); border-left: 3px solid var(--gold); border-radius: 0 6px 6px 0;
+    padding: 10px 14px; margin-bottom: 10px; }
+  .fblock .k { color: var(--gold); font-size: .85rem; letter-spacing: .1em; }
+  .fblock .t { margin-top: 2px; }
+  .subnote { color: var(--dim); font-size: .9rem; margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
+  .subnote b { color: var(--ink); font-weight: normal; }
+  textarea { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 12px; font-family: inherit; font-size: .95rem; min-height: 150px; resize: vertical; }
+  .hist { border: 1px solid var(--line); border-radius: 6px; margin-bottom: 8px; overflow: hidden; }
+  .hist .head { display: flex; gap: 12px; padding: 9px 12px; cursor: pointer; align-items: baseline; background: var(--panel2); }
+  .hist .head:hover { background: #2a261f; }
+  .hist .ts { color: var(--dim); font-size: .8rem; white-space: nowrap; }
+  .hist .q { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist .hl2 { color: var(--gold); font-size: .85rem; white-space: nowrap; }
+  .hist .body { display: none; padding: 12px; border-top: 1px solid var(--line); }
+  .hist.open .body { display: block; }
+  .hist .body pre { white-space: pre-wrap; font-family: inherit; background: var(--paper);
+    border-radius: 6px; padding: 10px; margin-bottom: 10px; }
+  .hidden { display: none !important; }
+  footer { text-align: center; color: var(--dim); font-size: .8rem; margin-top: 30px; }
+  @media (max-width: 560px) { .arrow { display: none; } header h1 { font-size: 1.5rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>东玄卜卦</h1>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.1</span></p>
+  </header>
+
+  <section id="sec-cast">
+    <h2>起 卦</h2>
+    <label for="question">所问何事(起卦前默念于心)</label>
+    <input type="text" id="question" placeholder="例:此番南下求职,成与不成?" maxlength="120">
+    <div class="btnrow">
+      <button id="btn-step">掷一爻</button>
+      <button id="btn-auto" class="primary">一键成卦(连掷六爻)</button>
+      <button id="btn-reset" class="ghost">清盘重掷</button>
+    </div>
+    <div class="tosslog" id="tosslog"></div>
+  </section>
+
+  <section id="sec-gua" class="hidden">
+    <h2>卦 象</h2>
+    <div class="guarea" id="guarea"></div>
+  </section>
+
+  <section id="sec-read" class="hidden">
+    <h2>解 读</h2>
+    <div class="headline" id="headline"></div>
+    <div class="verdict">
+      <span class="lv" id="v-lv"></span>
+      <div class="dx" id="v-dx"></div>
+      <div class="src" id="v-src"></div>
+    </div>
+    <div id="focus"></div>
+    <div class="subnote" id="moving-note"></div>
+    <div class="subnote" id="trigram-note"></div>
+    <div class="subnote" id="number-note"></div>
+  </section>
+
+  <section id="sec-report" class="hidden">
+    <h2>卦象回报(复制后发给东玄细断)</h2>
+    <textarea id="report" readonly></textarea>
+    <div class="btnrow">
+      <button id="btn-copy" class="primary">复制回报文本</button>
+    </div>
+  </section>
+
+  <section id="sec-hist">
+    <h2>卦 档 · 历史记录</h2>
+    <div id="histlist"></div>
+    <div class="btnrow">
+      <button id="btn-export" class="ghost">导出全部(JSON)</button>
+      <button id="btn-clearhist" class="ghost">清空卦档</button>
+    </div>
+  </section>
+
+  <footer>东玄卜卦 v0.1 内测版 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+</div>
+
+<script src="gua-data.js"></script>
+<script src="gua-core.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const HKEY = 'dongxuan_history_v1';
+  const POS = GuaCore.POS_NAMES;
+  let throws = [];       // 本盘已掷的爻 {sum, coins, label}
+  let currentCast = null;
+
+  // —— 起卦 ——
+  function tossOnce() {
+    if (throws.length >= 6) return;
+    const line = GuaCore.tossLine();
+    throws.push(line);
+    renderTossLog();
+    if (throws.length === 6) completeCast();
+  }
+  function autoCast() {
+    if (throws.length > 0 && throws.length < 6) return; // 逐掷中途不允许一键
+    resetBoard(false);
+    let i = 0;
+    $('btn-auto').disabled = true; $('btn-step').disabled = true;
+    const timer = setInterval(() => {
+      tossOnce();
+      if (++i >= 6) { clearInterval(timer); $('btn-auto').disabled = false; $('btn-step').disabled = false; }
+    }, 260);
+  }
+  function completeCast() {
+    const cast = GuaCore.castFromSums(throws.map(t => t.sum));
+    // 保留铜钱明细
+    cast.lines.forEach((l, i) => { l.coins = throws[i].coins; });
+    currentCast = cast;
+    const q = $('question').value.trim();
+    renderGua(cast);
+    renderReading(cast);
+    const report = GuaCore.buildReport(cast, q);
+    $('report').value = report;
+    ['sec-gua', 'sec-read', 'sec-report'].forEach(s => $(s).classList.remove('hidden'));
+    saveHistory(cast, q, report);
+  }
+  function resetBoard(clearQ) {
+    throws = []; currentCast = null;
+    renderTossLog();
+    ['sec-gua', 'sec-read', 'sec-report'].forEach(s => $(s).classList.add('hidden'));
+    if (clearQ) $('question').value = '';
+  }
+
+  // —— 渲染 ——
+  function renderTossLog() {
+    $('tosslog').innerHTML = throws.map((t, i) =>
+      `<div class="toss"><span class="idx">${POS[i]}</span>` +
+      t.coins.map(c => `<span class="coin ${c === '字' ? 'zi' : 'bei'}">${c}</span>`).join('') +
+      `<span class="val">和 <b>${t.sum}</b> · ${t.label}</span></div>`
+    ).join('');
+  }
+  function hexHtml(gua, movingIdx, caption) {
+    let rows = '';
+    for (let i = 5; i >= 0; i--) {
+      const yang = gua.id[i] === '1';
+      const mv = movingIdx && movingIdx.includes(i);
+      rows += `<div class="hl ${yang ? 'yang' : 'yin'}${mv ? ' moving' : ''}">` +
+        (yang ? '<div class="bar"></div>' : '<div class="bar l"></div><div class="bar r"></div>') +
+        (mv ? `<span class="mk">${yang ? '○' : '×'}</span>` : '') + '</div>';
+    }
+    return `<div class="guabox"><div class="caption">${caption}</div><div class="hexlines">${rows}</div>` +
+      `<div class="gname">${gua.sym} ${gua.full}</div><div class="gsym">第${gua.n}卦</div></div>`;
+  }
+  function renderGua(cast) {
+    let html = hexHtml(cast.ben, cast.moving, '本 卦');
+    if (cast.bian) html += `<div class="arrow">→</div>` + hexHtml(cast.bian, null, '变 卦');
+    $('guarea').innerHTML = html;
+  }
+  function renderReading(cast) {
+    const r = GuaCore.interpret(cast);
+    $('headline').textContent = r.headline;
+    $('v-lv').textContent = r.level;
+    $('v-dx').textContent = r.dx;
+    $('v-src').textContent = r.dxFrom + ' · ' + r.mode;
+    $('focus').innerHTML = r.focus.map(f =>
+      `<div class="fblock"><div class="k">${f.kind}</div><div class="t">${f.text}</div></div>`).join('');
+    $('moving-note').innerHTML = r.movingDetail.length
+      ? '<b>动爻爻位:</b>' + r.movingDetail.map(m => `${m.pos}(${m.meaning})`).join(';')
+      : '<b>六爻安静:</b>局面暂无变数,以本卦卦辞直断。';
+    $('trigram-note').innerHTML = '<b>八卦类象:</b>' + r.trigrams.note;
+    $('number-note').innerHTML = '<b>数理与应期参考:</b>' + r.numbers.note;
+  }
+
+  // —— 历史记录 ——
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e) { return []; }
+  }
+  function saveHistory(cast, q, report) {
+    const r = GuaCore.interpret(cast);
+    const rec = {
+      ts: Date.now(),
+      question: q || '(未填写)',
+      sums: cast.lines.map(l => l.sum),
+      coins: cast.lines.map(l => l.coins),
+      headline: r.headline, level: r.level, dx: r.dx, report,
+    };
+    const h = loadHistory();
+    h.unshift(rec);
+    if (h.length > 200) h.length = 200;
+    localStorage.setItem(HKEY, JSON.stringify(h));
+    renderHistory();
+  }
+  function renderHistory() {
+    const h = loadHistory();
+    $('histlist').innerHTML = h.length ? h.map((rec, i) => {
+      const d = new Date(rec.ts);
+      const ts = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ` +
+                 `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      return `<div class="hist" data-i="${i}">
+        <div class="head"><span class="ts">${ts}</span><span class="q">${esc(rec.question)}</span><span class="hl2">${esc(rec.headline)}</span></div>
+        <div class="body">
+          <pre>${esc(rec.report)}</pre>
+          <div><b style="color:var(--cinnabar)">【${esc(rec.level)}】</b> ${esc(rec.dx)}</div>
+          <div class="btnrow">
+            <button class="ghost btn-copyrec" data-i="${i}">复制回报</button>
+            <button class="ghost btn-delrec" data-i="${i}">删除此卦</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') : '<div style="color:var(--dim)">卦档尚空。起一卦,自动存档于此(仅存本机浏览器)。</div>';
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  // —— 事件 ——
+  $('btn-step').addEventListener('click', tossOnce);
+  $('btn-auto').addEventListener('click', autoCast);
+  $('btn-reset').addEventListener('click', () => resetBoard(true));
+  $('btn-copy').addEventListener('click', async () => {
+    const txt = $('report').value;
+    try { await navigator.clipboard.writeText(txt); $('btn-copy').textContent = '已复制 ✓'; }
+    catch (e) { $('report').select(); document.execCommand('copy'); $('btn-copy').textContent = '已复制 ✓'; }
+    setTimeout(() => { $('btn-copy').textContent = '复制回报文本'; }, 1500);
+  });
+  $('histlist').addEventListener('click', e => {
+    const del = e.target.closest('.btn-delrec');
+    const cp = e.target.closest('.btn-copyrec');
+    if (del) {
+      const h = loadHistory(); h.splice(Number(del.dataset.i), 1);
+      localStorage.setItem(HKEY, JSON.stringify(h)); renderHistory(); return;
+    }
+    if (cp) {
+      const h = loadHistory(); const rec = h[Number(cp.dataset.i)];
+      if (rec) navigator.clipboard.writeText(rec.report).catch(() => {});
+      cp.textContent = '已复制 ✓'; setTimeout(() => { cp.textContent = '复制回报'; }, 1500);
+      return;
+    }
+    const head = e.target.closest('.head');
+    if (head) head.parentElement.classList.toggle('open');
+  });
+  $('btn-export').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(loadHistory(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'dongxuan-guadang.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  $('btn-clearhist').addEventListener('click', () => {
+    if (confirm('清空全部卦档?此操作不可恢复。')) { localStorage.removeItem(HKEY); renderHistory(); }
+  });
+
+  renderHistory();
+})();
+</script>
+</body>
+</html>
