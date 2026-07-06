@@ -138,6 +138,47 @@ await t('清空卦档', async () => {
   ok((await page.locator('#histlist .hist').count()) === 0, '应清空');
 });
 
+await t('梅花易数:报数起卦出体用互变三卦', async () => {
+  await page.click('.tabs button[data-m=meihua]');
+  ok(await page.locator('#sec-mh').isVisible(), '梅花面板应可见');
+  ok(await page.locator('#sec-cast').evaluate(el => el.classList.contains('hidden')), '六爻面板应隐藏');
+  await page.fill('#question', '梅花内测一问');
+  await page.fill('#mh-n1', '3');
+  await page.fill('#mh-n2', '5');
+  await page.click('#btn-mh');
+  await page.waitForSelector('#sec-mhres:not(.hidden)');
+  ok((await page.locator('#mh-guas .guabox').count()) === 3, '本互变三卦');
+  ok(['大吉', '吉', '小吉', '不利', '凶'].includes(await page.textContent('#mh-lv')), '体用断语等级');
+  const rep = await page.inputValue('#report');
+  ok(rep.startsWith('【东玄梅花 · 卦象回报】'), rep.split('\n')[0]);
+  ok(rep.includes('互卦:') && rep.includes('体用断:'), '回报要素');
+});
+
+await t('小六壬:时间起课三宫齐、诗诀在', async () => {
+  await page.click('.tabs button[data-m=xlr]');
+  await page.click('#btn-xlr');
+  await page.waitForSelector('#sec-xlrres:not(.hidden)');
+  ok((await page.locator('#xlr-gongs .gongbox').count()) === 3, '三宫');
+  const names = await page.locator('#xlr-gongs .g-name').allTextContents();
+  for (const n of names) ok(['大安', '留连', '速喜', '赤口', '小吉', '空亡'].includes(n), n);
+  const rep = await page.inputValue('#report');
+  ok(rep.startsWith('【东玄小六壬 · 课象回报】'), rep.split('\n')[0]);
+});
+
+await t('卦档法门徽记与蓍草起卦', async () => {
+  const badges = await page.locator('#histlist .badge').allTextContents();
+  ok(badges.includes('梅花') && badges.includes('小六壬'), '徽记:' + badges.join(','));
+  // 蓍草大衍法起一卦
+  await page.click('.tabs button[data-m=liuyao]');
+  await page.check('input[name=ly-mode][value=dayan]');
+  await page.click('#btn-auto');
+  await page.waitForSelector('#sec-read:not(.hidden)', { timeout: 8000 });
+  const rep = await page.inputValue('#report');
+  ok(rep.includes('蓍草大衍'), '回报应注明蓍草法');
+  const badges2 = await page.locator('#histlist .badge').allTextContents();
+  ok(badges2.includes('六爻·蓍草'), '蓍草徽记:' + badges2.join(','));
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

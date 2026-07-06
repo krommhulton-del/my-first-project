@@ -130,6 +130,26 @@
     padding: 16px; margin-top: 14px; white-space: pre-wrap; line-height: 1.9; }
   .aiout .cursor { color: var(--gold); animation: blink 1s step-end infinite; }
   @keyframes blink { 50% { opacity: 0; } }
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; justify-content: center; flex-wrap: wrap; }
+  .tabs button { border-radius: 20px; padding: 8px 22px; }
+  .tabs button.on { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
+  .moderow { display: flex; gap: 14px; margin-bottom: 10px; color: var(--dim); flex-wrap: wrap; font-size: .95rem; }
+  .moderow label { display: inline-flex; align-items: center; gap: 5px; margin: 0; }
+  .numrow { display: flex; gap: 10px; flex-wrap: wrap; }
+  input[type=number] { width: 110px; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px 12px; font-size: 1rem; font-family: inherit; }
+  input[type=number]:focus { outline: none; border-color: var(--gold); }
+  .formerr { color: var(--cinnabar); font-size: .9rem; margin-top: 8px; }
+  .xlr-gongs { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+  .gongbox { flex: 1 1 160px; max-width: 240px; background: var(--panel2); border-radius: 8px; padding: 12px;
+    text-align: center; border-top: 3px solid var(--gold); }
+  .gongbox.bad { border-top-color: var(--cinnabar); }
+  .gongbox .g-cap { color: var(--gold); font-size: .8rem; letter-spacing: .15em; }
+  .gongbox .g-name { font-size: 1.3rem; letter-spacing: .2em; margin-top: 2px; }
+  .gongbox .g-attr { color: var(--dim); font-size: .85rem; margin: 4px 0; }
+  .gongbox .g-verse { font-size: .88rem; text-align: left; margin-top: 8px; line-height: 1.7; }
+  .badge { display: inline-block; border: 1px solid var(--gold); color: var(--gold); border-radius: 4px;
+    font-size: .72rem; padding: 0 5px; vertical-align: middle; white-space: nowrap; }
   @media (max-width: 560px) {
     header h1 { font-size: 1.5rem; }
     body { line-height: 1.65; }
@@ -153,19 +173,85 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.4</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.5</span></p>
   </header>
+
+  <nav class="tabs">
+    <button class="on" data-m="liuyao">六 爻</button>
+    <button data-m="meihua">梅花易数</button>
+    <button data-m="xlr">小六壬</button>
+  </nav>
+
+  <section id="sec-q">
+    <h2>所 问 何 事</h2>
+    <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
+  </section>
 
   <section id="sec-cast">
     <h2>起 卦</h2>
-    <label for="question">所问何事(起卦前默念于心)</label>
-    <input type="text" id="question" placeholder="例:此番南下求职,成与不成?" maxlength="120">
+    <div class="moderow">
+      <label><input type="radio" name="ly-mode" value="coin" checked> 三钱掷(火珠林法)</label>
+      <label><input type="radio" name="ly-mode" value="dayan"> 蓍草(大衍筮法)</label>
+    </div>
     <div class="btnrow">
       <button id="btn-step">掷一爻</button>
       <button id="btn-auto" class="primary">一键成卦(连掷六爻)</button>
       <button id="btn-reset" class="ghost">清盘重掷</button>
     </div>
     <div class="tosslog" id="tosslog"></div>
+  </section>
+
+  <section id="sec-mh" class="hidden">
+    <h2>梅花起卦</h2>
+    <div class="moderow">
+      <label><input type="radio" name="mh-mode" value="num" checked> 报数起卦</label>
+      <label><input type="radio" name="mh-mode" value="time"> 时间起卦(农历)</label>
+    </div>
+    <div id="mh-nums" class="numrow">
+      <input type="number" id="mh-n1" min="1" max="999" placeholder="上卦数">
+      <input type="number" id="mh-n2" min="1" max="999" placeholder="下卦数">
+    </div>
+    <div class="note" id="mh-note">心中默念所问,随口报两数(1–999):首数起上卦,次数起下卦,两数和加当下时辰数除六取动爻。</div>
+    <div class="formerr" id="mh-err"></div>
+    <div class="btnrow"><button id="btn-mh" class="primary">起 卦</button></div>
+  </section>
+
+  <section id="sec-mhres" class="hidden">
+    <h2>梅花卦象</h2>
+    <div class="paninfo" id="mh-info"></div>
+    <div class="guarea" id="mh-guas"></div>
+    <div class="verdict" style="margin-top:14px">
+      <span class="lv" id="mh-lv"></span>
+      <div class="dx" id="mh-dx"></div>
+    </div>
+    <div id="mh-jing"></div>
+    <div class="subnote" id="mh-notes"></div>
+  </section>
+
+  <section id="sec-xlr" class="hidden">
+    <h2>小六壬起课</h2>
+    <div class="moderow">
+      <label><input type="radio" name="xlr-mode" value="time" checked> 时间起课(农历月日时)</label>
+      <label><input type="radio" name="xlr-mode" value="num"> 报数起课(三数)</label>
+    </div>
+    <div id="xlr-nums" class="numrow hidden">
+      <input type="number" id="xlr-a" min="1" max="99" placeholder="数一">
+      <input type="number" id="xlr-b" min="1" max="99" placeholder="数二">
+      <input type="number" id="xlr-c" min="1" max="99" placeholder="数三">
+    </div>
+    <div class="note">古法「马前课」:自大安起月、月上起日、日上起时,三宫连断因、过程、果。</div>
+    <div class="formerr" id="xlr-err"></div>
+    <div class="btnrow"><button id="btn-xlr" class="primary">起 课</button></div>
+  </section>
+
+  <section id="sec-xlrres" class="hidden">
+    <h2>课 象</h2>
+    <div class="paninfo" id="xlr-info"></div>
+    <div class="xlr-gongs" id="xlr-gongs"></div>
+    <div class="verdict" style="margin-top:14px">
+      <span class="lv" id="xlr-lv"></span>
+      <div class="dx" id="xlr-dx"></div>
+    </div>
   </section>
 
   <section id="sec-gua" class="hidden">
@@ -239,12 +325,15 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.4 内测版 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.5 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
 <script src="gua-core.js"></script>
 <script src="najia.js"></script>
+<script src="lunar.js"></script>
+<script src="meihua.js"></script>
+<script src="xiaoliuren.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -253,13 +342,34 @@
   let throws = [];       // 本盘已掷的爻 {sum, coins, label}
   let currentCast = null;
   let currentZhuang = null;
-  let currentRecId = null;
   let aiBusy = false;
+
+  // —— 法门状态 ——
+  let curTab = 'liuyao';
+  const works = { liuyao: null, meihua: null, xlr: null };   // {method, material, report, recId}
+  const results = { liuyao: false, meihua: false, xlr: false };
+  const TAB_INPUT = { liuyao: ['sec-cast'], meihua: ['sec-mh'], xlr: ['sec-xlr'] };
+  const TAB_RESULT = { liuyao: ['sec-gua', 'sec-read', 'sec-pan'], meihua: ['sec-mhres'], xlr: ['sec-xlrres'] };
+  function refreshTab() {
+    for (const m of Object.keys(TAB_INPUT)) {
+      const on = m === curTab;
+      TAB_INPUT[m].forEach(id => $(id).classList.toggle('hidden', !on));
+      TAB_RESULT[m].forEach(id => $(id).classList.toggle('hidden', !(on && results[m])));
+    }
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === curTab));
+    const w = works[curTab];
+    $('sec-ai').classList.toggle('hidden', !w);
+    $('sec-report').classList.toggle('hidden', !w);
+    if (w) $('report').value = w.report;
+    $('ai-out').classList.add('hidden'); $('ai-out').textContent = '';
+    $('ai-status').textContent = ''; $('ai-status').classList.remove('err');
+  }
 
   // —— 起卦 ——
   function tossOnce() {
     if (throws.length >= 6) return;
-    const line = GuaCore.tossLine();
+    const dayan = document.querySelector('input[name=ly-mode]:checked').value === 'dayan';
+    const line = dayan ? GuaCore.dayanLine() : GuaCore.tossLine();
     throws.push(line);
     renderTossLog();
     if (throws.length === 6) completeCast();
@@ -276,6 +386,7 @@
   }
   function completeCast() {
     const cast = GuaCore.castFromSums(throws.map(t => t.sum));
+    const dayan = !throws[0].coins;
     // 保留铜钱明细
     cast.lines.forEach((l, i) => { l.coins = throws[i].coins; });
     currentCast = cast;
@@ -284,17 +395,21 @@
     renderGua(cast);
     renderReading(cast);
     renderPan(cast, currentZhuang);
-    const report = GuaCore.buildReport(cast, q) + '\n' + panText(cast, currentZhuang);
-    $('report').value = report;
-    ['sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'].forEach(s => $(s).classList.remove('hidden'));
-    $('ai-out').classList.add('hidden'); $('ai-out').textContent = '';
-    $('ai-status').textContent = ''; $('ai-status').classList.remove('err');
-    currentRecId = saveHistory(cast, q, report);
+    const method = dayan ? '六爻·蓍草' : '六爻';
+    const report = GuaCore.buildReport(cast, q) + '\n' + panText(cast, currentZhuang) +
+      (dayan ? '\n(起卦法:蓍草大衍筮法)' : '');
+    const material = buildMaterial(cast, currentZhuang, q) + (dayan ? '\n(本卦以蓍草大衍法揲得)' : '');
+    const r = GuaCore.interpret(cast);
+    const recId = saveRec({ method, question: q, headline: r.headline, level: r.level, dx: r.dx, report, cast });
+    works.liuyao = { method, material, report, recId };
+    results.liuyao = true;
+    refreshTab();
   }
   function resetBoard(clearQ) {
-    throws = []; currentCast = null; currentZhuang = null; currentRecId = null;
+    throws = []; currentCast = null; currentZhuang = null;
     renderTossLog();
-    ['sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'].forEach(s => $(s).classList.add('hidden'));
+    works.liuyao = null; results.liuyao = false;
+    refreshTab();
     if (clearQ) $('question').value = '';
   }
 
@@ -345,8 +460,10 @@
   function renderTossLog() {
     $('tosslog').innerHTML = throws.map((t, i) =>
       `<div class="toss"><span class="idx">${POS[i]}</span>` +
-      t.coins.map(c => `<span class="coin ${c === '字' ? 'zi' : 'bei'}">${c}</span>`).join('') +
-      `<span class="val">和 <b>${t.sum}</b> · ${t.label}</span></div>`
+      (t.coins
+        ? t.coins.map(c => `<span class="coin ${c === '字' ? 'zi' : 'bei'}">${c}</span>`).join('')
+        : '<span class="coin zi">蓍</span>') +
+      `<span class="val">${t.coins ? '和 ' : '揲得 '}<b>${t.sum}</b> · ${t.label}</span></div>`
     ).join('');
   }
   function hexHtml(gua, movingIdx, caption) {
@@ -385,15 +502,14 @@
   function loadHistory() {
     try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e) { return []; }
   }
-  function saveHistory(cast, q, report) {
-    const r = GuaCore.interpret(cast);
+  function saveRec(o) {
     const rec = {
       id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
       ts: Date.now(),
-      question: q || '(未填写)',
-      sums: cast.lines.map(l => l.sum),
-      coins: cast.lines.map(l => l.coins),
-      headline: r.headline, level: r.level, dx: r.dx, report,
+      method: o.method || '六爻',
+      question: o.question || '(未填写)',
+      sums: o.cast ? o.cast.lines.map(l => l.sum) : null,
+      headline: o.headline, level: o.level, dx: o.dx, report: o.report,
       aiReading: null,
     };
     const h = loadHistory();
@@ -419,7 +535,7 @@
       const ts = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ` +
                  `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
       return `<div class="hist" data-i="${i}">
-        <div class="head"><span class="ts">${ts}</span><span class="q">${esc(rec.question)}</span><span class="hl2">${esc(rec.headline)}</span></div>
+        <div class="head"><span class="ts">${ts}</span><span class="badge">${esc(rec.method || '六爻')}</span><span class="q">${esc(rec.question)}</span><span class="hl2">${esc(rec.headline)}</span></div>
         <div class="body">
           <pre>${esc(rec.report)}</pre>
           <div><b style="color:var(--cinnabar)">【${esc(rec.level)}】</b> ${esc(rec.dx)}</div>
@@ -532,14 +648,15 @@
 
   async function deepRead() {
     if (aiBusy) return;
-    if (!currentCast) { setStatus('先起一卦。', true); return; }
+    const w = works[curTab];
+    if (!w) { setStatus('先起一卦。', true); return; }
     const q = $('question').value.trim();
     if (!q) { setStatus('深断需先填「所问何事」——问卦无题,断无所指。', true); return; }
     const key = getKey();
     const providerId = $('ai-provider').value;
     if (!key) { setStatus(`请先设置 ${curProvider().label} API Key(点右侧「设置 API Key」)。`, true); $('keybox').classList.remove('hidden'); return; }
     const model = $('ai-model').value;
-    const material = buildMaterial(currentCast, currentZhuang, q);
+    const material = w.material + `\n(所问之事以此为准:${q})`;
     let url, headers, body;
     if (providerId === 'deepseek') {
       url = 'https://api.deepseek.com/chat/completions';
@@ -630,7 +747,7 @@
         throw new Error('未收到解读内容');
       } else {
         setStatus('断毕。已存入卦档。');
-        attachAiReading(currentRecId, model, text);
+        attachAiReading(w.recId, model, text);
       }
     } catch (e) {
       if (text) { out.textContent = text; }
@@ -645,7 +762,123 @@
     }
   }
 
+  // —— 梅花易数 ——
+  const MH_RULES = '【梅花断法】体卦为己、用卦为事应;用生体大吉,比和吉,体克用可成而迟,体生用耗泄不利,用克体凶。互卦察中间过程,变卦定结局;体卦旺衰以月令五行论;应期以体用卦数或变卦气数推,近取日时、远取月。八卦万物类象随所问细取。';
+  function doMeihua() {
+    $('mh-err').textContent = '';
+    const q = $('question').value.trim();
+    const now = new Date();
+    const lunar = Lunar.fromDate(now);
+    const mode = document.querySelector('input[name=mh-mode]:checked').value;
+    let cast;
+    if (mode === 'num') {
+      const n1 = parseInt($('mh-n1').value, 10), n2 = parseInt($('mh-n2').value, 10);
+      if (!(n1 >= 1 && n1 <= 999 && n2 >= 1 && n2 <= 999)) { $('mh-err').textContent = '请报两个 1–999 的数。'; return; }
+      cast = Meihua.castByNumbers(n1, n2, lunar.hourNum);
+    } else {
+      cast = Meihua.castByTime(lunar);
+    }
+    const gz = Najia.ganZhi(now);
+    const a = Meihua.analyze(cast, gz.monthZhi);
+    // 渲染
+    $('mh-info').innerHTML = `<b>起卦:</b>${esc(cast.how)}<br><b>今为:</b>${esc(Lunar.format(lunar))} · 月建${gz.monthZhi}`;
+    const tiSide = cast.movingInLower ? '上' : '下', yongSide = cast.movingInLower ? '下' : '上';
+    $('mh-guas').innerHTML =
+      hexHtml(cast.ben, [cast.moving - 1], `本 卦 · ${POS[cast.moving - 1]}动`) +
+      hexHtml(cast.hu, null, '互 卦 · 过程') +
+      hexHtml(cast.bian, null, '变 卦 · 结局');
+    $('mh-lv').textContent = a.lv;
+    $('mh-dx').textContent = `体${cast.tiTri.name}${a.ti}(${tiSide}卦) 用${cast.yongTri.name}${a.yong}(${yongSide}卦):${a.rel}。${a.txt}`;
+    $('mh-jing').innerHTML =
+      `<div class="fblock"><div class="k">本卦卦辞</div><div class="t">${esc(cast.ben.guaCi)}</div></div>` +
+      `<div class="fblock"><div class="k">动爻爻辞 · ${esc(cast.ben.name)}卦${POS[cast.moving - 1]}</div><div class="t">${esc(cast.ben.yaoCi[cast.moving - 1])}</div></div>` +
+      `<div class="fblock"><div class="k">变卦卦辞(结局)</div><div class="t">${esc(cast.bian.guaCi)}</div></div>`;
+    $('mh-notes').innerHTML = `<b>旺衰:</b>${esc(a.wang)}。<br><b>${esc(a.huNote)}</b>。<br><b>${esc(a.bianNote)}</b>。`;
+    // 回报与深断材料
+    const report = [
+      '【东玄梅花 · 卦象回报】',
+      `起卦:${cast.how}`,
+      `本卦:${cast.ben.full}(体${cast.tiTri.name}${a.ti}/${tiSide}卦,用${cast.yongTri.name}${a.yong}/${yongSide}卦),${POS[cast.moving - 1]}动`,
+      `互卦:${cast.hu.full}`,
+      `变卦:${cast.bian.full}`,
+      `体用断:${a.rel},${a.lv}。${a.wang}`,
+      `我要问的事:${q || '(未填写)'}`,
+    ].join('\n');
+    const material = '【卦法:梅花易数】\n' + report +
+      `\n经文:本卦辞「${cast.ben.guaCi}」;动爻辞「${cast.ben.yaoCi[cast.moving - 1]}」;变卦辞「${cast.bian.guaCi}」` +
+      '\n' + MH_RULES + '\n请依上述卦象与所问细断。';
+    const recId = saveRec({
+      method: '梅花', question: q,
+      headline: `本卦${cast.ben.full},${POS[cast.moving - 1]}动,互${cast.hu.name}变${cast.bian.name}`,
+      level: a.lv, dx: a.txt, report,
+    });
+    works.meihua = { method: '梅花', material, report, recId };
+    results.meihua = true;
+    refreshTab();
+  }
+
+  // —— 小六壬 ——
+  const XLR_RULES = '【小六壬断法】月宫为因、日宫为过程、时宫为果,主断在时宫;三宫连读事之来龙去脉;宫之五行与所问用事生克定吉凶轻重,方位、应期从宫位五行与诗诀取。';
+  function doXlr() {
+    $('xlr-err').textContent = '';
+    const q = $('question').value.trim();
+    const lunar = Lunar.fromDate(new Date());
+    const mode = document.querySelector('input[name=xlr-mode]:checked').value;
+    let c;
+    if (mode === 'num') {
+      const a = parseInt($('xlr-a').value, 10), b = parseInt($('xlr-b').value, 10), cc = parseInt($('xlr-c').value, 10);
+      if (!(a >= 1 && a <= 99 && b >= 1 && b <= 99 && cc >= 1 && cc <= 99)) { $('xlr-err').textContent = '请报三个 1–99 的数。'; return; }
+      c = Xiaoliuren.castByNumbers(a, b, cc);
+    } else {
+      c = Xiaoliuren.castByTime(lunar);
+    }
+    const caps = ['月宫 · 因', '日宫 · 过程', '时宫 · 果'];
+    $('xlr-info').innerHTML = `<b>起课:</b>${esc(c.how)}`;
+    $('xlr-gongs').innerHTML = c.gongs.map((g, i) =>
+      `<div class="gongbox${/凶/.test(g.ji) ? ' bad' : ''}">
+        <div class="g-cap">${caps[i]}</div>
+        <div class="g-name">${g.name}</div>
+        <div class="g-attr">${g.wx} · ${g.shen} · ${g.dir} · ${g.ji}</div>
+        <div class="g-verse">${i === 2 ? esc(g.verse) : esc(g.key)}</div>
+      </div>`).join('');
+    const g3 = c.gongs[2];
+    $('xlr-lv').textContent = g3.ji;
+    $('xlr-dx').textContent = `终落${g3.name}:${g3.key}`;
+    const report = [
+      '【东玄小六壬 · 课象回报】',
+      `起课:${c.how}`,
+      `三宫:月宫${c.gongs[0].name}(因)→ 日宫${c.gongs[1].name}(过程)→ 时宫${c.gongs[2].name}(果)`,
+      `主断:时宫${g3.name},${g3.ji}`,
+      `我要问的事:${q || '(未填写)'}`,
+    ].join('\n');
+    const material = '【卦法:小六壬(马前课)】\n' + report +
+      '\n三宫诗诀:\n' + c.gongs.map((g, i) => `${caps[i]} ${g.name}(${g.wx},${g.shen}):${g.verse}`).join('\n') +
+      '\n' + XLR_RULES + '\n请依上述课象与所问细断。';
+    const recId = saveRec({
+      method: '小六壬', question: q,
+      headline: `${c.gongs[0].name}·${c.gongs[1].name}·${c.gongs[2].name}`,
+      level: g3.ji, dx: g3.key, report,
+    });
+    works.xlr = { method: '小六壬', material, report, recId };
+    results.xlr = true;
+    refreshTab();
+  }
+
   // —— 事件 ——
+  document.querySelectorAll('.tabs button').forEach(b =>
+    b.addEventListener('click', () => { curTab = b.dataset.m; refreshTab(); }));
+  $('btn-mh').addEventListener('click', doMeihua);
+  $('btn-xlr').addEventListener('click', doXlr);
+  document.querySelectorAll('input[name=mh-mode]').forEach(r => r.addEventListener('change', () => {
+    const num = document.querySelector('input[name=mh-mode]:checked').value === 'num';
+    $('mh-nums').classList.toggle('hidden', !num);
+    $('mh-note').textContent = num
+      ? '心中默念所问,随口报两数(1–999):首数起上卦,次数起下卦,两数和加当下时辰数除六取动爻。'
+      : '以当下农历年支数+月+日之和除八起上卦,再加时辰数除八起下卦、除六取动爻(《梅花易数》年月日时起例)。';
+  }));
+  document.querySelectorAll('input[name=xlr-mode]').forEach(r => r.addEventListener('change', () => {
+    $('xlr-nums').classList.toggle('hidden', document.querySelector('input[name=xlr-mode]:checked').value !== 'num');
+  }));
   $('btn-deepread').addEventListener('click', deepRead);
   $('ai-provider').addEventListener('change', () => {
     localStorage.setItem(PKEY, $('ai-provider').value);
@@ -706,6 +939,7 @@
   });
 
   renderHistory();
+  refreshTab();
 
   // —— PWA:离线缓存(仅 http/https 下注册,file:// 与受限环境自动跳过)——
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {

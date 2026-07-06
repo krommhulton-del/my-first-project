@@ -27,6 +27,15 @@
     return makeLine(sum, coins);
   }
 
+  // ——— 蓍草大衍法一爻:按大衍之数五十的正则分布直接抽样 ———
+  // 老阴 1/16 | 少阳 5/16 | 少阴 7/16 | 老阳 3/16(《系辞》揲蓍三变之数)
+  function dayanLine(rngBit) {
+    const bit = rngBit || cryptoBit;
+    const r = (bit() << 3) | (bit() << 2) | (bit() << 1) | bit(); // 均匀 0..15
+    const sum = r === 0 ? 6 : (r <= 5 ? 7 : (r <= 12 ? 8 : 9));
+    return makeLine(sum, null);
+  }
+
   function makeLine(sum, coins) {
     if (sum < 6 || sum > 9) throw new Error('爻值必须在 6-9 之间,得到 ' + sum);
     const yang = (sum === 7 || sum === 9);   // 少阳/老阳为阳爻
@@ -169,5 +178,5 @@
     ].join('\n');
   }
 
-  return { cryptoBit, tossLine, castHexagram, castFromSums, interpret, interpretationPlan, buildReport, trigramsOf, POS_NAMES, POS_MEANING };
+  return { cryptoBit, tossLine, dayanLine, castHexagram, castFromSums, interpret, interpretationPlan, buildReport, trigramsOf, POS_NAMES, POS_MEANING };
 }));
