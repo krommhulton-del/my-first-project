@@ -3356,6 +3356,17 @@
       '\n\n请依上述卦象、排盘与所问之事细断。';
   }
 
+  // 发给模型前钉死"今天"与去术语的硬要求(紧挨生成,对 Claude/DeepSeek 都生效)
+  function nowAnchor() {
+    const d = new Date();
+    const wd = '日一二三四五六'[d.getDay()];
+    let lunar = '';
+    try { lunar = Lunar.format(Lunar.fromDate(d)); } catch (e) {}
+    const gz = Najia.ganZhi(d);
+    return `【今天是什么日子——断应期以此为准】阳历 ${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${wd}${lunar ? '(' + lunar + ')' : ''},当前节气月为${gz.monthZhi}月。凡说"本月/今天/今年",一律按这个阳历日期:本月=阳历${d.getMonth() + 1}月,今年=${d.getFullYear()}年。给时间点必须落在合理范围——问"本月"就别把好坏都推到下个月去,该落在本月内的落在本月内。`;
+  }
+  const ANTI_JARGON = '【落笔硬要求·必须遵守】读者是外行,只想听人话。你的回答里绝对不许出现下列字眼(它们只是你心里推演的原料):卦名(乾坤震巽坎离艮兑、革卦姤卦咸卦鼎卦之类)、爻辞原文(如"巩用黄牛之革""密云不雨")、体/用/体用/用生体/体生用/比和/生克/泄气/旺相休囚/月令、六亲名(妻财官鬼父母子孙兄弟)、世应/旬空/纳甲/十神、报卦类象(如"离为目""巽为纸""艮为手")。这些一个都别写出来,全部翻成大白话结果。每段开头先甩一句人话结论(成不成、顺不顺、几月、多少钱),再说为啥。别拿卦名或术语起手,别引古文,别写编号清单和markdown,像街坊老先生当面唠。';
+
   // —— 服务商配置 ——
   const PROVIDERS = {
     claude: {
@@ -3403,6 +3414,8 @@
     const model = $('ai-model').value;
     const material = w.material +
       (curFenke ? '\n' + curFenke.ai : '') +
+      '\n' + nowAnchor() +
+      '\n' + ANTI_JARGON +
       `\n(所问之事以此为准:${q})`;
     let url, headers, body;
     if (providerId === 'deepseek') {
