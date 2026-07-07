@@ -154,6 +154,23 @@
   .fk.on { border-color: var(--cinnabar); color: var(--cinnabar); background: #f6e9e0; }
   #fk-why { color: var(--dim); font-size: .88rem; margin-top: 10px; line-height: 1.7; }
   #fk-why b { color: var(--cinnabar); font-weight: normal; }
+  #fk-recommend { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  #fk-recommend .rq { color: var(--ink); font-size: .95rem; margin-bottom: 10px; }
+  #fk-recommend .rq b { color: var(--cinnabar); font-weight: normal; }
+  .mopt { display: block; width: 100%; text-align: left; border: 1px solid var(--line);
+    background: var(--panel2); border-radius: 8px; padding: 11px 14px; margin-bottom: 8px; cursor: pointer; }
+  .mopt:hover { background: #eee4cf; border-color: var(--gold); }
+  .mopt .top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .mopt .mname { font-size: 1.05rem; color: var(--ink); letter-spacing: .05em; }
+  .mopt .mmode { color: var(--dim); font-size: .82rem; }
+  .mopt .rtag { border: 1px solid var(--cinnabar); color: var(--cinnabar); border-radius: 4px;
+    font-size: .72rem; padding: 0 6px; }
+  .mopt .rtag.t2 { border-color: var(--gold); color: var(--gold); }
+  .mopt .rtag.t3 { border-color: var(--dim); color: var(--dim); }
+  .mopt .stars { color: var(--gold-fill); font-size: .82rem; margin-left: auto; letter-spacing: 1px; }
+  .mopt .rwhy { color: var(--dim); font-size: .85rem; margin-top: 5px; line-height: 1.65; }
+  .fk-note { color: var(--dim); font-size: .82rem; margin-top: 6px; line-height: 1.6; }
+  .fk-note b { color: var(--cinnabar); font-weight: normal; }
   @media (max-width: 560px) {
     header h1 { font-size: 1.5rem; }
     body { line-height: 1.65; }
@@ -177,7 +194,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.6</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.7</span></p>
   </header>
 
   <nav class="tabs">
@@ -189,7 +206,8 @@
   <section id="sec-fenke">
     <h2>分 科 · 术业有专攻</h2>
     <div class="fenke" id="fenke-chips"></div>
-    <div id="fk-why">点一科,自动派到最专的法门并备好问题;不选则自由问事。</div>
+    <div id="fk-why">先点你要问的类别,再从最适合的几种卜卦法里挑一种;不选则自由问事。</div>
+    <div id="fk-recommend" class="hidden"></div>
   </section>
 
   <section id="sec-q">
@@ -335,7 +353,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.6 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.7 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script>
@@ -2905,94 +2923,150 @@
 
 </script>
 <script>
-// fenke.js — 问事分科:每科配最专的法门与断法规程(术业有专攻)
-// method: liuyao(六爻)| meihua(梅花)| xlr(小六壬);mode 为该法门下的起卦方式。
-// ai 字段为深断专用断法规程,随卦象材料一并发给模型。
+// fenke.js — 问事分科 + 方法推荐(按提问分类,每类列最适合的几种法门供选择)
+// 依传统与实践共识排序:六爻精于具体人事吉凶与用神取象(画像/财/应期/婚恋/事业),
+// 梅花精于方位趋势与即时之事,小六壬精于当下急事与时效(日运/出行/见面)。
+// 奇门/大六壬在某些类别更精(失物寻人破案、宏观运筹),本程序未内置其起盘,
+// 以 note 如实标注、并以已内置法门中最接近者代占。
+// method: liuyao|meihua|xlr;mode 为该法门起式;star 为该法门对本类的适配度(1-3)。
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) { module.exports = factory(); }
   else { root.Fenke = factory(); }
 }(typeof self !== 'undefined' ? self : this, function () {
+  // 各法门在各类问题上的适配理由片段(复用)
+  const R = {
+    liuyaoRen: '六爻用神配五行地支、六神取象最细,人事画像与吉凶层层可推。',
+    liuyaoYing: '六爻以用神地支直对月日,应期在诸法中最精。',
+    liuyaoCai: '六爻妻财爻旺衰配卦数,量级与贫富断得死。',
+    liuyaoQing: '六爻世应格局直见两心向背、第三者与结局,断感情最透。',
+    liuyaoShi: '六爻官鬼父母两爻定功名格局,千年科场官场皆用此。',
+    meihuaFang: '梅花后天卦即方向盘,用卦变卦定现处与去向,断方位最直接。',
+    meihuaShi: '梅花体用生克简便灵活,即时起念之事、趋势起伏一卦了然。',
+    xlrJi: '小六壬应事神断、掐指即算,时效性强,当下急事最应验。',
+    xlrRi: '小六壬本为当日决断之术,日运、出行、见面来人首选。',
+  };
+
   const FENKE = [
     {
-      id: 'yingqi', label: '应期时间', method: 'liuyao', mode: 'coin',
-      q: '此事何时能成/何时见分晓?',
-      why: '问"何时",六爻地支应期法最精——用神地支直接对应月日。',
-      ai: '【分科断法·应期】以用神地支推时间:用神旺相,应于值日或本日;休囚,待生旺之月日;动爻待合日(与动爻支六合之日),静爻待冲日(相冲之支值日);旬空待填实(本支值日)或冲空之日;月破待出月填合。近事以日计,中事以月计,远事以年计,以用神旺衰定近远。必须给出首选时间窗与备选时间窗各一,每个都注明"取某支某法",落到阳历月旬。',
+      id: 'yingqi', label: '应期时间', q: '此事何时能成/何时见分晓?',
+      recommend: [
+        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoYing },
+        { method: 'meihua', mode: 'num', star: 2, tag: '次选', why: '梅花以卦气数推应期,近取日时、远取月,快而粗。' },
+      ],
+      note: '大事之精确应期,大六壬三传定日时更细;本程序以六爻近之。',
+      ai: '【分科断法·应期】以用神地支推时间:用神旺相,应于值日或本日;休囚,待生旺之月日;动爻待合日,静爻待冲日;旬空待填实或冲空之日;月破待出月填合。近事以日计,中事以月计,远事以年计。必须给出首选时间窗与备选时间窗各一,每个都注明"取某支某法",落到阳历月旬。',
     },
     {
-      id: 'fangwei', label: '方位寻物', method: 'meihua', mode: 'num',
-      q: '所寻之物/之人在哪个方向?',
-      why: '问方位,梅花后天卦方位最直接——用卦变卦即是方向盘。',
-      ai: '【分科断法·方位】以用卦定现处方位、变卦定移动去向:乾西北、坎正北、艮东北、震正东、巽东南、离正南、坤西南、兑正西。距离以卦之先天数结合旺衰定:旺则数大(取数乘十或百步/里),衰则数小;体用比和在近处熟地,用克体在难寻之处。结合卦象类象点明环境(坎近水、艮墙角山石、离炉灶电器明处、坤田土仓储、兑缺口洼地井、乾高亢金属处、震巽草木市集)。必须给:方向+距离区间+环境特征三件套。',
+      id: 'fangwei', label: '方位寻物', q: '所寻之物/之人在哪个方向?',
+      recommend: [
+        { method: 'meihua', mode: 'num', star: 3, tag: '首选', why: R.meihuaFang },
+        { method: 'xlr', mode: 'time', star: 2, tag: '次选', why: '小六壬六宫各主一方,急寻可掐指即得大向。' },
+        { method: 'liuyao', mode: 'coin', star: 2, tag: '亦可', why: '六爻以用神地支定方,兼可断落于何人。' },
+      ],
+      note: '寻物寻人之精确(落宫、落于何人手),奇门遁甲最擅;本程序以梅花/六爻近之。',
+      ai: '【分科断法·方位】以用卦定现处方位、变卦定移动去向:乾西北、坎正北、艮东北、震正东、巽东南、离正南、坤西南、兑正西。距离以卦之先天数结合旺衰定:旺则数大,衰则数小。结合卦象类象点明环境(坎近水、艮墙角山石、离炉灶电器明处、坤田土仓储、兑缺口洼地井、乾高亢金属处、震巽草木市集)。必须给:方向+距离区间+环境特征三件套。',
     },
     {
-      id: 'zhangxiang', label: '长相身材', method: 'liuyao', mode: 'coin',
-      q: '此人长相身材如何?(占前心中锁定其人)',
-      why: '问人物画像,六爻用神配六神取象最细——五行定形、六神定神态。',
-      ai: '【分科断法·形貌】以用神五行定形体:木主瘦长身高、发密;火主上尖下阔、面赤有神、行动急;土主敦厚矮壮、面黄圆;金主方正白皙、骨架利落;水主圆活丰润、面黑有光、灵动。六神定神态气质:青龙俊秀端正有教养,朱雀伶俐健谈眉目生动,勾陈敦实迟缓老成,螣蛇清瘦多心思、眼神飘,白虎刚悍有威、粗声大气,玄武妩媚暧昧、眼神含水。爻位定高矮(上爻高大、初二爻偏矮),旺相定胖瘦(旺则丰、衰则薄)。年龄以用神地支配长生沐浴推年段,跨度不超十岁。必须给:身高档、体型、脸型肤色、气质神态、年龄段五项。',
+      id: 'zhangxiang', label: '长相身材', q: '此人长相身材如何?(占前心中锁定其人)',
+      recommend: [
+        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoRen },
+        { method: 'meihua', mode: 'num', star: 1, tag: '亦可', why: '梅花以用卦五行取大略形貌,粗而快。' },
+      ],
+      ai: '【分科断法·形貌】以用神五行定形体:木主瘦长身高发密,火主上尖下阔面赤有神行动急,土主敦厚矮壮面黄圆,金主方正白皙骨架利落,水主圆活丰润面黑有光灵动。六神定神态:青龙俊秀端正,朱雀伶俐健谈眉目生动,勾陈敦实迟缓老成,螣蛇清瘦多心思眼神飘,白虎刚悍有威粗声大气,玄武妩媚暧昧眼神含水。爻位定高矮(上爻高、初二爻矮),旺相定胖瘦。年龄以用神地支配长生推年段,跨度不超十岁。必须给:身高档、体型、脸型肤色、气质神态、年龄段五项。',
     },
     {
-      id: 'jiajing', label: '家境出身', method: 'liuyao', mode: 'coin',
-      q: '此人家境出身如何?',
-      why: '问根基,六爻父母爻与宫位定家底,旺衰即厚薄。',
-      ai: '【分科断法·家境】父母爻为家宅根基:旺相临日月,家底殷实;休囚逢空破,根基薄。父母临青龙书香门第或体面产业,临白虎家有武职权势或曾破败重起,临勾陈田土房产多,临玄武家事复杂或灰色营生,临朱雀家人善经营口才行业,临螣蛇家道曲折。财爻生官、官生父连环有气者,家中有权有钱。卦宫五行配家中营生行业(金融管理、地产农业、文教、水利运输等)。必须给:家底档次(殷实/中等/薄弱)、家中主业方向、父母辈状况三项。',
+      id: 'jiajing', label: '家境出身', q: '此人家境出身如何?',
+      recommend: [
+        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: '六爻父母爻与卦宫定家底根基,旺衰即厚薄,应爻见对方家境。' },
+        { method: 'meihua', mode: 'num', star: 1, tag: '亦可', why: '梅花以体卦旺衰粗断根基强弱。' },
+      ],
+      ai: '【分科断法·家境】父母爻为家宅根基:旺相临日月家底殷实,休囚逢空破根基薄。父母临青龙书香门第或体面产业,临白虎家有武职权势或曾破败重起,临勾陈田土房产多,临玄武家事复杂或灰色营生,临朱雀家人善经营口才行业,临螣蛇家道曲折。财官父连环有气者有权有钱。卦宫五行配家中营生行业。必须给:家底档次(殷实/中等/薄弱)、家中主业方向、父母辈状况三项。',
     },
     {
-      id: 'caifu_ta', label: '财富量级', method: 'liuyao', mode: 'coin',
-      q: '此人/此事的财富量级有多大?',
-      why: '问钱的数目,六爻财爻旺衰配卦数换算,量级点得死。',
-      ai: '【分科断法·财量】以妻财爻定量级:临日月旺相,取大数;得生扶,取中数;休囚死绝,取小数。基数取财爻地支之数(子1丑2寅3…亥12)与卦之先后天数,旺相乘十乘百,休囚除减;两财爻并见相加。财爻空破而有救者,量级虚报打七折断。必须给:量级档位(千/万/十万/百万/千万)、档内具体数字区间、取自哪个爻哪个数的推法、得财或破财之时点(应期法)四项。',
+      id: 'caifu_ta', label: '财富量级', q: '此人/此事的财富量级有多大?',
+      recommend: [
+        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoCai },
+        { method: 'meihua', mode: 'num', star: 1, tag: '亦可', why: '梅花以卦数与体用旺衰估大略量级。' },
+      ],
+      ai: '【分科断法·财量】以妻财爻定量级:临日月旺相取大数,得生扶取中数,休囚死绝取小数。基数取财爻地支之数(子1丑2寅3…亥12)与卦之先后天数,旺相乘十乘百,休囚除减;两财爻并见相加。财爻空破而有救者,量级虚报打七折断。必须给:量级档位(千/万/十万/百万/千万)、档内具体数字区间、取自哪个爻哪个数的推法、得财或破财之时点(应期法)四项。',
     },
     {
-      id: 'chengshi', label: '城市去向', method: 'meihua', mode: 'num',
-      q: '去哪个方向的城市发展最利我?',
-      why: '选城市看方位与卦气,梅花体用配后天方位一卦定盘。',
-      ai: '【分科断法·城市】变卦方位为宜去之向(后天八卦方位),用生体之方为得助之地,用克体之方勿往。卦象配城市气质:离为文教传媒科技之城,兑为金融口岸消费之城,坎为水滨港口物流之城,艮为山城资源稳态之城,震为新兴产业活力之城,巽为商贸流通之城,乾为省会都会权力中枢,坤为农业腹地慢城。必须给:首选方位(以问卦人现居地为原点)+该方向城市类型画像+次选方位,并点明避开哪个方向。',
+      id: 'chengshi', label: '城市去向', q: '去哪个方向的城市发展最利我?',
+      recommend: [
+        { method: 'meihua', mode: 'num', star: 3, tag: '首选', why: R.meihuaFang + ' 变卦即宜去之向。' },
+        { method: 'liuyao', mode: 'coin', star: 2, tag: '次选', why: '六爻以世应生克与用神方位断利与不利。' },
+      ],
+      note: '择地趋避之运筹,奇门遁甲更强;本程序以梅花定向、六爻定利。',
+      ai: '【分科断法·城市】变卦方位为宜去之向(后天八卦方位),用生体之方为得助之地,用克体之方勿往。卦象配城市气质:离为文教传媒科技之城,兑为金融口岸消费之城,坎为水滨港口物流之城,艮为山城资源稳态之城,震为新兴产业活力之城,巽为商贸流通之城,乾为省会都会权力中枢,坤为农业腹地慢城。必须给:首选方位(以现居地为原点)+该方向城市类型画像+次选方位,并点明避开哪个方向。',
     },
     {
-      id: 'qinmi', label: '亲密关系', method: 'liuyao', mode: 'coin',
-      q: '我与此人的关系走向如何?',
-      why: '两人之事,六爻世应格局最透——世应生合冲克即两颗心的向背。',
-      ai: '【分科断法·亲密】世为己、应为对方,男占感情以妻财为用、女占以官鬼为用。用神生合世爻,对方有心;世生用,我方倒贴;世应相冲,聚少离多;相克,有伤害性拉扯;间爻发动,有第三者或阻隔之人。用神与他爻作合,对方另有牵扯;桃花支(子午卯酉)临用神动,暧昧成分重。用神旺衰定对方投入程度,应期法断关系节点。必须给:谁更主动、对方真实心态、间隔阻力、走向与结局、关键时间点五项,不粉饰。',
+      id: 'qinmi', label: '亲密关系', q: '我与此人的关系走向如何?',
+      recommend: [
+        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoQing },
+        { method: 'meihua', mode: 'num', star: 2, tag: '次选', why: '梅花体用生合看缘分深浅与聚散大势,简快。' },
+        { method: 'xlr', mode: 'time', star: 1, tag: '亦可', why: '小六壬急问"今日他会不会来/联系"最应。' },
+      ],
+      ai: '【分科断法·亲密】世为己、应为对方,男占以妻财为用、女占以官鬼为用。用神生合世爻对方有心;世生用我方倒贴;世应相冲聚少离多;相克有伤害性拉扯;间爻发动有第三者或阻隔之人;用神与他爻作合对方另有牵扯;桃花支(子午卯酉)临用神动暧昧重。用神旺衰定投入程度,应期法断关系节点。必须给:谁更主动、对方真实心态、间隔阻力、走向结局、关键时间点五项,不粉饰。',
     },
     {
-      id: 'touzi', label: '投资决策', method: 'liuyao', mode: 'coin',
-      q: '这笔投资能不能入?赚赔如何?',
-      why: '投资问吉凶赚赔,六爻财爻兄爻子孙爻三角看得最全。',
-      ai: '【分科断法·投资】妻财为标的与利润,世为己,应为对手方/市场,子孙为财源(生财),兄弟为劫耗(破财)。财爻旺相持世或生合世,可入;兄弟发动克财,必有劫耗,不入或轻仓;子孙动化财,源头活水,可加;财化兄、财空破,利润成空。官鬼动,有政策/官非/系统性风险。必须给:入/不入、仓位建议(轻/半/重)、预期赚赔幅度档、止损或退出时点(应期法)、最大风险来自哪一路五项。',
+      id: 'touzi', label: '投资决策', q: '这笔投资能不能入?赚赔如何?',
+      recommend: [
+        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: '六爻财/兄/子三爻看赚赔劫耗财源最全,官鬼见系统性风险。' },
+        { method: 'meihua', mode: 'num', star: 1, tag: '亦可', why: '梅花体用比和/生克快断可入与否。' },
+      ],
+      note: '大额博弈之择时运筹,奇门遁甲擅趋避;本程序以六爻断赚赔风险。',
+      ai: '【分科断法·投资】妻财为标的与利润,世为己,应为对手/市场,子孙为财源,兄弟为劫耗。财旺持世或生合世可入;兄弟发动克财必有劫耗,不入或轻仓;子孙动化财源头活水可加;财化兄、财空破利润成空;官鬼动有政策官非系统性风险。必须给:入/不入、仓位(轻/半/重)、预期赚赔幅度档、止损或退出时点(应期)、最大风险来自哪一路五项。',
     },
     {
-      id: 'shiye', label: '事业官运', method: 'liuyao', mode: 'coin',
-      q: '我的事业/职位近期有无进展?',
-      why: '功名事业,六爻官鬼父母两爻定格局,千年科场官场都这么断。',
-      ai: '【分科断法·事业】官鬼为职位权柄、父母为文书单位靠山、世爻为自身。官星旺相生合世爻,升迁调动有望;父母化官、官化进神,文书落定步步高;世爻空破休囚,自身无力承接;兄弟持世,同侪竞争夺位;子孙发动克官,主动摇、辞意或被裁撤之险。贵人方位以官星父母所临地支方位取。必须给:成与不成、时点(应期)、贵人在何方何类人、最大障碍、进退建议五项。',
+      id: 'shiye', label: '事业官运', q: '我的事业/职位近期有无进展?',
+      recommend: [
+        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoShi },
+        { method: 'meihua', mode: 'time', star: 2, tag: '次选', why: '梅花时间卦看事业近段趋势与转折。' },
+      ],
+      note: '谋事竞争谈判之运筹夺势,奇门遁甲最强;本程序以六爻断成败格局。',
+      ai: '【分科断法·事业】官鬼为职位权柄、父母为文书单位靠山、世为自身。官星旺相生合世爻升迁调动有望;父母化官、官化进神文书落定;世空破休囚自身无力承接;兄弟持世同侪夺位;子孙发动克官主动摇辞意或被裁。贵人方位以官星父母所临地支方位取。必须给:成与不成、时点(应期)、贵人在何方何类人、最大障碍、进退建议五项。',
     },
     {
-      id: 'riyun', label: '今日运势', method: 'xlr', mode: 'time',
-      q: '今日运势如何?宜做何事?',
-      why: '当日之事小六壬最快最应——马前课本就是行军当日决断之术。',
-      ai: '【分科断法·日运】以三宫连断今日:月宫为上午/事之起,日宫为午间/事之中,时宫为收尾/结果,主断在时宫。逐宫以五行配今日各时段吉凶:宫属木利东方与寅卯时,火利南方巳午时,金利西方申酉时,水利北方亥子时,土利四隅辰戌丑未时。必须给:今日总评一句、宜做与忌做各两件、吉时(具体钟点段)、吉方、需防的一件事五项。',
+      id: 'riyun', label: '今日运势', q: '今日运势如何?宜做何事?',
+      recommend: [
+        { method: 'xlr', mode: 'time', star: 3, tag: '首选', why: R.xlrRi },
+        { method: 'meihua', mode: 'time', star: 2, tag: '次选', why: '梅花时间卦分本互变三段铺当日早中晚。' },
+      ],
+      ai: '【分科断法·日运】以三宫连断今日:月宫为上午/事之起,日宫为午间/事之中,时宫为收尾/结果,主断在时宫。逐宫五行配今日各时段吉凶:木利东方寅卯时,火利南方巳午时,金利西方申酉时,水利北方亥子时,土利四隅辰戌丑未时。必须给:今日总评一句、宜做与忌做各两件、吉时(具体钟点段)、吉方、需防的一件事五项。',
     },
     {
-      id: 'yueyun', label: '本月运势', method: 'meihua', mode: 'time',
-      q: '本月运势如何?高低点在何时?',
-      why: '月内起伏,梅花时间卦本互变三段正好铺满一个月:月初、月中、月末。',
-      ai: '【分科断法·月运】以时间卦断本月:本卦为月初格局与主调,互卦为月中走势,变卦为月末归宿;体卦旺衰为本月元气。分四路各断一句:事业(官象)、财运(财象与卦数)、感情(体用生合)、健康(体卦受克处即病位:乾首离目坎耳肾震肝足巽股胆艮手脾兑口肺坤腹胃)。高点取生体之卦当令的旬,低点取克体之卦当令的旬,落到"上/中/下旬"。必须给:总评、四路各一句、高点旬、低点旬、本月最该抓的一件事。',
+      id: 'yueyun', label: '本月运势', q: '本月运势如何?高低点在何时?',
+      recommend: [
+        { method: 'meihua', mode: 'time', star: 3, tag: '首选', why: '梅花时间卦本互变三段正好铺满月初中末,趋势起伏一目了然。' },
+        { method: 'liuyao', mode: 'coin', star: 2, tag: '次选', why: '六爻以用神旺衰与动爻应期定本月吉凶月节点。' },
+      ],
+      ai: '【分科断法·月运】以时间卦断本月:本卦为月初主调,互卦为月中走势,变卦为月末归宿;体卦旺衰为本月元气。四路各断一句:事业(官象)、财运(财象与卦数)、感情(体用生合)、健康(体卦受克处即病位:乾首离目坎耳肾震足巽股艮手兑口坤腹)。高点取生体之卦当令旬,低点取克体之卦当令旬,落到上/中/下旬。必须给:总评、四路各一句、高点旬、低点旬、本月最该抓的一件事。',
     },
     {
-      id: 'nianyun', label: '年运大势', method: 'liuyao', mode: 'dayan',
-      q: '未来一年大势如何?',
-      why: '岁占大事用蓍草大衍——年运是大格局,古法郑重其事。',
-      ai: '【分科断法·年运】岁占:全卦为一年格局,内卦主上半年、外卦主下半年,动爻所在之季为全年转折点。世爻旺衰为一年元气底盘。六亲齐观各断一路:妻财(财运)、官鬼(事业官非)、父母(文书房产长辈)、子孙(子女下属健康解厄)、兄弟(人际破耗)。吉月凶月以爻支应期法列出(各至少两个月份,注明取法)。必须给:年度总评与关键词、上半年下半年各一段、五路各一句、吉月凶月清单、全年最大机会与最大坑各一。',
+      id: 'nianyun', label: '年运大势', q: '未来一年大势如何?',
+      recommend: [
+        { method: 'liuyao', mode: 'dayan', star: 3, tag: '首选', why: '岁占大事用蓍草大衍,古法郑重;内外卦分上下半年,六亲照见五路。' },
+        { method: 'liuyao', mode: 'coin', star: 2, tag: '次选', why: '三钱六爻同断年运,快捷。' },
+      ],
+      note: '一年宏观时空全景之运筹,奇门/太乙更擅国运大势;本程序以六爻岁占。',
+      ai: '【分科断法·年运】岁占:全卦为一年格局,内卦主上半年、外卦主下半年,动爻所在之季为转折点。世爻旺衰为一年元气底盘。六亲齐观:妻财(财运)、官鬼(事业官非)、父母(文书房产长辈)、子孙(子女下属健康解厄)、兄弟(人际破耗)。吉月凶月以爻支应期法列出(各至少两个月份,注明取法)。必须给:年度总评与关键词、上下半年各一段、五路各一句、吉月凶月清单、全年最大机会与最大坑各一。',
     },
     {
-      id: 'zonghe', label: '综合运势', method: 'liuyao', mode: 'coin',
-      q: '我当下整体运势如何?',
-      why: '全盘体检,六爻六亲俱全,一卦照见五路。',
-      ai: '【分科断法·综合】世爻旺衰为元气总盘。六亲五路齐断:财、官、父、子、兄各以旺衰动静断一句吉凶。当下最旺的一路(得日月生扶或发动生世者)点明可乘之势;最凶的一路(克世或空破者)点明须防之事。六神配世爻断当下心境状态。必须给:总评一句、五路各一句、最旺一路怎么乘、最凶一路怎么防、调整建议一条。',
+      id: 'zonghe', label: '综合运势', q: '我当下整体运势如何?',
+      recommend: [
+        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: '六爻六亲俱全,一卦照见财官父子兄五路。' },
+        { method: 'meihua', mode: 'num', star: 2, tag: '次选', why: '梅花体用一卦速览当下顺逆。' },
+        { method: 'xlr', mode: 'time', star: 1, tag: '亦可', why: '小六壬掐指速断当下大安否。' },
+      ],
+      ai: '【分科断法·综合】世爻旺衰为元气总盘。六亲五路齐断:财、官、父、子、兄各以旺衰动静断一句吉凶。最旺一路(得日月生扶或发动生世)点明可乘之势;最凶一路(克世或空破)点明须防之事。六神配世爻断当下心境。必须给:总评一句、五路各一句、最旺一路怎么乘、最凶一路怎么防、调整建议一条。',
     },
   ];
-  return { FENKE };
+
+  const METHOD_LABEL = { liuyao: '六爻', meihua: '梅花易数', xlr: '小六壬' };
+  const MODE_LABEL = {
+    coin: '三钱法', dayan: '蓍草大衍', num: '报数起卦', time: '时间起卦',
+  };
+  return { FENKE, METHOD_LABEL, MODE_LABEL };
 }));
 
 </script>
@@ -3528,37 +3602,73 @@
     refreshTab();
   }
 
-  // —— 分科:派单到专攻法门,深断带专科断法规程 ——
-  let curFenke = null;
-  const METHOD_NAMES = { liuyao: '六爻', meihua: '梅花易数', xlr: '小六壬' };
+  // —— 分科:点类别 → 列排序推荐 → 点选方法(术业有专攻,由你定夺)——
+  let curFenke = null;    // 已选类别
+  let curPick = null;     // 已选方法 {method, mode}
+  const METHOD_NAMES = Fenke.METHOD_LABEL, MODE_NAMES = Fenke.MODE_LABEL;
   function renderFenke() {
     $('fenke-chips').innerHTML = Fenke.FENKE.map(f =>
       `<button class="fk" data-id="${f.id}">${f.label}</button>`).join('');
   }
-  function selectFenke(id) {
-    curFenke = (curFenke && curFenke.id === id) ? null : (Fenke.FENKE.find(f => f.id === id) || null);
+  // 点类别:展开该类的方法推荐(不立即切法门,等用户点方法)
+  function openFenke(id) {
+    const same = curFenke && curFenke.id === id;
+    curFenke = same ? null : (Fenke.FENKE.find(f => f.id === id) || null);
+    curPick = null;
     document.querySelectorAll('.fk').forEach(b => b.classList.toggle('on', !!curFenke && b.dataset.id === curFenke.id));
     if (!curFenke) {
-      $('fk-why').innerHTML = '点一科,自动派到最专的法门并备好问题;不选则自由问事。';
+      $('fk-recommend').classList.add('hidden');
+      $('fk-why').innerHTML = '先点你要问的类别,再从最适合的几种卜卦法里挑一种;不选则自由问事。';
       return;
     }
+    $('fk-why').innerHTML = `已选类别<b>「${esc(curFenke.label)}」</b> —— 下面按适配度排序,点一种法门即用它起卦(深断按本类断法规程细批)。`;
+    const opts = curFenke.recommend.map((r, i) => {
+      const tcls = r.tag === '首选' ? '' : (r.tag === '次选' ? 't2' : 't3');
+      const stars = '★'.repeat(r.star) + '☆'.repeat(3 - r.star);
+      return `<button class="mopt" data-i="${i}">
+        <div class="top">
+          <span class="mname">${METHOD_NAMES[r.method]}</span>
+          <span class="mmode">· ${MODE_NAMES[r.mode]}</span>
+          <span class="rtag ${tcls}">${r.tag}</span>
+          <span class="stars" title="适配度">${stars}</span>
+        </div>
+        <div class="rwhy">${esc(r.why)}</div>
+      </button>`;
+    }).join('');
+    const note = curFenke.note ? `<div class="fk-note"><b>提示:</b>${esc(curFenke.note)}</div>` : '';
+    $('fk-recommend').innerHTML = `<div class="rq">拟问:<b>${esc(curFenke.q)}</b></div>${opts}${note}`;
+    $('fk-recommend').classList.remove('hidden');
+  }
+  // 点方法:切到对应法门与起式,填问题,锁定本类断法规程
+  function pickMethod(i) {
+    if (!curFenke) return;
+    const r = curFenke.recommend[i];
+    if (!r) return;
+    curPick = { method: r.method, mode: r.mode };
     $('question').value = curFenke.q;
-    $('fk-why').innerHTML = `<b>专攻:${METHOD_NAMES[curFenke.method]}</b> —— ${esc(curFenke.why)} 深断将按本科断法规程细批。`;
-    curTab = curFenke.method;
-    if (curFenke.method === 'liuyao') {
-      document.querySelector(`input[name=ly-mode][value=${curFenke.mode}]`).checked = true;
-    } else if (curFenke.method === 'meihua') {
-      const r = document.querySelector(`input[name=mh-mode][value=${curFenke.mode}]`);
-      r.checked = true; r.dispatchEvent(new Event('change'));
-    } else if (curFenke.method === 'xlr') {
-      const r = document.querySelector(`input[name=xlr-mode][value=${curFenke.mode}]`);
-      r.checked = true; r.dispatchEvent(new Event('change'));
+    curTab = r.method;
+    if (r.method === 'liuyao') {
+      const el = document.querySelector(`input[name=ly-mode][value=${r.mode}]`);
+      if (el) el.checked = true;
+    } else if (r.method === 'meihua') {
+      const el = document.querySelector(`input[name=mh-mode][value=${r.mode}]`);
+      if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
+    } else if (r.method === 'xlr') {
+      const el = document.querySelector(`input[name=xlr-mode][value=${r.mode}]`);
+      if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
     }
+    document.querySelectorAll('#fk-recommend .mopt').forEach((b, j) => b.style.borderColor = (j === i ? 'var(--cinnabar)' : ''));
+    $('fk-why').innerHTML = `已定<b>「${esc(curFenke.label)}」→ ${METHOD_NAMES[r.method]}·${MODE_NAMES[r.mode]}」</b>,下方起卦即可。`;
     refreshTab();
+    $('sec-q').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   $('fenke-chips').addEventListener('click', e => {
     const b = e.target.closest('.fk');
-    if (b) selectFenke(b.dataset.id);
+    if (b) openFenke(b.dataset.id);
+  });
+  $('fk-recommend').addEventListener('click', e => {
+    const b = e.target.closest('.mopt');
+    if (b) pickMethod(Number(b.dataset.i));
   });
   renderFenke();
 

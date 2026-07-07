@@ -156,6 +156,23 @@
   .fk.on { border-color: var(--cinnabar); color: var(--cinnabar); background: #f6e9e0; }
   #fk-why { color: var(--dim); font-size: .88rem; margin-top: 10px; line-height: 1.7; }
   #fk-why b { color: var(--cinnabar); font-weight: normal; }
+  #fk-recommend { margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  #fk-recommend .rq { color: var(--ink); font-size: .95rem; margin-bottom: 10px; }
+  #fk-recommend .rq b { color: var(--cinnabar); font-weight: normal; }
+  .mopt { display: block; width: 100%; text-align: left; border: 1px solid var(--line);
+    background: var(--panel2); border-radius: 8px; padding: 11px 14px; margin-bottom: 8px; cursor: pointer; }
+  .mopt:hover { background: #eee4cf; border-color: var(--gold); }
+  .mopt .top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .mopt .mname { font-size: 1.05rem; color: var(--ink); letter-spacing: .05em; }
+  .mopt .mmode { color: var(--dim); font-size: .82rem; }
+  .mopt .rtag { border: 1px solid var(--cinnabar); color: var(--cinnabar); border-radius: 4px;
+    font-size: .72rem; padding: 0 6px; }
+  .mopt .rtag.t2 { border-color: var(--gold); color: var(--gold); }
+  .mopt .rtag.t3 { border-color: var(--dim); color: var(--dim); }
+  .mopt .stars { color: var(--gold-fill); font-size: .82rem; margin-left: auto; letter-spacing: 1px; }
+  .mopt .rwhy { color: var(--dim); font-size: .85rem; margin-top: 5px; line-height: 1.65; }
+  .fk-note { color: var(--dim); font-size: .82rem; margin-top: 6px; line-height: 1.6; }
+  .fk-note b { color: var(--cinnabar); font-weight: normal; }
   @media (max-width: 560px) {
     header h1 { font-size: 1.5rem; }
     body { line-height: 1.65; }
@@ -179,7 +196,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.6</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.7</span></p>
   </header>
 
   <nav class="tabs">
@@ -191,7 +208,8 @@
   <section id="sec-fenke">
     <h2>分 科 · 术业有专攻</h2>
     <div class="fenke" id="fenke-chips"></div>
-    <div id="fk-why">点一科,自动派到最专的法门并备好问题;不选则自由问事。</div>
+    <div id="fk-why">先点你要问的类别,再从最适合的几种卜卦法里挑一种;不选则自由问事。</div>
+    <div id="fk-recommend" class="hidden"></div>
   </section>
 
   <section id="sec-q">
@@ -337,7 +355,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.6 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.7 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -879,37 +897,73 @@
     refreshTab();
   }
 
-  // —— 分科:派单到专攻法门,深断带专科断法规程 ——
-  let curFenke = null;
-  const METHOD_NAMES = { liuyao: '六爻', meihua: '梅花易数', xlr: '小六壬' };
+  // —— 分科:点类别 → 列排序推荐 → 点选方法(术业有专攻,由你定夺)——
+  let curFenke = null;    // 已选类别
+  let curPick = null;     // 已选方法 {method, mode}
+  const METHOD_NAMES = Fenke.METHOD_LABEL, MODE_NAMES = Fenke.MODE_LABEL;
   function renderFenke() {
     $('fenke-chips').innerHTML = Fenke.FENKE.map(f =>
       `<button class="fk" data-id="${f.id}">${f.label}</button>`).join('');
   }
-  function selectFenke(id) {
-    curFenke = (curFenke && curFenke.id === id) ? null : (Fenke.FENKE.find(f => f.id === id) || null);
+  // 点类别:展开该类的方法推荐(不立即切法门,等用户点方法)
+  function openFenke(id) {
+    const same = curFenke && curFenke.id === id;
+    curFenke = same ? null : (Fenke.FENKE.find(f => f.id === id) || null);
+    curPick = null;
     document.querySelectorAll('.fk').forEach(b => b.classList.toggle('on', !!curFenke && b.dataset.id === curFenke.id));
     if (!curFenke) {
-      $('fk-why').innerHTML = '点一科,自动派到最专的法门并备好问题;不选则自由问事。';
+      $('fk-recommend').classList.add('hidden');
+      $('fk-why').innerHTML = '先点你要问的类别,再从最适合的几种卜卦法里挑一种;不选则自由问事。';
       return;
     }
+    $('fk-why').innerHTML = `已选类别<b>「${esc(curFenke.label)}」</b> —— 下面按适配度排序,点一种法门即用它起卦(深断按本类断法规程细批)。`;
+    const opts = curFenke.recommend.map((r, i) => {
+      const tcls = r.tag === '首选' ? '' : (r.tag === '次选' ? 't2' : 't3');
+      const stars = '★'.repeat(r.star) + '☆'.repeat(3 - r.star);
+      return `<button class="mopt" data-i="${i}">
+        <div class="top">
+          <span class="mname">${METHOD_NAMES[r.method]}</span>
+          <span class="mmode">· ${MODE_NAMES[r.mode]}</span>
+          <span class="rtag ${tcls}">${r.tag}</span>
+          <span class="stars" title="适配度">${stars}</span>
+        </div>
+        <div class="rwhy">${esc(r.why)}</div>
+      </button>`;
+    }).join('');
+    const note = curFenke.note ? `<div class="fk-note"><b>提示:</b>${esc(curFenke.note)}</div>` : '';
+    $('fk-recommend').innerHTML = `<div class="rq">拟问:<b>${esc(curFenke.q)}</b></div>${opts}${note}`;
+    $('fk-recommend').classList.remove('hidden');
+  }
+  // 点方法:切到对应法门与起式,填问题,锁定本类断法规程
+  function pickMethod(i) {
+    if (!curFenke) return;
+    const r = curFenke.recommend[i];
+    if (!r) return;
+    curPick = { method: r.method, mode: r.mode };
     $('question').value = curFenke.q;
-    $('fk-why').innerHTML = `<b>专攻:${METHOD_NAMES[curFenke.method]}</b> —— ${esc(curFenke.why)} 深断将按本科断法规程细批。`;
-    curTab = curFenke.method;
-    if (curFenke.method === 'liuyao') {
-      document.querySelector(`input[name=ly-mode][value=${curFenke.mode}]`).checked = true;
-    } else if (curFenke.method === 'meihua') {
-      const r = document.querySelector(`input[name=mh-mode][value=${curFenke.mode}]`);
-      r.checked = true; r.dispatchEvent(new Event('change'));
-    } else if (curFenke.method === 'xlr') {
-      const r = document.querySelector(`input[name=xlr-mode][value=${curFenke.mode}]`);
-      r.checked = true; r.dispatchEvent(new Event('change'));
+    curTab = r.method;
+    if (r.method === 'liuyao') {
+      const el = document.querySelector(`input[name=ly-mode][value=${r.mode}]`);
+      if (el) el.checked = true;
+    } else if (r.method === 'meihua') {
+      const el = document.querySelector(`input[name=mh-mode][value=${r.mode}]`);
+      if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
+    } else if (r.method === 'xlr') {
+      const el = document.querySelector(`input[name=xlr-mode][value=${r.mode}]`);
+      if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
     }
+    document.querySelectorAll('#fk-recommend .mopt').forEach((b, j) => b.style.borderColor = (j === i ? 'var(--cinnabar)' : ''));
+    $('fk-why').innerHTML = `已定<b>「${esc(curFenke.label)}」→ ${METHOD_NAMES[r.method]}·${MODE_NAMES[r.mode]}」</b>,下方起卦即可。`;
     refreshTab();
+    $('sec-q').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   $('fenke-chips').addEventListener('click', e => {
     const b = e.target.closest('.fk');
-    if (b) selectFenke(b.dataset.id);
+    if (b) openFenke(b.dataset.id);
+  });
+  $('fk-recommend').addEventListener('click', e => {
+    const b = e.target.closest('.mopt');
+    if (b) pickMethod(Number(b.dataset.i));
   });
   renderFenke();
 

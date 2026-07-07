@@ -108,23 +108,36 @@ t('十三科齐全,覆盖时间/方位/长相/家境/财量/城市/亲密/投资
     ok(ids.includes(need), '缺 ' + need);
   }
 });
-t('每科法门合法、断法规程完整、问题模板齐备', () => {
+t('每科含排序推荐、法门合法、断法规程完整、问题模板齐备', () => {
   const METHODS = { liuyao: ['coin', 'dayan'], meihua: ['num', 'time'], xlr: ['time', 'num'] };
+  const TAGS = ['首选', '次选', '亦可'];
   for (const f of Fenke.FENKE) {
-    ok(METHODS[f.method], f.id + ' 法门:' + f.method);
-    ok(METHODS[f.method].includes(f.mode), f.id + ' 起式:' + f.mode);
     ok(f.q && f.q.length >= 6, f.id + ' 问题模板');
-    ok(f.why && f.why.length >= 10, f.id + ' 专攻理由');
+    ok(Array.isArray(f.recommend) && f.recommend.length >= 1, f.id + ' 推荐列表');
+    ok(f.recommend[0].tag === '首选', f.id + ' 首项应为首选');
+    let lastStar = 4;
+    for (const r of f.recommend) {
+      ok(METHODS[r.method], f.id + ' 法门:' + r.method);
+      ok(METHODS[r.method].includes(r.mode), f.id + ' 起式:' + r.mode);
+      ok(r.star >= 1 && r.star <= 3, f.id + ' 适配度 1-3');
+      ok(TAGS.includes(r.tag), f.id + ' 标签');
+      ok(r.why && r.why.length >= 8, f.id + ' 推荐理由');
+      ok(r.star <= lastStar, f.id + ' 适配度应递减排序'); lastStar = r.star;
+    }
     ok(f.ai && f.ai.length >= 100 && f.ai.startsWith('【分科断法'), f.id + ' 断法规程');
     ok(f.ai.includes('必须给'), f.id + ' 规程须含硬性输出要求');
   }
 });
-t('派单符合术业专攻:应期/画像/投资走六爻,方位/城市走梅花,日运走小六壬', () => {
-  const by = id => Fenke.FENKE.find(f => f.id === id);
-  eq(by('yingqi').method, 'liuyao'); eq(by('zhangxiang').method, 'liuyao'); eq(by('touzi').method, 'liuyao');
-  eq(by('fangwei').method, 'meihua'); eq(by('chengshi').method, 'meihua');
-  eq(by('riyun').method, 'xlr'); eq(by('riyun').mode, 'time');
-  eq(by('nianyun').mode, 'dayan', '年运岁占用蓍草');
+t('推荐首选符合术业专攻:画像/投资/事业首选六爻,方位/城市/月运首选梅花,日运首选小六壬', () => {
+  const top = id => Fenke.FENKE.find(f => f.id === id).recommend[0];
+  eq(top('zhangxiang').method, 'liuyao'); eq(top('touzi').method, 'liuyao'); eq(top('shiye').method, 'liuyao');
+  eq(top('fangwei').method, 'meihua'); eq(top('chengshi').method, 'meihua'); eq(top('yueyun').method, 'meihua');
+  eq(top('riyun').method, 'xlr'); eq(top('riyun').mode, 'time');
+  eq(top('nianyun').method, 'liuyao'); eq(top('nianyun').mode, 'dayan', '年运岁占用蓍草');
+});
+t('每类推荐至少给一种选择,多数给两种以上供挑', () => {
+  const multi = Fenke.FENKE.filter(f => f.recommend.length >= 2).length;
+  ok(multi >= 10, '应有 ≥10 类给出多方法供选,实为 ' + multi);
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

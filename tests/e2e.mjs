@@ -165,17 +165,44 @@ await t('小六壬:时间起课三宫齐、诗诀在', async () => {
   ok(rep.startsWith('【东玄小六壬 · 课象回报】'), rep.split('\n')[0]);
 });
 
-await t('分科派单:点「今日运势」自动切小六壬并填问题;点「方位寻物」切梅花', async () => {
+await t('分科两步选择:点类别展开排序推荐,点方法才切法门', async () => {
   ok((await page.locator('#fenke-chips .fk').count()) === 13, '十三科');
-  await page.click('.fk[data-id=riyun]');
-  ok(await page.locator('#sec-xlr').isVisible(), '应切到小六壬');
-  ok((await page.inputValue('#question')).includes('今日运势'), '问题模板');
-  ok((await page.textContent('#fk-why')).includes('小六壬'), '专攻说明');
+  // 点类别:展开推荐,但先不切法门
   await page.click('.fk[data-id=fangwei]');
-  ok(await page.locator('#sec-mh').isVisible(), '应切到梅花');
-  ok(!(await page.locator('#mh-nums').evaluate(el => el.classList.contains('hidden'))), '报数输入应展开');
-  await page.click('.fk[data-id=fangwei]'); // 再点取消选科
+  ok(!(await page.locator('#fk-recommend').evaluate(el => el.classList.contains('hidden'))), '推荐面板应展开');
+  const opts = page.locator('#fk-recommend .mopt');
+  ok((await opts.count()) >= 2, '方位类应给多种方法供选');
+  ok((await opts.first().locator('.rtag').textContent()) === '首选', '首项标首选');
+  ok((await opts.first().locator('.mname').textContent()) === '梅花易数', '方位首选梅花');
+  // 点首选方法 → 切到梅花、填问题
+  await opts.first().click();
+  ok(await page.locator('#sec-mh').isVisible(), '应切到梅花面板');
+  ok((await page.inputValue('#question')).includes('方向'), '问题模板已填');
+});
+
+await t('分科可改选非首选方法(方位改选六爻)', async () => {
+  await page.click('.fk[data-id=fangwei]'); // 收起
+  await page.click('.fk[data-id=fangwei]'); // 重新展开
+  const opts = page.locator('#fk-recommend .mopt');
+  const labels = await opts.locator('.mname').allTextContents();
+  const liuyaoIdx = labels.indexOf('六爻');
+  ok(liuyaoIdx >= 0, '方位推荐应含六爻可选:' + labels.join(','));
+  await opts.nth(liuyaoIdx).click();
+  ok(await page.locator('#sec-cast').isVisible(), '改选六爻后应切到六爻面板');
+});
+
+await t('分科日运首选小六壬、年运首选蓍草', async () => {
+  await page.click('.fk[data-id=riyun]');
+  const ri = page.locator('#fk-recommend .mopt').first();
+  ok((await ri.locator('.mname').textContent()) === '小六壬', '日运首选小六壬');
+  await ri.click();
+  ok(await page.locator('#sec-xlr').isVisible(), '切到小六壬');
+  await page.click('.fk[data-id=nianyun]');
+  ok((await page.locator('#fk-recommend .mopt').first().locator('.mmode').textContent()).includes('蓍草'), '年运首选蓍草');
+  // 取消选科
+  await page.click('.fk[data-id=nianyun]');
   ok((await page.locator('.fk.on').count()) === 0, '取消选科');
+  ok(await page.locator('#fk-recommend').evaluate(el => el.classList.contains('hidden')), '推荐面板收起');
   await page.click('.tabs button[data-m=liuyao]');
 });
 
