@@ -1,11 +1,11 @@
 {
   "name": "dongxuan-bugua",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "description": "东玄卜卦 · 三钱法起卦与解读一体的静态网页程序(内测)",
   "scripts": {
-    "test": "node tests/core.test.mjs && node tests/najia.test.mjs && node tests/fangmen.test.mjs",
-    "e2e": "node tests/e2e.mjs"
+    "test": "node tests/core.test.mjs && node tests/najia.test.mjs && node tests/fangmen.test.mjs && node tests/yunshi.test.mjs",
+    "e2e": "node tests/e2e.mjs && node tests/yunshi-e2e.mjs"
   },
   "devDependencies": {
     "playwright-core": "^1.49.0"
