@@ -150,6 +150,12 @@
   .gongbox .g-verse { font-size: .88rem; text-align: left; margin-top: 8px; line-height: 1.7; }
   .badge { display: inline-block; border: 1px solid var(--gold); color: var(--gold); border-radius: 4px;
     font-size: .72rem; padding: 0 5px; vertical-align: middle; white-space: nowrap; }
+  .fenke { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fk { border: 1px solid var(--line); background: var(--panel2); border-radius: 18px;
+    padding: 6px 14px; font-size: .92rem; letter-spacing: .05em; }
+  .fk.on { border-color: var(--cinnabar); color: var(--cinnabar); background: #f6e9e0; }
+  #fk-why { color: var(--dim); font-size: .88rem; margin-top: 10px; line-height: 1.7; }
+  #fk-why b { color: var(--cinnabar); font-weight: normal; }
   @media (max-width: 560px) {
     header h1 { font-size: 1.5rem; }
     body { line-height: 1.65; }
@@ -173,7 +179,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.5</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.6</span></p>
   </header>
 
   <nav class="tabs">
@@ -181,6 +187,12 @@
     <button data-m="meihua">梅花易数</button>
     <button data-m="xlr">小六壬</button>
   </nav>
+
+  <section id="sec-fenke">
+    <h2>分 科 · 术业有专攻</h2>
+    <div class="fenke" id="fenke-chips"></div>
+    <div id="fk-why">点一科,自动派到最专的法门并备好问题;不选则自由问事。</div>
+  </section>
 
   <section id="sec-q">
     <h2>所 问 何 事</h2>
@@ -325,7 +337,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.5 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.6 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -334,6 +346,7 @@
 <script src="lunar.js"></script>
 <script src="meihua.js"></script>
 <script src="xiaoliuren.js"></script>
+<script src="fenke.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -656,7 +669,9 @@
     const providerId = $('ai-provider').value;
     if (!key) { setStatus(`请先设置 ${curProvider().label} API Key(点右侧「设置 API Key」)。`, true); $('keybox').classList.remove('hidden'); return; }
     const model = $('ai-model').value;
-    const material = w.material + `\n(所问之事以此为准:${q})`;
+    const material = w.material +
+      (curFenke ? '\n' + curFenke.ai : '') +
+      `\n(所问之事以此为准:${q})`;
     let url, headers, body;
     if (providerId === 'deepseek') {
       url = 'https://api.deepseek.com/chat/completions';
@@ -863,6 +878,40 @@
     results.xlr = true;
     refreshTab();
   }
+
+  // —— 分科:派单到专攻法门,深断带专科断法规程 ——
+  let curFenke = null;
+  const METHOD_NAMES = { liuyao: '六爻', meihua: '梅花易数', xlr: '小六壬' };
+  function renderFenke() {
+    $('fenke-chips').innerHTML = Fenke.FENKE.map(f =>
+      `<button class="fk" data-id="${f.id}">${f.label}</button>`).join('');
+  }
+  function selectFenke(id) {
+    curFenke = (curFenke && curFenke.id === id) ? null : (Fenke.FENKE.find(f => f.id === id) || null);
+    document.querySelectorAll('.fk').forEach(b => b.classList.toggle('on', !!curFenke && b.dataset.id === curFenke.id));
+    if (!curFenke) {
+      $('fk-why').innerHTML = '点一科,自动派到最专的法门并备好问题;不选则自由问事。';
+      return;
+    }
+    $('question').value = curFenke.q;
+    $('fk-why').innerHTML = `<b>专攻:${METHOD_NAMES[curFenke.method]}</b> —— ${esc(curFenke.why)} 深断将按本科断法规程细批。`;
+    curTab = curFenke.method;
+    if (curFenke.method === 'liuyao') {
+      document.querySelector(`input[name=ly-mode][value=${curFenke.mode}]`).checked = true;
+    } else if (curFenke.method === 'meihua') {
+      const r = document.querySelector(`input[name=mh-mode][value=${curFenke.mode}]`);
+      r.checked = true; r.dispatchEvent(new Event('change'));
+    } else if (curFenke.method === 'xlr') {
+      const r = document.querySelector(`input[name=xlr-mode][value=${curFenke.mode}]`);
+      r.checked = true; r.dispatchEvent(new Event('change'));
+    }
+    refreshTab();
+  }
+  $('fenke-chips').addEventListener('click', e => {
+    const b = e.target.closest('.fk');
+    if (b) selectFenke(b.dataset.id);
+  });
+  renderFenke();
 
   // —— 事件 ——
   document.querySelectorAll('.tabs button').forEach(b =>

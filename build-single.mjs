@@ -14,6 +14,7 @@ html = html
   .replace('<script src="lunar.js"></script>', '<script>\n' + read('lunar.js') + '\n</script>')
   .replace('<script src="meihua.js"></script>', '<script>\n' + read('meihua.js') + '\n</script>')
   .replace('<script src="xiaoliuren.js"></script>', '<script>\n' + read('xiaoliuren.js') + '\n</script>')
+  .replace('<script src="fenke.js"></script>', '<script>\n' + read('fenke.js') + '\n</script>')
   // 桌面单文件版无 Service Worker 与 manifest(file:// 下不适用)
   .replace(/\n  \/\/ —— PWA[\s\S]*?\.catch\(\(\) => \{\}\);\n  \}\n/, '\n')
   .replace('<link rel="manifest" href="manifest.webmanifest">\n', '')

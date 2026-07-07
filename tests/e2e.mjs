@@ -165,6 +165,20 @@ await t('小六壬:时间起课三宫齐、诗诀在', async () => {
   ok(rep.startsWith('【东玄小六壬 · 课象回报】'), rep.split('\n')[0]);
 });
 
+await t('分科派单:点「今日运势」自动切小六壬并填问题;点「方位寻物」切梅花', async () => {
+  ok((await page.locator('#fenke-chips .fk').count()) === 13, '十三科');
+  await page.click('.fk[data-id=riyun]');
+  ok(await page.locator('#sec-xlr').isVisible(), '应切到小六壬');
+  ok((await page.inputValue('#question')).includes('今日运势'), '问题模板');
+  ok((await page.textContent('#fk-why')).includes('小六壬'), '专攻说明');
+  await page.click('.fk[data-id=fangwei]');
+  ok(await page.locator('#sec-mh').isVisible(), '应切到梅花');
+  ok(!(await page.locator('#mh-nums').evaluate(el => el.classList.contains('hidden'))), '报数输入应展开');
+  await page.click('.fk[data-id=fangwei]'); // 再点取消选科
+  ok((await page.locator('.fk.on').count()) === 0, '取消选科');
+  await page.click('.tabs button[data-m=liuyao]');
+});
+
 await t('卦档法门徽记与蓍草起卦', async () => {
   const badges = await page.locator('#histlist .badge').allTextContents();
   ok(badges.includes('梅花') && badges.includes('小六壬'), '徽记:' + badges.join(','));

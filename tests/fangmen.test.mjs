@@ -99,5 +99,33 @@ t('蓍草成卦走同一解卦管线', () => {
   ok(r.headline && r.focus.length, '解读');
 });
 
+console.log('【五】问事分科');
+const Fenke = require('../fenke.js');
+t('十三科齐全,覆盖时间/方位/长相/家境/财量/城市/亲密/投资/事业/日月年运/综合', () => {
+  eq(Fenke.FENKE.length, 13);
+  const ids = Fenke.FENKE.map(f => f.id);
+  for (const need of ['yingqi', 'fangwei', 'zhangxiang', 'jiajing', 'caifu_ta', 'chengshi', 'qinmi', 'touzi', 'shiye', 'riyun', 'yueyun', 'nianyun', 'zonghe']) {
+    ok(ids.includes(need), '缺 ' + need);
+  }
+});
+t('每科法门合法、断法规程完整、问题模板齐备', () => {
+  const METHODS = { liuyao: ['coin', 'dayan'], meihua: ['num', 'time'], xlr: ['time', 'num'] };
+  for (const f of Fenke.FENKE) {
+    ok(METHODS[f.method], f.id + ' 法门:' + f.method);
+    ok(METHODS[f.method].includes(f.mode), f.id + ' 起式:' + f.mode);
+    ok(f.q && f.q.length >= 6, f.id + ' 问题模板');
+    ok(f.why && f.why.length >= 10, f.id + ' 专攻理由');
+    ok(f.ai && f.ai.length >= 100 && f.ai.startsWith('【分科断法'), f.id + ' 断法规程');
+    ok(f.ai.includes('必须给'), f.id + ' 规程须含硬性输出要求');
+  }
+});
+t('派单符合术业专攻:应期/画像/投资走六爻,方位/城市走梅花,日运走小六壬', () => {
+  const by = id => Fenke.FENKE.find(f => f.id === id);
+  eq(by('yingqi').method, 'liuyao'); eq(by('zhangxiang').method, 'liuyao'); eq(by('touzi').method, 'liuyao');
+  eq(by('fangwei').method, 'meihua'); eq(by('chengshi').method, 'meihua');
+  eq(by('riyun').method, 'xlr'); eq(by('riyun').mode, 'time');
+  eq(by('nianyun').mode, 'dayan', '年运岁占用蓍草');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);
