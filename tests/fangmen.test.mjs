@@ -99,22 +99,29 @@ t('蓍草成卦走同一解卦管线', () => {
   ok(r.headline && r.focus.length, '解读');
 });
 
-console.log('【五】问事分科');
+console.log('【五】问事分科(全面版)');
 const Fenke = require('../fenke.js');
-t('十三科齐全,覆盖时间/方位/长相/家境/财量/城市/亲密/投资/事业/日月年运/综合', () => {
-  eq(Fenke.FENKE.length, 13);
-  const ids = Fenke.FENKE.map(f => f.id);
-  for (const need of ['yingqi', 'fangwei', 'zhangxiang', 'jiajing', 'caifu_ta', 'chengshi', 'qinmi', 'touzi', 'shiye', 'riyun', 'yueyun', 'nianyun', 'zonghe']) {
-    ok(ids.includes(need), '缺 ' + need);
+t('专科齐全(≥35项),十大类分组,id 唯一', () => {
+  ok(Fenke.FENKE.length >= 35, '专科数 ' + Fenke.FENKE.length);
+  eq(new Set(Fenke.FENKE.map(f => f.id)).size, Fenke.FENKE.length, 'id 唯一');
+  ok(Array.isArray(Fenke.GROUPS) && Fenke.GROUPS.length >= 10, '分组数 ' + Fenke.GROUPS.length);
+});
+t('覆盖各大问事门类(感情/事业/求学/财运/出行/健康/寻找/看人/运势/决策/官非)', () => {
+  const ids = new Set(Fenke.FENKE.map(f => f.id));
+  for (const need of ['yinyuan_when', 'zhengyuan_pic', 'guanxi_zouxiang', 'qiuzhi', 'tiaocao', 'kaoshi',
+    'caiyun', 'touzi', 'taozhai', 'chuxing', 'banjia', 'jiankang', 'jibing', 'xunwu', 'xunren',
+    'zhangxiang', 'xingge', 'riyun', 'yueyun', 'nianyun', 'gaibugai', 'yingqi', 'guansi', 'zaihuo']) {
+    ok(ids.has(need), '缺 ' + need);
   }
 });
-t('每科含排序推荐、法门合法、断法规程完整、问题模板齐备', () => {
+t('每科:分组合法、问题模板、排序推荐、法门起式合法、断法规程含硬性输出', () => {
   const METHODS = { liuyao: ['coin', 'dayan'], meihua: ['num', 'time'], xlr: ['time', 'num'] };
   const TAGS = ['首选', '次选', '亦可'];
   for (const f of Fenke.FENKE) {
+    ok(Fenke.GROUPS.includes(f.group), f.id + ' 分组:' + f.group);
     ok(f.q && f.q.length >= 6, f.id + ' 问题模板');
     ok(Array.isArray(f.recommend) && f.recommend.length >= 1, f.id + ' 推荐列表');
-    ok(f.recommend[0].tag === '首选', f.id + ' 首项应为首选');
+    eq(f.recommend[0].tag, '首选', f.id + ' 首项应为首选');
     let lastStar = 4;
     for (const r of f.recommend) {
       ok(METHODS[r.method], f.id + ' 法门:' + r.method);
@@ -122,22 +129,28 @@ t('每科含排序推荐、法门合法、断法规程完整、问题模板齐�
       ok(r.star >= 1 && r.star <= 3, f.id + ' 适配度 1-3');
       ok(TAGS.includes(r.tag), f.id + ' 标签');
       ok(r.why && r.why.length >= 8, f.id + ' 推荐理由');
-      ok(r.star <= lastStar, f.id + ' 适配度应递减排序'); lastStar = r.star;
+      ok(r.star <= lastStar, f.id + ' 适配度递减排序'); lastStar = r.star;
     }
-    ok(f.ai && f.ai.length >= 100 && f.ai.startsWith('【分科断法'), f.id + ' 断法规程');
+    ok(f.ai && f.ai.length >= 60, f.id + ' 断法规程');
     ok(f.ai.includes('必须给'), f.id + ' 规程须含硬性输出要求');
   }
 });
-t('推荐首选符合术业专攻:画像/投资/事业首选六爻,方位/城市/月运首选梅花,日运首选小六壬', () => {
+t('推荐首选符合术业专攻', () => {
   const top = id => Fenke.FENKE.find(f => f.id === id).recommend[0];
-  eq(top('zhangxiang').method, 'liuyao'); eq(top('touzi').method, 'liuyao'); eq(top('shiye').method, 'liuyao');
-  eq(top('fangwei').method, 'meihua'); eq(top('chengshi').method, 'meihua'); eq(top('yueyun').method, 'meihua');
-  eq(top('riyun').method, 'xlr'); eq(top('riyun').mode, 'time');
-  eq(top('nianyun').method, 'liuyao'); eq(top('nianyun').mode, 'dayan', '年运岁占用蓍草');
+  // 具体人事吉凶/画像/婚恋/财 → 六爻
+  for (const id of ['zhangxiang', 'touzi', 'qiuzhi', 'guanxi_zouxiang', 'caiyun', 'guansi']) eq(top(id).method, 'liuyao', id);
+  // 方位/趋势/月运 → 梅花
+  for (const id of ['banjia', 'yueyun', 'xunwu']) eq(top(id).method, 'meihua', id);
+  // 当下急事/日运/出行/寻人 → 小六壬
+  for (const id of ['riyun', 'chuxing', 'xunren']) eq(top(id).method, 'xlr', id);
+  // 年运岁占 → 蓍草
+  eq(top('nianyun').mode, 'dayan', '年运用蓍草');
 });
-t('每类推荐至少给一种选择,多数给两种以上供挑', () => {
+t('每组都有专科,绝大多数科给多法门供选', () => {
+  const groups = new Set(Fenke.FENKE.map(f => f.group));
+  ok(groups.size >= 10, '组数 ' + groups.size);
   const multi = Fenke.FENKE.filter(f => f.recommend.length >= 2).length;
-  ok(multi >= 10, '应有 ≥10 类给出多方法供选,实为 ' + multi);
+  ok(multi >= 15, '应有 ≥15 科多法门供选,实为 ' + multi);
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

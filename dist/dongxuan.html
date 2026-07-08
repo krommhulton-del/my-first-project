@@ -130,6 +130,16 @@
     padding: 16px; margin-top: 14px; white-space: pre-wrap; line-height: 1.9; }
   .aiout .cursor { color: var(--gold); animation: blink 1s step-end infinite; }
   @keyframes blink { 50% { opacity: 0; } }
+  .aiout .fq-you { color: var(--cinnabar); margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .aiout .fq-you b { font-weight: normal; }
+  #ai-followup { margin-top: 14px; }
+  .fuhint { color: var(--dim); font-size: .88rem; margin-bottom: 8px; }
+  .fuquick { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .fq { border: 1px dashed var(--gold); background: transparent; color: var(--gold); border-radius: 16px;
+    padding: 5px 12px; font-size: .85rem; text-align: left; }
+  #fu-input { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px 12px; font-family: inherit; font-size: .95rem; min-height: 64px; resize: vertical; }
+  #fu-input:focus { outline: none; border-color: var(--gold); }
   .tabs { display: flex; gap: 8px; margin-bottom: 18px; justify-content: center; flex-wrap: wrap; }
   .tabs button { border-radius: 20px; padding: 8px 22px; }
   .tabs button.on { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
@@ -150,7 +160,10 @@
   .gongbox .g-verse { font-size: .88rem; text-align: left; margin-top: 8px; line-height: 1.7; }
   .badge { display: inline-block; border: 1px solid var(--gold); color: var(--gold); border-radius: 4px;
     font-size: .72rem; padding: 0 5px; vertical-align: middle; white-space: nowrap; }
-  .fenke { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fenke { display: flex; flex-direction: column; gap: 12px; }
+  .fkgroup { }
+  .fkgh { color: var(--gold); font-size: .82rem; letter-spacing: .12em; margin-bottom: 6px; }
+  .fkrow { display: flex; flex-wrap: wrap; gap: 8px; }
   .fk { border: 1px solid var(--line); background: var(--panel2); border-radius: 18px;
     padding: 6px 14px; font-size: .92rem; letter-spacing: .05em; }
   .fk.on { border-color: var(--cinnabar); color: var(--cinnabar); background: #f6e9e0; }
@@ -337,6 +350,15 @@
     </div>
     <div id="ai-status"></div>
     <div id="ai-out" class="aiout hidden"></div>
+    <div id="ai-followup" class="hidden">
+      <div class="fuhint">断完还有不明白的?接着追问(卦象上下文不丢,东玄就着这一卦接着答):</div>
+      <div class="fuquick">
+        <button class="fq" data-t="卦象">这一卦里,{}你再讲细点(比如财运、时间、那个人具体些)</button>
+        <button class="fq" data-t="疑惑">你刚说的{},依据是什么?我有点不信,再解释解释</button>
+      </div>
+      <textarea id="fu-input" placeholder="直接打你想追问的,比如:那笔钱具体几月能到?/ 你说对方年长,凭啥?"></textarea>
+      <div class="btnrow"><button id="btn-followup" class="primary">追 问</button></div>
+    </div>
   </section>
 
   <section id="sec-report" class="hidden">
@@ -2926,150 +2948,181 @@
 
 </script>
 <script>
-// fenke.js — 问事分科 + 方法推荐(按提问分类,每类列最适合的几种法门供选择)
-// 依传统与实践共识排序:六爻精于具体人事吉凶与用神取象(画像/财/应期/婚恋/事业),
-// 梅花精于方位趋势与即时之事,小六壬精于当下急事与时效(日运/出行/见面)。
-// 奇门/大六壬在某些类别更精(失物寻人破案、宏观运筹),本程序未内置其起盘,
-// 以 note 如实标注、并以已内置法门中最接近者代占。
-// method: liuyao|meihua|xlr;mode 为该法门起式;star 为该法门对本类的适配度(1-3)。
+// fenke.js — 问事分科(全面版)+ 方法推荐
+// 按传统问事体系分十大类、约四十专科;每类列最适合的几种法门(带适配度排序与理由),用户点选。
+// 派单依共识:六爻精于具体人事吉凶与用神取象(婚恋/事业/财/画像/应期),
+// 梅花精于方位趋势与即时之事,小六壬精于当下急事与时效,岁占大事用蓍草。
+// method: liuyao|meihua|xlr;mode: coin|dayan|num|time;star 适配度1-3;tag 首选/次选/亦可。
+// ai 为该科断法规程(指导模型内部推演;输出去术语由主程序的 ANTI_JARGON 全局强制)。
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) { module.exports = factory(); }
   else { root.Fenke = factory(); }
 }(typeof self !== 'undefined' ? self : this, function () {
-  // 各法门在各类问题上的适配理由片段(复用)
-  const R = {
-    liuyaoRen: '六爻用神配五行地支、六神取象最细,人事画像与吉凶层层可推。',
-    liuyaoYing: '六爻以用神地支直对月日,应期在诸法中最精。',
-    liuyaoCai: '六爻妻财爻旺衰配卦数,量级与贫富断得死。',
-    liuyaoQing: '六爻世应格局直见两心向背、第三者与结局,断感情最透。',
-    liuyaoShi: '六爻官鬼父母两爻定功名格局,千年科场官场皆用此。',
-    meihuaFang: '梅花后天卦即方向盘,用卦变卦定现处与去向,断方位最直接。',
-    meihuaShi: '梅花体用生克简便灵活,即时起念之事、趋势起伏一卦了然。',
-    xlrJi: '小六壬应事神断、掐指即算,时效性强,当下急事最应验。',
-    xlrRi: '小六壬本为当日决断之术,日运、出行、见面来人首选。',
-  };
+  const LY = (star, tag, why, mode) => ({ method: 'liuyao', mode: mode || 'coin', star, tag, why });
+  const MH = (star, tag, why, mode) => ({ method: 'meihua', mode: mode || 'num', star, tag, why });
+  const XL = (star, tag, why, mode) => ({ method: 'xlr', mode: mode || 'time', star, tag, why });
+
+  const GROUPS = ['感情姻缘', '事业工作', '求学考试', '财运钱财', '出行搬迁', '健康疾病', '寻人寻物', '看某个人', '运势时运', '决策与择时', '官非风险'];
 
   const FENKE = [
-    {
-      id: 'yingqi', label: '应期时间', q: '此事何时能成/何时见分晓?',
-      recommend: [
-        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoYing },
-        { method: 'meihua', mode: 'num', star: 2, tag: '次选', why: '梅花以卦气数推应期,近取日时、远取月,快而粗。' },
-      ],
-      note: '大事之精确应期,大六壬三传定日时更细;本程序以六爻近之。',
-      ai: '【分科断法·应期】以用神地支推时间:用神旺相,应于值日或本日;休囚,待生旺之月日;动爻待合日,静爻待冲日;旬空待填实或冲空之日;月破待出月填合。近事以日计,中事以月计,远事以年计。必须给出首选时间窗与备选时间窗各一,每个都注明"取某支某法",落到阳历月旬。',
-    },
-    {
-      id: 'fangwei', label: '方位寻物', q: '所寻之物/之人在哪个方向?',
-      recommend: [
-        { method: 'meihua', mode: 'num', star: 3, tag: '首选', why: R.meihuaFang },
-        { method: 'xlr', mode: 'time', star: 2, tag: '次选', why: '小六壬六宫各主一方,急寻可掐指即得大向。' },
-        { method: 'liuyao', mode: 'coin', star: 2, tag: '亦可', why: '六爻以用神地支定方,兼可断落于何人。' },
-      ],
-      note: '寻物寻人之精确(落宫、落于何人手),奇门遁甲最擅;本程序以梅花/六爻近之。',
-      ai: '【分科断法·方位】以用卦定现处方位、变卦定移动去向:乾西北、坎正北、艮东北、震正东、巽东南、离正南、坤西南、兑正西。距离以卦之先天数结合旺衰定:旺则数大,衰则数小。结合卦象类象点明环境(坎近水、艮墙角山石、离炉灶电器明处、坤田土仓储、兑缺口洼地井、乾高亢金属处、震巽草木市集)。必须给:方向+距离区间+环境特征三件套。',
-    },
-    {
-      id: 'zhangxiang', label: '长相身材', q: '此人长相身材如何?(占前心中锁定其人)',
-      recommend: [
-        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoRen },
-        { method: 'meihua', mode: 'num', star: 1, tag: '亦可', why: '梅花以用卦五行取大略形貌,粗而快。' },
-      ],
-      ai: '【分科断法·形貌】以用神五行定形体:木主瘦长身高发密,火主上尖下阔面赤有神行动急,土主敦厚矮壮面黄圆,金主方正白皙骨架利落,水主圆活丰润面黑有光灵动。六神定神态:青龙俊秀端正,朱雀伶俐健谈眉目生动,勾陈敦实迟缓老成,螣蛇清瘦多心思眼神飘,白虎刚悍有威粗声大气,玄武妩媚暧昧眼神含水。爻位定高矮(上爻高、初二爻矮),旺相定胖瘦。年龄以用神地支配长生推年段,跨度不超十岁。必须给:身高档、体型、脸型肤色、气质神态、年龄段五项。',
-    },
-    {
-      id: 'jiajing', label: '家境出身', q: '此人家境出身如何?',
-      recommend: [
-        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: '六爻父母爻与卦宫定家底根基,旺衰即厚薄,应爻见对方家境。' },
-        { method: 'meihua', mode: 'num', star: 1, tag: '亦可', why: '梅花以体卦旺衰粗断根基强弱。' },
-      ],
-      ai: '【分科断法·家境】父母爻为家宅根基:旺相临日月家底殷实,休囚逢空破根基薄。父母临青龙书香门第或体面产业,临白虎家有武职权势或曾破败重起,临勾陈田土房产多,临玄武家事复杂或灰色营生,临朱雀家人善经营口才行业,临螣蛇家道曲折。财官父连环有气者有权有钱。卦宫五行配家中营生行业。必须给:家底档次(殷实/中等/薄弱)、家中主业方向、父母辈状况三项。',
-    },
-    {
-      id: 'caifu_ta', label: '财富量级', q: '此人/此事的财富量级有多大?',
-      recommend: [
-        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoCai },
-        { method: 'meihua', mode: 'num', star: 1, tag: '亦可', why: '梅花以卦数与体用旺衰估大略量级。' },
-      ],
-      ai: '【分科断法·财量】以妻财爻定量级:临日月旺相取大数,得生扶取中数,休囚死绝取小数。基数取财爻地支之数(子1丑2寅3…亥12)与卦之先后天数,旺相乘十乘百,休囚除减;两财爻并见相加。财爻空破而有救者,量级虚报打七折断。必须给:量级档位(千/万/十万/百万/千万)、档内具体数字区间、取自哪个爻哪个数的推法、得财或破财之时点(应期法)四项。',
-    },
-    {
-      id: 'chengshi', label: '城市去向', q: '去哪个方向的城市发展最利我?',
-      recommend: [
-        { method: 'meihua', mode: 'num', star: 3, tag: '首选', why: R.meihuaFang + ' 变卦即宜去之向。' },
-        { method: 'liuyao', mode: 'coin', star: 2, tag: '次选', why: '六爻以世应生克与用神方位断利与不利。' },
-      ],
-      note: '择地趋避之运筹,奇门遁甲更强;本程序以梅花定向、六爻定利。',
-      ai: '【分科断法·城市】变卦方位为宜去之向(后天八卦方位),用生体之方为得助之地,用克体之方勿往。卦象配城市气质:离为文教传媒科技之城,兑为金融口岸消费之城,坎为水滨港口物流之城,艮为山城资源稳态之城,震为新兴产业活力之城,巽为商贸流通之城,乾为省会都会权力中枢,坤为农业腹地慢城。必须给:首选方位(以现居地为原点)+该方向城市类型画像+次选方位,并点明避开哪个方向。',
-    },
-    {
-      id: 'qinmi', label: '亲密关系', q: '我与此人的关系走向如何?',
-      recommend: [
-        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoQing },
-        { method: 'meihua', mode: 'num', star: 2, tag: '次选', why: '梅花体用生合看缘分深浅与聚散大势,简快。' },
-        { method: 'xlr', mode: 'time', star: 1, tag: '亦可', why: '小六壬急问"今日他会不会来/联系"最应。' },
-      ],
-      ai: '【分科断法·亲密】世为己、应为对方,男占以妻财为用、女占以官鬼为用。用神生合世爻对方有心;世生用我方倒贴;世应相冲聚少离多;相克有伤害性拉扯;间爻发动有第三者或阻隔之人;用神与他爻作合对方另有牵扯;桃花支(子午卯酉)临用神动暧昧重。用神旺衰定投入程度,应期法断关系节点。必须给:谁更主动、对方真实心态、间隔阻力、走向结局、关键时间点五项,不粉饰。',
-    },
-    {
-      id: 'touzi', label: '投资决策', q: '这笔投资能不能入?赚赔如何?',
-      recommend: [
-        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: '六爻财/兄/子三爻看赚赔劫耗财源最全,官鬼见系统性风险。' },
-        { method: 'meihua', mode: 'num', star: 1, tag: '亦可', why: '梅花体用比和/生克快断可入与否。' },
-      ],
-      note: '大额博弈之择时运筹,奇门遁甲擅趋避;本程序以六爻断赚赔风险。',
-      ai: '【分科断法·投资】妻财为标的与利润,世为己,应为对手/市场,子孙为财源,兄弟为劫耗。财旺持世或生合世可入;兄弟发动克财必有劫耗,不入或轻仓;子孙动化财源头活水可加;财化兄、财空破利润成空;官鬼动有政策官非系统性风险。必须给:入/不入、仓位(轻/半/重)、预期赚赔幅度档、止损或退出时点(应期)、最大风险来自哪一路五项。',
-    },
-    {
-      id: 'shiye', label: '事业官运', q: '我的事业/职位近期有无进展?',
-      recommend: [
-        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: R.liuyaoShi },
-        { method: 'meihua', mode: 'time', star: 2, tag: '次选', why: '梅花时间卦看事业近段趋势与转折。' },
-      ],
-      note: '谋事竞争谈判之运筹夺势,奇门遁甲最强;本程序以六爻断成败格局。',
-      ai: '【分科断法·事业】官鬼为职位权柄、父母为文书单位靠山、世为自身。官星旺相生合世爻升迁调动有望;父母化官、官化进神文书落定;世空破休囚自身无力承接;兄弟持世同侪夺位;子孙发动克官主动摇辞意或被裁。贵人方位以官星父母所临地支方位取。必须给:成与不成、时点(应期)、贵人在何方何类人、最大障碍、进退建议五项。',
-    },
-    {
-      id: 'riyun', label: '今日运势', q: '今日运势如何?宜做何事?',
-      recommend: [
-        { method: 'xlr', mode: 'time', star: 3, tag: '首选', why: R.xlrRi },
-        { method: 'meihua', mode: 'time', star: 2, tag: '次选', why: '梅花时间卦分本互变三段铺当日早中晚。' },
-      ],
-      ai: '【分科断法·日运】以三宫连断今日:月宫为上午/事之起,日宫为午间/事之中,时宫为收尾/结果,主断在时宫。逐宫五行配今日各时段吉凶:木利东方寅卯时,火利南方巳午时,金利西方申酉时,水利北方亥子时,土利四隅辰戌丑未时。必须给:今日总评一句、宜做与忌做各两件、吉时(具体钟点段)、吉方、需防的一件事五项。',
-    },
-    {
-      id: 'yueyun', label: '本月运势', q: '本月运势如何?高低点在何时?',
-      recommend: [
-        { method: 'meihua', mode: 'time', star: 3, tag: '首选', why: '梅花时间卦本互变三段正好铺满月初中末,趋势起伏一目了然。' },
-        { method: 'liuyao', mode: 'coin', star: 2, tag: '次选', why: '六爻以用神旺衰与动爻应期定本月吉凶月节点。' },
-      ],
-      ai: '【分科断法·月运】以时间卦断本月:本卦为月初主调,互卦为月中走势,变卦为月末归宿;体卦旺衰为本月元气。四路各断一句:事业(官象)、财运(财象与卦数)、感情(体用生合)、健康(体卦受克处即病位:乾首离目坎耳肾震足巽股艮手兑口坤腹)。高点取生体之卦当令旬,低点取克体之卦当令旬,落到上/中/下旬。必须给:总评、四路各一句、高点旬、低点旬、本月最该抓的一件事。',
-    },
-    {
-      id: 'nianyun', label: '年运大势', q: '未来一年大势如何?',
-      recommend: [
-        { method: 'liuyao', mode: 'dayan', star: 3, tag: '首选', why: '岁占大事用蓍草大衍,古法郑重;内外卦分上下半年,六亲照见五路。' },
-        { method: 'liuyao', mode: 'coin', star: 2, tag: '次选', why: '三钱六爻同断年运,快捷。' },
-      ],
-      note: '一年宏观时空全景之运筹,奇门/太乙更擅国运大势;本程序以六爻岁占。',
-      ai: '【分科断法·年运】岁占:全卦为一年格局,内卦主上半年、外卦主下半年,动爻所在之季为转折点。世爻旺衰为一年元气底盘。六亲齐观:妻财(财运)、官鬼(事业官非)、父母(文书房产长辈)、子孙(子女下属健康解厄)、兄弟(人际破耗)。吉月凶月以爻支应期法列出(各至少两个月份,注明取法)。必须给:年度总评与关键词、上下半年各一段、五路各一句、吉月凶月清单、全年最大机会与最大坑各一。',
-    },
-    {
-      id: 'zonghe', label: '综合运势', q: '我当下整体运势如何?',
-      recommend: [
-        { method: 'liuyao', mode: 'coin', star: 3, tag: '首选', why: '六爻六亲俱全,一卦照见财官父子兄五路。' },
-        { method: 'meihua', mode: 'num', star: 2, tag: '次选', why: '梅花体用一卦速览当下顺逆。' },
-        { method: 'xlr', mode: 'time', star: 1, tag: '亦可', why: '小六壬掐指速断当下大安否。' },
-      ],
-      ai: '【分科断法·综合】世爻旺衰为元气总盘。六亲五路齐断:财、官、父、子、兄各以旺衰动静断一句吉凶。最旺一路(得日月生扶或发动生世)点明可乘之势;最凶一路(克世或空破)点明须防之事。六神配世爻断当下心境。必须给:总评一句、五路各一句、最旺一路怎么乘、最凶一路怎么防、调整建议一条。',
-    },
+    // ——— 感情姻缘 ———
+    { id: 'yinyuan_when', group: '感情姻缘', label: '姻缘何时到', q: '我的正缘/姻缘什么时候到?',
+      recommend: [LY(3, '首选', '六爻以婚恋用神的旺衰与动应,直接推出正缘出现的月份。'), MH(2, '次选', '梅花以卦气数取应期,快而粗。')],
+      ai: '男占看妻财、女占看官鬼为正缘星。用神旺相临日月或发动、逢合,主缘分近;休囚空破主迟。应期以用神地支及其冲合之月推。必须给:大概几年内、最可能的一两个阳历月份区间、届时是主动遇上还是经人介绍。' },
+    { id: 'zhengyuan_pic', group: '感情姻缘', label: '正缘画像', q: '我未来的正缘是个什么样的人?',
+      recommend: [LY(3, '首选', '六爻用神配五行地支、六神取象,把对方年龄长相性格职业一层层推出来。')],
+      ai: '男以妻财、女以官鬼为用神。五行定形体高矮胖瘦,六神定气质神态,爻位定年龄长幼,卦宫与十神定职业方向,用神所临方位定相遇/居住方位。必须给:年龄段(跨度不超十岁)、身高体型、长相肤色、性格两笔、职业方向、大概在哪个方向遇到,六项。' },
+    { id: 'guanxi_zouxiang', group: '感情姻缘', label: '这段感情走向', q: '我和现在这个人,能走多远?',
+      recommend: [LY(3, '首选', '六爻世应生克冲合,直见两心向背、阻力与结局。'), MH(2, '次选', '梅花体用生合看缘分深浅与聚散大势。')],
+      ai: '世为己应为对方,男看妻财女看官鬼为对方之情。用神生合世主对方有心,世生用主你倒贴,世应相冲主聚少离多,相克主互相伤害,间爻动主有第三者或阻隔。必须给:能不能长久、谁更投入、最大阻力在哪、大概什么时候是坎、结局指向,五项。' },
+    { id: 'ta_zhenxin', group: '感情姻缘', label: 'TA是否真心', q: 'TA对我到底是不是真心?有没有别人?',
+      recommend: [LY(3, '首选', '六爻看对方之爻的动静、与他爻的合克,真心假意与有无第三者一目了然。')],
+      ai: '取对方用神(男看财、女看官,或以应爻为对方)。用神生合世为真心,休囚不上卦为冷淡,用神与他爻作合主对方另有牵扯,桃花支临用神动主暧昧。必须给:是不是真心、热度几分、有没有别人及那人啥样、你该进还是该收,四项。' },
+    { id: 'fuhe', group: '感情姻缘', label: '分手能否复合', q: '我们分手了,还能复合吗?',
+      recommend: [LY(3, '首选', '六爻看对方之爻是否回头生合世爻、旧情之爻有无生机。')],
+      ai: '世为己应/用为对方。用神动而生合世、或伏而逢冲出主有转机;用神休囚墓绝、或化退化破主难回。必须给:能不能复合、几成把握、要复合得靠谁先低头、大概什么时候有机会,四项。' },
+    { id: 'xiangqin', group: '感情姻缘', label: '相亲/介绍成不成', q: '这个相亲/介绍的对象,能成吗?',
+      recommend: [LY(3, '首选', '六爻以用神与世的生合、媒介之爻(应/间爻)论成败。')],
+      ai: '世为己,用神为对方,间爻或应为介绍人。用神生合世且间爻不阻主成;用神休囚、间爻发动克世主中间生变或黄。必须给:成不成、卡在哪、要不要继续跟、大概多久见分晓,四项。' },
+
+    // ——— 事业工作 ———
+    { id: 'qiuzhi', group: '事业工作', label: '求职/面试', q: '这份工作/这次面试,能成吗?',
+      recommend: [LY(3, '首选', '六爻以官鬼(职位)、父母(offer文书)、世(自己)论录取。'), XL(2, '次选', '小六壬急问三两天内出不出结果最应。')],
+      ai: '官鬼为职位、父母为录用文书、世为自身、应为对方单位。官父生合世、父母持世旺相主录用;世休囚空破或被克主落选。必须给:能不能拿到、几成、卡点在哪(能力/竞争/薪资)、大概几天内出结果,四项。' },
+    { id: 'tiaocao', group: '事业工作', label: '该不该跳槽', q: '我该不该跳槽/换工作?',
+      recommend: [LY(3, '首选', '六爻比现职与新处之爻的旺衰生克,该动该守立见。')],
+      ai: '以世为己、官为职、财为薪、应或变爻为新去处。新去处之爻旺相生世、变卦优于本卦主宜动;新处休囚、动而化退化破主宜守。必须给:该不该跳、新东家好还是留下好、动的话什么时候动、最大风险,四项。' },
+    { id: 'shengzhi', group: '事业工作', label: '升职加薪', q: '我近期能升职/加薪吗?',
+      recommend: [LY(3, '首选', '六爻官星生合世为升迁、财星旺相为加薪,应期定时。')],
+      ai: '官鬼为职位权柄、财为薪、世为己、父母为任命文书。官旺生世或官化进神主升,财旺临世主加薪;子孙持世动克官主难升或有辞意。必须给:升不升/加不加、幅度大概、靠谁(贵人在哪)、大概什么时候,四项。' },
+    { id: 'chuangye', group: '事业工作', label: '创业/开店', q: '我创业/开这个店,能做起来吗?',
+      recommend: [LY(3, '首选', '六爻以财为利、子孙为财源、世为己、兄弟为耗,通盘看成败。'), MH(2, '次选', '梅花时间卦看这摊事的起、中、末趋势。', 'time')],
+      ai: '财为利润、子孙为货源/财源、世为经营者、兄弟为竞争劫耗、官为风险政策。财子旺相生世主可做;兄弟发动克财、财空破主难赚或赔。必须给:能不能做起来、几成、什么时候见回头钱、最大坑在哪、要不要合伙,五项。' },
+    { id: 'hehuo', group: '事业工作', label: '合伙合作', q: '和这个人/这家合伙合作,靠谱吗?',
+      recommend: [LY(3, '首选', '六爻世应生克见双方诚意与利益分配,兄弟爻见分钱之争。')],
+      ai: '世为己、应为对方、财为共同利益、兄弟为分利之争。世应生合、财旺不受兄弟克主可合;世应相冲相克、兄弟持世动主同床异梦、分钱起争。必须给:靠不靠谱、对方真实意图、谁占便宜、要不要合、丑话怎么说在前,四五项。' },
+    { id: 'tanpan', group: '事业工作', label: '谈判/签约/项目', q: '这次谈判/签约/项目,能成吗?',
+      recommend: [LY(3, '首选', '六爻世应力量对比与用神旺衰定谈成谈崩。'), XL(2, '次选', '小六壬急问当下这场谈得拢谈不拢最应。')],
+      ai: '世为己方、应为对方、用神依所谈之标的取(合同看父母、钱看财、货看财)。世旺应弱、用神生合世主成且我占优;应旺克世主受制或谈崩。必须给:成不成、我方占优还是被动、卡在哪个条件、什么时候定,四项。' },
+
+    // ——— 求学考试 ———
+    { id: 'kaoshi', group: '求学考试', label: '考试/考公考编', q: '这次考试/考公考编,能过吗?',
+      recommend: [LY(3, '首选', '六爻以父母(文书试卷)、官(功名录取)、世(自己)论中榜。')],
+      ai: '父母为试卷成绩、官鬼为录取功名、世为考生。父母官星旺相生合世、世旺主过或上榜;世空破休囚、父母官星受克主落。必须给:过不过/上不上、名次大概档位、弱在哪科哪块、什么时候出分,四项。' },
+    { id: 'mianshi', group: '求学考试', label: '面试/答辩/评审', q: '这次面试/答辩/评审,能过吗?',
+      recommend: [LY(3, '首选', '六爻看官父生世与临场之爻旺衰。'), XL(2, '次选', '小六壬急问明后天这场最应。')],
+      ai: '官为评委/关卡、父为材料/表现、世为己。官父生合世主顺过;应克世、世逢空破主临场受挫。必须给:过不过、临场表现强弱、评委态度、大概什么时候通知,四项。' },
+    { id: 'zhuanye', group: '求学考试', label: '选专业/选学校', q: '这几个专业/学校,选哪个好?',
+      recommend: [MH(3, '首选', '梅花以卦象类象与体用生克,给各选项气质与利弊。'), LY(2, '次选', '六爻分别以世应生克断各选项利否。')],
+      ai: '以体为己、用为所选,用生体或比和之选为宜;卦象类象配学科/城市气质。若多选,逐一起卦或以卦象方位归类。必须给:首选哪个及为啥、次选、要避开哪个、各自大概前景一句,四项。' },
+
+    // ——— 财运钱财 ———
+    { id: 'caiyun', group: '财运钱财', label: '近期财运', q: '我近期的财运怎么样?',
+      recommend: [LY(3, '首选', '六爻财爻旺衰持世与否,进项多寡、破财与否一卦看清。')],
+      ai: '财为钱、世为己、子孙为财源、兄弟为破耗。财旺生合世主进财;兄弟发动、财空破主破财漏财。必须给:整体旺还是紧、钱从哪来(正财/偏财/副业)、大概进项方向、什么时候要防破财,四项。' },
+    { id: 'touzi', group: '财运钱财', label: '投资能否赚', q: '这笔投资/买这个,能赚吗?',
+      recommend: [LY(3, '首选', '六爻财/兄/子/官四路,赚赔劫耗风险看得最全。')],
+      ai: '财为标的利润、世为己、应为市场对手、子孙为财源、兄弟为劫耗、官为系统性风险。财旺持世或生世主可入;兄动克财主劫耗、财空破主套牢、官动主政策/黑天鹅。必须给:入不入、仓位轻重、大概赚赔幅度、止损或退出时点、最大风险来自哪路,五项。' },
+    { id: 'taozhai', group: '财运钱财', label: '欠款/讨债', q: '这笔钱/账,能要回来吗?',
+      recommend: [LY(3, '首选', '六爻财爻与应(欠方)的动静生克,能不能要回、几时到手看得清。')],
+      ai: '财为欠款、世为己、应为欠方。财旺动而生合世、应生世主能要回;财空破入墓、应克世或伏藏主难讨。必须给:能不能要回、能回几成、要靠软还是硬、大概什么时候到手,四项。' },
+    { id: 'shengyi', group: '财运钱财', label: '这单生意成不成', q: '这单生意/买卖,做得成吗?',
+      recommend: [LY(3, '首选', '六爻财为利、世为己、应为客户,成败利润一卦断。')],
+      ai: '财为利润、世为己、应为客户对方、兄弟为压价竞争。世应生合、财旺生世主成且有利;应克世、兄动克财主谈不拢或利薄。必须给:成不成、利润厚薄、卡在哪、什么时候能定,四项。' },
+    { id: 'cailiang', group: '财运钱财', label: '财富量级', q: '这个人/这件事,到底有多少钱?',
+      recommend: [LY(3, '首选', '六爻财爻旺衰配卦数换算量级,千万级别点得死。')],
+      ai: '以财爻旺衰配地支之数与卦数定量级:旺相乘十乘百,休囚除减,两财并见相加。必须给:量级档位(千/万/十万/百万/千万)、档内数字区间、是虚是实(空破打折)、钱是流动还是存量,四项。' },
+
+    // ——— 出行搬迁 ———
+    { id: 'chuxing', group: '出行搬迁', label: '出行顺不顺', q: '这趟出门/旅行,顺不顺、安不安全?',
+      recommend: [XL(3, '首选', '小六壬当下急事最应,三宫连断去程、途中、到达。'), LY(2, '次选', '六爻以世与父母(车)、官(险)论安危。')],
+      ai: '小六壬三宫断去、中、回;六爻以世为己、父母为车马交通、官鬼为险阻。世旺无克、三宫吉主顺;官动克世、赤口空亡主有阻或不安。必须给:顺不顺、要防什么(误点/破财/口舌/安全)、哪个时段哪个方向利、要不要改期,四项。' },
+    { id: 'banjia', group: '出行搬迁', label: '搬家/换城市方向', q: '搬家/换城市,往哪个方向走利我?',
+      recommend: [MH(3, '首选', '梅花后天卦即方向盘,变卦定宜去之向,用生体之方得助。'), LY(2, '次选', '六爻以世应生克与用神方位断利否。')],
+      ai: '变卦方位为宜去之向,用生体之方为得助之地,用克体之方勿往;卦象配城市气质。必须给:首选方位(以现居为原点)+该方向城市/地段类型、次选方位、避开哪个方向、大概什么时候动利,四项。' },
+    { id: 'yuanxing', group: '出行搬迁', label: '留学/移民/外派', q: '留学/移民/外派,能成吗、去了好不好?',
+      recommend: [LY(3, '首选', '六爻以父母(签证文书)、世(己)、应(外方)、财官论成与利。')],
+      ai: '父母为签证文书、世为己、应为目的地/机构、财官为当地发展。父母生世、应生合世主批得下且去了顺;父空破、应克世主卡文书或去了受制。必须给:能不能成行、卡在哪一环、去了发展好不好、什么时候定,四项。' },
+
+    // ——— 健康疾病 ———
+    { id: 'jiankang', group: '健康疾病', label: '近期身体', q: '我近期身体状况怎么样?',
+      recommend: [LY(3, '首选', '六爻以世/用神受克之处定病位,官鬼为病、子孙为药。')],
+      ai: '世或所测者用神为身,官鬼为病、子孙为医药解厄。世旺无克主平安;官鬼旺动克世主病来,受克之爻五行定病位(乾头离心目坎肾耳震足肝巽股胆艮手脾兑口肺坤腹胃)。必须给:整体稳不稳、要留意哪个部位、大概什么时候是坎、注意啥,四项。' },
+    { id: 'jibing', group: '健康疾病', label: '这个病能好吗', q: '这个病/这次不舒服,能好吗、要紧吗?',
+      recommend: [LY(3, '首选', '六爻官鬼(病)与子孙(药)、世(身)的力量对比定轻重与愈期。')],
+      ai: '官鬼为病、子孙为医药、世/用神为病人。子孙旺动制官、官休囚主病轻易愈;官旺克世、世入墓空破主病重难缠。必须给:要紧不要紧、大概多久能好、忌什么、什么时候是关口,四项。切忌代替就医,该看病照说去看。' },
+    { id: 'shoushu', group: '健康疾病', label: '手术/就医', q: '这次手术/就医,顺不顺?',
+      recommend: [LY(3, '首选', '六爻以官(病)、子孙(医)、父母(医院器械)、世论顺逆。'), XL(2, '次选', '小六壬急问就近这一两天最应。')],
+      ai: '子孙为医生医药、父母为医院器械、官为病、世为患者。子孙旺相生世、官受制主顺利;子孙空破、世受克主波折。必须给:顺不顺、医生/医院靠不靠谱、要防什么、大概哪天动利,四项。' },
+
+    // ——— 寻人寻物 ———
+    { id: 'xunwu', group: '寻人寻物', label: '丢的东西', q: '我丢的东西,找得回吗?在哪个方向?',
+      recommend: [MH(3, '首选', '梅花后天卦定方位、类象定环境,失物找没找回一卦见。'), XL(2, '次选', '小六壬急寻掐指即得大向。')],
+      note: '寻物之精确(落于何人手),奇门遁甲最擅,本程序以梅花/小六壬近之。',
+      ai: '梅花以用卦定现处方位、变卦定移没移动,卦象类象定藏处环境(坎近水、艮墙角柜箱、离明处电器、坤仓储地面、兑缺口洼处、乾高处金属)。必须给:找不找得回、在哪个方向大概多远、藏在什么样的地方、什么时候能见,四项。' },
+    { id: 'xunren', group: '寻人寻物', label: '走失的人/宠物', q: '走失的人/宠物,在哪、能找回吗?',
+      recommend: [XL(3, '首选', '小六壬应事最快,三宫连断走向与安危。'), MH(2, '次选', '梅花定方位与远近。', 'num')],
+      ai: '小六壬三宫断出走、现状、归否;梅花用卦定方位、变卦定动向。必须给:人/宠平安否、往哪个方向去了、大概远近、找回大概什么时候,四项。' },
+    { id: 'mouren_nali', group: '寻人寻物', label: '某人在哪在干嘛', q: '某人现在在哪、在干什么?',
+      recommend: [XL(3, '首选', '小六壬当下即事,宫象直断人之动静。'), MH(2, '次选', '梅花以卦象类象描其处境。', 'num')],
+      ai: '以时宫或用卦之象断此人当下的动静、所在与状态,宫象/卦象类象定场合与方位,旺衰定其安稳与否。必须给:大概在哪个方向或什么场合、正在忙什么、状态好不好、这会儿要不要联系他,四项。' },
+
+    // ——— 看某个人 ———
+    { id: 'zhangxiang', group: '看某个人', label: '长相身材', q: '这个人长相身材什么样?(占前心里锁定其人)',
+      recommend: [LY(3, '首选', '六爻五行定形、六神定神态,画像最细。')],
+      ai: '取其人用神(问对方一般以应爻或所属六亲)。五行定形体(木瘦长、火尖赤、土敦厚矮、金方白、水圆润),六神定气质,爻位定高矮,旺衰定胖瘦。必须给:身高档、体型、脸型肤色、气质神态、年龄段,五项。' },
+    { id: 'xingge', group: '看某个人', label: '性格人品', q: '这个人性格人品怎么样?',
+      recommend: [LY(3, '首选', '六爻六神与用神动静,秉性厚薄看得出。')],
+      ai: '用神配六神与五行:青龙端方、朱雀伶俐话多、勾陈稳钝、螣蛇多心机、白虎刚烈、玄武暧昧;用神旺静主稳、乱动逢冲主浮。必须给:性子直爽还是深、靠不靠得住、脾气软硬、待人厚薄,四项,只说这人本身不替你下结论。' },
+    { id: 'jiajing', group: '看某个人', label: '家境出身', q: '这个人家境出身怎么样?',
+      recommend: [LY(3, '首选', '六爻父母爻与卦宫定家底厚薄。')],
+      ai: '父母为家宅根基、卦宫五行配家中营生。父母旺相临青龙主家底体面,休囚空破主根基薄。必须给:家底档次(殷实/中等/薄弱)、家里主要靠啥营生、父母辈状况,三项。' },
+    { id: 'xinren', group: '看某个人', label: '能否信任/深交', q: '这个人,能信任、能深交或合作吗?',
+      recommend: [LY(3, '首选', '六爻用神与世的生克合冲,诚意与后患一卦见。')],
+      ai: '用神(对方)生合世主可交、克世刑害世主有后患,用神与他爻作合主此人另有心思。必须给:能不能信、交浅交深、要防他哪一手、相处大概啥结果,四项,只断此人对你之利害,不作道德总评。' },
+
+    // ——— 运势时运 ———
+    { id: 'riyun', group: '运势时运', label: '今日运', q: '我今天运势怎么样?宜做什么?',
+      recommend: [XL(3, '首选', '马前课本为当日决断之术,最快最应。'), MH(2, '次选', '梅花时间卦分早中晚三段。', 'time')],
+      ai: '小六壬三宫断今日上午/午间/收尾,主断时宫;宫之五行配吉时吉方。必须给:今日总评一句、宜做与忌做各两件、吉时(具体钟点段)、吉方、防一件事,五项。' },
+    { id: 'yueyun', group: '运势时运', label: '本月运', q: '我这个月运势怎么样?',
+      recommend: [MH(3, '首选', '梅花时间卦本互变正好铺满月初中末,起伏一目了然。', 'time'), LY(2, '次选', '六爻以用神旺衰与动应定本月吉凶节点。')],
+      ai: '本卦为月初主调、互卦为月中、变卦为月末;分事业财运感情健康四路各一句。高低点落到上/中/下旬。必须给:总评、四路各一句、高点旬、低点旬、本月最该抓的一件事。' },
+    { id: 'nianyun', group: '运势时运', label: '今年运', q: '我今年一年大势怎么样?',
+      recommend: [LY(3, '首选', '岁占大事用蓍草,内外卦分上下半年,六亲照见五路。', 'dayan'), LY(2, '次选', '三钱六爻同断年运,快捷。')],
+      ai: '内卦主上半年、外卦主下半年,动爻之季为转折;六亲齐观财官父子兄五路。吉凶月以爻支应期列出。必须给:年度总基调一句、上下半年各一段、钱/事业/感情/家宅健康各一句、吉月凶月清单、全年最大机会与最大坑各一。' },
+    { id: 'zonghe', group: '运势时运', label: '当下综合运', q: '我当下整体运势怎么样?',
+      recommend: [LY(3, '首选', '六爻六亲俱全,一卦照见财官父子兄五路。')],
+      ai: '世为元气总盘,财官父子兄五路各断一句。最旺一路点明可乘、最凶一路点明须防,六神配世断当下心境。必须给:总评一句、五路各一句、最旺一路怎么用、最凶一路怎么防、一条调整建议。' },
+
+    // ——— 决策与择时 ———
+    { id: 'gaibugai', group: '决策与择时', label: '该不该做', q: '这件事,我到底该做还是不该做?',
+      recommend: [LY(3, '首选', '六爻以用神吉凶与世的得失,直接给做或不做。')],
+      ai: '按所问取用神,用神吉、生合世、变卦优于本卦主可为;用神凶、克世、动而化退化破主不宜。必须给:做还是不做、做的话把握几成、不做会错过啥、什么时机最好,四项,给个明确态度不打太极。' },
+    { id: 'deng_dong', group: '决策与择时', label: '该等还是该动', q: '这事我该再等等,还是现在就动?',
+      recommend: [LY(3, '首选', '六爻用神旺衰与动静定进退时机。'), XL(2, '次选', '小六壬急事当下动不动最应。')],
+      ai: '用神当令旺相、动而有气主宜动;用神休囚待生、逢空待填主宜等。必须给:等还是动、若等等到什么时候(阳历月旬)、若动最佳时点、错过时机的代价,四项。' },
+    { id: 'erxuanyi', group: '决策与择时', label: '两条路选哪个', q: 'A和B两条路/两个选择,我该选哪个?',
+      recommend: [LY(3, '首选', '六爻以两爻(或两卦)分表A、B,比其旺衰生克。')],
+      note: '两选一最好为A、B各摇一卦对比,或于一卦中以世应/两用神分表。',
+      ai: '若一卦分断:以生合世、旺相之一方为宜取;若各摇一卦:比两卦用神旺衰与吉凶。必须给:选哪个、为啥、另一个差在哪、选定后大概啥结果,四项。' },
+    { id: 'yingqi', group: '决策与择时', label: '何时成/见分晓', q: '这件事,大概什么时候能成/见分晓?',
+      recommend: [LY(3, '首选', '六爻用神地支直对月日,应期在诸法中最精。'), MH(2, '次选', '梅花以卦气数取应期,快而粗。')],
+      note: '大事精确应期,大六壬三传更细;本程序以六爻近之。',
+      ai: '以用神或动变之爻地支推:旺待冲、衰待生、空待填实冲空、动待合、静待冲。必须给:首选时间窗与备选时间窗各一(落到阳历月旬)、各注明取自哪支,以及是快是慢的总判。' },
+
+    // ——— 官非风险 ———
+    { id: 'guansi', group: '官非风险', label: '官司/纠纷输赢', q: '这场官司/纠纷,我能赢吗?',
+      recommend: [LY(3, '首选', '六爻世应力量与官鬼、父母(状纸判决)的生克定输赢。')],
+      ai: '世为己、应为对方、官鬼为官方/对方攻势、父母为状纸判决、子孙为解神。世旺应弱、子孙持世制官主我方有利;应旺克世、官动克世主不利。必须给:输赢倾向、我方强弱、和解还是打到底更划算、大概什么时候了结,四项。' },
+    { id: 'zaihuo', group: '官非风险', label: '近期有无灾祸', q: '我近期有没有灾祸/意外要防?',
+      recommend: [LY(3, '首选', '六爻官鬼、白虎与世的动克,凶险与否看得出。'), XL(2, '次选', '小六壬急问这几日安危最应。')],
+      ai: '官鬼为病灾是非、白虎为血光意外、世为己。世旺无克主平安;官鬼白虎旺动克世主有事,受克之爻五行定灾之类别与方位。必须给:近期稳不稳、要防哪一类(病/破财/口舌官非/交通)、大概什么时段、怎么避,四项,报险据实但不吓唬人。' },
   ];
 
   const METHOD_LABEL = { liuyao: '六爻', meihua: '梅花易数', xlr: '小六壬' };
-  const MODE_LABEL = {
-    coin: '三钱法', dayan: '蓍草大衍', num: '报数起卦', time: '时间起卦',
-  };
-  return { FENKE, METHOD_LABEL, MODE_LABEL };
+  const MODE_LABEL = { coin: '三钱法', dayan: '蓍草大衍', num: '报数起卦', time: '时间起卦' };
+  return { FENKE, GROUPS, METHOD_LABEL, MODE_LABEL };
 }));
 
 </script>
@@ -3100,8 +3153,17 @@
     $('sec-ai').classList.toggle('hidden', !w);
     $('sec-report').classList.toggle('hidden', !w);
     if (w) $('report').value = w.report;
-    $('ai-out').classList.add('hidden'); $('ai-out').textContent = '';
+    // 切换法门时,还原该法门自己的深断/追问对话(存在 works[tab].convo)
+    $('ai-out').innerHTML = ''; $('ai-followup').classList.add('hidden');
     $('ai-status').textContent = ''; $('ai-status').classList.remove('err');
+    if (w && w.convo && w.convo.turns.length) {
+      const out = $('ai-out'); out.classList.remove('hidden');
+      w.convo.turns.forEach((t, i) => {
+        if (t.role === 'assistant') { const a = document.createElement('div'); a.className = 'fq-ans'; a.textContent = t.content; out.appendChild(a); }
+        else if (i > 0) { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(t.content.split('\n')[0]); out.appendChild(y); }
+      });
+      $('ai-followup').classList.remove('hidden');
+    } else { $('ai-out').classList.add('hidden'); }
   }
 
   // —— 起卦 ——
@@ -3402,62 +3464,63 @@
     $('ai-status').classList.toggle('err', !!isErr);
   }
 
-  async function deepRead() {
+  let curAns = null; // 当前流式写入的答案元素
+
+  function deepRead() { return runAI(null); }
+  function followUp() {
+    const w = works[curTab];
+    if (!w || !w.convo) { setStatus('先做一次深断,再追问。', true); return; }
+    const t = $('fu-input').value.trim();
+    if (!t) { setStatus('先打上你要追问的话。', true); return; }
+    return runAI(t);
+  }
+
+  // 统一的多轮对话引擎:followupText 为 null 时是首断,否则是追问
+  async function runAI(followupText) {
     if (aiBusy) return;
     const w = works[curTab];
     if (!w) { setStatus('先起一卦。', true); return; }
-    const q = $('question').value.trim();
-    if (!q) { setStatus('深断需先填「所问何事」——问卦无题,断无所指。', true); return; }
-    const key = getKey();
     const providerId = $('ai-provider').value;
+    const key = getKey();
     if (!key) { setStatus(`请先设置 ${curProvider().label} API Key(点右侧「设置 API Key」)。`, true); $('keybox').classList.remove('hidden'); return; }
     const model = $('ai-model').value;
-    const material = w.material +
-      (curFenke ? '\n' + curFenke.ai : '') +
-      '\n' + nowAnchor() +
-      '\n' + ANTI_JARGON +
-      `\n(所问之事以此为准:${q})`;
+
+    let turns;
+    if (!followupText) {
+      const q = $('question').value.trim();
+      if (!q) { setStatus('深断需先填「所问何事」——问卦无题,断无所指。', true); return; }
+      const material = w.material + (curFenke ? '\n' + curFenke.ai : '') +
+        '\n' + nowAnchor() + '\n' + ANTI_JARGON + `\n(所问之事以此为准:${q})`;
+      turns = [{ role: 'user', content: material }];
+    } else {
+      if (!w.convo || !w.convo.turns.length) { setStatus('先做一次深断,再追问。', true); return; }
+      const fu = followupText + '\n(就着这一卦、这个人这件事接着答,别换卦别重起;还是大白话、不许冒术语。若这一卦确实答不了这个追问,直说"这卦看不出来",不许硬编。)';
+      turns = w.convo.turns.concat([{ role: 'user', content: fu }]);
+    }
+
     let url, headers, body;
     if (providerId === 'deepseek') {
       url = 'https://api.deepseek.com/chat/completions';
       headers = { 'content-type': 'application/json', 'authorization': 'Bearer ' + key };
-      body = {
-        model, stream: true, max_tokens: 8000,
-        messages: [
-          { role: 'system', content: DONGXUAN_SYSTEM + DS_ADDENDUM },
-          { role: 'user', content: material },
-        ],
-      };
+      body = { model, stream: true, max_tokens: 8000, messages: [{ role: 'system', content: DONGXUAN_SYSTEM + DS_ADDENDUM }].concat(turns) };
       if (model === 'deepseek-chat') body.temperature = 0.8;
     } else {
       url = 'https://api.anthropic.com/v1/messages';
-      headers = {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      };
-      body = {
-        model, max_tokens: 16000, stream: true,
-        system: DONGXUAN_SYSTEM,
-        messages: [{ role: 'user', content: material }],
-      };
-      if (model === 'claude-fable-5') {
-        // Fable 5:思考常开(不传 thinking);按官方建议带服务端兜底回退
-        headers['anthropic-beta'] = 'server-side-fallback-2026-06-01';
-        body.fallbacks = [{ model: 'claude-opus-4-8' }];
-      } else {
-        body.thinking = { type: 'adaptive' };
-      }
+      headers = { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+      body = { model, max_tokens: 16000, stream: true, system: DONGXUAN_SYSTEM, messages: turns };
+      if (model === 'claude-fable-5') { headers['anthropic-beta'] = 'server-side-fallback-2026-06-01'; body.fallbacks = [{ model: 'claude-opus-4-8' }]; }
+      else body.thinking = { type: 'adaptive' };
     }
 
-    aiBusy = true;
-    $('btn-deepread').disabled = true;
-    setStatus('东玄凝神观卦……');
-    const out = $('ai-out');
-    out.classList.remove('hidden');
-    out.innerHTML = '<span class="cursor">▍</span>';
+    aiBusy = true; $('btn-deepread').disabled = true; $('btn-followup').disabled = true;
+    setStatus(followupText ? '东玄再想想……' : '东玄凝神观卦……');
+    const out = $('ai-out'); out.classList.remove('hidden');
+    if (!followupText) out.innerHTML = '';
+    else { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(followupText); out.appendChild(y); }
+    curAns = document.createElement('div'); curAns.className = 'fq-ans'; curAns.innerHTML = '<span class="cursor">▍</span>'; out.appendChild(curAns);
+
     let text = '', stopReason = null;
+    const feed = chunk => { text += chunk; curAns.textContent = text; curAns.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); };
     try {
       const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
       if (!resp.ok) {
@@ -3467,27 +3530,14 @@
         if (resp.status === 402) msg = 'DeepSeek 账户余额不足,请充值后再试。';
         throw new Error(msg);
       }
-      const reader = resp.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      const feed = chunk => {
-        text += chunk;
-        out.textContent = text;
-        out.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>');
-      };
+      const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const parts = buf.split('\n\n');
-        buf = parts.pop();
+        const { done, value } = await reader.read(); if (done) break;
+        buf += dec.decode(value, { stream: true }); const parts = buf.split('\n\n'); buf = parts.pop();
         for (const part of parts) {
-          const dataLine = part.split('\n').find(l => l.startsWith('data:'));
-          if (!dataLine) continue;
-          const payload = dataLine.replace(/^data:\s*/, '');
-          if (payload === '[DONE]') continue;
-          let ev;
-          try { ev = JSON.parse(payload); } catch (e) { continue; }
+          const dataLine = part.split('\n').find(l => l.startsWith('data:')); if (!dataLine) continue;
+          const payload = dataLine.replace(/^data:\s*/, ''); if (payload === '[DONE]') continue;
+          let ev; try { ev = JSON.parse(payload); } catch (e) { continue; }
           if (providerId === 'deepseek') {
             const ch = ev.choices && ev.choices[0];
             if (ch && ch.delta && ch.delta.content) feed(ch.delta.content);
@@ -3500,25 +3550,25 @@
           }
         }
       }
-      out.textContent = text;
+      curAns.textContent = text;
       if (stopReason === 'refusal' || stopReason === 'content_filter') {
-        setStatus('此问触发了模型方的安全过滤,未能出断。换个问法再试。', true);
-      } else if (!text) {
-        throw new Error('未收到解读内容');
-      } else {
-        setStatus('断毕。已存入卦档。');
-        attachAiReading(w.recId, model, text);
+        setStatus('此问触发了模型方的安全过滤,换个问法再试。', true);
+        if (!followupText) out.classList.add('hidden'); else curAns.remove();
+      } else if (!text) { throw new Error('未收到内容'); }
+      else {
+        w.convo = { provider: providerId, model, turns: turns.concat([{ role: 'assistant', content: text }]) };
+        $('ai-followup').classList.remove('hidden');
+        if (!followupText) { setStatus('断毕。可在下方追问。已存入卦档。'); attachAiReading(w.recId, model, text); }
+        else { setStatus('答毕。还有不明白的接着追问。'); $('fu-input').value = ''; }
       }
     } catch (e) {
-      if (text) { out.textContent = text; }
       const hint = /Failed to fetch|NetworkError|TypeError/.test(String(e))
-        ? '网络请求被拦截:托管版(Artifact)环境禁止外联,请在 PWA/本地版使用深断;或复制下方回报文本粘给东玄。'
+        ? '网络请求被拦截:托管版(Artifact)禁止外联,请在桌面/本地版用深断;或复制回报文本粘给东玄。'
         : String(e.message || e);
-      setStatus('深断未成:' + hint, true);
-      if (!text) out.classList.add('hidden');
+      setStatus((followupText ? '追问未成:' : '深断未成:') + hint, true);
+      if (!text) { if (!followupText) out.classList.add('hidden'); else if (curAns) curAns.remove(); }
     } finally {
-      aiBusy = false;
-      $('btn-deepread').disabled = false;
+      aiBusy = false; $('btn-deepread').disabled = false; $('btn-followup').disabled = false;
     }
   }
 
@@ -3629,8 +3679,12 @@
   let curPick = null;     // 已选方法 {method, mode}
   const METHOD_NAMES = Fenke.METHOD_LABEL, MODE_NAMES = Fenke.MODE_LABEL;
   function renderFenke() {
-    $('fenke-chips').innerHTML = Fenke.FENKE.map(f =>
-      `<button class="fk" data-id="${f.id}">${f.label}</button>`).join('');
+    const byGroup = {};
+    Fenke.FENKE.forEach(f => { (byGroup[f.group] = byGroup[f.group] || []).push(f); });
+    $('fenke-chips').innerHTML = Fenke.GROUPS.filter(g => byGroup[g]).map(g =>
+      `<div class="fkgroup"><div class="fkgh">${g}</div><div class="fkrow">` +
+      byGroup[g].map(f => `<button class="fk" data-id="${f.id}">${f.label}</button>`).join('') +
+      `</div></div>`).join('');
   }
   // 点类别:展开该类的方法推荐(不立即切法门,等用户点方法)
   function openFenke(id) {
@@ -3710,6 +3764,11 @@
     $('xlr-nums').classList.toggle('hidden', document.querySelector('input[name=xlr-mode]:checked').value !== 'num');
   }));
   $('btn-deepread').addEventListener('click', deepRead);
+  $('btn-followup').addEventListener('click', followUp);
+  document.querySelectorAll('.fq').forEach(b => b.addEventListener('click', () => {
+    $('fu-input').value = b.textContent.replace('{}', '');
+    $('fu-input').focus();
+  }));
   $('ai-provider').addEventListener('change', () => {
     localStorage.setItem(PKEY, $('ai-provider').value);
     syncProviderUI();

@@ -132,6 +132,16 @@
     padding: 16px; margin-top: 14px; white-space: pre-wrap; line-height: 1.9; }
   .aiout .cursor { color: var(--gold); animation: blink 1s step-end infinite; }
   @keyframes blink { 50% { opacity: 0; } }
+  .aiout .fq-you { color: var(--cinnabar); margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .aiout .fq-you b { font-weight: normal; }
+  #ai-followup { margin-top: 14px; }
+  .fuhint { color: var(--dim); font-size: .88rem; margin-bottom: 8px; }
+  .fuquick { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .fq { border: 1px dashed var(--gold); background: transparent; color: var(--gold); border-radius: 16px;
+    padding: 5px 12px; font-size: .85rem; text-align: left; }
+  #fu-input { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px 12px; font-family: inherit; font-size: .95rem; min-height: 64px; resize: vertical; }
+  #fu-input:focus { outline: none; border-color: var(--gold); }
   .tabs { display: flex; gap: 8px; margin-bottom: 18px; justify-content: center; flex-wrap: wrap; }
   .tabs button { border-radius: 20px; padding: 8px 22px; }
   .tabs button.on { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
@@ -152,7 +162,10 @@
   .gongbox .g-verse { font-size: .88rem; text-align: left; margin-top: 8px; line-height: 1.7; }
   .badge { display: inline-block; border: 1px solid var(--gold); color: var(--gold); border-radius: 4px;
     font-size: .72rem; padding: 0 5px; vertical-align: middle; white-space: nowrap; }
-  .fenke { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fenke { display: flex; flex-direction: column; gap: 12px; }
+  .fkgroup { }
+  .fkgh { color: var(--gold); font-size: .82rem; letter-spacing: .12em; margin-bottom: 6px; }
+  .fkrow { display: flex; flex-wrap: wrap; gap: 8px; }
   .fk { border: 1px solid var(--line); background: var(--panel2); border-radius: 18px;
     padding: 6px 14px; font-size: .92rem; letter-spacing: .05em; }
   .fk.on { border-color: var(--cinnabar); color: var(--cinnabar); background: #f6e9e0; }
@@ -339,6 +352,15 @@
     </div>
     <div id="ai-status"></div>
     <div id="ai-out" class="aiout hidden"></div>
+    <div id="ai-followup" class="hidden">
+      <div class="fuhint">断完还有不明白的?接着追问(卦象上下文不丢,东玄就着这一卦接着答):</div>
+      <div class="fuquick">
+        <button class="fq" data-t="卦象">这一卦里,{}你再讲细点(比如财运、时间、那个人具体些)</button>
+        <button class="fq" data-t="疑惑">你刚说的{},依据是什么?我有点不信,再解释解释</button>
+      </div>
+      <textarea id="fu-input" placeholder="直接打你想追问的,比如:那笔钱具体几月能到?/ 你说对方年长,凭啥?"></textarea>
+      <div class="btnrow"><button id="btn-followup" class="primary">追 问</button></div>
+    </div>
   </section>
 
   <section id="sec-report" class="hidden">
@@ -395,8 +417,17 @@
     $('sec-ai').classList.toggle('hidden', !w);
     $('sec-report').classList.toggle('hidden', !w);
     if (w) $('report').value = w.report;
-    $('ai-out').classList.add('hidden'); $('ai-out').textContent = '';
+    // 切换法门时,还原该法门自己的深断/追问对话(存在 works[tab].convo)
+    $('ai-out').innerHTML = ''; $('ai-followup').classList.add('hidden');
     $('ai-status').textContent = ''; $('ai-status').classList.remove('err');
+    if (w && w.convo && w.convo.turns.length) {
+      const out = $('ai-out'); out.classList.remove('hidden');
+      w.convo.turns.forEach((t, i) => {
+        if (t.role === 'assistant') { const a = document.createElement('div'); a.className = 'fq-ans'; a.textContent = t.content; out.appendChild(a); }
+        else if (i > 0) { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(t.content.split('\n')[0]); out.appendChild(y); }
+      });
+      $('ai-followup').classList.remove('hidden');
+    } else { $('ai-out').classList.add('hidden'); }
   }
 
   // —— 起卦 ——
@@ -697,62 +728,63 @@
     $('ai-status').classList.toggle('err', !!isErr);
   }
 
-  async function deepRead() {
+  let curAns = null; // 当前流式写入的答案元素
+
+  function deepRead() { return runAI(null); }
+  function followUp() {
+    const w = works[curTab];
+    if (!w || !w.convo) { setStatus('先做一次深断,再追问。', true); return; }
+    const t = $('fu-input').value.trim();
+    if (!t) { setStatus('先打上你要追问的话。', true); return; }
+    return runAI(t);
+  }
+
+  // 统一的多轮对话引擎:followupText 为 null 时是首断,否则是追问
+  async function runAI(followupText) {
     if (aiBusy) return;
     const w = works[curTab];
     if (!w) { setStatus('先起一卦。', true); return; }
-    const q = $('question').value.trim();
-    if (!q) { setStatus('深断需先填「所问何事」——问卦无题,断无所指。', true); return; }
-    const key = getKey();
     const providerId = $('ai-provider').value;
+    const key = getKey();
     if (!key) { setStatus(`请先设置 ${curProvider().label} API Key(点右侧「设置 API Key」)。`, true); $('keybox').classList.remove('hidden'); return; }
     const model = $('ai-model').value;
-    const material = w.material +
-      (curFenke ? '\n' + curFenke.ai : '') +
-      '\n' + nowAnchor() +
-      '\n' + ANTI_JARGON +
-      `\n(所问之事以此为准:${q})`;
+
+    let turns;
+    if (!followupText) {
+      const q = $('question').value.trim();
+      if (!q) { setStatus('深断需先填「所问何事」——问卦无题,断无所指。', true); return; }
+      const material = w.material + (curFenke ? '\n' + curFenke.ai : '') +
+        '\n' + nowAnchor() + '\n' + ANTI_JARGON + `\n(所问之事以此为准:${q})`;
+      turns = [{ role: 'user', content: material }];
+    } else {
+      if (!w.convo || !w.convo.turns.length) { setStatus('先做一次深断,再追问。', true); return; }
+      const fu = followupText + '\n(就着这一卦、这个人这件事接着答,别换卦别重起;还是大白话、不许冒术语。若这一卦确实答不了这个追问,直说"这卦看不出来",不许硬编。)';
+      turns = w.convo.turns.concat([{ role: 'user', content: fu }]);
+    }
+
     let url, headers, body;
     if (providerId === 'deepseek') {
       url = 'https://api.deepseek.com/chat/completions';
       headers = { 'content-type': 'application/json', 'authorization': 'Bearer ' + key };
-      body = {
-        model, stream: true, max_tokens: 8000,
-        messages: [
-          { role: 'system', content: DONGXUAN_SYSTEM + DS_ADDENDUM },
-          { role: 'user', content: material },
-        ],
-      };
+      body = { model, stream: true, max_tokens: 8000, messages: [{ role: 'system', content: DONGXUAN_SYSTEM + DS_ADDENDUM }].concat(turns) };
       if (model === 'deepseek-chat') body.temperature = 0.8;
     } else {
       url = 'https://api.anthropic.com/v1/messages';
-      headers = {
-        'content-type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      };
-      body = {
-        model, max_tokens: 16000, stream: true,
-        system: DONGXUAN_SYSTEM,
-        messages: [{ role: 'user', content: material }],
-      };
-      if (model === 'claude-fable-5') {
-        // Fable 5:思考常开(不传 thinking);按官方建议带服务端兜底回退
-        headers['anthropic-beta'] = 'server-side-fallback-2026-06-01';
-        body.fallbacks = [{ model: 'claude-opus-4-8' }];
-      } else {
-        body.thinking = { type: 'adaptive' };
-      }
+      headers = { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+      body = { model, max_tokens: 16000, stream: true, system: DONGXUAN_SYSTEM, messages: turns };
+      if (model === 'claude-fable-5') { headers['anthropic-beta'] = 'server-side-fallback-2026-06-01'; body.fallbacks = [{ model: 'claude-opus-4-8' }]; }
+      else body.thinking = { type: 'adaptive' };
     }
 
-    aiBusy = true;
-    $('btn-deepread').disabled = true;
-    setStatus('东玄凝神观卦……');
-    const out = $('ai-out');
-    out.classList.remove('hidden');
-    out.innerHTML = '<span class="cursor">▍</span>';
+    aiBusy = true; $('btn-deepread').disabled = true; $('btn-followup').disabled = true;
+    setStatus(followupText ? '东玄再想想……' : '东玄凝神观卦……');
+    const out = $('ai-out'); out.classList.remove('hidden');
+    if (!followupText) out.innerHTML = '';
+    else { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(followupText); out.appendChild(y); }
+    curAns = document.createElement('div'); curAns.className = 'fq-ans'; curAns.innerHTML = '<span class="cursor">▍</span>'; out.appendChild(curAns);
+
     let text = '', stopReason = null;
+    const feed = chunk => { text += chunk; curAns.textContent = text; curAns.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); };
     try {
       const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
       if (!resp.ok) {
@@ -762,27 +794,14 @@
         if (resp.status === 402) msg = 'DeepSeek 账户余额不足,请充值后再试。';
         throw new Error(msg);
       }
-      const reader = resp.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      const feed = chunk => {
-        text += chunk;
-        out.textContent = text;
-        out.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>');
-      };
+      const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const parts = buf.split('\n\n');
-        buf = parts.pop();
+        const { done, value } = await reader.read(); if (done) break;
+        buf += dec.decode(value, { stream: true }); const parts = buf.split('\n\n'); buf = parts.pop();
         for (const part of parts) {
-          const dataLine = part.split('\n').find(l => l.startsWith('data:'));
-          if (!dataLine) continue;
-          const payload = dataLine.replace(/^data:\s*/, '');
-          if (payload === '[DONE]') continue;
-          let ev;
-          try { ev = JSON.parse(payload); } catch (e) { continue; }
+          const dataLine = part.split('\n').find(l => l.startsWith('data:')); if (!dataLine) continue;
+          const payload = dataLine.replace(/^data:\s*/, ''); if (payload === '[DONE]') continue;
+          let ev; try { ev = JSON.parse(payload); } catch (e) { continue; }
           if (providerId === 'deepseek') {
             const ch = ev.choices && ev.choices[0];
             if (ch && ch.delta && ch.delta.content) feed(ch.delta.content);
@@ -795,25 +814,25 @@
           }
         }
       }
-      out.textContent = text;
+      curAns.textContent = text;
       if (stopReason === 'refusal' || stopReason === 'content_filter') {
-        setStatus('此问触发了模型方的安全过滤,未能出断。换个问法再试。', true);
-      } else if (!text) {
-        throw new Error('未收到解读内容');
-      } else {
-        setStatus('断毕。已存入卦档。');
-        attachAiReading(w.recId, model, text);
+        setStatus('此问触发了模型方的安全过滤,换个问法再试。', true);
+        if (!followupText) out.classList.add('hidden'); else curAns.remove();
+      } else if (!text) { throw new Error('未收到内容'); }
+      else {
+        w.convo = { provider: providerId, model, turns: turns.concat([{ role: 'assistant', content: text }]) };
+        $('ai-followup').classList.remove('hidden');
+        if (!followupText) { setStatus('断毕。可在下方追问。已存入卦档。'); attachAiReading(w.recId, model, text); }
+        else { setStatus('答毕。还有不明白的接着追问。'); $('fu-input').value = ''; }
       }
     } catch (e) {
-      if (text) { out.textContent = text; }
       const hint = /Failed to fetch|NetworkError|TypeError/.test(String(e))
-        ? '网络请求被拦截:托管版(Artifact)环境禁止外联,请在 PWA/本地版使用深断;或复制下方回报文本粘给东玄。'
+        ? '网络请求被拦截:托管版(Artifact)禁止外联,请在桌面/本地版用深断;或复制回报文本粘给东玄。'
         : String(e.message || e);
-      setStatus('深断未成:' + hint, true);
-      if (!text) out.classList.add('hidden');
+      setStatus((followupText ? '追问未成:' : '深断未成:') + hint, true);
+      if (!text) { if (!followupText) out.classList.add('hidden'); else if (curAns) curAns.remove(); }
     } finally {
-      aiBusy = false;
-      $('btn-deepread').disabled = false;
+      aiBusy = false; $('btn-deepread').disabled = false; $('btn-followup').disabled = false;
     }
   }
 
@@ -924,8 +943,12 @@
   let curPick = null;     // 已选方法 {method, mode}
   const METHOD_NAMES = Fenke.METHOD_LABEL, MODE_NAMES = Fenke.MODE_LABEL;
   function renderFenke() {
-    $('fenke-chips').innerHTML = Fenke.FENKE.map(f =>
-      `<button class="fk" data-id="${f.id}">${f.label}</button>`).join('');
+    const byGroup = {};
+    Fenke.FENKE.forEach(f => { (byGroup[f.group] = byGroup[f.group] || []).push(f); });
+    $('fenke-chips').innerHTML = Fenke.GROUPS.filter(g => byGroup[g]).map(g =>
+      `<div class="fkgroup"><div class="fkgh">${g}</div><div class="fkrow">` +
+      byGroup[g].map(f => `<button class="fk" data-id="${f.id}">${f.label}</button>`).join('') +
+      `</div></div>`).join('');
   }
   // 点类别:展开该类的方法推荐(不立即切法门,等用户点方法)
   function openFenke(id) {
@@ -1005,6 +1028,11 @@
     $('xlr-nums').classList.toggle('hidden', document.querySelector('input[name=xlr-mode]:checked').value !== 'num');
   }));
   $('btn-deepread').addEventListener('click', deepRead);
+  $('btn-followup').addEventListener('click', followUp);
+  document.querySelectorAll('.fq').forEach(b => b.addEventListener('click', () => {
+    $('fu-input').value = b.textContent.replace('{}', '');
+    $('fu-input').focus();
+  }));
   $('ai-provider').addEventListener('change', () => {
     localStorage.setItem(PKEY, $('ai-provider').value);
     syncProviderUI();

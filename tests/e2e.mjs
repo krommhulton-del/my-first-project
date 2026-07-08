@@ -80,6 +80,18 @@ await t('AI 深断区:无 Key 时点击给出设置提示', async () => {
   ok(!(await page.locator('#keybox').evaluate(el => el.classList.contains('hidden'))), 'Key 输入框应展开');
 });
 
+await t('追问区:初始隐藏;展开后快捷按钮填模板、无深断时追问给提示', async () => {
+  ok(await page.locator('#ai-followup').evaluate(el => el.classList.contains('hidden')), '追问区初始应隐藏');
+  // 展开追问区(正常由深断成功后触发;此处直接显示以测交互)
+  await page.evaluate(() => document.getElementById('ai-followup').classList.remove('hidden'));
+  await page.locator('.fq').first().click();
+  ok((await page.inputValue('#fu-input')).length > 5, '快捷按钮应填入追问模板');
+  await page.click('#btn-followup');
+  ok((await page.textContent('#ai-status')).includes('深断'), '未深断先追问应提示:' + (await page.textContent('#ai-status')));
+  await page.fill('#fu-input', '');
+  await page.evaluate(() => document.getElementById('ai-followup').classList.add('hidden'));
+});
+
 await t('AI 深断区:保存/清除 Key 走 localStorage', async () => {
   await page.fill('#api-key', 'sk-ant-test-123');
   await page.click('#btn-savekey');
@@ -165,28 +177,30 @@ await t('小六壬:时间起课三宫齐、诗诀在', async () => {
   ok(rep.startsWith('【东玄小六壬 · 课象回报】'), rep.split('\n')[0]);
 });
 
+await t('分科全面版:≥35 专科、分组显示', async () => {
+  ok((await page.locator('#fenke-chips .fk').count()) >= 35, '专科数 ' + (await page.locator('#fenke-chips .fk').count()));
+  ok((await page.locator('#fenke-chips .fkgroup').count()) >= 10, '应分十大类以上');
+});
+
 await t('分科两步选择:点类别展开排序推荐,点方法才切法门', async () => {
-  ok((await page.locator('#fenke-chips .fk').count()) === 13, '十三科');
-  // 点类别:展开推荐,但先不切法门
-  await page.click('.fk[data-id=fangwei]');
+  await page.click('.fk[data-id=banjia]');
   ok(!(await page.locator('#fk-recommend').evaluate(el => el.classList.contains('hidden'))), '推荐面板应展开');
   const opts = page.locator('#fk-recommend .mopt');
-  ok((await opts.count()) >= 2, '方位类应给多种方法供选');
+  ok((await opts.count()) >= 2, '搬家方位类应给多种方法供选');
   ok((await opts.first().locator('.rtag').textContent()) === '首选', '首项标首选');
-  ok((await opts.first().locator('.mname').textContent()) === '梅花易数', '方位首选梅花');
-  // 点首选方法 → 切到梅花、填问题
+  ok((await opts.first().locator('.mname').textContent()) === '梅花易数', '搬家方位首选梅花');
   await opts.first().click();
   ok(await page.locator('#sec-mh').isVisible(), '应切到梅花面板');
   ok((await page.inputValue('#question')).includes('方向'), '问题模板已填');
 });
 
-await t('分科可改选非首选方法(方位改选六爻)', async () => {
-  await page.click('.fk[data-id=fangwei]'); // 收起
-  await page.click('.fk[data-id=fangwei]'); // 重新展开
+await t('分科可改选非首选方法(搬家改选六爻)', async () => {
+  await page.click('.fk[data-id=banjia]'); // 收起
+  await page.click('.fk[data-id=banjia]'); // 重新展开
   const opts = page.locator('#fk-recommend .mopt');
   const labels = await opts.locator('.mname').allTextContents();
   const liuyaoIdx = labels.indexOf('六爻');
-  ok(liuyaoIdx >= 0, '方位推荐应含六爻可选:' + labels.join(','));
+  ok(liuyaoIdx >= 0, '搬家推荐应含六爻可选:' + labels.join(','));
   await opts.nth(liuyaoIdx).click();
   ok(await page.locator('#sec-cast').isVisible(), '改选六爻后应切到六爻面板');
 });
@@ -199,7 +213,6 @@ await t('分科日运首选小六壬、年运首选蓍草', async () => {
   ok(await page.locator('#sec-xlr').isVisible(), '切到小六壬');
   await page.click('.fk[data-id=nianyun]');
   ok((await page.locator('#fk-recommend .mopt').first().locator('.mmode').textContent()).includes('蓍草'), '年运首选蓍草');
-  // 取消选科
   await page.click('.fk[data-id=nianyun]');
   ok((await page.locator('.fk.on').count()) === 0, '取消选科');
   ok(await page.locator('#fk-recommend').evaluate(el => el.classList.contains('hidden')), '推荐面板收起');
