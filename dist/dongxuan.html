@@ -9,6 +9,15 @@
 <meta name="apple-mobile-web-app-title" content="东玄卜卦">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23f4eee1%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2238%22%20fill%3D%22%23c9a45c%22%20stroke%3D%22%238a6f3a%22%20stroke-width%3D%223%22%2F%3E%3Crect%20x%3D%2240%22%20y%3D%2240%22%20width%3D%2220%22%20height%3D%2220%22%20fill%3D%22%23f4eee1%22%20stroke%3D%22%238a6f3a%22%20stroke-width%3D%222%22%2F%3E%3C%2Fsvg%3E">
 <title>东玄卜卦 · 三钱起卦</title>
+<meta name="description" content="东玄卜卦:六爻·梅花·小六壬三大法门,四十专科按事分科选法,起卦、排盘、AI 深断一体。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="东玄卜卦 · 全方位占卜">
+<meta property="og:description" content="六爻·梅花·小六壬三大法门,四十专科按事分科选法,起卦排盘 AI 深断一体,还能看八字日月年运。">
+<meta property="og:image" content="icon-512.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="东玄卜卦 · 全方位占卜">
+<meta name="twitter:description" content="六爻·梅花·小六壬三大法门,按事分科选法,起卦排盘 AI 深断一体。">
+<meta name="twitter:image" content="icon-512.png">
 <style>
   :root {
     /* 米白宣纸底 + 墨褐字 + 赭金题字 + 朱砂印 */
@@ -209,8 +218,8 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.8</span></p>
-    <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a></div>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.9</span></p>
+    <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
   <nav class="tabs">
@@ -378,7 +387,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.8 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.9 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script>
@@ -3825,6 +3834,23 @@
   });
   $('btn-clearhist').addEventListener('click', () => {
     if (confirm('清空全部卦档?此操作不可恢复。')) { localStorage.removeItem(HKEY); renderHistory(); }
+  });
+
+  // —— 分享:优先系统分享面板,不支持则复制链接 ——
+  const shareBtn = $('btn-share');
+  if (shareBtn) shareBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const url = location.href.split('#')[0];
+    const data = { title: '东玄卜卦', text: '东玄卜卦:六爻·梅花·小六壬,按事分科选法,起卦排盘 AI 深断一体。', url };
+    const isFile = location.protocol === 'file:';
+    if (!isFile && navigator.share) {
+      try { await navigator.share(data); return; } catch (err) { if (err && err.name === 'AbortError') return; }
+    }
+    // 退路:复制链接
+    const toCopy = isFile ? '(这是本地文件,想分享请用网址版:把仓库设公开开 GitHub Pages 后的链接)' : url;
+    try { await navigator.clipboard.writeText(toCopy); shareBtn.textContent = isFile ? '本地文件无法分享' : '链接已复制 ✓'; }
+    catch (err) { shareBtn.textContent = url; }
+    setTimeout(() => { shareBtn.textContent = '分享给朋友 ⤴'; }, 2200);
   });
 
   renderHistory();
