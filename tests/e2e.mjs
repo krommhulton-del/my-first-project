@@ -177,9 +177,24 @@ await t('小六壬:时间起课三宫齐、诗诀在', async () => {
   ok(rep.startsWith('【东玄小六壬 · 课象回报】'), rep.split('\n')[0]);
 });
 
-await t('分科全面版:≥35 专科、分组显示', async () => {
-  ok((await page.locator('#fenke-chips .fk').count()) >= 35, '专科数 ' + (await page.locator('#fenke-chips .fk').count()));
-  ok((await page.locator('#fenke-chips .fkgroup').count()) >= 10, '应分十大类以上');
+await t('奇门遁甲:此刻起局出九宫、值符值使、事宫、回报', async () => {
+  await page.click('.tabs button[data-m=qimen]');
+  ok(await page.locator('#sec-qm').isVisible(), '奇门起局面板应可见');
+  await page.fill('#question', '奇门内测一问,往哪个方向利');
+  await page.click('#btn-qm');
+  await page.waitForSelector('#sec-qmres:not(.hidden)');
+  ok((await page.locator('#qm-grid .qmcell').count()) === 9, '九宫九格');
+  ok((await page.locator('#qm-grid .qmcell.key').count()) === 1, '事宫高亮一格');
+  const info = await page.locator('#qm-info').textContent();
+  ok(/遁.*局/.test(info), '起局含遁局:' + info.slice(0, 40));
+  ok((await page.locator('#qm-notes').textContent()).includes('值符'), '含值符值使白话');
+  const rep = await page.inputValue('#report');
+  ok(rep.includes('奇门遁甲') && rep.includes('值使'), '回报含奇门起局:' + rep.split('\n')[0]);
+});
+
+await t('分科全面版:≥50 专科、分组显示、含奇门派单', async () => {
+  ok((await page.locator('#fenke-chips .fk').count()) >= 50, '专科数 ' + (await page.locator('#fenke-chips .fk').count()));
+  ok((await page.locator('#fenke-chips .fkgroup').count()) >= 12, '应分十二大类以上');
 });
 
 await t('分科两步选择:点类别展开排序推荐,点方法才切法门', async () => {
@@ -188,9 +203,9 @@ await t('分科两步选择:点类别展开排序推荐,点方法才切法门', 
   const opts = page.locator('#fk-recommend .mopt');
   ok((await opts.count()) >= 2, '搬家方位类应给多种方法供选');
   ok((await opts.first().locator('.rtag').textContent()) === '首选', '首项标首选');
-  ok((await opts.first().locator('.mname').textContent()) === '梅花易数', '搬家方位首选梅花');
+  ok((await opts.first().locator('.mname').textContent()) === '奇门遁甲', '搬家方位首选奇门');
   await opts.first().click();
-  ok(await page.locator('#sec-mh').isVisible(), '应切到梅花面板');
+  ok(await page.locator('#sec-qm').isVisible(), '应切到奇门面板');
   ok((await page.inputValue('#question')).includes('方向'), '问题模板已填');
 });
 

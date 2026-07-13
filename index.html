@@ -11,14 +11,14 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>东玄卜卦 · 三钱起卦</title>
-<meta name="description" content="东玄卜卦:六爻·梅花·小六壬三大法门,四十专科按事分科选法,起卦、排盘、AI 深断一体。">
+<meta name="description" content="东玄卜卦:六爻·梅花·小六壬·奇门遁甲四大法门,按事分科选法,起卦、排盘、AI 深断一体。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="东玄卜卦 · 全方位占卜">
-<meta property="og:description" content="六爻·梅花·小六壬三大法门,四十专科按事分科选法,起卦排盘 AI 深断一体,还能看八字日月年运。">
+<meta property="og:description" content="六爻·梅花·小六壬·奇门遁甲四大法门,按事分科选法,起卦排盘 AI 深断一体,还能看八字日月年运。">
 <meta property="og:image" content="icon-512.png">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="东玄卜卦 · 全方位占卜">
-<meta name="twitter:description" content="六爻·梅花·小六壬三大法门,按事分科选法,起卦排盘 AI 深断一体。">
+<meta name="twitter:description" content="六爻·梅花·小六壬·奇门遁甲四大法门,按事分科选法,起卦排盘 AI 深断一体。">
 <meta name="twitter:image" content="icon-512.png">
 <style>
   :root {
@@ -197,7 +197,24 @@
   .mopt .rwhy { color: var(--dim); font-size: .85rem; margin-top: 5px; line-height: 1.65; }
   .fk-note { color: var(--dim); font-size: .82rem; margin-top: 6px; line-height: 1.6; }
   .fk-note b { color: var(--cinnabar); font-weight: normal; }
+  .qm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+  .qmcell { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 6px;
+    text-align: center; min-height: 96px; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+  .qmcell.center { background: #efe7d4; border-style: dashed; }
+  .qmcell.key { border-color: var(--cinnabar); box-shadow: 0 0 0 1px var(--cinnabar) inset; }
+  .qmcell .qgan { font-size: 1.02rem; letter-spacing: 2px; }
+  .qmcell .qgan .sky { color: var(--cinnabar); } .qmcell .qgan .earth { color: var(--gold); }
+  .qmcell .qstar { font-size: .82rem; color: var(--ink); }
+  .qmcell .qgate { font-size: .9rem; }
+  .qmcell .qgate.ji { color: var(--gold); } .qmcell .qgate.xiong { color: var(--cinnabar); }
+  .qmcell .qshen { font-size: .78rem; color: var(--dim); }
+  .qmcell .qpos { font-size: .72rem; color: var(--dim); letter-spacing: .1em; }
+  .qm-legend { color: var(--dim); font-size: .78rem; margin-top: 8px; line-height: 1.6; }
+  .qm-legend .sky { color: var(--cinnabar); } .qm-legend .earth { color: var(--gold); }
   @media (max-width: 560px) {
+    .qmcell { min-height: 82px; padding: 6px 3px; }
+    .qmcell .qgan { font-size: .92rem; } .qmcell .qstar, .qmcell .qgate { font-size: .78rem; }
+    .qmcell .qshen, .qmcell .qpos { font-size: .68rem; }
     header h1 { font-size: 1.5rem; }
     body { line-height: 1.65; }
     section { padding: 16px 14px; }
@@ -220,7 +237,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.9</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.10</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -228,6 +245,7 @@
     <button class="on" data-m="liuyao">六 爻</button>
     <button data-m="meihua">梅花易数</button>
     <button data-m="xlr">小六壬</button>
+    <button data-m="qimen">奇门遁甲</button>
   </nav>
 
   <section id="sec-fenke">
@@ -307,6 +325,25 @@
       <span class="lv" id="xlr-lv"></span>
       <div class="dx" id="xlr-dx"></div>
     </div>
+  </section>
+
+  <section id="sec-qm" class="hidden">
+    <h2>奇门起局</h2>
+    <div class="note">时家奇门(转盘法·拆补定局):按<b>此刻</b>的年月日时,依节气三元定阴阳遁与局数,排地盘六仪三奇、天盘九星、八门、八神,以值符值使定主客动向。心中默念所问,当下起局。</div>
+    <div class="formerr" id="qm-err"></div>
+    <div class="btnrow"><button id="btn-qm" class="primary">此刻起局</button></div>
+  </section>
+
+  <section id="sec-qmres" class="hidden">
+    <h2>奇门盘 · 九宫</h2>
+    <div class="paninfo" id="qm-info"></div>
+    <div class="qm-grid" id="qm-grid"></div>
+    <div class="qm-legend"><span class="sky">红=天盘干</span> / <span class="earth">金=地盘干</span> · 星=九星 · 门=八门 · 神=八神;红框为<b>事宫</b>(值符所临)。</div>
+    <div class="verdict" style="margin-top:14px">
+      <span class="lv" id="qm-lv"></span>
+      <div class="dx" id="qm-dx"></div>
+    </div>
+    <div class="subnote" id="qm-notes"></div>
   </section>
 
   <section id="sec-gua" class="hidden">
@@ -389,7 +426,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.9 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.10 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -398,6 +435,7 @@
 <script src="lunar.js"></script>
 <script src="meihua.js"></script>
 <script src="xiaoliuren.js"></script>
+<script src="qimen.js"></script>
 <script src="fenke.js"></script>
 <script>
 (function () {
@@ -411,10 +449,10 @@
 
   // —— 法门状态 ——
   let curTab = 'liuyao';
-  const works = { liuyao: null, meihua: null, xlr: null };   // {method, material, report, recId}
-  const results = { liuyao: false, meihua: false, xlr: false };
-  const TAB_INPUT = { liuyao: ['sec-cast'], meihua: ['sec-mh'], xlr: ['sec-xlr'] };
-  const TAB_RESULT = { liuyao: ['sec-gua', 'sec-read', 'sec-pan'], meihua: ['sec-mhres'], xlr: ['sec-xlrres'] };
+  const works = { liuyao: null, meihua: null, xlr: null, qimen: null };   // {method, material, report, recId}
+  const results = { liuyao: false, meihua: false, xlr: false, qimen: false };
+  const TAB_INPUT = { liuyao: ['sec-cast'], meihua: ['sec-mh'], xlr: ['sec-xlr'], qimen: ['sec-qm'] };
+  const TAB_RESULT = { liuyao: ['sec-gua', 'sec-read', 'sec-pan'], meihua: ['sec-mhres'], xlr: ['sec-xlrres'], qimen: ['sec-qmres'] };
   function refreshTab() {
     for (const m of Object.keys(TAB_INPUT)) {
       const on = m === curTab;
@@ -835,9 +873,20 @@
         else { setStatus('答毕。还有不明白的接着追问。'); $('fu-input').value = ''; }
       }
     } catch (e) {
-      const hint = /Failed to fetch|NetworkError|TypeError/.test(String(e))
-        ? '网络请求被拦截:托管版(Artifact)禁止外联,请在桌面/本地版用深断;或复制回报文本粘给东玄。'
-        : String(e.message || e);
+      const netErr = /Failed to fetch|NetworkError|TypeError|load failed/i.test(String(e));
+      let hint;
+      if (netErr) {
+        const inArtifact = location.hostname.endsWith('claude.ai') || location.hostname.endsWith('claudeusercontent.com') || location.ancestorOrigins && location.ancestorOrigins.length;
+        if (inArtifact || location.protocol === 'blob:') {
+          hint = '连不上网——你现在是在 claude.ai 预览里打开的,这种页面浏览器禁止一切外部联网,所以深断(不管 Claude 还是 DeepSeek)都连不上,这不是软件坏了。要用深断,二选一:①电脑上打开下载的 dongxuan.html 文件;②用 GitHub Pages 网址在手机/浏览器里打开。也可以直接复制上方「卦象回报」发给东玄。';
+        } else if (providerId === 'deepseek') {
+          hint = '连不上 DeepSeek 接口。先查网络;若网址版仍连不上,多半是 DeepSeek 未开放浏览器直连(跨域限制),可切到「Claude」通道再试(Claude 支持浏览器直连)。';
+        } else {
+          hint = '连不上网络,请检查网络连接后重试;或复制上方「卦象回报」发给东玄。';
+        }
+      } else {
+        hint = String(e.message || e);
+      }
       setStatus((followupText ? '追问未成:' : '深断未成:') + hint, true);
       if (!text) { if (!followupText) out.classList.add('hidden'); else if (curAns) curAns.remove(); }
     } finally {
@@ -947,6 +996,56 @@
     refreshTab();
   }
 
+  // —— 奇门遁甲 ——
+  const QM_ORDER = [4, 9, 2, 3, 5, 7, 8, 1, 6]; // 盘面九宫:上南下北,巽离坤/震中兑/艮坎乾
+  const QM_RULES = '【奇门断法】日干为求测人自身、时干为所问之事,年命为根本。求财看生门与财(我克者)落何宫;求官谋职看开门、值符、天心;婚姻看六合与男庚女乙;出行看吉门吉星之方位;疾病看天芮天蓬与生门死门制化;讼事看伤门开门与值符值使。吉门(开休生)、吉星(心辅任禽冲)、吉神(值符太阴六合九地九天)所临之宫为吉;凶门(死惊伤)、凶星(蓬芮柱)、凶神(白虎玄武螣蛇)所临之宫为凶;门迫、空亡、入墓则力弱迟滞;方位取用神落宫之八方,应期取其宫数与旺相。【落纸铁则:门、星、神、宫、值符值使、三奇六仪这些名目只在你心里推演,写给客人看的成稿里一个术语都不许出现——全部翻成大白话的结果和方位(几月、往哪个方向大概多远、多少钱、成不成、谁先主动、能不能拿下),每段先甩一句人话结论再说为啥,不报名目、不掉书袋、不引古文,像街坊老先生当面唠。】';
+  function doQimen() {
+    $('qm-err').textContent = '';
+    const q = $('question').value.trim();
+    const c = Qimen.cast(new Date());
+    const v = Qimen.verdict(c);
+    $('qm-info').innerHTML =
+      `<b>起局:</b>${esc(c.cal.year)}年 ${esc(c.cal.month)}月 ${esc(c.dayGZ)}日 ${esc(c.hourGZ)}时<br>` +
+      `<b>节气:</b>${esc(c.jieqi)}·${esc(c.yuan)}　<b>遁局:</b>${esc(c.dun)}　<b>旬首之仪:</b>${esc(c.fuYi)}`;
+    $('qm-grid').innerHTML = QM_ORDER.map(p => {
+      const x = c.cells[p];
+      if (p === 5) {
+        return `<div class="qmcell center"><div class="qpos">中·中央</div>` +
+          `<div class="qgan"><span class="earth">${esc(x.earthGan)}</span></div>` +
+          `<div class="qstar">${esc(x.star)}</div></div>`;
+      }
+      const gcls = /大吉|吉/.test(x.gateJi) ? 'ji' : (/凶/.test(x.gateJi) ? 'xiong' : '');
+      return `<div class="qmcell${p === v.gong ? ' key' : ''}">
+        <div class="qpos">${esc(x.name)}·${esc(x.dir)}</div>
+        <div class="qgan"><span class="sky">${esc(x.skyGan)}</span> <span class="earth">${esc(x.earthGan)}</span></div>
+        <div class="qstar">${esc(x.star)}</div>
+        <div class="qgate ${gcls}">${esc(x.gate)}</div>
+        <div class="qshen">${esc(x.shen)}</div>
+      </div>`;
+    }).join('');
+    $('qm-lv').textContent = v.lv;
+    $('qm-dx').textContent = `所问这桩事,落点在${v.name}宫(${v.dir}):这一门主「${v.gateUse}」。眼下是「${v.lv}」的局面。`;
+    $('qm-notes').innerHTML =
+      `<b>值符</b>${esc(c.zhiFu.star)}临${esc(GONGNAME(c.zhiFu.atGong))}(${esc(GONGDIR(c.zhiFu.atGong))})——这是这件事的主心骨、贵人与主动方所在;` +
+      `<b>值使</b>${esc(c.zhiShi.gate)}临${esc(GONGNAME(c.zhiShi.atGong))}(${esc(GONGDIR(c.zhiShi.atGong))})——这是事情走的门路与去向。` +
+      `<br>日干代表你自己、时干代表所问之事,深断时东玄会据此把方位、时机、成败落到大白话。`;
+    const report = [
+      Qimen.report(c).trimEnd(),
+      `我要问的事:${q || '(未填写)'}`,
+    ].join('\n');
+    const material = '【卦法:奇门遁甲(时家·转盘·拆补)】\n' + report + '\n' + QM_RULES + '\n请依上述奇门局与所问细断。';
+    const recId = saveRec({
+      method: '奇门', question: q,
+      headline: `${c.dun}·${c.jieqi}${c.yuan},事宫${v.name}${v.gate}`,
+      level: v.lv, dx: $('qm-dx').textContent, report,
+    });
+    works.qimen = { method: '奇门', material, report, recId };
+    results.qimen = true;
+    refreshTab();
+  }
+  const GONGNAME = p => Qimen.GONG[p].name + p + '宫';
+  const GONGDIR = p => Qimen.GONG[p].dir;
+
   // —— 分科:点类别 → 列排序推荐 → 点选方法(术业有专攻,由你定夺)——
   let curFenke = null;    // 已选类别
   let curPick = null;     // 已选方法 {method, mode}
@@ -1026,6 +1125,7 @@
     b.addEventListener('click', () => { curTab = b.dataset.m; refreshTab(); }));
   $('btn-mh').addEventListener('click', doMeihua);
   $('btn-xlr').addEventListener('click', doXlr);
+  $('btn-qm').addEventListener('click', doQimen);
   document.querySelectorAll('input[name=mh-mode]').forEach(r => r.addEventListener('change', () => {
     const num = document.querySelector('input[name=mh-mode]:checked').value === 'num';
     $('mh-nums').classList.toggle('hidden', !num);

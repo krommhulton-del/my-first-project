@@ -101,10 +101,13 @@ t('蓍草成卦走同一解卦管线', () => {
 
 console.log('【五】问事分科(全面版)');
 const Fenke = require('../fenke.js');
-t('专科齐全(≥35项),十大类分组,id 唯一', () => {
-  ok(Fenke.FENKE.length >= 35, '专科数 ' + Fenke.FENKE.length);
+t('专科齐全(≥50项),十二大类分组,id 唯一,含奇门派单', () => {
+  ok(Fenke.FENKE.length >= 50, '专科数 ' + Fenke.FENKE.length);
   eq(new Set(Fenke.FENKE.map(f => f.id)).size, Fenke.FENKE.length, 'id 唯一');
-  ok(Array.isArray(Fenke.GROUPS) && Fenke.GROUPS.length >= 10, '分组数 ' + Fenke.GROUPS.length);
+  ok(Array.isArray(Fenke.GROUPS) && Fenke.GROUPS.length >= 12, '分组数 ' + Fenke.GROUPS.length);
+  ok(Fenke.GROUPS.includes('婚姻家庭') && Fenke.GROUPS.includes('谋事求人'), '含新增分组');
+  ok(Fenke.FENKE.some(f => f.recommend.some(r => r.method === 'qimen')), '含奇门派单');
+  eq(Fenke.METHOD_LABEL.qimen, '奇门遁甲', '奇门法门标签');
 });
 t('覆盖各大问事门类(感情/事业/求学/财运/出行/健康/寻找/看人/运势/决策/官非)', () => {
   const ids = new Set(Fenke.FENKE.map(f => f.id));
@@ -115,7 +118,7 @@ t('覆盖各大问事门类(感情/事业/求学/财运/出行/健康/寻找/看
   }
 });
 t('每科:分组合法、问题模板、排序推荐、法门起式合法、断法规程含硬性输出', () => {
-  const METHODS = { liuyao: ['coin', 'dayan'], meihua: ['num', 'time'], xlr: ['time', 'num'] };
+  const METHODS = { liuyao: ['coin', 'dayan'], meihua: ['num', 'time'], xlr: ['time', 'num'], qimen: ['time'] };
   const TAGS = ['首选', '次选', '亦可'];
   for (const f of Fenke.FENKE) {
     ok(Fenke.GROUPS.includes(f.group), f.id + ' 分组:' + f.group);
@@ -139,10 +142,12 @@ t('推荐首选符合术业专攻', () => {
   const top = id => Fenke.FENKE.find(f => f.id === id).recommend[0];
   // 具体人事吉凶/画像/婚恋/财 → 六爻
   for (const id of ['zhangxiang', 'touzi', 'qiuzhi', 'guanxi_zouxiang', 'caiyun', 'guansi']) eq(top(id).method, 'liuyao', id);
-  // 方位/趋势/月运 → 梅花
-  for (const id of ['banjia', 'yueyun', 'xunwu']) eq(top(id).method, 'meihua', id);
-  // 当下急事/日运/出行/寻人 → 小六壬
-  for (const id of ['riyun', 'chuxing', 'xunren']) eq(top(id).method, 'xlr', id);
+  // 趋势/月运 → 梅花
+  for (const id of ['yueyun', 'zhuanye']) eq(top(id).method, 'meihua', id);
+  // 当下急事/日运/出行 → 小六壬
+  for (const id of ['riyun', 'chuxing']) eq(top(id).method, 'xlr', id);
+  // 方位/寻物寻人/谋略博弈/求人办事 → 奇门遁甲
+  for (const id of ['banjia', 'xunwu', 'xunren', 'mouren_nali', 'qiuren', 'moushi', 'jingzheng']) eq(top(id).method, 'qimen', id);
   // 年运岁占 → 蓍草
   eq(top('nianyun').mode, 'dayan', '年运用蓍草');
 });

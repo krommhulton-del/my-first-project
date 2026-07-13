@@ -14,6 +14,7 @@ html = html
   .replace('<script src="lunar.js"></script>', '<script>\n' + read('lunar.js') + '\n</script>')
   .replace('<script src="meihua.js"></script>', '<script>\n' + read('meihua.js') + '\n</script>')
   .replace('<script src="xiaoliuren.js"></script>', '<script>\n' + read('xiaoliuren.js') + '\n</script>')
+  .replace('<script src="qimen.js"></script>', '<script>\n' + read('qimen.js') + '\n</script>')
   .replace('<script src="fenke.js"></script>', '<script>\n' + read('fenke.js') + '\n</script>')
   // 桌面单文件版无 Service Worker 与 manifest(file:// 下不适用)
   .replace(/\n  \/\/ —— PWA[\s\S]*?\.catch\(\(\) => \{\}\);\n  \}\n/, '\n')
@@ -27,6 +28,8 @@ html = html
 if (html.includes('script src') || html.includes('serviceWorker')) throw new Error('内联未完成');
 
 mkdirSync(join(ROOT, 'dist'), { recursive: true });
-const out = join(ROOT, 'dist', '东玄卜卦.html');
-writeFileSync(out, html);
-console.log('已生成', out, '(', Buffer.byteLength(html), '字节 )');
+for (const name of ['东玄卜卦.html', 'dongxuan.html']) { // 中文名 + ASCII 名(避免双击乱码打不开)
+  const out = join(ROOT, 'dist', name);
+  writeFileSync(out, html);
+  console.log('已生成', out, '(', Buffer.byteLength(html), '字节 )');
+}

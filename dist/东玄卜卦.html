@@ -9,14 +9,14 @@
 <meta name="apple-mobile-web-app-title" content="东玄卜卦">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23f4eee1%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2238%22%20fill%3D%22%23c9a45c%22%20stroke%3D%22%238a6f3a%22%20stroke-width%3D%223%22%2F%3E%3Crect%20x%3D%2240%22%20y%3D%2240%22%20width%3D%2220%22%20height%3D%2220%22%20fill%3D%22%23f4eee1%22%20stroke%3D%22%238a6f3a%22%20stroke-width%3D%222%22%2F%3E%3C%2Fsvg%3E">
 <title>东玄卜卦 · 三钱起卦</title>
-<meta name="description" content="东玄卜卦:六爻·梅花·小六壬三大法门,四十专科按事分科选法,起卦、排盘、AI 深断一体。">
+<meta name="description" content="东玄卜卦:六爻·梅花·小六壬·奇门遁甲四大法门,按事分科选法,起卦、排盘、AI 深断一体。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="东玄卜卦 · 全方位占卜">
-<meta property="og:description" content="六爻·梅花·小六壬三大法门,四十专科按事分科选法,起卦排盘 AI 深断一体,还能看八字日月年运。">
+<meta property="og:description" content="六爻·梅花·小六壬·奇门遁甲四大法门,按事分科选法,起卦排盘 AI 深断一体,还能看八字日月年运。">
 <meta property="og:image" content="icon-512.png">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="东玄卜卦 · 全方位占卜">
-<meta name="twitter:description" content="六爻·梅花·小六壬三大法门,按事分科选法,起卦排盘 AI 深断一体。">
+<meta name="twitter:description" content="六爻·梅花·小六壬·奇门遁甲四大法门,按事分科选法,起卦排盘 AI 深断一体。">
 <meta name="twitter:image" content="icon-512.png">
 <style>
   :root {
@@ -195,7 +195,24 @@
   .mopt .rwhy { color: var(--dim); font-size: .85rem; margin-top: 5px; line-height: 1.65; }
   .fk-note { color: var(--dim); font-size: .82rem; margin-top: 6px; line-height: 1.6; }
   .fk-note b { color: var(--cinnabar); font-weight: normal; }
+  .qm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+  .qmcell { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 6px;
+    text-align: center; min-height: 96px; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+  .qmcell.center { background: #efe7d4; border-style: dashed; }
+  .qmcell.key { border-color: var(--cinnabar); box-shadow: 0 0 0 1px var(--cinnabar) inset; }
+  .qmcell .qgan { font-size: 1.02rem; letter-spacing: 2px; }
+  .qmcell .qgan .sky { color: var(--cinnabar); } .qmcell .qgan .earth { color: var(--gold); }
+  .qmcell .qstar { font-size: .82rem; color: var(--ink); }
+  .qmcell .qgate { font-size: .9rem; }
+  .qmcell .qgate.ji { color: var(--gold); } .qmcell .qgate.xiong { color: var(--cinnabar); }
+  .qmcell .qshen { font-size: .78rem; color: var(--dim); }
+  .qmcell .qpos { font-size: .72rem; color: var(--dim); letter-spacing: .1em; }
+  .qm-legend { color: var(--dim); font-size: .78rem; margin-top: 8px; line-height: 1.6; }
+  .qm-legend .sky { color: var(--cinnabar); } .qm-legend .earth { color: var(--gold); }
   @media (max-width: 560px) {
+    .qmcell { min-height: 82px; padding: 6px 3px; }
+    .qmcell .qgan { font-size: .92rem; } .qmcell .qstar, .qmcell .qgate { font-size: .78rem; }
+    .qmcell .qshen, .qmcell .qpos { font-size: .68rem; }
     header h1 { font-size: 1.5rem; }
     body { line-height: 1.65; }
     section { padding: 16px 14px; }
@@ -218,7 +235,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.9</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.10</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -226,6 +243,7 @@
     <button class="on" data-m="liuyao">六 爻</button>
     <button data-m="meihua">梅花易数</button>
     <button data-m="xlr">小六壬</button>
+    <button data-m="qimen">奇门遁甲</button>
   </nav>
 
   <section id="sec-fenke">
@@ -305,6 +323,25 @@
       <span class="lv" id="xlr-lv"></span>
       <div class="dx" id="xlr-dx"></div>
     </div>
+  </section>
+
+  <section id="sec-qm" class="hidden">
+    <h2>奇门起局</h2>
+    <div class="note">时家奇门(转盘法·拆补定局):按<b>此刻</b>的年月日时,依节气三元定阴阳遁与局数,排地盘六仪三奇、天盘九星、八门、八神,以值符值使定主客动向。心中默念所问,当下起局。</div>
+    <div class="formerr" id="qm-err"></div>
+    <div class="btnrow"><button id="btn-qm" class="primary">此刻起局</button></div>
+  </section>
+
+  <section id="sec-qmres" class="hidden">
+    <h2>奇门盘 · 九宫</h2>
+    <div class="paninfo" id="qm-info"></div>
+    <div class="qm-grid" id="qm-grid"></div>
+    <div class="qm-legend"><span class="sky">红=天盘干</span> / <span class="earth">金=地盘干</span> · 星=九星 · 门=八门 · 神=八神;红框为<b>事宫</b>(值符所临)。</div>
+    <div class="verdict" style="margin-top:14px">
+      <span class="lv" id="qm-lv"></span>
+      <div class="dx" id="qm-dx"></div>
+    </div>
+    <div class="subnote" id="qm-notes"></div>
   </section>
 
   <section id="sec-gua" class="hidden">
@@ -387,7 +424,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.9 内测版 · 六爻·梅花·小六壬 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.10 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script>
@@ -2957,11 +2994,181 @@
 
 </script>
 <script>
+// qimen.js — 时家奇门遁甲:转盘法 · 拆补定局
+// 定局:节气三元(阴阳遁 + 局数,冬至起阳遁、夏至起阴遁);符头(近甲己日)地支定上中下元。
+// 地盘:阳遁顺、阴遁逆,布六仪三奇(戊己庚辛壬癸丁丙乙)。
+// 天盘:值符星加于时干所落之宫,九星随转;八门:值使加于时宫(阳顺阴逆数时辰);
+// 八神:值符神起于天盘值符宫,阳顺阴逆。中五宫寄坤二。
+// 依《烟波钓叟歌》《奇门遁甲统宗》通行体例。爻宫序用洛书九宫。内测法,school 取转盘·拆补。
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) { module.exports = factory(require('./najia.js')); }
+  else { root.Qimen = factory(root.Najia); }
+}(typeof self !== 'undefined' ? self : this, function (Najia) {
+  const GAN = Najia.GAN, ZHI = Najia.ZHI;
+
+  // 24 节气,0 = 冬至(黄经 270°),每 15° 一气
+  const JIEQI = ['冬至', '小寒', '大寒', '立春', '雨水', '惊蛰', '春分', '清明', '谷雨', '立夏', '小满', '芒种',
+    '夏至', '小暑', '大暑', '立秋', '处暑', '白露', '秋分', '寒露', '霜降', '立冬', '小雪', '大雪'];
+  // 各节气 上元/中元/下元 三元局数(1–9)
+  const JU = [
+    [1, 7, 4], [2, 8, 5], [3, 9, 6], [8, 5, 2], [9, 6, 3], [1, 7, 4], [3, 9, 6], [4, 1, 7], [5, 2, 8], [4, 1, 7], [5, 2, 8], [6, 3, 9],
+    [9, 3, 6], [8, 2, 5], [7, 1, 4], [2, 5, 8], [1, 4, 7], [9, 3, 6], [7, 1, 4], [6, 9, 3], [5, 8, 2], [6, 9, 3], [5, 8, 2], [4, 7, 1],
+  ];
+  // 地盘布序:六仪(戊己庚辛壬癸)后接三奇(丁丙乙)
+  const YIQI = ['戊', '己', '庚', '辛', '壬', '癸', '丁', '丙', '乙'];
+  // 九宫:1坎北 2坤西南 3震东 4巽东南 5中 6乾西北 7兑西 8艮东北 9离南
+  const GONG = {
+    1: { name: '坎', dir: '正北', wx: '水' }, 2: { name: '坤', dir: '西南', wx: '土' }, 3: { name: '震', dir: '正东', wx: '木' },
+    4: { name: '巽', dir: '东南', wx: '木' }, 5: { name: '中', dir: '中央', wx: '土' }, 6: { name: '乾', dir: '西北', wx: '金' },
+    7: { name: '兑', dir: '正西', wx: '金' }, 8: { name: '艮', dir: '东北', wx: '土' }, 9: { name: '离', dir: '正南', wx: '火' },
+  };
+  const HOME_STAR = { 1: '天蓬', 2: '天芮', 3: '天冲', 4: '天辅', 5: '天禽', 6: '天心', 7: '天柱', 8: '天任', 9: '天英' };
+  const HOME_GATE = { 1: '休门', 2: '死门', 3: '伤门', 4: '杜门', 6: '开门', 7: '惊门', 8: '生门', 9: '景门' };
+  const STAR_JI = { 天蓬: '凶(盗贼水险)', 天芮: '大凶(病)', 天冲: '小吉(动利)', 天辅: '吉(文昌)', 天禽: '吉(中正)', 天心: '大吉(医药谋)', 天柱: '凶(破守)', 天任: '吉(稳)', 天英: '平(血光文明)' };
+  const GATE_JI = { 开门: '大吉(求官出行)', 休门: '吉(见贵谈和)', 生门: '大吉(求财治病)', 伤门: '凶(争斗损伤)', 杜门: '凶(闭藏躲避)', 景门: '平(文书信息)', 死门: '大凶(死丧诉讼)', 惊门: '凶(惊恐口舌)' };
+  const SHEN = ['值符', '螣蛇', '太阴', '六合', '白虎', '玄武', '九地', '九天'];
+  const SHEN_JI = { 值符: '吉(贵人)', 螣蛇: '虚惊怪异', 太阴: '吉(暗中相助)', 六合: '吉(和合婚姻)', 白虎: '凶(伤病争杀)', 玄武: '凶(盗骗暗昧)', 九地: '吉(藏守坚固)', 九天: '吉(扬名远行)' };
+  const XUNSHOU = ['戊', '己', '庚', '辛', '壬', '癸']; // 甲子旬→戊、甲戌旬→己 … 甲寅旬→癸
+  const RING = [1, 8, 3, 4, 9, 2, 7, 6];  // 转盘环序(顺时针八宫;中5寄坤2)
+  const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+  const eff = p => (p === 5 ? 2 : p);     // 中宫寄坤二
+  const rIdx = p => RING.indexOf(eff(p));
+
+  function gz60(gIdx, zIdx) { for (let i = 0; i < 60; i++) if (i % 10 === gIdx && i % 12 === zIdx) return i; return -1; }
+
+  // 主排盘:date 为 Date(按其本地历日与时刻)
+  function cast(date) {
+    const d = date || new Date();
+    const cal = Najia.ganZhi(d);
+    const dIdx = Najia.dayIndex(d.getFullYear(), d.getMonth() + 1, d.getDate()); // 日 60 甲子 0..59
+
+    // 节气 + 阴阳遁
+    const qi = Math.floor((((cal.sunLon - 270) % 360 + 360) % 360) / 15); // 0=冬至 … 23=大雪
+    const yin = qi >= 12;                                                  // 夏至起阴遁
+
+    // 拆补定元:符头 = 最近(含当日)之甲或己日,其地支定上中下元
+    const dayGan = dIdx % 10;
+    const fuTou = ((dIdx - (dayGan % 5)) % 60 + 60) % 60;
+    const fuZhi = fuTou % 12;
+    const yuan = (fuZhi % 3 === 0) ? 0 : (fuZhi % 3 === 2 ? 1 : 2);        // 子午卯酉→上、寅申巳亥→中、辰戌丑未→下
+    const ju = JU[qi][yuan];
+
+    // 时干支(五鼠遁)
+    const hb = Math.floor(((d.getHours() + 1) % 24) / 2);                  // 时支 子=0
+    const hGan = ((dayGan % 5) * 2 + hb) % 10;
+    const hIdx = gz60(hGan, hb);                                           // 时 60 甲子
+    const xun = Math.floor(hIdx / 10);
+    const fuYi = XUNSHOU[xun];                                             // 符头仪(旬首所遁之仪)
+
+    // 地盘:布六仪三奇
+    const earth = {}, ganPos = {};
+    for (let i = 0; i < 9; i++) {
+      const p = yin ? ((ju - 1 - i) % 9 + 9) % 9 + 1 : ((ju - 1 + i) % 9) + 1;
+      earth[p] = YIQI[i]; ganPos[YIQI[i]] = p;
+    }
+
+    const fuGong = ganPos[fuYi];                       // 符头仪落宫 = 值符本宫
+    // 符头仪若在中5,值符为天禽,寄坤2、与天芮同宫同行,盘面以坤2天芮为值符位
+    const zhiFuStar = HOME_STAR[eff(fuGong)];
+    const zhiShiGate = HOME_GATE[eff(fuGong)];
+    const shiGong = (GAN[hGan] === '甲') ? fuGong : ganPos[GAN[hGan]]; // 甲遁符头仪
+
+    const offStar = ((rIdx(shiGong) - rIdx(fuGong)) % 8 + 8) % 8;       // 值符加时干
+    const dir = yin ? -1 : 1;
+    const k = hIdx % 10;                                                // 时在本旬中的位次(旬首=0)
+    const offGate = ((dir * k) % 8 + 8) % 8;                            // 值使加时宫(阳顺阴逆)
+
+    // 组装八宫(1..9 除5)
+    const cells = {};
+    for (const p of [1, 2, 3, 4, 6, 7, 8, 9]) {
+      const j = rIdx(p);
+      const srcStar = RING[((j - offStar) % 8 + 8) % 8];
+      const srcGate = RING[((j - offGate) % 8 + 8) % 8];
+      cells[p] = {
+        gong: p, name: GONG[p].name, dir: GONG[p].dir, wx: GONG[p].wx,
+        earthGan: earth[p], skyGan: earth[srcStar],
+        star: HOME_STAR[srcStar], gate: HOME_GATE[srcGate],
+      };
+    }
+    cells[5] = { gong: 5, name: '中', dir: '中央', wx: '土', earthGan: earth[5], skyGan: null, star: '天禽(寄二)', gate: null };
+
+    // 八神:值符神起于天盘值符宫(=时干宫),阳顺阴逆
+    const startR = rIdx(shiGong);
+    for (let s = 0; s < 8; s++) {
+      const p = RING[((startR + dir * s) % 8 + 8) % 8];
+      cells[p].shen = SHEN[s];
+    }
+    cells[5].shen = null;
+
+    // 吉凶注记
+    for (const p of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+      const c = cells[p];
+      c.starJi = STAR_JI[c.star.replace('(寄二)', '')] || '';
+      c.gateJi = c.gate ? GATE_JI[c.gate] : '';
+      c.shenJi = c.shen ? SHEN_JI[c.shen] : '';
+    }
+
+    return {
+      date: d, cal,
+      qi, jieqi: JIEQI[qi], yin, ju, yuan: ['上元', '中元', '下元'][yuan],
+      dun: (yin ? '阴遁' : '阳遁') + NUM[ju] + '局',
+      dayGZ: cal.day, hourGZ: GAN[hGan] + ZHI[hb], fuYi,
+      zhiFu: { star: zhiFuStar, homeGong: fuGong, atGong: eff(shiGong), qinJi: fuGong === 5 }, // 值符星:本宫→飞至时干宫;qinJi=符头在中5(天禽寄坤二)
+      zhiShi: { gate: zhiShiGate, homeGong: eff(fuGong), atGong: RING[((rIdx(fuGong) + offGate) % 8 + 8) % 8] },
+      cells,
+    };
+  }
+
+  // 八门落到实事上的大白话
+  const GATE_USE = {
+    开门: '出门、见贵人、办正事、求官谋职最顺', 休门: '歇缓、谈和、见贵人、婚嫁办喜事吉',
+    生门: '求财、看病、置业、办实事最旺的一门', 伤门: '争斗讨债、追人索物有力,但问病问和问平安不利',
+    杜门: '宜守不宜进、宜藏宜避,躲事避灾可以,办事推进则被堵', 景门: '文书、信息、考试、宣传、打听消息',
+    死门: '办事僵住不动、拖沓无果,涉丧涉讼才用得上', 惊门: '虚惊、口舌是非、官非纠缠,心神不宁',
+  };
+  // 事宫(值符/时干所临之宫)综合吉凶
+  function verdict(c) {
+    const gW = { 开门: 3, 休门: 2, 生门: 3, 景门: 0, 杜门: -1, 伤门: -2, 惊门: -2, 死门: -3 };
+    const sW = { 天心: 2, 天辅: 2, 天任: 1, 天禽: 1, 天冲: 1, 天英: 0, 天柱: -2, 天蓬: -2, 天芮: -3 };
+    const nW = { 值符: 2, 太阴: 1, 六合: 1, 九地: 1, 九天: 1, 螣蛇: -1, 白虎: -2, 玄武: -2 };
+    const g = c.cells[c.zhiFu.atGong];
+    const star = (g.star || '').replace('(寄二)', '');
+    const score = (gW[g.gate] || 0) + (sW[star] || 0) + (nW[g.shen] || 0);
+    const lv = score >= 4 ? '上吉' : score >= 2 ? '顺' : score >= -1 ? '平' : score >= -3 ? '滞' : '凶';
+    return {
+      gong: g.gong, name: g.name, dir: g.dir, gate: g.gate, star, shen: g.shen,
+      score, lv, gateUse: GATE_USE[g.gate] || '',
+    };
+  }
+
+  // 供 AI 深断的起局文本
+  function report(c) {
+    const order = [4, 9, 2, 3, 5, 7, 8, 1, 6]; // 巽离坤 / 震中兑 / 艮坎乾,九宫盘面顺序
+    let s = `【奇门遁甲 · 起局回报(时家 · 转盘 · 拆补)】\n`;
+    s += `起局:${c.cal.year} ${c.cal.month} ${c.dayGZ}日 ${c.hourGZ}时(节气${c.jieqi}·${c.yuan})\n`;
+    s += `遁局:${c.dun}　旬首之仪:${c.fuYi}\n`;
+    s += `值符:${c.zhiFu.star}${c.zhiFu.qinJi ? '(符头在中5,天禽寄坤二、以天芮同宫论)' : ''}(本居${GONG[c.zhiFu.homeGong].name}${c.zhiFu.homeGong}宫)飞临${GONG[c.zhiFu.atGong].name}${c.zhiFu.atGong}宫\n`;
+    s += `值使:${c.zhiShi.gate}(本居${GONG[c.zhiShi.homeGong].name}${c.zhiShi.homeGong}宫)飞临${GONG[c.zhiShi.atGong].name}${c.zhiShi.atGong}宫\n`;
+    s += `九宫盘面(天盘干/地盘干 · 九星 · 八门 · 八神 · 方位):\n`;
+    for (const p of order) {
+      const x = c.cells[p];
+      if (p === 5) { s += `　[中5·中央] 地盘${x.earthGan}　${x.star}\n`; continue; }
+      s += `　[${x.name}${p}·${x.dir}] 天${x.skyGan}/地${x.earthGan}　${x.star}(${x.starJi})　${x.gate}(${x.gateJi})　${x.shen}(${x.shenJi})\n`;
+    }
+    return s;
+  }
+
+  return { cast, report, verdict, GATE_USE, GONG, JIEQI, JU, RING, HOME_STAR, HOME_GATE };
+}));
+
+</script>
+<script>
 // fenke.js — 问事分科(全面版)+ 方法推荐
-// 按传统问事体系分十大类、约四十专科;每类列最适合的几种法门(带适配度排序与理由),用户点选。
+// 按传统问事体系分十二大类、六十余专科;每类列最适合的几种法门(带适配度排序与理由),用户点选。
 // 派单依共识:六爻精于具体人事吉凶与用神取象(婚恋/事业/财/画像/应期),
-// 梅花精于方位趋势与即时之事,小六壬精于当下急事与时效,岁占大事用蓍草。
-// method: liuyao|meihua|xlr;mode: coin|dayan|num|time;star 适配度1-3;tag 首选/次选/亦可。
+// 梅花精于方位趋势与即时之事,小六壬精于当下急事与时效,
+// 奇门遁甲精于方位、时机、谋略博弈、求人办事与寻物落处,岁占大事用蓍草。
+// method: liuyao|meihua|xlr|qimen;mode: coin|dayan|num|time;star 适配度1-3;tag 首选/次选/亦可。
 // ai 为该科断法规程(指导模型内部推演;输出去术语由主程序的 ANTI_JARGON 全局强制)。
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) { module.exports = factory(); }
@@ -2970,8 +3177,9 @@
   const LY = (star, tag, why, mode) => ({ method: 'liuyao', mode: mode || 'coin', star, tag, why });
   const MH = (star, tag, why, mode) => ({ method: 'meihua', mode: mode || 'num', star, tag, why });
   const XL = (star, tag, why, mode) => ({ method: 'xlr', mode: mode || 'time', star, tag, why });
+  const QM = (star, tag, why) => ({ method: 'qimen', mode: 'time', star, tag, why });
 
-  const GROUPS = ['感情姻缘', '事业工作', '求学考试', '财运钱财', '出行搬迁', '健康疾病', '寻人寻物', '看某个人', '运势时运', '决策与择时', '官非风险'];
+  const GROUPS = ['感情姻缘', '婚姻家庭', '事业工作', '求学考试', '财运钱财', '谋事求人', '出行搬迁', '健康疾病', '寻人寻物', '看某个人', '运势时运', '决策与择时', '官非风险'];
 
   const FENKE = [
     // ——— 感情姻缘 ———
@@ -2993,6 +3201,32 @@
     { id: 'xiangqin', group: '感情姻缘', label: '相亲/介绍成不成', q: '这个相亲/介绍的对象,能成吗?',
       recommend: [LY(3, '首选', '六爻以用神与世的生合、媒介之爻(应/间爻)论成败。')],
       ai: '世为己,用神为对方,间爻或应为介绍人。用神生合世且间爻不阻主成;用神休囚、间爻发动克世主中间生变或黄。必须给:成不成、卡在哪、要不要继续跟、大概多久见分晓,四项。' },
+    { id: 'biaobai', group: '感情姻缘', label: '该不该表白/追', q: '我该不该跟这个人表白/主动追?',
+      recommend: [LY(3, '首选', '六爻看对方之爻对世的向背,主动之利弊立见。'), XL(2, '次选', '小六壬急问这两天开不开口最应。')],
+      ai: '世为己、用神(男看财女看官,或应爻)为对方。用神生合世主对方有意、宜进;用神休囚不上卦或克世主时机未到、贸然表白易碰壁。必须给:该不该主动、几成会成、什么时候开口最合适、被拒的可能有多大,四项。' },
+    { id: 'yidi', group: '感情姻缘', label: '异地恋能否长久', q: '我们异地,这段感情能撑下去吗?',
+      recommend: [LY(3, '首选', '六爻世应远近生合冲破,聚散前景看得清。')],
+      ai: '世应两地,看世应生合还是冲克、间爻有无阻隔、用神有无外情之合。生合主能撑、终有团聚之期;相冲相破、用神旁合主渐行渐远。必须给:能不能撑下去、最大的坎是什么、大概什么时候能结束异地或分手、谁更容易先动摇,四项。' },
+    { id: 'anmei', group: '感情姻缘', label: '暧昧/该不该继续', q: '和这个暧昧的人,有没有结果、该不该继续?',
+      recommend: [LY(3, '首选', '六爻看对方之爻是真动情还是虚与逢迎。')],
+      ai: '取对方用神,用神生合世为有戏、可推进;用神与他爻作合、休囚不上卦为逢场作戏或另有人。必须给:有没有结果、对方是真是逢场、继续还是抽身、拖下去的代价,四项,只断此事不评判对错。' },
+
+    // ——— 婚姻家庭 ———
+    { id: 'jiehun', group: '婚姻家庭', label: '该不该结婚', q: '和这个人,该不该结婚?婚后好不好?',
+      recommend: [LY(3, '首选', '六爻世应生合与财官旺衰,婚配合不合、婚后顺不顺一卦断。')],
+      ai: '世为己、应为对方、男以财为妻、女以官为夫。世应生合、用神旺相不受冲克主可婚且婚后和;世应刑冲克害、用神空破主勉强或婚后多磨。必须给:该不该结、婚后大致顺不顺、最大隐患在哪、若结大概什么时候办利,四项。' },
+    { id: 'lihun', group: '婚姻家庭', label: '婚姻危机/该不该离', q: '这段婚姻还有救吗?该不该离?',
+      recommend: [LY(3, '首选', '六爻世应与配偶用神的生克动变,回不回得去看得清。')],
+      ai: '世为己、应或配偶用神为伴侣。用神动而生合世、间无第三者主有救;世应相冲、用神旁合他爻、动而化绝主难回。必须给:还有没有救、症结在谁、修复还是分开哪个代价小、若离大概什么时候了断,四项,不劝和不劝离只据卦说利害。' },
+    { id: 'qiuzi', group: '婚姻家庭', label: '求子/怀孕', q: '我(们)什么时候能有孩子?这胎顺不顺?',
+      recommend: [LY(3, '首选', '六爻以子孙爻旺衰动静论有无、迟早与安否。')],
+      ai: '子孙为子女、世为己、财为孕妇气血。子孙旺相临日月或动而生世主有喜且近;子孙空破休囚、被克主迟或不顺。必须给:大概什么时候有、这胎/求子顺不顺、要注意啥、子孙缘厚薄,四项。涉医事以就医为准。' },
+    { id: 'jiazhai', group: '婚姻家庭', label: '家宅平安/搬入', q: '我家宅这段平安吗?这房子/新居好不好?',
+      recommend: [LY(3, '首选', '六爻以二爻宅、五爻人、父母为房，通盘看宅运。'), MH(2, '次选', '梅花以卦象方位断居处气场吉凶。')],
+      ai: '二爻为宅、父母为房屋、世为居者、官鬼为祸祟、子孙为安宁。宅爻父母旺相无克主平安;官鬼动临二爻或克世主宅不宁。必须给:这段家宅稳不稳、要防哪一路(病/破财/口舌/失盗)、哪个方位要留意、住着旺不旺人,四项。' },
+    { id: 'jiaren', group: '婚姻家庭', label: '家人关系/婆媳', q: '我和某位家人(婆媳/父母/子女)的关系,怎么缓和?',
+      recommend: [LY(3, '首选', '六爻以对应六亲爻与世的生克,症结与转机看得出。'), XL(2, '次选', '小六壬急问近日相处气氛。')],
+      ai: '按关系取六亲(长辈父母、平辈兄弟、子女子孙),看其与世的生合克冲。生合主可缓、相克主结在利益或脾性。必须给:症结在哪、谁先让一步更有效、大概什么时候能缓、相处要避开啥,四项,只断相处不评家人是非。' },
 
     // ——— 事业工作 ———
     { id: 'qiuzhi', group: '事业工作', label: '求职/面试', q: '这份工作/这次面试,能成吗?',
@@ -3011,8 +3245,17 @@
       recommend: [LY(3, '首选', '六爻世应生克见双方诚意与利益分配,兄弟爻见分钱之争。')],
       ai: '世为己、应为对方、财为共同利益、兄弟为分利之争。世应生合、财旺不受兄弟克主可合;世应相冲相克、兄弟持世动主同床异梦、分钱起争。必须给:靠不靠谱、对方真实意图、谁占便宜、要不要合、丑话怎么说在前,四五项。' },
     { id: 'tanpan', group: '事业工作', label: '谈判/签约/项目', q: '这次谈判/签约/项目,能成吗?',
-      recommend: [LY(3, '首选', '六爻世应力量对比与用神旺衰定谈成谈崩。'), XL(2, '次选', '小六壬急问当下这场谈得拢谈不拢最应。')],
+      recommend: [LY(3, '首选', '六爻世应力量对比与用神旺衰定谈成谈崩。'), QM(2, '次选', '奇门以我方(日干)对彼方(时干)之落宫强弱、值符值使动向,定博弈占优与否。'), XL(1, '亦可', '小六壬急问当下这场谈得拢谈不拢最应。')],
       ai: '世为己方、应为对方、用神依所谈之标的取(合同看父母、钱看财、货看财)。世旺应弱、用神生合世主成且我占优;应旺克世主受制或谈崩。必须给:成不成、我方占优还是被动、卡在哪个条件、什么时候定,四项。' },
+    { id: 'shiye', group: '事业工作', label: '失业/裁员后何时有工作', q: '我失业/被裁了,什么时候能找到下一份工作?',
+      recommend: [LY(3, '首选', '六爻以官(职)、父母(offer)、世(己)旺衰与应期,定再就业时点。')],
+      ai: '官为职位、父母为录用文书、世为己、财为薪。官父旺相生合世、临日月或动主近期有着落;休囚空破主还需等。必须给:大概多久能有工作(阳历月区间)、哪类单位/行业更容易成、这期间该主动出击还是等、薪资比原来高还是低,四项。' },
+    { id: 'xiaoren', group: '事业工作', label: '职场小人/领导关系', q: '我职场上有没有小人?和领导关系怎么处?',
+      recommend: [LY(3, '首选', '六爻以兄弟(同僚劫夺)、官(上司)、白虎玄武之爻定小人与上意。'), QM(2, '次选', '奇门以凶神(白虎玄武)所临之宫定小人方位与来路。')],
+      ai: '兄弟为同僚劫夺、官鬼为上司、玄武主暗算、白虎主刚克。凶爻临兄弟动而克世主有小人;官生合世主上司赏识,官克世主受压。必须给:有没有小人及大概什么样的人(职级/性别方位)、领导对你实际态度、怎么应对、什么时候能缓,四项,只断处境不教你做人。' },
+    { id: 'fuye', group: '事业工作', label: '副业/接私活', q: '我搞这个副业/接私活,能成、能赚吗?',
+      recommend: [LY(3, '首选', '六爻财为副业进项、子孙为财源、兄弟为分心劫耗,通盘断。'), MH(2, '次选', '梅花时间卦看这摊副业起中末走势。', 'time')],
+      ai: '财为副业收入、子孙为技艺财源、世为己、兄弟为耗散、官为本职冲突。财子旺相生世主可做有赚;兄动克财、财空破主白忙或影响主业。必须给:能不能做起来、大概能添多少进项(月区间)、会不会拖累主业、什么时候见回头钱,四项。' },
 
     // ——— 求学考试 ———
     { id: 'kaoshi', group: '求学考试', label: '考试/考公考编', q: '这次考试/考公考编,能过吗?',
@@ -3030,7 +3273,7 @@
       recommend: [LY(3, '首选', '六爻财爻旺衰持世与否,进项多寡、破财与否一卦看清。')],
       ai: '财为钱、世为己、子孙为财源、兄弟为破耗。财旺生合世主进财;兄弟发动、财空破主破财漏财。必须给:整体旺还是紧、钱从哪来(正财/偏财/副业)、大概进项方向、什么时候要防破财,四项。' },
     { id: 'touzi', group: '财运钱财', label: '投资能否赚', q: '这笔投资/买这个,能赚吗?',
-      recommend: [LY(3, '首选', '六爻财/兄/子/官四路,赚赔劫耗风险看得最全。')],
+      recommend: [LY(3, '首选', '六爻财/兄/子/官四路,赚赔劫耗风险看得最全。'), QM(1, '亦可', '奇门可辅看进出场时机与财之方位,但赚赔轻重仍以六爻为准。')],
       ai: '财为标的利润、世为己、应为市场对手、子孙为财源、兄弟为劫耗、官为系统性风险。财旺持世或生世主可入;兄动克财主劫耗、财空破主套牢、官动主政策/黑天鹅。必须给:入不入、仓位轻重、大概赚赔幅度、止损或退出时点、最大风险来自哪路,五项。' },
     { id: 'taozhai', group: '财运钱财', label: '欠款/讨债', q: '这笔钱/账,能要回来吗?',
       recommend: [LY(3, '首选', '六爻财爻与应(欠方)的动静生克,能不能要回、几时到手看得清。')],
@@ -3042,13 +3285,27 @@
       recommend: [LY(3, '首选', '六爻财爻旺衰配卦数换算量级,千万级别点得死。')],
       ai: '以财爻旺衰配地支之数与卦数定量级:旺相乘十乘百,休囚除减,两财并见相加。必须给:量级档位(千/万/十万/百万/千万)、档内数字区间、是虚是实(空破打折)、钱是流动还是存量,四项。' },
 
+    // ——— 谋事求人 ———
+    { id: 'qiuren', group: '谋事求人', label: '求人办事/托关系', q: '我想托人办这件事,能办成吗?找谁、往哪个方向使劲?',
+      recommend: [QM(3, '首选', '奇门以日干(己)求时干(事)、值符(贵人)落宫,直指该往哪个方向、托什么样的人办得成,求人办事最擅。'), LY(2, '次选', '六爻以应(对方)、官(门路)、世(己)生克断能否办成。')],
+      ai: '奇门以求测人(日干)与所求之事(时干)落宫的生克、值符(贵人)所临方位断成败与助力来路;六爻以应为受托人、官为门路、父母为文书。必须给:办不办得成、该找什么样的人(方位/身份特征)、走哪条门路、大概什么时候有信,四项。' },
+    { id: 'moushi', group: '谋事求人', label: '谋一件大事', q: '我谋划的这件大事(某个计划/局),能成吗?',
+      recommend: [QM(3, '首选', '奇门本为谋略之术,以全盘门星神与值符值使动向,断此局能不能布成、变数在哪。'), LY(2, '次选', '六爻以用神旺衰动变断成败与关节。')],
+      ai: '奇门看事之落宫得吉门吉星吉神则可成、值使门路通畅则事顺,门迫空亡则受阻;六爻按所谋取用神断旺衰吉凶。必须给:能不能成、成的关键抓手在哪、最大变数/对手在哪个方向、什么时候是发动的好时机,四项。' },
+    { id: 'jingzheng', group: '谋事求人', label: '竞争/博弈/对手', q: '我和对手这场竞争(投标/竞聘/比拼),谁占上风?',
+      recommend: [QM(3, '首选', '奇门以我(日干)对彼(时干或对宫)之宫位强弱、吉凶门星,定主客胜负与制胜方位,博弈最擅。'), LY(2, '次选', '六爻世应力量对比定输赢。')],
+      ai: '奇门以己方落宫对彼方落宫的旺衰生克、所乘门星神吉凶,定谁占上风及制胜之方位时机;六爻世旺应弱、子孙制官主我胜。必须给:谁占上风、我方强在哪弱在哪、往哪个方向/用什么打法能翻盘、什么时候见分晓,四项。' },
+    { id: 'taoshuofa', group: '谋事求人', label: '维权/讨说法', q: '这件事我要讨个说法/维权,能要到吗?',
+      recommend: [LY(3, '首选', '六爻以世(己)、应(对方)、官父(公理文书)生克定能否讨到。'), QM(2, '次选', '奇门以开门伤门与值符值使动向,断硬来还是走门路更有效。')],
+      ai: '世为己、应为对方、父母为凭据文书、官为说理/官方、子孙为解。世旺、父母官星生合世主能讨到;应旺克世主对方硬、难要。必须给:能不能要到、要到几成、软磨还是硬刚更有效、大概多久有结果,四项。' },
+
     // ——— 出行搬迁 ———
     { id: 'chuxing', group: '出行搬迁', label: '出行顺不顺', q: '这趟出门/旅行,顺不顺、安不安全?',
-      recommend: [XL(3, '首选', '小六壬当下急事最应,三宫连断去程、途中、到达。'), LY(2, '次选', '六爻以世与父母(车)、官(险)论安危。')],
-      ai: '小六壬三宫断去、中、回;六爻以世为己、父母为车马交通、官鬼为险阻。世旺无克、三宫吉主顺;官动克世、赤口空亡主有阻或不安。必须给:顺不顺、要防什么(误点/破财/口舌/安全)、哪个时段哪个方向利、要不要改期,四项。' },
+      recommend: [XL(3, '首选', '小六壬当下急事最应,三宫连断去程、途中、到达。'), QM(2, '次选', '奇门以吉门吉星之宫定利行方位与吉时,凶神所临定要避的方向,择方避险最擅。'), LY(1, '亦可', '六爻以世与父母(车)、官(险)论安危。')],
+      ai: '小六壬三宫断去、中、回;奇门取吉门吉星之方为利行之向、凶神之方宜避;六爻以世为己、父母为车马交通、官鬼为险阻。世旺无克主顺;官动克世、赤口空亡主有阻。必须给:顺不顺、要防什么(误点/破财/口舌/安全)、哪个时段哪个方向利、要不要改期,四项。' },
     { id: 'banjia', group: '出行搬迁', label: '搬家/换城市方向', q: '搬家/换城市,往哪个方向走利我?',
-      recommend: [MH(3, '首选', '梅花后天卦即方向盘,变卦定宜去之向,用生体之方得助。'), LY(2, '次选', '六爻以世应生克与用神方位断利否。')],
-      ai: '变卦方位为宜去之向,用生体之方为得助之地,用克体之方勿往;卦象配城市气质。必须给:首选方位(以现居为原点)+该方向城市/地段类型、次选方位、避开哪个方向、大概什么时候动利,四项。' },
+      recommend: [QM(3, '首选', '奇门九宫即八方吉凶图,吉门吉星之宫为宜迁之向、凶神之宫勿往,定方位最擅。'), MH(2, '次选', '梅花后天卦即方向盘,变卦定宜去之向,用生体之方得助。'), LY(1, '亦可', '六爻以世应生克与用神方位断利否。')],
+      ai: '奇门以吉门吉星吉神所临之宫为宜迁方位、凶神凶门之宫勿往;梅花以变卦方位与用生体之方为宜去之地。必须给:首选方位(以现居为原点)+该方向大致地段类型、次选方位、务必避开哪个方向、大概什么时候动利,四项。' },
     { id: 'yuanxing', group: '出行搬迁', label: '留学/移民/外派', q: '留学/移民/外派,能成吗、去了好不好?',
       recommend: [LY(3, '首选', '六爻以父母(签证文书)、世(己)、应(外方)、财官论成与利。')],
       ai: '父母为签证文书、世为己、应为目的地/机构、财官为当地发展。父母生世、应生合世主批得下且去了顺;父空破、应克世主卡文书或去了受制。必须给:能不能成行、卡在哪一环、去了发展好不好、什么时候定,四项。' },
@@ -3066,15 +3323,14 @@
 
     // ——— 寻人寻物 ———
     { id: 'xunwu', group: '寻人寻物', label: '丢的东西', q: '我丢的东西,找得回吗?在哪个方向?',
-      recommend: [MH(3, '首选', '梅花后天卦定方位、类象定环境,失物找没找回一卦见。'), XL(2, '次选', '小六壬急寻掐指即得大向。')],
-      note: '寻物之精确(落于何人手),奇门遁甲最擅,本程序以梅花/小六壬近之。',
-      ai: '梅花以用卦定现处方位、变卦定移没移动,卦象类象定藏处环境(坎近水、艮墙角柜箱、离明处电器、坤仓储地面、兑缺口洼处、乾高处金属)。必须给:找不找得回、在哪个方向大概多远、藏在什么样的地方、什么时候能见,四项。' },
+      recommend: [QM(3, '首选', '奇门九宫方位、落宫门星神直指失物在哪个方向、落于何人之手、能否寻回,寻物古来以奇门最精。'), MH(2, '次选', '梅花后天卦定方位、类象定环境。'), XL(1, '亦可', '小六壬急寻掐指即得大向。')],
+      ai: '奇门以失物用神(所丢之物取象)落宫定现处方位远近、宫之门星神定藏处环境与经手之人;梅花以用卦定方位、变卦定移动、类象定环境(坎近水、艮墙角柜箱、离明处电器、坤仓储地面、兑缺口洼处、乾高处金属)。必须给:找不找得回、在哪个方向大概多远、藏在什么样的地方或在谁手上、什么时候能见,四项。' },
     { id: 'xunren', group: '寻人寻物', label: '走失的人/宠物', q: '走失的人/宠物,在哪、能找回吗?',
-      recommend: [XL(3, '首选', '小六壬应事最快,三宫连断走向与安危。'), MH(2, '次选', '梅花定方位与远近。', 'num')],
-      ai: '小六壬三宫断出走、现状、归否;梅花用卦定方位、变卦定动向。必须给:人/宠平安否、往哪个方向去了、大概远近、找回大概什么时候,四项。' },
+      recommend: [QM(3, '首选', '奇门以人之用神落宫定去向方位与安危,寻踪最擅。'), XL(2, '次选', '小六壬应事最快,三宫连断走向与安危。'), MH(1, '亦可', '梅花定方位与远近。', 'num')],
+      ai: '奇门以走失者用神落宫定方位、远近与吉凶(逢吉门吉神主平安、凶神主险);小六壬三宫断出走、现状、归否。必须给:人/宠平安否、往哪个方向去了、大概远近、找回大概什么时候,四项。' },
     { id: 'mouren_nali', group: '寻人寻物', label: '某人在哪在干嘛', q: '某人现在在哪、在干什么?',
-      recommend: [XL(3, '首选', '小六壬当下即事,宫象直断人之动静。'), MH(2, '次选', '梅花以卦象类象描其处境。', 'num')],
-      ai: '以时宫或用卦之象断此人当下的动静、所在与状态,宫象/卦象类象定场合与方位,旺衰定其安稳与否。必须给:大概在哪个方向或什么场合、正在忙什么、状态好不好、这会儿要不要联系他,四项。' },
+      recommend: [QM(3, '首选', '奇门以其人用神落宫,方位、场合、动静一宫直断。'), XL(2, '次选', '小六壬当下即事,宫象直断人之动静。'), MH(1, '亦可', '梅花以卦象类象描其处境。', 'num')],
+      ai: '奇门以此人用神落宫之方位、所乘门星神断其当下所在场合与动静状态;小六壬以时宫之象断动静。必须给:大概在哪个方向或什么场合、正在忙什么、状态好不好、这会儿要不要联系他,四项。' },
 
     // ——— 看某个人 ———
     { id: 'zhangxiang', group: '看某个人', label: '长相身材', q: '这个人长相身材什么样?(占前心里锁定其人)',
@@ -3116,20 +3372,20 @@
       note: '两选一最好为A、B各摇一卦对比,或于一卦中以世应/两用神分表。',
       ai: '若一卦分断:以生合世、旺相之一方为宜取;若各摇一卦:比两卦用神旺衰与吉凶。必须给:选哪个、为啥、另一个差在哪、选定后大概啥结果,四项。' },
     { id: 'yingqi', group: '决策与择时', label: '何时成/见分晓', q: '这件事,大概什么时候能成/见分晓?',
-      recommend: [LY(3, '首选', '六爻用神地支直对月日,应期在诸法中最精。'), MH(2, '次选', '梅花以卦气数取应期,快而粗。')],
+      recommend: [LY(3, '首选', '六爻用神地支直对月日,应期在诸法中最精。'), QM(2, '次选', '奇门以用神落宫之数与旺相定应期,兼给发动的吉时吉方。'), MH(1, '亦可', '梅花以卦气数取应期,快而粗。')],
       note: '大事精确应期,大六壬三传更细;本程序以六爻近之。',
       ai: '以用神或动变之爻地支推:旺待冲、衰待生、空待填实冲空、动待合、静待冲。必须给:首选时间窗与备选时间窗各一(落到阳历月旬)、各注明取自哪支,以及是快是慢的总判。' },
 
     // ——— 官非风险 ———
     { id: 'guansi', group: '官非风险', label: '官司/纠纷输赢', q: '这场官司/纠纷,我能赢吗?',
-      recommend: [LY(3, '首选', '六爻世应力量与官鬼、父母(状纸判决)的生克定输赢。')],
+      recommend: [LY(3, '首选', '六爻世应力量与官鬼、父母(状纸判决)的生克定输赢。'), QM(2, '次选', '奇门以己方(日干)对彼方之落宫强弱、开门伤门与值符值使,定攻守占优与制胜方位。')],
       ai: '世为己、应为对方、官鬼为官方/对方攻势、父母为状纸判决、子孙为解神。世旺应弱、子孙持世制官主我方有利;应旺克世、官动克世主不利。必须给:输赢倾向、我方强弱、和解还是打到底更划算、大概什么时候了结,四项。' },
     { id: 'zaihuo', group: '官非风险', label: '近期有无灾祸', q: '我近期有没有灾祸/意外要防?',
       recommend: [LY(3, '首选', '六爻官鬼、白虎与世的动克,凶险与否看得出。'), XL(2, '次选', '小六壬急问这几日安危最应。')],
       ai: '官鬼为病灾是非、白虎为血光意外、世为己。世旺无克主平安;官鬼白虎旺动克世主有事,受克之爻五行定灾之类别与方位。必须给:近期稳不稳、要防哪一类(病/破财/口舌官非/交通)、大概什么时段、怎么避,四项,报险据实但不吓唬人。' },
   ];
 
-  const METHOD_LABEL = { liuyao: '六爻', meihua: '梅花易数', xlr: '小六壬' };
+  const METHOD_LABEL = { liuyao: '六爻', meihua: '梅花易数', xlr: '小六壬', qimen: '奇门遁甲' };
   const MODE_LABEL = { coin: '三钱法', dayan: '蓍草大衍', num: '报数起卦', time: '时间起卦' };
   return { FENKE, GROUPS, METHOD_LABEL, MODE_LABEL };
 }));
@@ -3147,10 +3403,10 @@
 
   // —— 法门状态 ——
   let curTab = 'liuyao';
-  const works = { liuyao: null, meihua: null, xlr: null };   // {method, material, report, recId}
-  const results = { liuyao: false, meihua: false, xlr: false };
-  const TAB_INPUT = { liuyao: ['sec-cast'], meihua: ['sec-mh'], xlr: ['sec-xlr'] };
-  const TAB_RESULT = { liuyao: ['sec-gua', 'sec-read', 'sec-pan'], meihua: ['sec-mhres'], xlr: ['sec-xlrres'] };
+  const works = { liuyao: null, meihua: null, xlr: null, qimen: null };   // {method, material, report, recId}
+  const results = { liuyao: false, meihua: false, xlr: false, qimen: false };
+  const TAB_INPUT = { liuyao: ['sec-cast'], meihua: ['sec-mh'], xlr: ['sec-xlr'], qimen: ['sec-qm'] };
+  const TAB_RESULT = { liuyao: ['sec-gua', 'sec-read', 'sec-pan'], meihua: ['sec-mhres'], xlr: ['sec-xlrres'], qimen: ['sec-qmres'] };
   function refreshTab() {
     for (const m of Object.keys(TAB_INPUT)) {
       const on = m === curTab;
@@ -3571,9 +3827,20 @@
         else { setStatus('答毕。还有不明白的接着追问。'); $('fu-input').value = ''; }
       }
     } catch (e) {
-      const hint = /Failed to fetch|NetworkError|TypeError/.test(String(e))
-        ? '网络请求被拦截:托管版(Artifact)禁止外联,请在桌面/本地版用深断;或复制回报文本粘给东玄。'
-        : String(e.message || e);
+      const netErr = /Failed to fetch|NetworkError|TypeError|load failed/i.test(String(e));
+      let hint;
+      if (netErr) {
+        const inArtifact = location.hostname.endsWith('claude.ai') || location.hostname.endsWith('claudeusercontent.com') || location.ancestorOrigins && location.ancestorOrigins.length;
+        if (inArtifact || location.protocol === 'blob:') {
+          hint = '连不上网——你现在是在 claude.ai 预览里打开的,这种页面浏览器禁止一切外部联网,所以深断(不管 Claude 还是 DeepSeek)都连不上,这不是软件坏了。要用深断,二选一:①电脑上打开下载的 dongxuan.html 文件;②用 GitHub Pages 网址在手机/浏览器里打开。也可以直接复制上方「卦象回报」发给东玄。';
+        } else if (providerId === 'deepseek') {
+          hint = '连不上 DeepSeek 接口。先查网络;若网址版仍连不上,多半是 DeepSeek 未开放浏览器直连(跨域限制),可切到「Claude」通道再试(Claude 支持浏览器直连)。';
+        } else {
+          hint = '连不上网络,请检查网络连接后重试;或复制上方「卦象回报」发给东玄。';
+        }
+      } else {
+        hint = String(e.message || e);
+      }
       setStatus((followupText ? '追问未成:' : '深断未成:') + hint, true);
       if (!text) { if (!followupText) out.classList.add('hidden'); else if (curAns) curAns.remove(); }
     } finally {
@@ -3683,6 +3950,56 @@
     refreshTab();
   }
 
+  // —— 奇门遁甲 ——
+  const QM_ORDER = [4, 9, 2, 3, 5, 7, 8, 1, 6]; // 盘面九宫:上南下北,巽离坤/震中兑/艮坎乾
+  const QM_RULES = '【奇门断法】日干为求测人自身、时干为所问之事,年命为根本。求财看生门与财(我克者)落何宫;求官谋职看开门、值符、天心;婚姻看六合与男庚女乙;出行看吉门吉星之方位;疾病看天芮天蓬与生门死门制化;讼事看伤门开门与值符值使。吉门(开休生)、吉星(心辅任禽冲)、吉神(值符太阴六合九地九天)所临之宫为吉;凶门(死惊伤)、凶星(蓬芮柱)、凶神(白虎玄武螣蛇)所临之宫为凶;门迫、空亡、入墓则力弱迟滞;方位取用神落宫之八方,应期取其宫数与旺相。【落纸铁则:门、星、神、宫、值符值使、三奇六仪这些名目只在你心里推演,写给客人看的成稿里一个术语都不许出现——全部翻成大白话的结果和方位(几月、往哪个方向大概多远、多少钱、成不成、谁先主动、能不能拿下),每段先甩一句人话结论再说为啥,不报名目、不掉书袋、不引古文,像街坊老先生当面唠。】';
+  function doQimen() {
+    $('qm-err').textContent = '';
+    const q = $('question').value.trim();
+    const c = Qimen.cast(new Date());
+    const v = Qimen.verdict(c);
+    $('qm-info').innerHTML =
+      `<b>起局:</b>${esc(c.cal.year)}年 ${esc(c.cal.month)}月 ${esc(c.dayGZ)}日 ${esc(c.hourGZ)}时<br>` +
+      `<b>节气:</b>${esc(c.jieqi)}·${esc(c.yuan)}　<b>遁局:</b>${esc(c.dun)}　<b>旬首之仪:</b>${esc(c.fuYi)}`;
+    $('qm-grid').innerHTML = QM_ORDER.map(p => {
+      const x = c.cells[p];
+      if (p === 5) {
+        return `<div class="qmcell center"><div class="qpos">中·中央</div>` +
+          `<div class="qgan"><span class="earth">${esc(x.earthGan)}</span></div>` +
+          `<div class="qstar">${esc(x.star)}</div></div>`;
+      }
+      const gcls = /大吉|吉/.test(x.gateJi) ? 'ji' : (/凶/.test(x.gateJi) ? 'xiong' : '');
+      return `<div class="qmcell${p === v.gong ? ' key' : ''}">
+        <div class="qpos">${esc(x.name)}·${esc(x.dir)}</div>
+        <div class="qgan"><span class="sky">${esc(x.skyGan)}</span> <span class="earth">${esc(x.earthGan)}</span></div>
+        <div class="qstar">${esc(x.star)}</div>
+        <div class="qgate ${gcls}">${esc(x.gate)}</div>
+        <div class="qshen">${esc(x.shen)}</div>
+      </div>`;
+    }).join('');
+    $('qm-lv').textContent = v.lv;
+    $('qm-dx').textContent = `所问这桩事,落点在${v.name}宫(${v.dir}):这一门主「${v.gateUse}」。眼下是「${v.lv}」的局面。`;
+    $('qm-notes').innerHTML =
+      `<b>值符</b>${esc(c.zhiFu.star)}临${esc(GONGNAME(c.zhiFu.atGong))}(${esc(GONGDIR(c.zhiFu.atGong))})——这是这件事的主心骨、贵人与主动方所在;` +
+      `<b>值使</b>${esc(c.zhiShi.gate)}临${esc(GONGNAME(c.zhiShi.atGong))}(${esc(GONGDIR(c.zhiShi.atGong))})——这是事情走的门路与去向。` +
+      `<br>日干代表你自己、时干代表所问之事,深断时东玄会据此把方位、时机、成败落到大白话。`;
+    const report = [
+      Qimen.report(c).trimEnd(),
+      `我要问的事:${q || '(未填写)'}`,
+    ].join('\n');
+    const material = '【卦法:奇门遁甲(时家·转盘·拆补)】\n' + report + '\n' + QM_RULES + '\n请依上述奇门局与所问细断。';
+    const recId = saveRec({
+      method: '奇门', question: q,
+      headline: `${c.dun}·${c.jieqi}${c.yuan},事宫${v.name}${v.gate}`,
+      level: v.lv, dx: $('qm-dx').textContent, report,
+    });
+    works.qimen = { method: '奇门', material, report, recId };
+    results.qimen = true;
+    refreshTab();
+  }
+  const GONGNAME = p => Qimen.GONG[p].name + p + '宫';
+  const GONGDIR = p => Qimen.GONG[p].dir;
+
   // —— 分科:点类别 → 列排序推荐 → 点选方法(术业有专攻,由你定夺)——
   let curFenke = null;    // 已选类别
   let curPick = null;     // 已选方法 {method, mode}
@@ -3762,6 +4079,7 @@
     b.addEventListener('click', () => { curTab = b.dataset.m; refreshTab(); }));
   $('btn-mh').addEventListener('click', doMeihua);
   $('btn-xlr').addEventListener('click', doXlr);
+  $('btn-qm').addEventListener('click', doQimen);
   document.querySelectorAll('input[name=mh-mode]').forEach(r => r.addEventListener('change', () => {
     const num = document.querySelector('input[name=mh-mode]:checked').value === 'num';
     $('mh-nums').classList.toggle('hidden', !num);
