@@ -243,7 +243,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.12</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.13</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -448,7 +448,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.12 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.13 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -580,7 +580,7 @@
   }
   function startDuo() {
     if (!(curFenke && curFenke.duo)) return;
-    duoPlan = { fkLabel: curFenke.label, mainQ: curFenke.q, subs: curFenke.duo.subs, idx: 0, done: [] };
+    duoPlan = { fkLabel: curFenke.label, mainQ: curFenke.q, subs: curFenke.duo.subs, rules: curFenke.duo.rules || '', idx: 0, done: [] };
     throws = []; currentCast = null; currentZhuang = null; renderTossLog();
     works.liuyao = null; results.liuyao = false;
     $('duo-offer').classList.add('hidden');
@@ -602,7 +602,8 @@
     const n = duoPlan.done.length;
     const report = [`【东玄六爻 · 分占连断回报】问「${duoPlan.fkLabel}」,分 ${n} 卦分占,每卦只断其分项。` + genderReportLine()]
       .concat(duoPlan.done.map((d, i) => `\n——第${i + 1}卦 · ${d.k}(${d.q})——\n${d.report}`)).join('\n');
-    const rules = `【分占连断规则】同一大事拆成 ${n} 个分项,各占一卦。铁律:每卦只回答其标注的分项,禁止把甲卦的结论挪到乙分项(一卦一断);逐项断完后,末尾用三五句总揽全局(只综合各分项已得结论,不另生新断)。每个分项都要落到具体:时间给旬/月、钱给数字区间、人给画像。`;
+    const rules = `【分占连断规则】同一大事拆成 ${n} 个分项,各占一卦。铁律:每卦只回答其标注的分项,禁止把甲卦的结论挪到乙分项(一卦一断);若分项标注为「验证」,该卦专职校验前面各卦所断的可信度,不答新问题;逐项断完后,末尾用三五句总揽全局(只综合各分项已得结论,不另生新断)。每个分项都要落到具体:时间给旬/月、钱给数字区间、人给画像。` +
+      (duoPlan.rules ? `\n【本科专用规程(优先遵行)】${duoPlan.rules}` : '');
     const material = `【卦法:六爻 · 分占连断(${duoPlan.fkLabel})】\n` + rules + genderMaterialLine() +
       duoPlan.done.map((d, i) => `\n\n——第${i + 1}卦 · 分项「${d.k}」(所问:${d.q})——\n${d.report}\n【经文取材】\n${d.jing}`).join('') +
       '\n\n请按上述规则逐项细断后总揽。';

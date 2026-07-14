@@ -160,7 +160,7 @@ t('推荐首选符合术业专攻', () => {
 t('复杂科给分占方案与奇门总览;看人拆身高/长相/身材三分科', () => {
   for (const id of ['yueyun', 'nianyun', 'zonghe']) {
     const f = Fenke.FENKE.find(x => x.id === id);
-    ok(f.duo && Array.isArray(f.duo.subs) && f.duo.subs.length >= 4, id + ' 应有分占方案(≥4分项)');
+    ok(f.duo && Array.isArray(f.duo.subs) && f.duo.subs.length >= 5, id + ' 应有分占方案(≥5分项)');
     for (const s of f.duo.subs) ok(s.k && s.q && s.q.length >= 6, id + ' 分项完整:' + JSON.stringify(s));
     ok(f.recommend.some(r => r.method === 'qimen'), id + ' 应含奇门一盘多断');
     ok(f.note && f.note.length >= 20, id + ' 应有复杂度规则说明');
@@ -169,6 +169,19 @@ t('复杂科给分占方案与奇门总览;看人拆身高/长相/身材三分�
   for (const need of ['shengao', 'zhangxiang', 'shencai']) ok(ids.has(need), '缺 ' + need);
   ok(Fenke.FENKE.find(f => f.id === 'shengao').ai.includes('厘米'), '身高规程须给厘米区间');
   ok(Fenke.FENKE.find(f => f.id === 'shengao').ai.includes('性别'), '身高规程须按性别换算');
+});
+t('分占体系:验证卦收尾、落细规程;财富量级六卦逐层锁定', () => {
+  for (const id of ['yueyun', 'nianyun', 'zonghe', 'cailiang']) {
+    const f = Fenke.FENKE.find(x => x.id === id);
+    ok(f.duo && f.duo.rules && f.duo.rules.length >= 40, id + ' 分占应带落细规程');
+    const last = f.duo.subs[f.duo.subs.length - 1];
+    ok(last.k.includes('验证'), id + ' 分占最后一卦应为验证卦,实为 ' + last.k);
+  }
+  const cl = Fenke.FENKE.find(f => f.id === 'cailiang');
+  ok(cl.duo.subs.length === 6, '财富量级应为六卦,实为 ' + cl.duo.subs.length);
+  const keys = cl.duo.subs.map(s => s.k).join(',');
+  for (const k of ['定位数', '定区间', '定构成', '家庭资产', '年薪收入', '验证']) ok(keys.includes(k), '财富量级缺分项 ' + k);
+  ok(cl.duo.rules.includes('位数') && cl.duo.rules.includes('承接'), '财富量级规程须含逐层承接锁定');
 });
 t('每组都有专科,绝大多数科给多法门供选', () => {
   const groups = new Set(Fenke.FENKE.map(f => f.group));

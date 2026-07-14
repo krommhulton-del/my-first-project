@@ -238,7 +238,7 @@ await t('性别选项:选男起卦,回报注明问卦人;持久化', async () =>
   await page.selectOption('#q-gender', '');
 });
 
-await t('分占连断:月运选六爻,五卦连占出合并回报与总览', async () => {
+await t('分占连断:月运选六爻,六卦连占(含验证卦)出合并回报与总览', async () => {
   await page.click('.fk[data-id=yueyun]');
   const opts = page.locator('#fk-recommend .mopt');
   const labels = await opts.locator('.mname').allTextContents();
@@ -247,18 +247,32 @@ await t('分占连断:月运选六爻,五卦连占出合并回报与总览', asy
   await opts.nth(li).click();
   ok(!(await page.locator('#duo-offer').evaluate(el => el.classList.contains('hidden'))), '应出现分占连断提议');
   await page.click('#btn-duo-start');
-  for (let i = 0; i < 5; i++) {
-    await page.waitForFunction(n => document.getElementById('duo-status').textContent.includes(`${n}/5`), i + 1, { timeout: 9000 });
+  for (let i = 0; i < 6; i++) {
+    await page.waitForFunction(n => document.getElementById('duo-status').textContent.includes(`${n}/6`), i + 1, { timeout: 9000 });
     await page.click('#btn-auto');
   }
-  await page.waitForFunction(() => document.getElementById('duo-status').textContent.includes('完成'), null, { timeout: 20000 });
+  await page.waitForFunction(() => document.getElementById('duo-status').textContent.includes('完成'), null, { timeout: 24000 });
   const rep = await page.inputValue('#report');
   ok(rep.startsWith('【东玄六爻 · 分占连断回报】'), rep.split('\n')[0]);
-  for (const k of ['总基调', '财运', '事业', '感情人缘', '健康家宅']) ok(rep.includes(k), '回报含分项 ' + k);
+  for (const k of ['总基调', '财运', '事业', '感情人缘', '健康家宅', '验证']) ok(rep.includes(k), '回报含分项 ' + k);
   ok((await page.locator('#headline').textContent()).includes('分占连断'), '解读区出总览');
-  ok((await page.locator('#focus .fblock').count()) === 5, '总览五个分项块');
+  ok((await page.locator('#focus .fblock').count()) === 6, '总览六个分项块(含验证)');
   ok((await page.locator('#histlist .badge').allTextContents()).some(b => b.includes('分占')), '卦档含分占徽记');
   await page.click('.fk[data-id=yueyun]'); // 收起分科
+});
+
+await t('财富量级:六卦逐层锁定方案可入(位数→区间→构成→家产→年薪→验证)', async () => {
+  await page.click('.fk[data-id=cailiang]');
+  const opts = page.locator('#fk-recommend .mopt');
+  await opts.first().click(); // 首选六爻
+  ok(!(await page.locator('#duo-offer').evaluate(el => el.classList.contains('hidden'))), '财富量级应提议分占');
+  const title = await page.locator('#duo-title').textContent();
+  for (const k of ['定位数', '定区间', '定构成', '家庭资产', '年薪收入', '验证']) ok(title.includes(k), '提议含分项 ' + k);
+  await page.click('#btn-duo-start');
+  await page.waitForFunction(() => document.getElementById('duo-status').textContent.includes('1/6'), null, { timeout: 5000 });
+  ok((await page.inputValue('#question')).includes('几位数'), '第一卦问位数');
+  await page.click('#btn-reset'); // 取消本次连占,收尾
+  await page.click('.fk[data-id=cailiang]');
 });
 
 await t('分科日运首选小六壬、年运首选蓍草', async () => {
