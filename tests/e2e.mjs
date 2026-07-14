@@ -187,14 +187,18 @@ await t('奇门遁甲:此刻起局出九宫、值符值使、事宫、回报', a
   ok((await page.locator('#qm-grid .qmcell.key').count()) === 1, '事宫高亮一格');
   const info = await page.locator('#qm-info').textContent();
   ok(/遁.*局/.test(info), '起局含遁局:' + info.slice(0, 40));
-  ok((await page.locator('#qm-notes').textContent()).includes('值符'), '含值符值使白话');
+  ok(info.includes('同一时辰'), '应标明同一时辰一局不变的规矩');
+  ok(info.includes('空亡'), '应报时旬空亡');
+  const notes = await page.locator('#qm-notes').textContent();
+  ok(notes.includes('值符'), '含值符值使白话');
+  ok(notes.includes('为什么断'), '应给断语依据');
   const rep = await page.inputValue('#report');
   ok(rep.includes('奇门遁甲') && rep.includes('值使'), '回报含奇门起局:' + rep.split('\n')[0]);
 });
 
-await t('分科全面版:≥50 专科、分组显示、含奇门派单', async () => {
-  ok((await page.locator('#fenke-chips .fk').count()) >= 50, '专科数 ' + (await page.locator('#fenke-chips .fk').count()));
-  ok((await page.locator('#fenke-chips .fkgroup').count()) >= 12, '应分十二大类以上');
+await t('分科全面版:≥75 专科、十四大类、含奇门派单', async () => {
+  ok((await page.locator('#fenke-chips .fk').count()) >= 75, '专科数 ' + (await page.locator('#fenke-chips .fk').count()));
+  ok((await page.locator('#fenke-chips .fkgroup').count()) >= 14, '应分十四大类以上');
 });
 
 await t('分科两步选择:点类别展开排序推荐,点方法才切法门', async () => {

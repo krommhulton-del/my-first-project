@@ -101,13 +101,19 @@ t('蓍草成卦走同一解卦管线', () => {
 
 console.log('【五】问事分科(全面版)');
 const Fenke = require('../fenke.js');
-t('专科齐全(≥50项),十二大类分组,id 唯一,含奇门派单', () => {
-  ok(Fenke.FENKE.length >= 50, '专科数 ' + Fenke.FENKE.length);
+t('专科齐全(≥75项),十四大类分组,id 唯一,含奇门派单', () => {
+  ok(Fenke.FENKE.length >= 75, '专科数 ' + Fenke.FENKE.length);
   eq(new Set(Fenke.FENKE.map(f => f.id)).size, Fenke.FENKE.length, 'id 唯一');
-  ok(Array.isArray(Fenke.GROUPS) && Fenke.GROUPS.length >= 12, '分组数 ' + Fenke.GROUPS.length);
-  ok(Fenke.GROUPS.includes('婚姻家庭') && Fenke.GROUPS.includes('谋事求人'), '含新增分组');
+  ok(Array.isArray(Fenke.GROUPS) && Fenke.GROUPS.length >= 14, '分组数 ' + Fenke.GROUPS.length);
+  ok(Fenke.GROUPS.includes('婚姻家庭') && Fenke.GROUPS.includes('谋事求人') && Fenke.GROUPS.includes('人际往来'), '含新增分组');
   ok(Fenke.FENKE.some(f => f.recommend.some(r => r.method === 'qimen')), '含奇门派单');
   eq(Fenke.METHOD_LABEL.qimen, '奇门遁甲', '奇门法门标签');
+  // 高频民生问事全覆盖(按需求调研补充)
+  const ids2 = new Set(Fenke.FENKE.map(f => f.id));
+  for (const need of ['lianxi', 'wanglian', 'ta_qingkuang', 'hunqi', 'bianzhi', 'zhuanzheng', 'caiyuan', 'zimeiti',
+    'kaoyan', 'maifang', 'huanzhai', 'dagoumai', 'jiaren_bing', 'chongwu', 'hehao', 'jieqian', 'zhouyun', 'zeri', 'zhuihui']) {
+    ok(ids2.has(need), '缺高频专科 ' + need);
+  }
 });
 t('覆盖各大问事门类(感情/事业/求学/财运/出行/健康/寻找/看人/运势/决策/官非)', () => {
   const ids = new Set(Fenke.FENKE.map(f => f.id));

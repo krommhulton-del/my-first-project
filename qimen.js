@@ -33,6 +33,10 @@
   const SHEN = ['值符', '螣蛇', '太阴', '六合', '白虎', '玄武', '九地', '九天'];
   const SHEN_JI = { 值符: '吉(贵人)', 螣蛇: '虚惊怪异', 太阴: '吉(暗中相助)', 六合: '吉(和合婚姻)', 白虎: '凶(伤病争杀)', 玄武: '凶(盗骗暗昧)', 九地: '吉(藏守坚固)', 九天: '吉(扬名远行)' };
   const XUNSHOU = ['戊', '己', '庚', '辛', '壬', '癸']; // 甲子旬→戊、甲戌旬→己 … 甲寅旬→癸
+  const PALACE_ZHI = { 1: ['子'], 8: ['丑', '寅'], 3: ['卯'], 4: ['辰', '巳'], 9: ['午'], 2: ['未', '申'], 7: ['酉'], 6: ['戌', '亥'] };
+  const GATE_WX = { 开门: '金', 休门: '水', 生门: '土', 伤门: '木', 杜门: '木', 景门: '火', 死门: '土', 惊门: '金' };
+  const SHENG = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
+  const KE = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' };
   const RING = [1, 8, 3, 4, 9, 2, 7, 6];  // 转盘环序(顺时针八宫;中5寄坤2)
   const NUM = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
   const eff = p => (p === 5 ? 2 : p);     // 中宫寄坤二
@@ -63,6 +67,8 @@
     const hIdx = gz60(hGan, hb);                                           // 时 60 甲子
     const xun = Math.floor(hIdx / 10);
     const fuYi = XUNSHOU[xun];                                             // 符头仪(旬首所遁之仪)
+    const xunShouH = hIdx - (hIdx % 10);                                   // 时旬空亡
+    const xunKong = [ZHI[(xunShouH + 10) % 12], ZHI[(xunShouH + 11) % 12]];
 
     // 地盘:布六仪三奇
     const earth = {}, ganPos = {};
@@ -112,11 +118,15 @@
       c.shenJi = c.shen ? SHEN_JI[c.shen] : '';
     }
 
+    // 日干落宫(求测人;甲日遁于当日旬首之仪)
+    const riYi = (dIdx % 10 === 0) ? XUNSHOU[Math.floor(dIdx / 10)] : GAN[dIdx % 10];
+    const riGong = eff(ganPos[riYi]);
+
     return {
       date: d, cal,
       qi, jieqi: JIEQI[qi], yin, ju, yuan: ['上元', '中元', '下元'][yuan],
       dun: (yin ? '阴遁' : '阳遁') + NUM[ju] + '局',
-      dayGZ: cal.day, hourGZ: GAN[hGan] + ZHI[hb], fuYi,
+      dayGZ: cal.day, hourGZ: GAN[hGan] + ZHI[hb], hourBranch: hb, fuYi, xunKong, riGong,
       zhiFu: { star: zhiFuStar, homeGong: fuGong, atGong: eff(shiGong), qinJi: fuGong === 5 }, // 值符星:本宫→飞至时干宫;qinJi=符头在中5(天禽寄坤二)
       zhiShi: { gate: zhiShiGate, homeGong: eff(fuGong), atGong: RING[((rIdx(fuGong) + offGate) % 8 + 8) % 8] },
       cells,
@@ -130,18 +140,42 @@
     杜门: '宜守不宜进、宜藏宜避,躲事避灾可以,办事推进则被堵', 景门: '文书、信息、考试、宣传、打听消息',
     死门: '办事僵住不动、拖沓无果,涉丧涉讼才用得上', 惊门: '虚惊、口舌是非、官非纠缠,心神不宁',
   };
-  // 事宫(值符/时干所临之宫)综合吉凶
+  // 事宫综合吉凶。事宫=时干落宫(值符所临)——此宫八神恒为值符,故不以神计分,
+  // 而以:门星本性、门迫/门生宫、三奇临宫、人事生克(日干宫 vs 时干宫)、事宫空亡,综合判。
   function verdict(c) {
     const gW = { 开门: 3, 休门: 2, 生门: 3, 景门: 0, 杜门: -1, 伤门: -2, 惊门: -2, 死门: -3 };
     const sW = { 天心: 2, 天辅: 2, 天任: 1, 天禽: 1, 天冲: 1, 天英: 0, 天柱: -2, 天蓬: -2, 天芮: -3 };
-    const nW = { 值符: 2, 太阴: 1, 六合: 1, 九地: 1, 九天: 1, 螣蛇: -1, 白虎: -2, 玄武: -2 };
-    const g = c.cells[c.zhiFu.atGong];
+    const shiP = c.zhiFu.atGong;                  // 事宫(时干落宫)
+    const riP = c.riGong;                          // 人宫(日干落宫)
+    const g = c.cells[shiP];
     const star = (g.star || '').replace('(寄二)', '');
-    const score = (gW[g.gate] || 0) + (sW[star] || 0) + (nW[g.shen] || 0);
-    const lv = score >= 4 ? '上吉' : score >= 2 ? '顺' : score >= -1 ? '平' : score >= -3 ? '滞' : '凶';
+    const reasons = [];
+    let score = (gW[g.gate] || 0) + (sW[star] || 0);
+    const gj = /大吉|吉/.test(g.gateJi || '') ? '吉门' : (/凶/.test(g.gateJi || '') ? '凶门' : '平门');
+    reasons.push(`事落${g.name}宫得${g.gate}(${gj})配${star}`);
+    // 门迫/门生宫
+    const gwx = GATE_WX[g.gate];
+    if (gwx && KE[gwx] === g.wx) { score -= 2; reasons.push('门克宫成门迫,事多阻折'); }
+    else if (gwx && SHENG[gwx] === g.wx) { score += 1; reasons.push('门生宫,门路顺'); }
+    else if (gwx && KE[g.wx] === gwx) { score -= 1; reasons.push('宫制门,进展偏慢'); }
+    // 三奇临事宫
+    if (['乙', '丙', '丁'].includes(g.skyGan)) { score += 1; reasons.push(`天盘得${g.skyGan}奇相助`); }
+    // 人事生克:日干宫(我)与时干宫(事)五行
+    const rwx = c.cells[riP].wx, swx = g.wx;
+    if (riP === shiP) { score += 1; reasons.push('人事同宫,事在自己手里'); }
+    else if (SHENG[swx] === rwx) { score += 2; reasons.push('事来生我,顺水推舟'); }
+    else if (SHENG[rwx] === swx) { score -= 1; reasons.push('我去生事,得倒贴力气'); }
+    else if (KE[rwx] === swx) { score += 1; reasons.push('我克事,能拿下但费劲'); }
+    else if (KE[swx] === rwx) { score -= 2; reasons.push('事克我,这事压人,别硬顶'); }
+    else { score += 1; reasons.push('人事比和,合得来'); }
+    // 事宫空亡(按时旬)
+    const kong = (PALACE_ZHI[shiP] || []).some(z => c.xunKong.includes(z));
+    if (kong) { score -= 2; reasons.push('事宫落空亡,近期虚而不实、难落地'); }
+    const lv = score >= 5 ? '上吉' : score >= 2 ? '顺' : score >= -2 ? '平' : score >= -5 ? '滞' : '凶';
     return {
-      gong: g.gong, name: g.name, dir: g.dir, gate: g.gate, star, shen: g.shen,
-      score, lv, gateUse: GATE_USE[g.gate] || '',
+      gong: shiP, name: g.name, dir: g.dir, gate: g.gate, star, shen: g.shen,
+      riGong: riP, riName: c.cells[riP].name,
+      score, lv, kong, reasons, gateUse: GATE_USE[g.gate] || '',
     };
   }
 
@@ -150,7 +184,8 @@
     const order = [4, 9, 2, 3, 5, 7, 8, 1, 6]; // 巽离坤 / 震中兑 / 艮坎乾,九宫盘面顺序
     let s = `【奇门遁甲 · 起局回报(时家 · 转盘 · 拆补)】\n`;
     s += `起局:${c.cal.year} ${c.cal.month} ${c.dayGZ}日 ${c.hourGZ}时(节气${c.jieqi}·${c.yuan})\n`;
-    s += `遁局:${c.dun}　旬首之仪:${c.fuYi}\n`;
+    s += `遁局:${c.dun}　旬首之仪:${c.fuYi}　时旬空亡:${c.xunKong.join('、')}\n`;
+    s += `日干${c.dayGZ[0]}(求测人)落${GONG[c.riGong].name}${c.riGong}宫;时干${c.hourGZ[0]}(所问之事)落${GONG[c.zhiFu.atGong].name}${c.zhiFu.atGong}宫\n`;
     s += `值符:${c.zhiFu.star}${c.zhiFu.qinJi ? '(符头在中5,天禽寄坤二、以天芮同宫论)' : ''}(本居${GONG[c.zhiFu.homeGong].name}${c.zhiFu.homeGong}宫)飞临${GONG[c.zhiFu.atGong].name}${c.zhiFu.atGong}宫\n`;
     s += `值使:${c.zhiShi.gate}(本居${GONG[c.zhiShi.homeGong].name}${c.zhiShi.homeGong}宫)飞临${GONG[c.zhiShi.atGong].name}${c.zhiShi.atGong}宫\n`;
     s += `九宫盘面(天盘干/地盘干 · 九星 · 八门 · 八神 · 方位):\n`;

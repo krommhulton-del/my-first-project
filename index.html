@@ -243,7 +243,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.11</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.12</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -448,7 +448,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.11 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.12 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -1105,9 +1105,11 @@
     const q = $('question').value.trim();
     const c = Qimen.cast(new Date());
     const v = Qimen.verdict(c);
+    const hStart = (c.hourBranch * 2 + 23) % 24, hEnd = (hStart + 2) % 24;
     $('qm-info').innerHTML =
       `<b>起局:</b>${esc(c.cal.year)}年 ${esc(c.cal.month)}月 ${esc(c.dayGZ)}日 ${esc(c.hourGZ)}时<br>` +
-      `<b>节气:</b>${esc(c.jieqi)}·${esc(c.yuan)}　<b>遁局:</b>${esc(c.dun)}　<b>旬首之仪:</b>${esc(c.fuYi)}`;
+      `<b>节气:</b>${esc(c.jieqi)}·${esc(c.yuan)}　<b>遁局:</b>${esc(c.dun)}　<b>旬首之仪:</b>${esc(c.fuYi)}　<b>时旬空亡:</b>${esc(c.xunKong.join('、'))}<br>` +
+      `<b>规矩:</b>时家奇门以时辰定局,本局属${esc(c.hourGZ[1])}时(${hStart}:00–${hEnd}:00),同一时辰内再起局面不变;过了 ${hEnd}:00 或换一类问题,才是新局。`;
     $('qm-grid').innerHTML = QM_ORDER.map(p => {
       const x = c.cells[p];
       if (p === 5) {
@@ -1125,11 +1127,12 @@
       </div>`;
     }).join('');
     $('qm-lv').textContent = v.lv;
-    $('qm-dx').textContent = `所问这桩事,落点在${v.name}宫(${v.dir}):这一门主「${v.gateUse}」。眼下是「${v.lv}」的局面。`;
+    $('qm-dx').textContent = `所问这桩事,落在${v.name}宫(${v.dir}),得${v.gate}:${v.gateUse}。你自己(日干)落${v.riName}宫。综合断:「${v.lv}」。`;
     $('qm-notes').innerHTML =
-      `<b>值符</b>${esc(c.zhiFu.star)}临${esc(GONGNAME(c.zhiFu.atGong))}(${esc(GONGDIR(c.zhiFu.atGong))})——这是这件事的主心骨、贵人与主动方所在;` +
-      `<b>值使</b>${esc(c.zhiShi.gate)}临${esc(GONGNAME(c.zhiShi.atGong))}(${esc(GONGDIR(c.zhiShi.atGong))})——这是事情走的门路与去向。` +
-      `<br>日干代表你自己、时干代表所问之事,深断时东玄会据此把方位、时机、成败落到大白话。`;
+      `<b>为什么断「${esc(v.lv)}」:</b>${esc(v.reasons.join(';'))}。<br>` +
+      `<b>值符</b>${esc(c.zhiFu.star)}临${esc(GONGNAME(c.zhiFu.atGong))}(${esc(GONGDIR(c.zhiFu.atGong))})——这件事的主心骨、贵人与主动方所在;` +
+      `<b>值使</b>${esc(c.zhiShi.gate)}临${esc(GONGNAME(c.zhiShi.atGong))}(${esc(GONGDIR(c.zhiShi.atGong))})——事情走的门路与去向。` +
+      `<br>日干为你、时干为事,深断时东玄会据全盘把方位、时机、成败落到大白话。`;
     const report = [
       Qimen.report(c).trimEnd(),
       `我要问的事:${q || '(未填写)'}` + genderReportLine(),

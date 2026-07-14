@@ -52,10 +52,25 @@ for (const dt of samples) {
   // report 不抛错且含关键信息
   const r = Qimen.report(c);
   ok(r.includes('值符') && r.includes('值使') && r.includes(c.dun), `${tag} report 完整`);
-  // verdict:事宫即值符所临之宫,吉凶级别合法
+  // verdict:事宫即值符所临之宫,吉凶级别合法,断语依据齐备
   const v = Qimen.verdict(c);
   eq(v.gong, c.zhiFu.atGong, `${tag} 事宫=值符落宫`);
   ok(['上吉', '顺', '平', '滞', '凶'].includes(v.lv), `${tag} verdict 级别合法(${v.lv})`);
+  ok(Array.isArray(v.reasons) && v.reasons.length >= 2, `${tag} verdict 有断语依据`);
+  ok(v.riGong >= 1 && v.riGong <= 9 && v.riGong !== 5, `${tag} 日干宫合法(${v.riGong})`);
+}
+
+// 回归测试:吉凶必须有真实分布,不能几乎恒为「顺」(旧bug:事宫恒带值符神+2分)
+{
+  const lvs = new Set(), scores = new Set();
+  for (let day = 1; day <= 28; day += 3) {
+    for (const hour of [0, 4, 8, 12, 16, 20]) {
+      const v = Qimen.verdict(Qimen.cast(new Date(2026, 3, day, hour, 30)));
+      lvs.add(v.lv); scores.add(v.score);
+    }
+  }
+  ok(lvs.size >= 3, `吉凶级别应有分布,实得:${[...lvs].join('、')}`);
+  ok(scores.size >= 5, `评分应随局变化,实得 ${scores.size} 种`);
 }
 
 // 阴阳遁边界
