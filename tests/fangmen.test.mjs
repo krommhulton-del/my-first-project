@@ -151,6 +151,19 @@ t('推荐首选符合术业专攻', () => {
   // 年运岁占 → 蓍草
   eq(top('nianyun').mode, 'dayan', '年运用蓍草');
 });
+t('复杂科给分占方案与奇门总览;看人拆身高/长相/身材三分科', () => {
+  for (const id of ['yueyun', 'nianyun', 'zonghe']) {
+    const f = Fenke.FENKE.find(x => x.id === id);
+    ok(f.duo && Array.isArray(f.duo.subs) && f.duo.subs.length >= 4, id + ' 应有分占方案(≥4分项)');
+    for (const s of f.duo.subs) ok(s.k && s.q && s.q.length >= 6, id + ' 分项完整:' + JSON.stringify(s));
+    ok(f.recommend.some(r => r.method === 'qimen'), id + ' 应含奇门一盘多断');
+    ok(f.note && f.note.length >= 20, id + ' 应有复杂度规则说明');
+  }
+  const ids = new Set(Fenke.FENKE.map(f => f.id));
+  for (const need of ['shengao', 'zhangxiang', 'shencai']) ok(ids.has(need), '缺 ' + need);
+  ok(Fenke.FENKE.find(f => f.id === 'shengao').ai.includes('厘米'), '身高规程须给厘米区间');
+  ok(Fenke.FENKE.find(f => f.id === 'shengao').ai.includes('性别'), '身高规程须按性别换算');
+});
 t('每组都有专科,绝大多数科给多法门供选', () => {
   const groups = new Set(Fenke.FENKE.map(f => f.group));
   ok(groups.size >= 10, '组数 ' + groups.size);

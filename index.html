@@ -211,6 +211,12 @@
   .qmcell .qpos { font-size: .72rem; color: var(--dim); letter-spacing: .1em; }
   .qm-legend { color: var(--dim); font-size: .78rem; margin-top: 8px; line-height: 1.6; }
   .qm-legend .sky { color: var(--cinnabar); } .qm-legend .earth { color: var(--gold); }
+  .qrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .qrow input[type=text] { flex: 1 1 240px; }
+  #q-gender { flex: 0 0 auto; }
+  #duo-offer { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
+  #duo-offer .duo-title { color: var(--dim); font-size: .9rem; margin-bottom: 8px; line-height: 1.7; }
+  #duo-status { margin-top: 10px; color: var(--cinnabar); font-size: .95rem; letter-spacing: .03em; line-height: 1.7; }
   @media (max-width: 560px) {
     .qmcell { min-height: 82px; padding: 6px 3px; }
     .qmcell .qgan { font-size: .92rem; } .qmcell .qstar, .qmcell .qgate { font-size: .78rem; }
@@ -237,7 +243,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.10</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.11</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -257,7 +263,15 @@
 
   <section id="sec-q">
     <h2>所 问 何 事</h2>
-    <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
+    <div class="qrow">
+      <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
+      <select id="q-gender" title="问卦人性别,选填;问婚恋、看人时影响断法口径">
+        <option value="">性别·选填</option>
+        <option value="男">我是男</option>
+        <option value="女">我是女</option>
+      </select>
+    </div>
+    <div class="note">问感情婚恋、看某个人这类,选上性别断得更准(男女看的门道不同);其余问题可不填。</div>
   </section>
 
   <section id="sec-cast">
@@ -271,6 +285,14 @@
       <button id="btn-auto" class="primary">一键成卦(连掷六爻)</button>
       <button id="btn-reset" class="ghost">清盘重掷</button>
     </div>
+    <div id="duo-offer" class="hidden">
+      <div class="duo-title" id="duo-title"></div>
+      <div class="btnrow">
+        <button id="btn-duo-start" class="primary"></button>
+        <button id="btn-duo-single" class="ghost">就用单卦总断</button>
+      </div>
+    </div>
+    <div id="duo-status" class="hidden"></div>
     <div class="tosslog" id="tosslog"></div>
   </section>
 
@@ -426,7 +448,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.10 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.11 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -446,6 +468,16 @@
   let currentCast = null;
   let currentZhuang = null;
   let aiBusy = false;
+  let duoPlan = null;    // 分占连断:{fkLabel, subs:[{k,q}], idx, done:[{k,q,cast,z,r,report,jing}]}
+
+  // —— 问卦人性别(选填,影响取用神与画像口径)——
+  const GKEY = 'dongxuan_gender';
+  function gender() { return $('q-gender').value; }
+  function genderReportLine() { const g = gender(); return g ? `\n问卦人:${g}` : ''; }
+  function genderMaterialLine() {
+    const g = gender();
+    return g ? `\n【问卦人性别:${g}】凡涉婚恋对方、看人画像、称谓口径,均按此性别推断(男问姻缘以妻财为对方,女以官鬼为对方;身高长相等画像按对应性别标准换算)。` : '';
+  }
 
   // —— 法门状态 ——
   let curTab = 'liuyao';
@@ -488,7 +520,7 @@
   }
   function autoCast() {
     if (throws.length > 0 && throws.length < 6) return; // 逐掷中途不允许一键
-    resetBoard(false);
+    resetBoard(false, true);
     let i = 0;
     $('btn-auto').disabled = true; $('btn-step').disabled = true;
     const timer = setInterval(() => {
@@ -507,22 +539,91 @@
     renderGua(cast);
     renderReading(cast);
     renderPan(cast, currentZhuang);
-    const method = dayan ? '六爻·蓍草' : '六爻';
-    const report = GuaCore.buildReport(cast, q) + '\n' + panText(cast, currentZhuang) +
-      (dayan ? '\n(起卦法:蓍草大衍筮法)' : '');
-    const material = buildMaterial(cast, currentZhuang, q) + (dayan ? '\n(本卦以蓍草大衍法揲得)' : '');
     const r = GuaCore.interpret(cast);
+    if (duoPlan) { // 分占连断:存本分项之卦,续掷或收官
+      const sub = duoPlan.subs[duoPlan.idx];
+      const plan = GuaCore.interpretationPlan(cast);
+      duoPlan.done.push({
+        k: sub.k, q, cast, z: currentZhuang, r,
+        report: GuaCore.buildReport(cast, q) + '\n' + panText(cast, currentZhuang),
+        jing: plan.focus.map(f => `${f.kind}:${f.text}`).join('\n'),
+      });
+      duoPlan.idx++;
+      results.liuyao = true;
+      if (duoPlan.idx < duoPlan.subs.length) { throws = []; renderTossLog(); duoStep(); refreshTab(); return; }
+      finishDuo(); return;
+    }
+    const method = dayan ? '六爻·蓍草' : '六爻';
+    const report = GuaCore.buildReport(cast, q) + genderReportLine() + '\n' + panText(cast, currentZhuang) +
+      (dayan ? '\n(起卦法:蓍草大衍筮法)' : '');
+    const material = buildMaterial(cast, currentZhuang, q) + genderMaterialLine() + (dayan ? '\n(本卦以蓍草大衍法揲得)' : '');
     const recId = saveRec({ method, question: q, headline: r.headline, level: r.level, dx: r.dx, report, cast });
     works.liuyao = { method, material, report, recId };
     results.liuyao = true;
     refreshTab();
   }
-  function resetBoard(clearQ) {
+  function resetBoard(clearQ, keepDuo) {
     throws = []; currentCast = null; currentZhuang = null;
     renderTossLog();
     works.liuyao = null; results.liuyao = false;
+    if (!keepDuo) cancelDuo();
     refreshTab();
     if (clearQ) $('question').value = '';
+  }
+
+  // —— 分占连断:复杂之问(月运/年运/综合运)拆分项各占一卦,一卦一断 ——
+  function offerDuo(fk) {
+    if (!(fk && fk.duo)) { $('duo-offer').classList.add('hidden'); return; }
+    $('duo-title').textContent = `「${fk.label}」跨面广,单卦装不下所有分项。可走分占连断:${fk.duo.subs.map(s => s.k).join('、')},共 ${fk.duo.subs.length} 卦各管一路,一卦一断互不串,断得更细。`;
+    $('btn-duo-start').textContent = `分占连断(${fk.duo.subs.length} 卦)`;
+    $('duo-offer').classList.remove('hidden');
+  }
+  function startDuo() {
+    if (!(curFenke && curFenke.duo)) return;
+    duoPlan = { fkLabel: curFenke.label, mainQ: curFenke.q, subs: curFenke.duo.subs, idx: 0, done: [] };
+    throws = []; currentCast = null; currentZhuang = null; renderTossLog();
+    works.liuyao = null; results.liuyao = false;
+    $('duo-offer').classList.add('hidden');
+    duoStep();
+    refreshTab();
+  }
+  function duoStep() {
+    const s = duoPlan.subs[duoPlan.idx];
+    $('question').value = s.q;
+    $('duo-status').textContent = `分占连断 ${duoPlan.idx + 1}/${duoPlan.subs.length} · 本卦占「${s.k}」:${s.q} —— 心里默念,点「一键成卦」`;
+    $('duo-status').classList.remove('hidden');
+  }
+  function cancelDuo() {
+    duoPlan = null;
+    $('duo-status').classList.add('hidden');
+    $('duo-offer').classList.add('hidden');
+  }
+  function finishDuo() {
+    const n = duoPlan.done.length;
+    const report = [`【东玄六爻 · 分占连断回报】问「${duoPlan.fkLabel}」,分 ${n} 卦分占,每卦只断其分项。` + genderReportLine()]
+      .concat(duoPlan.done.map((d, i) => `\n——第${i + 1}卦 · ${d.k}(${d.q})——\n${d.report}`)).join('\n');
+    const rules = `【分占连断规则】同一大事拆成 ${n} 个分项,各占一卦。铁律:每卦只回答其标注的分项,禁止把甲卦的结论挪到乙分项(一卦一断);逐项断完后,末尾用三五句总揽全局(只综合各分项已得结论,不另生新断)。每个分项都要落到具体:时间给旬/月、钱给数字区间、人给画像。`;
+    const material = `【卦法:六爻 · 分占连断(${duoPlan.fkLabel})】\n` + rules + genderMaterialLine() +
+      duoPlan.done.map((d, i) => `\n\n——第${i + 1}卦 · 分项「${d.k}」(所问:${d.q})——\n${d.report}\n【经文取材】\n${d.jing}`).join('') +
+      '\n\n请按上述规则逐项细断后总揽。';
+    // 总览渲染(盘面保留最后一卦,解读区改为逐卦总览)
+    $('headline').textContent = `分占连断 · ${duoPlan.fkLabel} · 共 ${n} 卦`;
+    $('v-lv').textContent = '连占';
+    $('v-dx').textContent = duoPlan.done.map(d => `${d.k}【${d.r.level}】`).join(' · ');
+    $('v-src').textContent = '各分项逐卦断语见下;上方卦象与排盘为最后一卦之盘面';
+    $('focus').innerHTML = duoPlan.done.map((d, i) =>
+      `<div class="fblock"><div class="k">第${i + 1}卦 · ${esc(d.k)}【${esc(d.r.level)}】 ${esc(d.r.headline)}</div><div class="t">${esc(d.r.dx)}</div></div>`).join('');
+    const recId = saveRec({
+      method: '六爻·分占', question: `${duoPlan.fkLabel}(分占${n}卦)`,
+      headline: duoPlan.done.map(d => `${d.k}:${d.r.level}`).join(' '),
+      level: `连占${n}卦`, dx: $('v-dx').textContent, report,
+    });
+    works.liuyao = { method: '六爻·分占', material, report, recId, noFenkeAi: true, q: duoPlan.mainQ };
+    results.liuyao = true;
+    $('question').value = duoPlan.mainQ;
+    $('duo-status').textContent = `分占连断完成:${n} 卦已齐。可直接请东玄深断——逐项细批,末尾总揽。`;
+    duoPlan = null;
+    refreshTab();
   }
 
   // —— 纳甲排盘 ——
@@ -798,9 +899,9 @@
 
     let turns;
     if (!followupText) {
-      const q = $('question').value.trim();
+      const q = w.q || $('question').value.trim();
       if (!q) { setStatus('深断需先填「所问何事」——问卦无题,断无所指。', true); return; }
-      const material = w.material + (curFenke ? '\n' + curFenke.ai : '') +
+      const material = w.material + ((curFenke && !w.noFenkeAi) ? '\n' + curFenke.ai : '') +
         '\n' + nowAnchor() + '\n' + ANTI_JARGON + `\n(所问之事以此为准:${q})`;
       turns = [{ role: 'user', content: material }];
     } else {
@@ -934,9 +1035,9 @@
       `互卦:${cast.hu.full}`,
       `变卦:${cast.bian.full}`,
       `体用断:${a.rel},${a.lv}。${a.wang}`,
-      `我要问的事:${q || '(未填写)'}`,
+      `我要问的事:${q || '(未填写)'}` + genderReportLine(),
     ].join('\n');
-    const material = '【卦法:梅花易数】\n' + report +
+    const material = '【卦法:梅花易数】\n' + report + genderMaterialLine() +
       `\n经文:本卦辞「${cast.ben.guaCi}」;动爻辞「${cast.ben.yaoCi[cast.moving - 1]}」;变卦辞「${cast.bian.guaCi}」` +
       '\n' + MH_RULES + '\n请依上述卦象与所问细断。';
     const recId = saveRec({
@@ -981,9 +1082,9 @@
       `起课:${c.how}`,
       `三宫:月宫${c.gongs[0].name}(因)→ 日宫${c.gongs[1].name}(过程)→ 时宫${c.gongs[2].name}(果)`,
       `主断:时宫${g3.name},${g3.ji}`,
-      `我要问的事:${q || '(未填写)'}`,
+      `我要问的事:${q || '(未填写)'}` + genderReportLine(),
     ].join('\n');
-    const material = '【卦法:小六壬(马前课)】\n' + report +
+    const material = '【卦法:小六壬(马前课)】\n' + report + genderMaterialLine() +
       '\n三宫诗诀:\n' + c.gongs.map((g, i) => `${caps[i]} ${g.name}(${g.wx},${g.shen}):${g.verse}`).join('\n') +
       '\n' + XLR_RULES + '\n请依上述课象与所问细断。';
     const recId = saveRec({
@@ -1031,9 +1132,9 @@
       `<br>日干代表你自己、时干代表所问之事,深断时东玄会据此把方位、时机、成败落到大白话。`;
     const report = [
       Qimen.report(c).trimEnd(),
-      `我要问的事:${q || '(未填写)'}`,
+      `我要问的事:${q || '(未填写)'}` + genderReportLine(),
     ].join('\n');
-    const material = '【卦法:奇门遁甲(时家·转盘·拆补)】\n' + report + '\n' + QM_RULES + '\n请依上述奇门局与所问细断。';
+    const material = '【卦法:奇门遁甲(时家·转盘·拆补)】\n' + report + genderMaterialLine() + '\n' + QM_RULES + '\n请依上述奇门局与所问细断。';
     const recId = saveRec({
       method: '奇门', question: q,
       headline: `${c.dun}·${c.jieqi}${c.yuan},事宫${v.name}${v.gate}`,
@@ -1095,9 +1196,11 @@
     curPick = { method: r.method, mode: r.mode };
     $('question').value = curFenke.q;
     curTab = r.method;
+    cancelDuo();
     if (r.method === 'liuyao') {
       const el = document.querySelector(`input[name=ly-mode][value=${r.mode}]`);
       if (el) el.checked = true;
+      offerDuo(curFenke);
     } else if (r.method === 'meihua') {
       const el = document.querySelector(`input[name=mh-mode][value=${r.mode}]`);
       if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
@@ -1166,6 +1269,10 @@
   $('btn-step').addEventListener('click', tossOnce);
   $('btn-auto').addEventListener('click', autoCast);
   $('btn-reset').addEventListener('click', () => resetBoard(true));
+  $('btn-duo-start').addEventListener('click', startDuo);
+  $('btn-duo-single').addEventListener('click', () => $('duo-offer').classList.add('hidden'));
+  if (localStorage.getItem(GKEY)) $('q-gender').value = localStorage.getItem(GKEY);
+  $('q-gender').addEventListener('change', () => localStorage.setItem(GKEY, $('q-gender').value));
   $('btn-copy').addEventListener('click', async () => {
     const txt = $('report').value;
     try { await navigator.clipboard.writeText(txt); $('btn-copy').textContent = '已复制 ✓'; }

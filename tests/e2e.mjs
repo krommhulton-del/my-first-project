@@ -220,6 +220,43 @@ await t('分科可改选非首选方法(搬家改选六爻)', async () => {
   ok(await page.locator('#sec-cast').isVisible(), '改选六爻后应切到六爻面板');
 });
 
+await t('性别选项:选男起卦,回报注明问卦人;持久化', async () => {
+  await page.click('.tabs button[data-m=liuyao]');
+  await page.selectOption('#q-gender', '男');
+  await page.fill('#question', '性别口径内测一问');
+  await page.check('input[name=ly-mode][value=coin]');
+  await page.click('#btn-auto');
+  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:男'), null, { timeout: 9000 });
+  const rep = await page.inputValue('#report');
+  ok(rep.includes('问卦人:男'), '回报应注明性别');
+  await page.reload({ waitUntil: 'load' });
+  ok((await page.inputValue('#q-gender')) === '男', '性别应持久化');
+  await page.selectOption('#q-gender', '');
+});
+
+await t('分占连断:月运选六爻,五卦连占出合并回报与总览', async () => {
+  await page.click('.fk[data-id=yueyun]');
+  const opts = page.locator('#fk-recommend .mopt');
+  const labels = await opts.locator('.mname').allTextContents();
+  const li = labels.indexOf('六爻');
+  ok(li >= 0, '月运应含六爻可选:' + labels.join(','));
+  await opts.nth(li).click();
+  ok(!(await page.locator('#duo-offer').evaluate(el => el.classList.contains('hidden'))), '应出现分占连断提议');
+  await page.click('#btn-duo-start');
+  for (let i = 0; i < 5; i++) {
+    await page.waitForFunction(n => document.getElementById('duo-status').textContent.includes(`${n}/5`), i + 1, { timeout: 9000 });
+    await page.click('#btn-auto');
+  }
+  await page.waitForFunction(() => document.getElementById('duo-status').textContent.includes('完成'), null, { timeout: 20000 });
+  const rep = await page.inputValue('#report');
+  ok(rep.startsWith('【东玄六爻 · 分占连断回报】'), rep.split('\n')[0]);
+  for (const k of ['总基调', '财运', '事业', '感情人缘', '健康家宅']) ok(rep.includes(k), '回报含分项 ' + k);
+  ok((await page.locator('#headline').textContent()).includes('分占连断'), '解读区出总览');
+  ok((await page.locator('#focus .fblock').count()) === 5, '总览五个分项块');
+  ok((await page.locator('#histlist .badge').allTextContents()).some(b => b.includes('分占')), '卦档含分占徽记');
+  await page.click('.fk[data-id=yueyun]'); // 收起分科
+});
+
 await t('分科日运首选小六壬、年运首选蓍草', async () => {
   await page.click('.fk[data-id=riyun]');
   const ri = page.locator('#fk-recommend .mopt').first();

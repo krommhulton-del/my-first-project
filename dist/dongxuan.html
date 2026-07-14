@@ -209,6 +209,12 @@
   .qmcell .qpos { font-size: .72rem; color: var(--dim); letter-spacing: .1em; }
   .qm-legend { color: var(--dim); font-size: .78rem; margin-top: 8px; line-height: 1.6; }
   .qm-legend .sky { color: var(--cinnabar); } .qm-legend .earth { color: var(--gold); }
+  .qrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .qrow input[type=text] { flex: 1 1 240px; }
+  #q-gender { flex: 0 0 auto; }
+  #duo-offer { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
+  #duo-offer .duo-title { color: var(--dim); font-size: .9rem; margin-bottom: 8px; line-height: 1.7; }
+  #duo-status { margin-top: 10px; color: var(--cinnabar); font-size: .95rem; letter-spacing: .03em; line-height: 1.7; }
   @media (max-width: 560px) {
     .qmcell { min-height: 82px; padding: 6px 3px; }
     .qmcell .qgan { font-size: .92rem; } .qmcell .qstar, .qmcell .qgate { font-size: .78rem; }
@@ -235,7 +241,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.10</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.11</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -255,7 +261,15 @@
 
   <section id="sec-q">
     <h2>所 问 何 事</h2>
-    <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
+    <div class="qrow">
+      <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
+      <select id="q-gender" title="问卦人性别,选填;问婚恋、看人时影响断法口径">
+        <option value="">性别·选填</option>
+        <option value="男">我是男</option>
+        <option value="女">我是女</option>
+      </select>
+    </div>
+    <div class="note">问感情婚恋、看某个人这类,选上性别断得更准(男女看的门道不同);其余问题可不填。</div>
   </section>
 
   <section id="sec-cast">
@@ -269,6 +283,14 @@
       <button id="btn-auto" class="primary">一键成卦(连掷六爻)</button>
       <button id="btn-reset" class="ghost">清盘重掷</button>
     </div>
+    <div id="duo-offer" class="hidden">
+      <div class="duo-title" id="duo-title"></div>
+      <div class="btnrow">
+        <button id="btn-duo-start" class="primary"></button>
+        <button id="btn-duo-single" class="ghost">就用单卦总断</button>
+      </div>
+    </div>
+    <div id="duo-status" class="hidden"></div>
     <div class="tosslog" id="tosslog"></div>
   </section>
 
@@ -424,7 +446,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.10 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.11 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script>
@@ -3333,9 +3355,16 @@
       ai: '奇门以此人用神落宫之方位、所乘门星神断其当下所在场合与动静状态;小六壬以时宫之象断动静。必须给:大概在哪个方向或什么场合、正在忙什么、状态好不好、这会儿要不要联系他,四项。' },
 
     // ——— 看某个人 ———
-    { id: 'zhangxiang', group: '看某个人', label: '长相身材', q: '这个人长相身材什么样?(占前心里锁定其人)',
-      recommend: [LY(3, '首选', '六爻五行定形、六神定神态,画像最细。')],
-      ai: '取其人用神(问对方一般以应爻或所属六亲)。五行定形体(木瘦长、火尖赤、土敦厚矮、金方白、水圆润),六神定气质,爻位定高矮,旺衰定胖瘦。必须给:身高档、体型、脸型肤色、气质神态、年龄段,五项。' },
+    { id: 'shengao', group: '看某个人', label: '身高几何', q: '这个人身高大概多少?(占前心里锁定其人)',
+      recommend: [LY(3, '首选', '六爻五行定基调、爻位定档、旺衰加减,身高可落到厘米区间。')],
+      note: '专断身高一项,断得最死;要看整体形象请分开再占「长相」「身材」。',
+      ai: '专断身高一项,别的不答。取其人用神,五行定基调:木主高挑颀长、火主中上挺拔、土主敦实偏矮、金主中等匀称、水主中下圆润;爻位定档:五爻上爻加高、三四爻中平、初二爻偏矮;旺衰加减:旺相加半档到一档、休囚死减半档,动化进神再加、化退减。已注明性别的按男女各自标准换算(如男175-182、女162-168这种口径)。必须给:具体厘米区间(跨度不超8厘米)、在人群里算高算中算矮、腿长坐高比例一句、看上去显高还是显矮,四项。' },
+    { id: 'zhangxiang', group: '看某个人', label: '长相相貌', q: '这个人长什么样?(只看脸,占前心里锁定其人)',
+      recommend: [LY(3, '首选', '六爻五行定脸型肤色、六神定神态,面相画得最细。')],
+      ai: '专断脸,不断身。取其人用神,五行定脸型肤色:木长脸偏青黄、火下巴偏尖带红气、土面方圆偏黄、金白净方正、水面圆润偏黑;六神定神态气质:青龙清正端方、朱雀眉眼灵动话多、勾陈老实相、螣蛇眼神多思带算计、白虎带煞气硬朗、玄武眉眼含糊暧昧;旺衰定精气神足不足。必须给:脸型、五官两三笔、肤色、气质神态、颜值档(上中下),五项。' },
+    { id: 'shencai', group: '看某个人', label: '身材体型', q: '这个人身材体型怎么样?(占前心里锁定其人)',
+      recommend: [LY(3, '首选', '六爻五行定骨架、旺衰定胖瘦、六神定体态。')],
+      ai: '专断身材体型,不断脸不断身高。取其人用神,五行定骨架:木细长、火削肩窄背、土厚实宽横、金方正匀称、水圆软;旺衰定胖瘦:旺相丰隆壮实、休囚清瘦、逢生渐胖、被克紧实或干瘪;六神定体态:青龙挺拔、朱雀灵活、勾陈墩实、螣蛇纤曲、白虎虎背熊腰、玄武含胸肉感。必须给:胖瘦档、肩背腰腿各一笔、体态好不好看、穿衣显不显身材,四项。' },
     { id: 'xingge', group: '看某个人', label: '性格人品', q: '这个人性格人品怎么样?',
       recommend: [LY(3, '首选', '六爻六神与用神动静,秉性厚薄看得出。')],
       ai: '用神配六神与五行:青龙端方、朱雀伶俐话多、勾陈稳钝、螣蛇多心机、白虎刚烈、玄武暧昧;用神旺静主稳、乱动逢冲主浮。必须给:性子直爽还是深、靠不靠得住、脾气软硬、待人厚薄,四项,只说这人本身不替你下结论。' },
@@ -3351,14 +3380,35 @@
       recommend: [XL(3, '首选', '马前课本为当日决断之术,最快最应。'), MH(2, '次选', '梅花时间卦分早中晚三段。', 'time')],
       ai: '小六壬三宫断今日上午/午间/收尾,主断时宫;宫之五行配吉时吉方。必须给:今日总评一句、宜做与忌做各两件、吉时(具体钟点段)、吉方、防一件事,五项。' },
     { id: 'yueyun', group: '运势时运', label: '本月运', q: '我这个月运势怎么样?',
-      recommend: [MH(3, '首选', '梅花时间卦本互变正好铺满月初中末,起伏一目了然。', 'time'), LY(2, '次选', '六爻以用神旺衰与动应定本月吉凶节点。')],
-      ai: '本卦为月初主调、互卦为月中、变卦为月末;分事业财运感情健康四路各一句。高低点落到上/中/下旬。必须给:总评、四路各一句、高点旬、低点旬、本月最该抓的一件事。' },
+      recommend: [MH(3, '首选', '梅花时间卦本互变对应月初中末,一卦看整月节奏最顺。', 'time'), LY(2, '次选', '六爻走分占连断:总、财、事业、感情、健康各占一卦,一卦一断,分路最细。'), QM(2, '次选', '奇门一盘全息,九宫各路用神同览,一局总览本月大势。')],
+      note: '月运跨三十天、含多路事,超出单卦信息量。规矩:看整月「节奏」用梅花(本互变正好对应月初中末);要「分路」细看选六爻,会引导你分占连断(五卦各管一路,互不串卦);奇门一盘多断则总览全局。',
+      duo: { subs: [
+        { k: '总基调', q: '我这个月整体运势的主调如何?' },
+        { k: '财运', q: '我这个月钱财进出如何?' },
+        { k: '事业', q: '我这个月工作事业顺不顺?' },
+        { k: '感情人缘', q: '我这个月感情与人缘如何?' },
+        { k: '健康家宅', q: '我这个月身体与家里状况如何?' } ] },
+      ai: '若为梅花:本卦为月初主调、互卦为月中、变卦为月末,分事业财运感情健康四路各一句,高低点落到上/中/下旬。若为六爻分占连断:每卦只断其标注分项,断完总揽。必须给:总评、各路各一句、高点旬、低点旬、本月最该抓的一件事。' },
     { id: 'nianyun', group: '运势时运', label: '今年运', q: '我今年一年大势怎么样?',
-      recommend: [LY(3, '首选', '岁占大事用蓍草,内外卦分上下半年,六亲照见五路。', 'dayan'), LY(2, '次选', '三钱六爻同断年运,快捷。')],
-      ai: '内卦主上半年、外卦主下半年,动爻之季为转折;六亲齐观财官父子兄五路。吉凶月以爻支应期列出。必须给:年度总基调一句、上下半年各一段、钱/事业/感情/家宅健康各一句、吉月凶月清单、全年最大机会与最大坑各一。' },
+      recommend: [LY(3, '首选', '岁占大事用蓍草,内外卦分上下半年,六亲照见五路。', 'dayan'), LY(2, '次选', '三钱六爻同断年运,快捷;分占连断五卦则各路更细。'), QM(2, '次选', '奇门一盘同览多路,岁运总览亦可。')],
+      note: '年运一卦看五路是粗览;要细就走分占连断(五卦各管一路,一卦一断);岁占郑重其事,古法推蓍草。',
+      duo: { subs: [
+        { k: '总基调', q: '我今年整体运势的主调如何?' },
+        { k: '财运', q: '我今年钱财进出如何?' },
+        { k: '事业', q: '我今年事业发展如何?' },
+        { k: '感情人缘', q: '我今年感情与人缘如何?' },
+        { k: '健康家宅', q: '我今年健康与家宅如何?' } ] },
+      ai: '内卦主上半年、外卦主下半年,动爻之季为转折;六亲齐观财官父子兄五路;若为分占连断则每卦只断其分项。吉凶月以爻支应期列出。必须给:年度总基调一句、上下半年各一段、钱/事业/感情/家宅健康各一句、吉月凶月清单、全年最大机会与最大坑各一。' },
     { id: 'zonghe', group: '运势时运', label: '当下综合运', q: '我当下整体运势怎么样?',
-      recommend: [LY(3, '首选', '六爻六亲俱全,一卦照见财官父子兄五路。')],
-      ai: '世为元气总盘,财官父子兄五路各断一句。最旺一路点明可乘、最凶一路点明须防,六神配世断当下心境。必须给:总评一句、五路各一句、最旺一路怎么用、最凶一路怎么防、一条调整建议。' },
+      recommend: [LY(3, '首选', '六爻六亲俱全,一卦照见财官父子兄五路;分占连断则各路更细。'), QM(2, '次选', '奇门一盘全息,九宫同览多路,复杂多面之问一局总览。')],
+      note: '综合运含多路事:一卦粗览五路可以,要细看选六爻后走分占连断(五卦各管一路)。',
+      duo: { subs: [
+        { k: '总基调', q: '我最近这阵子整体运势的主调如何?' },
+        { k: '财运', q: '我最近这阵子钱财进出如何?' },
+        { k: '事业', q: '我最近这阵子工作事业顺不顺?' },
+        { k: '感情人缘', q: '我最近这阵子感情与人缘如何?' },
+        { k: '健康家宅', q: '我最近这阵子身体与家里状况如何?' } ] },
+      ai: '世为元气总盘,财官父子兄五路各断一句;若为分占连断则每卦只断其分项。最旺一路点明可乘、最凶一路点明须防,六神配世断当下心境。必须给:总评一句、五路各一句、最旺一路怎么用、最凶一路怎么防、一条调整建议。' },
 
     // ——— 决策与择时 ———
     { id: 'gaibugai', group: '决策与择时', label: '该不该做', q: '这件事,我到底该做还是不该做?',
@@ -3400,6 +3450,16 @@
   let currentCast = null;
   let currentZhuang = null;
   let aiBusy = false;
+  let duoPlan = null;    // 分占连断:{fkLabel, subs:[{k,q}], idx, done:[{k,q,cast,z,r,report,jing}]}
+
+  // —— 问卦人性别(选填,影响取用神与画像口径)——
+  const GKEY = 'dongxuan_gender';
+  function gender() { return $('q-gender').value; }
+  function genderReportLine() { const g = gender(); return g ? `\n问卦人:${g}` : ''; }
+  function genderMaterialLine() {
+    const g = gender();
+    return g ? `\n【问卦人性别:${g}】凡涉婚恋对方、看人画像、称谓口径,均按此性别推断(男问姻缘以妻财为对方,女以官鬼为对方;身高长相等画像按对应性别标准换算)。` : '';
+  }
 
   // —— 法门状态 ——
   let curTab = 'liuyao';
@@ -3442,7 +3502,7 @@
   }
   function autoCast() {
     if (throws.length > 0 && throws.length < 6) return; // 逐掷中途不允许一键
-    resetBoard(false);
+    resetBoard(false, true);
     let i = 0;
     $('btn-auto').disabled = true; $('btn-step').disabled = true;
     const timer = setInterval(() => {
@@ -3461,22 +3521,91 @@
     renderGua(cast);
     renderReading(cast);
     renderPan(cast, currentZhuang);
-    const method = dayan ? '六爻·蓍草' : '六爻';
-    const report = GuaCore.buildReport(cast, q) + '\n' + panText(cast, currentZhuang) +
-      (dayan ? '\n(起卦法:蓍草大衍筮法)' : '');
-    const material = buildMaterial(cast, currentZhuang, q) + (dayan ? '\n(本卦以蓍草大衍法揲得)' : '');
     const r = GuaCore.interpret(cast);
+    if (duoPlan) { // 分占连断:存本分项之卦,续掷或收官
+      const sub = duoPlan.subs[duoPlan.idx];
+      const plan = GuaCore.interpretationPlan(cast);
+      duoPlan.done.push({
+        k: sub.k, q, cast, z: currentZhuang, r,
+        report: GuaCore.buildReport(cast, q) + '\n' + panText(cast, currentZhuang),
+        jing: plan.focus.map(f => `${f.kind}:${f.text}`).join('\n'),
+      });
+      duoPlan.idx++;
+      results.liuyao = true;
+      if (duoPlan.idx < duoPlan.subs.length) { throws = []; renderTossLog(); duoStep(); refreshTab(); return; }
+      finishDuo(); return;
+    }
+    const method = dayan ? '六爻·蓍草' : '六爻';
+    const report = GuaCore.buildReport(cast, q) + genderReportLine() + '\n' + panText(cast, currentZhuang) +
+      (dayan ? '\n(起卦法:蓍草大衍筮法)' : '');
+    const material = buildMaterial(cast, currentZhuang, q) + genderMaterialLine() + (dayan ? '\n(本卦以蓍草大衍法揲得)' : '');
     const recId = saveRec({ method, question: q, headline: r.headline, level: r.level, dx: r.dx, report, cast });
     works.liuyao = { method, material, report, recId };
     results.liuyao = true;
     refreshTab();
   }
-  function resetBoard(clearQ) {
+  function resetBoard(clearQ, keepDuo) {
     throws = []; currentCast = null; currentZhuang = null;
     renderTossLog();
     works.liuyao = null; results.liuyao = false;
+    if (!keepDuo) cancelDuo();
     refreshTab();
     if (clearQ) $('question').value = '';
+  }
+
+  // —— 分占连断:复杂之问(月运/年运/综合运)拆分项各占一卦,一卦一断 ——
+  function offerDuo(fk) {
+    if (!(fk && fk.duo)) { $('duo-offer').classList.add('hidden'); return; }
+    $('duo-title').textContent = `「${fk.label}」跨面广,单卦装不下所有分项。可走分占连断:${fk.duo.subs.map(s => s.k).join('、')},共 ${fk.duo.subs.length} 卦各管一路,一卦一断互不串,断得更细。`;
+    $('btn-duo-start').textContent = `分占连断(${fk.duo.subs.length} 卦)`;
+    $('duo-offer').classList.remove('hidden');
+  }
+  function startDuo() {
+    if (!(curFenke && curFenke.duo)) return;
+    duoPlan = { fkLabel: curFenke.label, mainQ: curFenke.q, subs: curFenke.duo.subs, idx: 0, done: [] };
+    throws = []; currentCast = null; currentZhuang = null; renderTossLog();
+    works.liuyao = null; results.liuyao = false;
+    $('duo-offer').classList.add('hidden');
+    duoStep();
+    refreshTab();
+  }
+  function duoStep() {
+    const s = duoPlan.subs[duoPlan.idx];
+    $('question').value = s.q;
+    $('duo-status').textContent = `分占连断 ${duoPlan.idx + 1}/${duoPlan.subs.length} · 本卦占「${s.k}」:${s.q} —— 心里默念,点「一键成卦」`;
+    $('duo-status').classList.remove('hidden');
+  }
+  function cancelDuo() {
+    duoPlan = null;
+    $('duo-status').classList.add('hidden');
+    $('duo-offer').classList.add('hidden');
+  }
+  function finishDuo() {
+    const n = duoPlan.done.length;
+    const report = [`【东玄六爻 · 分占连断回报】问「${duoPlan.fkLabel}」,分 ${n} 卦分占,每卦只断其分项。` + genderReportLine()]
+      .concat(duoPlan.done.map((d, i) => `\n——第${i + 1}卦 · ${d.k}(${d.q})——\n${d.report}`)).join('\n');
+    const rules = `【分占连断规则】同一大事拆成 ${n} 个分项,各占一卦。铁律:每卦只回答其标注的分项,禁止把甲卦的结论挪到乙分项(一卦一断);逐项断完后,末尾用三五句总揽全局(只综合各分项已得结论,不另生新断)。每个分项都要落到具体:时间给旬/月、钱给数字区间、人给画像。`;
+    const material = `【卦法:六爻 · 分占连断(${duoPlan.fkLabel})】\n` + rules + genderMaterialLine() +
+      duoPlan.done.map((d, i) => `\n\n——第${i + 1}卦 · 分项「${d.k}」(所问:${d.q})——\n${d.report}\n【经文取材】\n${d.jing}`).join('') +
+      '\n\n请按上述规则逐项细断后总揽。';
+    // 总览渲染(盘面保留最后一卦,解读区改为逐卦总览)
+    $('headline').textContent = `分占连断 · ${duoPlan.fkLabel} · 共 ${n} 卦`;
+    $('v-lv').textContent = '连占';
+    $('v-dx').textContent = duoPlan.done.map(d => `${d.k}【${d.r.level}】`).join(' · ');
+    $('v-src').textContent = '各分项逐卦断语见下;上方卦象与排盘为最后一卦之盘面';
+    $('focus').innerHTML = duoPlan.done.map((d, i) =>
+      `<div class="fblock"><div class="k">第${i + 1}卦 · ${esc(d.k)}【${esc(d.r.level)}】 ${esc(d.r.headline)}</div><div class="t">${esc(d.r.dx)}</div></div>`).join('');
+    const recId = saveRec({
+      method: '六爻·分占', question: `${duoPlan.fkLabel}(分占${n}卦)`,
+      headline: duoPlan.done.map(d => `${d.k}:${d.r.level}`).join(' '),
+      level: `连占${n}卦`, dx: $('v-dx').textContent, report,
+    });
+    works.liuyao = { method: '六爻·分占', material, report, recId, noFenkeAi: true, q: duoPlan.mainQ };
+    results.liuyao = true;
+    $('question').value = duoPlan.mainQ;
+    $('duo-status').textContent = `分占连断完成:${n} 卦已齐。可直接请东玄深断——逐项细批,末尾总揽。`;
+    duoPlan = null;
+    refreshTab();
   }
 
   // —— 纳甲排盘 ——
@@ -3752,9 +3881,9 @@
 
     let turns;
     if (!followupText) {
-      const q = $('question').value.trim();
+      const q = w.q || $('question').value.trim();
       if (!q) { setStatus('深断需先填「所问何事」——问卦无题,断无所指。', true); return; }
-      const material = w.material + (curFenke ? '\n' + curFenke.ai : '') +
+      const material = w.material + ((curFenke && !w.noFenkeAi) ? '\n' + curFenke.ai : '') +
         '\n' + nowAnchor() + '\n' + ANTI_JARGON + `\n(所问之事以此为准:${q})`;
       turns = [{ role: 'user', content: material }];
     } else {
@@ -3888,9 +4017,9 @@
       `互卦:${cast.hu.full}`,
       `变卦:${cast.bian.full}`,
       `体用断:${a.rel},${a.lv}。${a.wang}`,
-      `我要问的事:${q || '(未填写)'}`,
+      `我要问的事:${q || '(未填写)'}` + genderReportLine(),
     ].join('\n');
-    const material = '【卦法:梅花易数】\n' + report +
+    const material = '【卦法:梅花易数】\n' + report + genderMaterialLine() +
       `\n经文:本卦辞「${cast.ben.guaCi}」;动爻辞「${cast.ben.yaoCi[cast.moving - 1]}」;变卦辞「${cast.bian.guaCi}」` +
       '\n' + MH_RULES + '\n请依上述卦象与所问细断。';
     const recId = saveRec({
@@ -3935,9 +4064,9 @@
       `起课:${c.how}`,
       `三宫:月宫${c.gongs[0].name}(因)→ 日宫${c.gongs[1].name}(过程)→ 时宫${c.gongs[2].name}(果)`,
       `主断:时宫${g3.name},${g3.ji}`,
-      `我要问的事:${q || '(未填写)'}`,
+      `我要问的事:${q || '(未填写)'}` + genderReportLine(),
     ].join('\n');
-    const material = '【卦法:小六壬(马前课)】\n' + report +
+    const material = '【卦法:小六壬(马前课)】\n' + report + genderMaterialLine() +
       '\n三宫诗诀:\n' + c.gongs.map((g, i) => `${caps[i]} ${g.name}(${g.wx},${g.shen}):${g.verse}`).join('\n') +
       '\n' + XLR_RULES + '\n请依上述课象与所问细断。';
     const recId = saveRec({
@@ -3985,9 +4114,9 @@
       `<br>日干代表你自己、时干代表所问之事,深断时东玄会据此把方位、时机、成败落到大白话。`;
     const report = [
       Qimen.report(c).trimEnd(),
-      `我要问的事:${q || '(未填写)'}`,
+      `我要问的事:${q || '(未填写)'}` + genderReportLine(),
     ].join('\n');
-    const material = '【卦法:奇门遁甲(时家·转盘·拆补)】\n' + report + '\n' + QM_RULES + '\n请依上述奇门局与所问细断。';
+    const material = '【卦法:奇门遁甲(时家·转盘·拆补)】\n' + report + genderMaterialLine() + '\n' + QM_RULES + '\n请依上述奇门局与所问细断。';
     const recId = saveRec({
       method: '奇门', question: q,
       headline: `${c.dun}·${c.jieqi}${c.yuan},事宫${v.name}${v.gate}`,
@@ -4049,9 +4178,11 @@
     curPick = { method: r.method, mode: r.mode };
     $('question').value = curFenke.q;
     curTab = r.method;
+    cancelDuo();
     if (r.method === 'liuyao') {
       const el = document.querySelector(`input[name=ly-mode][value=${r.mode}]`);
       if (el) el.checked = true;
+      offerDuo(curFenke);
     } else if (r.method === 'meihua') {
       const el = document.querySelector(`input[name=mh-mode][value=${r.mode}]`);
       if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
@@ -4120,6 +4251,10 @@
   $('btn-step').addEventListener('click', tossOnce);
   $('btn-auto').addEventListener('click', autoCast);
   $('btn-reset').addEventListener('click', () => resetBoard(true));
+  $('btn-duo-start').addEventListener('click', startDuo);
+  $('btn-duo-single').addEventListener('click', () => $('duo-offer').classList.add('hidden'));
+  if (localStorage.getItem(GKEY)) $('q-gender').value = localStorage.getItem(GKEY);
+  $('q-gender').addEventListener('change', () => localStorage.setItem(GKEY, $('q-gender').value));
   $('btn-copy').addEventListener('click', async () => {
     const txt = $('report').value;
     try { await navigator.clipboard.writeText(txt); $('btn-copy').textContent = '已复制 ✓'; }
