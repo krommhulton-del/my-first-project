@@ -285,7 +285,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.21</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.22</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
     <p class="guide"><b>怎么用:</b>① 填问卦人 → ② 在分科里挑要问的事(或直接往下写问题)→ ③ 起卦看解读 → ④ 请东玄深断、可追问。一句话装不下的大问用底部「大问拆阵」;近来不顺想调一调,用「转运」。<br><b>按钮颜色:</b>红色=起卦 · 金色=请东玄细断(需AI) · 灰色=辅助操作。</p>
   </header>
@@ -574,7 +574,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.21 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.22 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -668,8 +668,16 @@
   }
 
   // —— 起卦 ——
+  // 分占连断刚完成时防误掷:再掷会顶掉整套结果,先问一声
+  function guardDuoOverwrite() {
+    if (!duoPlan && works.liuyao && works.liuyao.method === '六爻·分占') {
+      return confirm('上一套分占连断的结果还在(可先请东玄深断)。再掷会另起新卦、顶掉它——确定继续吗?');
+    }
+    return true;
+  }
   function tossOnce() {
     if (throws.length >= 6) return;
+    if (throws.length === 0 && !guardDuoOverwrite()) return;
     const dayan = document.querySelector('input[name=ly-mode]:checked').value === 'dayan';
     const line = dayan ? GuaCore.dayanLine() : GuaCore.tossLine();
     throws.push(line);
@@ -678,6 +686,7 @@
   }
   function autoCast() {
     if (throws.length > 0 && throws.length < 6) return; // 逐掷中途不允许一键
+    if (!guardDuoOverwrite()) return;
     resetBoard(false, true);
     let i = 0;
     $('btn-auto').disabled = true; $('btn-step').disabled = true;
@@ -784,8 +793,9 @@
     });
     works.liuyao = { method: '六爻·分占', material, report, recId, noFenkeAi: true, q: duoPlan.mainQ };
     results.liuyao = true;
-    $('question').value = duoPlan.mainQ;
-    $('duo-status').textContent = `分占连断完成:${n} 卦已齐。可直接请东玄深断——逐项细批,末尾总揽。`;
+    throws = []; renderTossLog();
+    $('question').value = '';
+    $('duo-status').textContent = `分占连断完成:${n} 卦已齐,问题已收好。直接请东玄深断即可——逐项细批,末尾总揽;不用再掷。`;
     duoPlan = null;
     refreshTab();
   }

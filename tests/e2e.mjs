@@ -268,6 +268,12 @@ await t('分占连断:月运选六爻,六卦连占(含验证卦)出合并回报�
   ok((await page.locator('#headline').textContent()).includes('分占连断'), '解读区出总览');
   ok((await page.locator('#focus .fblock').count()) === 6, '总览六个分项块(含验证)');
   ok((await page.locator('#histlist .badge').allTextContents()).some(b => b.includes('分占')), '卦档含分占徽记');
+  // 完成后防误掷:问题框清空;再掷需确认,取消则不掷
+  ok((await page.inputValue('#question')) === '', '连断完成后问题框应清空');
+  page.once('dialog', d => d.dismiss());
+  await page.click('#btn-auto');
+  await page.waitForTimeout(400);
+  ok((await page.locator('#tosslog .toss').count()) === 0, '未确认时不应再掷');
   await page.click('.fk[data-id=yueyun]'); // 收起分科
 });
 
