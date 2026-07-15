@@ -196,6 +196,10 @@ t('旺衰相性:人/城/司/宅四科,五卦分路、档位结论;核心运势�
   const yc = Fenke.FENKE.find(f => f.id === 'yunshi_core');
   ok(yc && yc.rangeInput === true, '核心运势应支持选时段');
   ok(yc.ai.includes('双轨') && yc.ai.includes('高点'), '核心运势规程须双轨与高低点');
+  ok(yc.duo && yc.duo.subs.length === 6, '核心运势应有六卦分路');
+  ok(yc.duo.subs.every(s2 => s2.q.includes('«T»')), '六卦问句均应带时段占位');
+  ok(yc.duo.subs[yc.duo.subs.length - 1].k === '验证', '末卦应为验证');
+  ok(yc.duo.rules.includes('画面感') || yc.duo.rules.includes('比喻'), '规程须要求画面感,忌流水账');
 });
 t('问数问期专类:五卦互证、复筮取交集、验证收尾', () => {
   ok(Fenke.GROUPS.includes('问数问期'), '应有问数问期分组');

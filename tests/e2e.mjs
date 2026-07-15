@@ -415,6 +415,13 @@ await t('核心运势选时段:近一月/指定某年,问题自动重组', async
   await page.fill('#fk-year', '2028');
   await page.locator('#fk-recommend .mopt').first().click();
   ok((await page.inputValue('#question')).includes('2028年运势'), '问题应带年份:' + (await page.inputValue('#question')));
+  // 六卦分路连断:时段短语代入每一卦
+  ok(!(await page.locator('#duo-offer').evaluate(el => el.classList.contains('hidden'))), '核心运势应提议分占');
+  await page.click('#btn-duo-start');
+  await page.waitForFunction(() => document.getElementById('duo-status').textContent.includes('1/6'), null, { timeout: 5000 });
+  ok((await page.inputValue('#question')).includes('2028年') && (await page.inputValue('#question')).includes('主调'), '第一卦应带时段:' + (await page.inputValue('#question')));
+  await page.click('#btn-reset');
+  await expandGroups();
   await page.click('.fk[data-id=yunshi_core]');
 });
 

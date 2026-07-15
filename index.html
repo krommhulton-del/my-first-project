@@ -285,7 +285,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.24</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.25</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
     <p class="guide"><b>怎么用:</b>① 填问卦人 → ② 在分科里挑要问的事(或直接往下写问题)→ ③ 起卦看解读 → ④ 请东玄深断、可追问。一句话装不下的大问用底部「大问拆阵」;近来不顺想调一调,用「转运」。<br><b>按钮颜色:</b>红色=起卦 · 金色=请东玄细断(需AI) · 灰色=辅助操作。</p>
   </header>
@@ -579,7 +579,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.24 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.25 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -757,7 +757,10 @@
   function startDuo(planKey) {
     const p = curFenke && (planKey === 'duo2' ? curFenke.duo2 : curFenke.duo);
     if (!p) return;
-    duoPlan = { fkLabel: curFenke.label + (planKey === 'duo2' ? '·详占' : ''), mainQ: curFenke.q, subs: p.subs, rules: p.rules || '', idx: 0, done: [] };
+    const subs = JSON.parse(JSON.stringify(p.subs));
+    const T = curFenke.rangeInput ? (curRangePhrase || '当下') : '';
+    subs.forEach(s2 => { s2.q = s2.q.replace(/«T»/g, T); });
+    duoPlan = { fkLabel: curFenke.label + (planKey === 'duo2' ? '·详占' : '') + (T ? `(${T})` : ''), mainQ: T ? `我${T}运势怎么样?` : curFenke.q, subs, rules: p.rules || '', idx: 0, done: [] };
     throws = []; currentCast = null; currentZhuang = null; renderTossLog();
     works.liuyao = null; results.liuyao = false;
     $('duo-offer').classList.add('hidden');
@@ -1658,6 +1661,7 @@
 
   // —— 分科:点类别 → 列排序推荐 → 点选方法(术业有专攻,由你定夺)——
   let curFenke = null;    // 已选类别
+  let curRangePhrase = ''; // rangeInput 类别当前所选时段短语(供分占问句代入)
   let curPick = null;     // 已选方法 {method, mode}
   const METHOD_NAMES = Fenke.METHOD_LABEL, MODE_NAMES = Fenke.MODE_LABEL;
   function renderFenke() {
@@ -1726,8 +1730,8 @@
     }
     if (curFenke.rangeInput && $('fk-range')) {
       const rv = $('fk-range').value;
-      if (rv === 'year') { const yy = parseInt($('fk-year').value, 10); if (yy) pickedQ = `我${yy}年运势怎么样?`; }
-      else if (rv) pickedQ = `我${rv}运势怎么样?`;
+      if (rv === 'year') { const yy = parseInt($('fk-year').value, 10); if (yy) pickedQ = `我${yy}年运势怎么样?`; curRangePhrase = yy ? `${yy}年` : '当下'; }
+      else { if (rv) pickedQ = `我${rv}运势怎么样?`; curRangePhrase = rv || '当下'; }
     }
     $('question').value = pickedQ;
     curTab = r.method;
