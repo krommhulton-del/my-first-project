@@ -182,6 +182,8 @@ t('分占体系:验证卦收尾、落细规程;财富量级六卦逐层锁定', 
   const keys = cl.duo.subs.map(s => s.k).join(',');
   for (const k of ['定位数', '定区间', '定构成', '家庭资产', '年薪收入', '验证']) ok(keys.includes(k), '财富量级缺分项 ' + k);
   ok(cl.duo.rules.includes('位数') && cl.duo.rules.includes('承接'), '财富量级规程须含逐层承接锁定');
+  ok(cl.duo.rules.includes('取数规程') && cl.duo.rules.includes('先天卦数') && cl.duo.rules.includes('常识校验'), '财富量级须含四步取数规程');
+  ok(cl.ai.includes('测数四步'), '单卦规程亦须取数四步');
 });
 t('日运可择日;月运九卦详占、年运十卦详占(时段卦+路卦交叉印证)', () => {
   const ri = Fenke.FENKE.find(f => f.id === 'riyun');

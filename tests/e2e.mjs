@@ -360,6 +360,7 @@ await t('以卦追问:按钮在,未深断时给提示', async () => {
 });
 
 await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折叠', async () => {
+  await page.click('#sec-dawen .foldh');
   await page.click('#btn-dw-example');
   ok((await page.locator('#dw-plan .dwgroup').count()) >= 5, '应有五个以上板块');
   ok((await page.locator('#dw-plan .dw-cast').count()) >= 8, '应有八个以上起卦位');
@@ -393,7 +394,22 @@ await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折�
   ok((await page.locator('#dw-plan .dwgroup').count()) === 0, '清空后阵应无');
 });
 
+await t('为谁问:问题旁单独填性别年龄(替人问),盖过顶栏默认', async () => {
+  await page.click('.tabs button[data-m=liuyao]');
+  ok((await page.textContent('#qh-q')).includes('未填'), '空缺时应有提醒');
+  await page.selectOption('#qg-q', '女');
+  await page.fill('#qa-q', '35');
+  ok((await page.textContent('#qh-q')).includes('女,35岁'), '提示应显示当前口径');
+  await page.fill('#question', '替人问卦内测');
+  await page.click('#btn-auto');
+  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:女,35岁'), null, { timeout: 9000 });
+  await page.selectOption('#qg-q', '');
+  await page.fill('#qa-q', '');
+  ok((await page.locator('#qh-dw').count()) === 1 && (await page.locator('#qh-zy').count()) === 1, '拆阵与转运也应有为谁问');
+});
+
 await t('转运板块:六卦阵可摆、诊断开方分组、逐卦可起、无Key开方给提示', async () => {
+  await page.click('#sec-zhuanyun .foldh');
   await page.click('#btn-zy-start');
   ok((await page.locator('#zy-plan .dwgroup').count()) === 2, '应有诊断/开方两组');
   ok((await page.locator('#zy-plan .zy-cast').count()) === 6, '应有六个起卦位');

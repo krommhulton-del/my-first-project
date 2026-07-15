@@ -221,6 +221,18 @@
   #q-age { flex: 0 0 auto; width: 110px; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
     border-radius: 6px; padding: 10px 12px; font-size: .95rem; font-family: inherit; }
   #q-age:focus { outline: none; border-color: var(--gold); }
+  .qwho { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; color: var(--dim); font-size: .9rem; }
+  .qwho select { padding: 6px 8px; font-size: .88rem; }
+  .qwho input[type=number] { width: 84px; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px 8px; font-size: .88rem; font-family: inherit; }
+  .qwho input[type=number]:focus { outline: none; border-color: var(--gold); }
+  .qwhint { font-size: .82rem; }
+  .qwhint.warn { color: var(--cinnabar); }
+  header .guide { color: var(--dim); font-size: .82rem; margin-top: 10px; line-height: 1.7; }
+  header .guide b { color: var(--gold); font-weight: normal; }
+  .fold .foldh { cursor: pointer; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .foldtri { color: var(--dim); font-size: .8rem; flex: 0 0 auto; }
+  .foldbody { margin-top: 4px; }
   #dw-q, #dw-fu, #zy-fu { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
     border-radius: 6px; padding: 10px 12px; font-family: inherit; font-size: .95rem; min-height: 76px; resize: vertical; }
   #dw-q:focus, #dw-fu:focus, #zy-fu:focus { outline: none; border-color: var(--gold); }
@@ -268,8 +280,9 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.17</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.18</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
+    <p class="guide"><b>怎么用:</b>① 填问卦人 → ② 在分科里挑要问的事(或直接往下写问题)→ ③ 起卦看解读 → ④ 请东玄深断、可追问。一句话装不下的大问用底部「大问拆阵」;近来不顺想调一调,用「转运」。</p>
   </header>
 
   <nav class="tabs">
@@ -278,13 +291,6 @@
     <button data-m="xlr">小六壬</button>
     <button data-m="qimen">奇门遁甲</button>
   </nav>
-
-  <section id="sec-fenke">
-    <h2>分 科 · 术业有专攻</h2>
-    <div class="fenke" id="fenke-chips"></div>
-    <div id="fk-why">先点你要问的类别,再从最适合的几种卜卦法里挑一种;不选则自由问事。</div>
-    <div id="fk-recommend" class="hidden"></div>
-  </section>
 
   <section id="sec-querent">
     <h2>问 卦 人</h2>
@@ -299,51 +305,27 @@
     </div>
   </section>
 
-  <section id="sec-dawen">
-    <h2>问 道 · 大问拆阵</h2>
-    <div class="note">一卦装不下的大问,先请东玄把它<b>拆成阵</b>:分板块、每卦配好卦法与小问;你逐个点「起卦」,起完汇总深断,把各卦应期串成一条时间线。</div>
-    <textarea id="dw-q" maxlength="600" placeholder="用你自己的话,把心里那个大问写在这里,越具体拆出来的阵越贴。例:我这几年诸事不顺,想看看往后五年整体走向,哪年转运、该往哪使劲?"></textarea>
-    <div class="btnrow">
-      <button id="btn-dw-plan" class="primary">请东玄拆阵(AI)</button>
-      <button id="btn-dw-example" class="ghost">用现成「命途总览」阵</button>
-    </div>
-    <div id="dw-status"></div>
-    <div id="dw-plan"></div>
-    <div id="dw-actions" class="btnrow hidden">
-      <button id="btn-dw-read" class="primary">汇总深断</button>
-      <button id="btn-dw-clear" class="ghost">清空此阵</button>
-    </div>
-    <div id="dw-out" class="aiout hidden"></div>
-    <div id="dw-followup" class="hidden">
-      <div class="fuhint">就这套阵与批语接着追问:</div>
-      <textarea id="dw-fu" placeholder="例:两个板块给的年份对不上,以哪个为准?"></textarea>
-      <div class="btnrow"><button id="btn-dw-fu" class="primary">追 问</button></div>
-    </div>
+  <section id="sec-fenke">
+    <h2>分 科 · 术业有专攻</h2>
+    <div class="fenke" id="fenke-chips"></div>
+    <div id="fk-why">先点你要问的类别,再从最适合的几种卜卦法里挑一种;不选则自由问事。</div>
+    <div id="fk-recommend" class="hidden"></div>
   </section>
 
-  <section id="sec-zhuanyun">
-    <h2>转 运 · 把牌打好</h2>
-    <div class="note">这里<b>不算命</b>。牌已经发到手里,好坏都改不了——但打牌的是你:先摸清牌面(近况与根源),再看哪张牌最能打(什么最旺你),然后拿到打法(宜忌、吉方吉时、补救三步)。哪怕这把牌不好,也要打得漂亮。</div>
-    <div class="btnrow">
-      <button id="btn-zy-start" class="primary">摆转运阵(6 卦)</button>
-    </div>
-    <div id="zy-status"></div>
-    <div id="zy-plan"></div>
-    <div id="zy-actions" class="btnrow hidden">
-      <button id="btn-zy-read" class="primary">开转运方</button>
-      <button id="btn-zy-clear" class="ghost">清空此阵</button>
-    </div>
-    <div id="zy-out" class="aiout hidden"></div>
-    <div id="zy-followup" class="hidden">
-      <div class="fuhint">就这套转运方接着追问:</div>
-      <textarea id="zy-fu" placeholder="例:补救那三步,先做哪步最要紧?"></textarea>
-      <div class="btnrow"><button id="btn-zy-fu" class="primary">追 问</button></div>
-    </div>
-  </section>
+  
+
+  
+
+  
 
   <section id="sec-q">
     <h2>所 问 何 事</h2>
     <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
+    <div class="qwho">为谁问:
+      <select id="qg-q" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
+      <input type="number" id="qa-q" min="1" max="120" placeholder="年龄" title="替别人问,就填那人的年龄">
+      <span class="qwhint" id="qh-q"></span>
+    </div>
   </section>
 
   <section id="sec-cast">
@@ -516,6 +498,62 @@
     </div>
   </section>
 
+  <section id="sec-dawen" class="fold">
+    <h2 class="foldh">问 道 · 大问拆阵(一句大问,拆成一套卦)<span class="foldtri">▸</span></h2>
+    <div class="foldbody hidden">
+    <div class="note">一卦装不下的大问,先请东玄把它<b>拆成阵</b>:分板块、每卦配好卦法与小问;你逐个点「起卦」,起完汇总深断,把各卦应期串成一条时间线。</div>
+    <textarea id="dw-q" maxlength="600" placeholder="用你自己的话,把心里那个大问写在这里,越具体拆出来的阵越贴。例:我这几年诸事不顺,想看看往后五年整体走向,哪年转运、该往哪使劲?"></textarea>
+    <div class="qwho">为谁问:
+      <select id="qg-dw" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
+      <input type="number" id="qa-dw" min="1" max="120" placeholder="年龄" title="替别人问,就填那人的年龄">
+      <span class="qwhint" id="qh-dw"></span>
+    </div>
+    <div class="btnrow">
+      <button id="btn-dw-plan" class="primary">请东玄拆阵(AI)</button>
+      <button id="btn-dw-example" class="ghost">用现成「命途总览」阵</button>
+    </div>
+    <div id="dw-status"></div>
+    <div id="dw-plan"></div>
+    <div id="dw-actions" class="btnrow hidden">
+      <button id="btn-dw-read" class="primary">汇总深断</button>
+      <button id="btn-dw-clear" class="ghost">清空此阵</button>
+    </div>
+    <div id="dw-out" class="aiout hidden"></div>
+    <div id="dw-followup" class="hidden">
+      <div class="fuhint">就这套阵与批语接着追问:</div>
+      <textarea id="dw-fu" placeholder="例:两个板块给的年份对不上,以哪个为准?"></textarea>
+      <div class="btnrow"><button id="btn-dw-fu" class="primary">追 问</button></div>
+    </div>
+  </div>
+  </section>
+
+  <section id="sec-zhuanyun" class="fold">
+    <h2 class="foldh">转 运(近来不顺?先诊断,再给做法)<span class="foldtri">▸</span></h2>
+    <div class="foldbody hidden">
+    <div class="note">这里不看吉凶定数,只办两件实事:<b>近来不顺的根子在哪</b>,以及<b>接下来怎么做</b>。先诊断(现状、根源、什么最旺你),再给做法(宜忌、方位时机、补救步骤)——每一条都落到当天能做的事上。运有起落,事在人为。</div>
+    <div class="qwho">为谁问:
+      <select id="qg-zy" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
+      <input type="number" id="qa-zy" min="1" max="120" placeholder="年龄" title="替别人问,就填那人的年龄">
+      <span class="qwhint" id="qh-zy"></span>
+    </div>
+    <div class="btnrow">
+      <button id="btn-zy-start" class="primary">开始(共 6 卦)</button>
+    </div>
+    <div id="zy-status"></div>
+    <div id="zy-plan"></div>
+    <div id="zy-actions" class="btnrow hidden">
+      <button id="btn-zy-read" class="primary">汇总深断</button>
+      <button id="btn-zy-clear" class="ghost">清空此阵</button>
+    </div>
+    <div id="zy-out" class="aiout hidden"></div>
+    <div id="zy-followup" class="hidden">
+      <div class="fuhint">就这份诊断和做法接着追问:</div>
+      <textarea id="zy-fu" placeholder="例:补救那几步,先做哪一步最要紧?"></textarea>
+      <div class="btnrow"><button id="btn-zy-fu" class="primary">追 问</button></div>
+    </div>
+  </div>
+  </section>
+
   <section id="sec-hist">
     <h2>卦 档 · 历史记录</h2>
     <div id="histlist"></div>
@@ -525,7 +563,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.17 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.18 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -547,23 +585,41 @@
   let aiBusy = false;
   let duoPlan = null;    // 分占连断:{fkLabel, subs:[{k,q}], idx, done:[{k,q,cast,z,r,report,jing}]}
 
-  // —— 问卦人性别与年龄(选填,影响取用神、应期与人生阶段口径)——
+  // —— 问卦人性别与年龄:顶栏为默认;每个问事入口旁可单独填(替别人问)——
   const GKEY = 'dongxuan_gender', AKEY = 'dongxuan_age';
-  function gender() { return $('q-gender').value; }
-  function qAge() { const v = parseInt($('q-age').value, 10); return (v >= 1 && v <= 120) ? v : null; }
-  function querentBrief() {
-    const g = gender(), a = qAge();
+  function gender(ctx) {
+    const local = ctx && $('qg-' + ctx) ? $('qg-' + ctx).value : '';
+    return local || $('q-gender').value;
+  }
+  function qAge(ctx) {
+    const lv = ctx && $('qa-' + ctx) ? parseInt($('qa-' + ctx).value, 10) : NaN;
+    if (lv >= 1 && lv <= 120) return lv;
+    const v = parseInt($('q-age').value, 10);
+    return (v >= 1 && v <= 120) ? v : null;
+  }
+  function querentBrief(ctx) {
+    const g = gender(ctx), a = qAge(ctx);
     if (!g && !a) return '';
     return `${g || '性别未说明'}${a ? `,${a}岁` : ''}`;
   }
-  function genderReportLine() { const b = querentBrief(); return b ? `\n问卦人:${b}` : ''; }
-  function genderMaterialLine() {
-    const g = gender(), a = qAge();
+  function genderReportLine(ctx) { const b = querentBrief(ctx); return b ? `\n问卦人:${b}` : ''; }
+  function genderMaterialLine(ctx) {
+    const g = gender(ctx), a = qAge(ctx);
     if (!g && !a) return '';
-    let s = `\n【问卦人:${querentBrief()}】`;
-    if (g) s += `凡涉婚恋对方、看人画像、称谓口径,按此性别推断(男问姻缘以妻财为对方,女以官鬼为对方;画像按对应性别标准换算)。`;
+    let s = `\n【问卦人:${querentBrief(ctx)}】此为所问之事的当事人(可能是替人问卦),一切口径以此人为准。`;
+    if (g) s += `凡涉婚恋对方、看人画像、称谓,按此性别推断(男问姻缘以妻财为对方,女以官鬼为对方;画像按对应性别标准换算)。`;
     if (a) s += `断应期与人生阶段以此年龄起算:婚嫁、生育、置业、事业转折等结论必须落在该年龄之后的合理区间,称谓与建议贴合此年纪的处境,不许给出与年龄相悖的说法。`;
     return s;
+  }
+  // 各入口「为谁问」提示:空则提醒,有则显示当前口径
+  function updateQwho() {
+    for (const ctx of ['q', 'dw', 'zy']) {
+      const el = $('qh-' + ctx);
+      if (!el) continue;
+      const b = querentBrief(ctx);
+      if (b) { el.textContent = `按「${b}」断`; el.classList.remove('warn'); }
+      else { el.textContent = '未填性别年龄——替别人问就填那人的;不填按通用口径,断语易含糊'; el.classList.add('warn'); }
+    }
   }
 
   // —— 法门状态 ——
@@ -641,9 +697,9 @@
       finishDuo(); return;
     }
     const method = dayan ? '六爻·蓍草' : '六爻';
-    const report = GuaCore.buildReport(cast, q) + genderReportLine() + '\n' + panText(cast, currentZhuang) +
+    const report = GuaCore.buildReport(cast, q) + genderReportLine('q') + '\n' + panText(cast, currentZhuang) +
       (dayan ? '\n(起卦法:蓍草大衍筮法)' : '');
-    const material = buildMaterial(cast, currentZhuang, q) + genderMaterialLine() + (dayan ? '\n(本卦以蓍草大衍法揲得)' : '');
+    const material = buildMaterial(cast, currentZhuang, q) + genderMaterialLine('q') + (dayan ? '\n(本卦以蓍草大衍法揲得)' : '');
     const recId = saveRec({ method, question: q, headline: r.headline, level: r.level, dx: r.dx, report, cast });
     works.liuyao = { method, material, report, recId };
     results.liuyao = true;
@@ -692,11 +748,11 @@
   }
   function finishDuo() {
     const n = duoPlan.done.length;
-    const report = [`【东玄六爻 · 分占连断回报】问「${duoPlan.fkLabel}」,分 ${n} 卦分占,每卦只断其分项。` + genderReportLine()]
+    const report = [`【东玄六爻 · 分占连断回报】问「${duoPlan.fkLabel}」,分 ${n} 卦分占,每卦只断其分项。` + genderReportLine('q')]
       .concat(duoPlan.done.map((d, i) => `\n——第${i + 1}卦 · ${d.k}(${d.q})——\n${d.report}`)).join('\n');
     const rules = `【分占连断规则】同一大事拆成 ${n} 个分项,各占一卦。铁律:每卦只回答其标注的分项,禁止把甲卦的结论挪到乙分项(一卦一断);若分项标注为「验证」,该卦专职校验前面各卦所断的可信度,不答新问题;逐项断完后,末尾用三五句总揽全局(只综合各分项已得结论,不另生新断)。每个分项都要落到具体:时间给旬/月、钱给数字区间、人给画像。` +
       (duoPlan.rules ? `\n【本科专用规程(优先遵行)】${duoPlan.rules}` : '');
-    const material = `【卦法:六爻 · 分占连断(${duoPlan.fkLabel})】\n` + rules + genderMaterialLine() +
+    const material = `【卦法:六爻 · 分占连断(${duoPlan.fkLabel})】\n` + rules + genderMaterialLine('q') +
       duoPlan.done.map((d, i) => `\n\n——第${i + 1}卦 · 分项「${d.k}」(所问:${d.q})——\n${d.report}\n【经文取材】\n${d.jing}`).join('') +
       '\n\n请按上述规则逐项细断后总揽。';
     // 总览渲染(盘面保留最后一卦,解读区改为逐卦总览)
@@ -1187,7 +1243,7 @@
     if (!getKey()) { dwStatus(`AI 拆阵需先设置 ${curProvider().label} API Key(见「东玄深断」栏);也可直接用现成「命途总览」阵。`, true); return; }
     dwBusy = true; $('btn-dw-plan').disabled = true; dwStatus('东玄正在拆阵……');
     try {
-      const { text } = await llmStream([{ role: 'user', content: `大问:${q}${querentBrief() ? `(问卦人:${querentBrief()})` : ''}\n请拆阵,只回JSON。` }], null, DW_PLAN_SYSTEM);
+      const { text } = await llmStream([{ role: 'user', content: `大问:${q}${querentBrief('dw') ? `(问卦人:${querentBrief('dw')})` : ''}\n请拆阵,只回JSON。` }], null, DW_PLAN_SYSTEM);
       const m = text.match(/\{[\s\S]*\}/);
       const plan = JSON.parse(m ? m[0] : text);
       if (!Array.isArray(plan.groups) || !plan.groups.length) throw new Error('阵形不完整');
@@ -1257,7 +1313,7 @@
       material += `\n\n════ 板块:${g.title}${g.why ? `(${g.why})` : ''} ════`;
       for (const c of done) material += `\n——${DW_METHODS[c.method]}卦 · 所问:${c.q}\n(此卦必须给:${c.focus || '落地结论'})\n${c.report}`;
     }
-    material += genderMaterialLine() + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
+    material += genderMaterialLine('dw') + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
     return dwAsk([{ role: 'user', content: material }], false);
   }
   function dwFollowUp() {
@@ -1297,19 +1353,19 @@
   // —— 转运:先诊断(牌面/根源/底牌),后开方(宜忌/方时/补救)——不算命,给打法 ——
   let zyPlan = null, zyConvo = null, zyBusy = false;
   const ZY_PLAN = {
-    note: '先诊断后开方:前三卦摸牌面,后三卦给打法。',
+    note: '先诊断后做法:前三卦看现状与根源,后三卦给可执行的做法。',
     groups: [
-      { title: '诊断 · 先摸清牌面', why: '不清楚牌面,打法无从谈起', casts: [
+      { title: '第一步 · 诊断:现状与根源', why: '先弄清处境,做法才有的放矢', casts: [
         { method: 'liuyao', q: '我最近这阵子运气到底怎么样,处在什么位置?', focus: '在低谷/平路/上坡哪一段、低到几分(十分制)、这段还要持续多久(落到旬或月)、是真不顺还是感受放大了' },
         { method: 'liuyao', q: '我最近不顺,根子在哪?', focus: '从五路查:时段(流月不利,过了就好)/环境场所(常去或新去之地不合,含住处工位)/人(谁在耗你)/自身状态(作息、内耗、硬顶)/纯偶然波动——点名最重的一两路并给依据,不吓唬、不谈邪祟' },
-        { method: 'liuyao', q: '眼下我手里哪张牌最能打,什么最旺我?', focus: '最有气的一条线(财/事业/人缘/学业/创作点名)、旺我的五行落到具体物事(颜色/场所/方向/哪类人)、这张牌眼下怎么打' }] },
-      { title: '开方 · 把牌打漂亮', why: '全是当天就能做的动作', casts: [
+        { method: 'liuyao', q: '眼下什么最旺我、哪条路最有气?', focus: '最有气的一条线(财/事业/人缘/学业/创作点名)、旺我的五行落到具体物事(颜色/场所/方向/哪类人)、眼下怎么用它' }] },
+      { title: '第二步 · 做法:宜忌、方位时机、补救', why: '全是当天就能做的事', casts: [
         { method: 'liuyao', q: '近期我最宜做什么、最忌做什么?', focus: '宜三件+忌三件,每件都可执行、各配时段(本旬/本月),忌讳讲清代价' },
         { method: 'qimen', q: '近期往哪个方向走旺、哪几天是吉窗?', focus: '吉方与忌方(以住处为原点,含常走动线怎么调)、近两周内的吉日窗、办要紧事挑什么时辰段' },
         { method: 'liuyao', q: '已经落下的坑,怎么补救弥补?', focus: '补救三步(环境上一步/人事上一步/自身状态上一步),排出先后,各自多久见效' }] },
     ],
   };
-  const ZY_RULES = '【转运方铁律】这不是算命,是给打法:①不吓唬、不宿命、不谈冲撞邪祟鬼神,不推荐任何花钱消灾开光之物;②把"运"拆成四要素讲:时段、环境、人、自身状态;③所有建议必须是普通人当天就能落手的动作(去哪/避哪/几点办事/穿用什么颜色/找谁/怎么歇),禁止"调整心态""保持乐观"这类空话;④若根源卦指向环境场所,就落到具体:哪类地方少去、住处工位怎么调(通风采光动线整理这类实在话)、多去哪类旺你的场所;⑤输出结构:牌面(现状几句+还要多久)→根源(点名主因与依据)→最旺的牌与打法→宜忌清单(各三条带时段)→吉方吉窗→补救三步(排先后)→末尾一句收束,把"就算这把牌不好也要打得漂亮"的精气神点出来,不灌鸡汤。';
+  const ZY_RULES = '【转运铁律】这不是算命,是诊断加做法:①不吓唬、不宿命、不谈冲撞邪祟鬼神,不推荐任何花钱消灾开光之物;②把"运"拆成四要素讲:时段、环境、人、自身状态;③所有建议必须是普通人当天就能落手的动作(去哪/避哪/几点办事/穿用什么颜色/找谁/怎么歇),禁止"调整心态""保持乐观"这类空话;④若根源卦指向环境场所,就落到具体:哪类地方少去、住处工位怎么调(通风采光动线整理这类实在话)、多去哪类旺你的场所;⑤输出结构:现状(几句+还要多久)→根源(点名主因与依据)→什么最旺、怎么用→宜忌清单(各三条带时段)→吉方吉窗→补救三步(排先后)→末尾一两句收束:运有起落、事在人为,语气平实,不灌鸡汤。';
   function zyStatus(msg, err) { $('zy-status').textContent = msg; $('zy-status').classList.toggle('err', !!err); }
   function zyDone() { return zyPlan ? zyPlan.groups.reduce((s, g) => s + g.casts.filter(c => c.done).length, 0) : 0; }
   function zyTotal() { return zyPlan ? zyPlan.groups.reduce((s, g) => s + g.casts.length, 0) : 0; }
@@ -1325,7 +1381,7 @@
   }
   async function zyAsk(turns, isFollow) {
     zyBusy = true; $('btn-zy-read').disabled = true; $('btn-zy-fu').disabled = true;
-    zyStatus(isFollow ? '东玄再想想……' : '东玄凝神,开转运方……');
+    zyStatus(isFollow ? '东玄再想想……' : '东玄凝神,细批之中……');
     const out = $('zy-out'); out.classList.remove('hidden');
     if (isFollow) { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(turns[turns.length - 1].content.split('\n')[0]); out.appendChild(y); }
     else out.innerHTML = '';
@@ -1341,17 +1397,17 @@
         $('zy-followup').classList.remove('hidden');
         if (isFollow) { $('zy-fu').value = ''; zyStatus('答毕。可接着追问。'); }
         else {
-          zyStatus('转运方已开。可在下方追问。已存入卦档。');
+          zyStatus('诊断与做法已出。可在下方追问。已存入卦档。');
           const recId = saveRec({
-            method: '转运', question: '转运方(先诊断后开方)',
-            headline: `${zyDone()}/${zyTotal()} 卦成方`, level: '方', dx: ZY_PLAN.note,
+            method: '转运', question: '转运(诊断+做法)',
+            headline: `${zyDone()}/${zyTotal()} 卦`, level: '诊', dx: ZY_PLAN.note,
             report: zyPlan.groups.map(g => g.casts.filter(c => c.done).map(c => `【${g.title}】${c.q}\n${c.report}`).join('\n\n')).filter(Boolean).join('\n\n'),
           });
           attachAiReading(recId, $('ai-model').value, text);
         }
       }
     } catch (e) {
-      zyStatus((isFollow ? '追问未成:' : '开方未成:') + aiErrHint(e, $('ai-provider').value), true);
+      zyStatus((isFollow ? '追问未成:' : '汇总未成:') + aiErrHint(e, $('ai-provider').value), true);
       if (!text) ans.remove();
     } finally { zyBusy = false; $('btn-zy-read').disabled = false; $('btn-zy-fu').disabled = false; }
   }
@@ -1359,20 +1415,20 @@
     zyPlan = JSON.parse(JSON.stringify(ZY_PLAN));
     zyConvo = null; $('zy-out').classList.add('hidden'); $('zy-out').innerHTML = ''; $('zy-followup').classList.add('hidden');
     renderZy();
-    zyStatus(`转运阵已摆好:先诊断三卦,再开方三卦。心里想着自己近来的处境,逐个点「起卦」;起完点「开转运方」。`);
+    zyStatus(`六卦已摆好:前三卦看现状与根源,后三卦给做法。心里想着自己近来的处境,逐个点「起卦」;起完点「汇总深断」。`);
   });
   $('btn-zy-read').addEventListener('click', () => {
     if (zyBusy || !zyPlan) return;
     if (!zyDone()) { zyStatus('还没起卦——先在阵里点「起卦」。', true); return; }
-    if (!getKey()) { zyStatus(`开转运方需先设置 ${curProvider().label} API Key(见「东玄深断」栏)。`, true); return; }
-    let material = `【转运 · 先诊断后开方】\n${ZY_RULES}\n【规矩】每卦只答其小问并给足"必须给";诊断三卦先立住(牌面、根源、底牌),开方三卦全部落到可执行动作;未起之卦直说"未起卦,此项不断"。`;
+    if (!getKey()) { zyStatus(`汇总深断需先设置 ${curProvider().label} API Key(见「东玄深断」栏)。`, true); return; }
+    let material = `【转运 · 先诊断后做法】\n${ZY_RULES}\n【规矩】每卦只答其小问并给足"必须给";诊断三卦先立住(现状、根源、何为最旺),做法三卦全部落到可执行动作;未起之卦直说"未起卦,此项不断"。`;
     for (const g of zyPlan.groups) {
       const done = g.casts.filter(c => c.done);
       if (!done.length) continue;
       material += `\n\n════ ${g.title} ════`;
       for (const c of done) material += `\n——${DW_METHODS[c.method]}卦 · 所问:${c.q}\n(此卦必须给:${c.focus})\n${c.report}`;
     }
-    material += genderMaterialLine() + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
+    material += genderMaterialLine('zy') + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
     return zyAsk([{ role: 'user', content: material }], false);
   });
   $('btn-zy-fu').addEventListener('click', () => {
@@ -1401,7 +1457,7 @@
     if (!c || c.done) return;
     dwCastOne(c);
     renderZy();
-    zyStatus(`已起 ${zyDone()}/${zyTotal()} 卦。${zyDone() >= zyTotal() ? '全阵起毕,点「开转运方」。' : ''}`);
+    zyStatus(`已起 ${zyDone()}/${zyTotal()} 卦。${zyDone() >= zyTotal() ? '六卦起毕,点「汇总深断」。' : ''}`);
   });
 
   // —— 梅花易数 ——
@@ -1444,9 +1500,9 @@
       `互卦:${cast.hu.full}`,
       `变卦:${cast.bian.full}`,
       `体用断:${a.rel},${a.lv}。${a.wang}`,
-      `我要问的事:${q || '(未填写)'}` + genderReportLine(),
+      `我要问的事:${q || '(未填写)'}` + genderReportLine('q'),
     ].join('\n');
-    const material = '【卦法:梅花易数】\n' + report + genderMaterialLine() +
+    const material = '【卦法:梅花易数】\n' + report + genderMaterialLine('q') +
       `\n经文:本卦辞「${cast.ben.guaCi}」;动爻辞「${cast.ben.yaoCi[cast.moving - 1]}」;变卦辞「${cast.bian.guaCi}」` +
       '\n' + MH_RULES + '\n请依上述卦象与所问细断。';
     const recId = saveRec({
@@ -1491,9 +1547,9 @@
       `起课:${c.how}`,
       `三宫:月宫${c.gongs[0].name}(因)→ 日宫${c.gongs[1].name}(过程)→ 时宫${c.gongs[2].name}(果)`,
       `主断:时宫${g3.name},${g3.ji}`,
-      `我要问的事:${q || '(未填写)'}` + genderReportLine(),
+      `我要问的事:${q || '(未填写)'}` + genderReportLine('q'),
     ].join('\n');
-    const material = '【卦法:小六壬(马前课)】\n' + report + genderMaterialLine() +
+    const material = '【卦法:小六壬(马前课)】\n' + report + genderMaterialLine('q') +
       '\n三宫诗诀:\n' + c.gongs.map((g, i) => `${caps[i]} ${g.name}(${g.wx},${g.shen}):${g.verse}`).join('\n') +
       '\n' + XLR_RULES + '\n请依上述课象与所问细断。';
     const recId = saveRec({
@@ -1544,9 +1600,9 @@
       `<br>日干为你、时干为事,深断时东玄会据全盘把方位、时机、成败落到大白话。`;
     const report = [
       Qimen.report(c).trimEnd(),
-      `我要问的事:${q || '(未填写)'}` + genderReportLine(),
+      `我要问的事:${q || '(未填写)'}` + genderReportLine('q'),
     ].join('\n');
-    const material = '【卦法:奇门遁甲(时家·转盘·拆补)】\n' + report + genderMaterialLine() + '\n' + QM_RULES + '\n请依上述奇门局与所问细断。';
+    const material = '【卦法:奇门遁甲(时家·转盘·拆补)】\n' + report + genderMaterialLine('q') + '\n' + QM_RULES + '\n请依上述奇门局与所问细断。';
     const recId = saveRec({
       method: '奇门', question: q,
       headline: `${c.dun}·${c.jieqi}${c.yuan},事宫${v.name}${v.gate}`,
@@ -1706,9 +1762,14 @@
   $('btn-duo-start2').addEventListener('click', () => startDuo('duo2'));
   $('btn-duo-single').addEventListener('click', () => $('duo-offer').classList.add('hidden'));
   if (localStorage.getItem(GKEY)) $('q-gender').value = localStorage.getItem(GKEY);
-  $('q-gender').addEventListener('change', () => localStorage.setItem(GKEY, $('q-gender').value));
+  $('q-gender').addEventListener('change', () => { localStorage.setItem(GKEY, $('q-gender').value); updateQwho(); });
   if (localStorage.getItem(AKEY)) $('q-age').value = localStorage.getItem(AKEY);
-  $('q-age').addEventListener('change', () => localStorage.setItem(AKEY, $('q-age').value));
+  $('q-age').addEventListener('change', () => { localStorage.setItem(AKEY, $('q-age').value); updateQwho(); });
+  for (const ctx of ['q', 'dw', 'zy']) {
+    $('qg-' + ctx).addEventListener('change', updateQwho);
+    $('qa-' + ctx).addEventListener('input', updateQwho);
+  }
+  updateQwho();
   $('btn-copy').addEventListener('click', async () => {
     const txt = $('report').value;
     try { await navigator.clipboard.writeText(txt); $('btn-copy').textContent = '已复制 ✓'; }
@@ -1759,6 +1820,12 @@
     catch (err) { shareBtn.textContent = url; }
     setTimeout(() => { shareBtn.textContent = '分享给朋友 ⤴'; }, 2200);
   });
+
+  document.querySelectorAll('.fold .foldh').forEach(h => h.addEventListener('click', () => {
+    const b = h.parentElement.querySelector('.foldbody');
+    const hid = b.classList.toggle('hidden');
+    h.querySelector('.foldtri').textContent = hid ? '▸' : '▾';
+  }));
 
   renderHistory();
   refreshTab();
