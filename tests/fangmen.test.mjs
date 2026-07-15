@@ -183,6 +183,21 @@ t('分占体系:验证卦收尾、落细规程;财富量级六卦逐层锁定', 
   for (const k of ['定位数', '定区间', '定构成', '家庭资产', '年薪收入', '验证']) ok(keys.includes(k), '财富量级缺分项 ' + k);
   ok(cl.duo.rules.includes('位数') && cl.duo.rules.includes('承接'), '财富量级规程须含逐层承接锁定');
 });
+t('日运可择日;月运九卦详占、年运十卦详占(时段卦+路卦交叉印证)', () => {
+  const ri = Fenke.FENKE.find(f => f.id === 'riyun');
+  ok(ri.dateInput === true, '日运应支持择日');
+  ok(ri.ai.includes('将来某日'), '日运规程须含择日断法');
+  const yy = Fenke.FENKE.find(f => f.id === 'yueyun');
+  ok(yy.duo2 && yy.duo2.subs.length === 9, '月运详占应九卦,实为 ' + (yy.duo2 ? yy.duo2.subs.length : 0));
+  const yk = yy.duo2.subs.map(s => s.k).join(',');
+  for (const k of ['上旬', '中旬', '下旬', '验证']) ok(yk.includes(k), '月运详占缺 ' + k);
+  ok(yy.duo2.rules.includes('交叉印证'), '月运详占须交叉印证');
+  const ny = Fenke.FENKE.find(f => f.id === 'nianyun');
+  ok(ny.duo2 && ny.duo2.subs.length === 10, '年运详占应十卦,实为 ' + (ny.duo2 ? ny.duo2.subs.length : 0));
+  const nk = ny.duo2.subs.map(s => s.k).join(',');
+  for (const k of ['一季度', '二季度', '三季度', '四季度', '验证']) ok(nk.includes(k), '年运详占缺 ' + k);
+  ok(ny.duo2.rules.includes('交叉印证'), '年运详占须交叉印证');
+});
 t('每组都有专科,绝大多数科给多法门供选', () => {
   const groups = new Set(Fenke.FENKE.map(f => f.group));
   ok(groups.size >= 10, '组数 ' + groups.size);

@@ -30,6 +30,9 @@ async function t(name, fn) {
   catch (e) { fail++; console.error('  ✗', name, '——', e.message); }
 }
 const ok = (v, m) => { if (!v) throw new Error(m || '断言失败'); };
+// 分科组默认折叠;点分科片前先全部展开
+const expandGroups = () => page.evaluate(() =>
+  document.querySelectorAll('#fenke-chips .fkrow').forEach(r => r.classList.remove('hidden')));
 
 const URL0 = `http://127.0.0.1:${PORT}/`;
 await page.goto(URL0);
@@ -202,6 +205,7 @@ await t('分科全面版:≥75 专科、十四大类、含奇门派单', async (
 });
 
 await t('分科两步选择:点类别展开排序推荐,点方法才切法门', async () => {
+  await expandGroups();
   await page.click('.fk[data-id=banjia]');
   ok(!(await page.locator('#fk-recommend').evaluate(el => el.classList.contains('hidden'))), '推荐面板应展开');
   const opts = page.locator('#fk-recommend .mopt');
@@ -214,6 +218,7 @@ await t('分科两步选择:点类别展开排序推荐,点方法才切法门', 
 });
 
 await t('分科可改选非首选方法(搬家改选六爻)', async () => {
+  await expandGroups();
   await page.click('.fk[data-id=banjia]'); // 收起
   await page.click('.fk[data-id=banjia]'); // 重新展开
   const opts = page.locator('#fk-recommend .mopt');
@@ -239,6 +244,7 @@ await t('性别选项:选男起卦,回报注明问卦人;持久化', async () =>
 });
 
 await t('分占连断:月运选六爻,六卦连占(含验证卦)出合并回报与总览', async () => {
+  await expandGroups();
   await page.click('.fk[data-id=yueyun]');
   const opts = page.locator('#fk-recommend .mopt');
   const labels = await opts.locator('.mname').allTextContents();
@@ -262,6 +268,7 @@ await t('分占连断:月运选六爻,六卦连占(含验证卦)出合并回报�
 });
 
 await t('财富量级:六卦逐层锁定方案可入(位数→区间→构成→家产→年薪→验证)', async () => {
+  await expandGroups();
   await page.click('.fk[data-id=cailiang]');
   const opts = page.locator('#fk-recommend .mopt');
   await opts.first().click(); // 首选六爻
@@ -276,6 +283,7 @@ await t('财富量级:六卦逐层锁定方案可入(位数→区间→构成→
 });
 
 await t('分科日运首选小六壬、年运首选蓍草', async () => {
+  await expandGroups();
   await page.click('.fk[data-id=riyun]');
   const ri = page.locator('#fk-recommend .mopt').first();
   ok((await ri.locator('.mname').textContent()) === '小六壬', '日运首选小六壬');
@@ -287,6 +295,91 @@ await t('分科日运首选小六壬、年运首选蓍草', async () => {
   ok((await page.locator('.fk.on').count()) === 0, '取消选科');
   ok(await page.locator('#fk-recommend').evaluate(el => el.classList.contains('hidden')), '推荐面板收起');
   await page.click('.tabs button[data-m=liuyao]');
+});
+
+await t('分科组折叠:默认收起,点组名展开/收起', async () => {
+  await page.reload();
+  ok((await page.locator('#fenke-chips .fkgroup').count()) >= 14, '组框应在');
+  ok(await page.locator('#fenke-chips .fkrow').first().evaluate(el => el.classList.contains('hidden')), '默认应收起');
+  await page.locator('#fenke-chips .fkgh').first().click();
+  ok(!(await page.locator('#fenke-chips .fkrow').first().evaluate(el => el.classList.contains('hidden'))), '点组名应展开');
+  ok((await page.locator('#fenke-chips .fkgh .tri').first().textContent()) === '▾', '三角应转向');
+  await page.locator('#fenke-chips .fkgh').first().click();
+  ok(await page.locator('#fenke-chips .fkrow').first().evaluate(el => el.classList.contains('hidden')), '再点应收起');
+});
+
+await t('择日日运:挑将来某日,问题带上该日期', async () => {
+  await expandGroups();
+  await page.click('.fk[data-id=riyun]');
+  ok(await page.locator('#fk-date').isVisible(), '日运应有日期选择');
+  const t2 = new Date(Date.now() + 10 * 86400000);
+  const iso = `${t2.getFullYear()}-${String(t2.getMonth() + 1).padStart(2, '0')}-${String(t2.getDate()).padStart(2, '0')}`;
+  await page.fill('#fk-date', iso);
+  await page.locator('#fk-recommend .mopt').first().click();
+  const q = await page.inputValue('#question');
+  ok(q.includes(`${t2.getMonth() + 1}月${t2.getDate()}日`), '问题应含所择日期:' + q);
+  await page.click('.fk[data-id=riyun]');
+});
+
+await t('月运详占:提供九卦交叉印证入口;年运详占十卦', async () => {
+  await expandGroups();
+  await page.click('.fk[data-id=yueyun]');
+  const labels = await page.locator('#fk-recommend .mopt .mname').allTextContents();
+  await page.locator('#fk-recommend .mopt').nth(labels.indexOf('六爻')).click();
+  ok(!(await page.locator('#btn-duo-start2').evaluate(el => el.classList.contains('hidden'))), '应有详占按钮');
+  ok((await page.textContent('#btn-duo-start2')).includes('9'), '月运详占应为九卦');
+  await page.click('#btn-duo-start2');
+  await page.waitForFunction(() => document.getElementById('duo-status').textContent.includes('1/9'), null, { timeout: 5000 });
+  ok((await page.inputValue('#question')).includes('主调'), '详占第一卦为总基调');
+  await page.click('#btn-reset');
+  await expandGroups();
+  await page.click('.fk[data-id=nianyun]');
+  const labels2 = await page.locator('#fk-recommend .mopt .mname').allTextContents();
+  await page.locator('#fk-recommend .mopt').nth(labels2.indexOf('六爻')).click();
+  ok((await page.textContent('#btn-duo-start2')).includes('10'), '年运详占应为十卦');
+  await page.click('.fk[data-id=nianyun]');
+  await page.click('#btn-reset');
+});
+
+await t('以卦追问:按钮在,未深断时给提示', async () => {
+  await page.click('.tabs button[data-m=liuyao]');
+  await page.fill('#question', '以卦追问内测');
+  await page.click('#btn-auto');
+  await page.waitForFunction(() => document.querySelectorAll('#tosslog .toss').length === 6, null, { timeout: 9000 });
+  await page.evaluate(() => document.getElementById('ai-followup').classList.remove('hidden'));
+  await page.fill('#fu-input', '这卦之外我还想问一件新事');
+  await page.click('#btn-followup-gua');
+  ok((await page.textContent('#ai-status')).includes('深断'), '未深断先以卦追问应提示:' + (await page.textContent('#ai-status')));
+  await page.fill('#fu-input', '');
+  await page.evaluate(() => document.getElementById('ai-followup').classList.add('hidden'));
+});
+
+await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折叠', async () => {
+  await page.click('#btn-dw-example');
+  ok((await page.locator('#dw-plan .dwgroup').count()) >= 5, '应有五个以上板块');
+  ok((await page.locator('#dw-plan .dw-cast').count()) >= 8, '应有八个以上起卦位');
+  ok((await page.inputValue('#dw-q')).includes('人生轨迹'), '大问框应填入示例问');
+  // 起两卦
+  await page.locator('#dw-plan .dw-cast').first().click();
+  ok((await page.locator('#dw-plan .res').count()) === 1, '第一卦应显示✓摘要');
+  await page.locator('#dw-plan .dw-cast').first().click();
+  ok((await page.locator('#dw-plan .res').count()) === 2, '第二卦应显示✓摘要');
+  ok((await page.textContent('#dw-status')).includes('2/'), '进度应更新');
+  ok(!(await page.locator('#dw-actions').evaluate(el => el.classList.contains('hidden'))), '汇总深断入口应出现');
+  // 折叠板块
+  await page.locator('#dw-plan .dwgh').first().click();
+  ok(await page.locator('#dw-plan .dwbody').first().evaluate(el => el.classList.contains('hidden')), '板块应可折叠');
+  await page.locator('#dw-plan .dwgh').first().click();
+  // 无 Key 汇总深断 → 提示
+  await page.click('#btn-dw-read');
+  ok((await page.textContent('#dw-status')).includes('API Key'), '无Key应提示:' + (await page.textContent('#dw-status')));
+  // AI 拆阵无 Key → 提示
+  await page.fill('#dw-q', '我的人生轨迹是什么样的?');
+  await page.click('#btn-dw-plan');
+  ok((await page.textContent('#dw-status')).includes('API Key'), '拆阵无Key应提示');
+  // 清空
+  await page.click('#btn-dw-clear');
+  ok((await page.locator('#dw-plan .dwgroup').count()) === 0, '清空后阵应无');
 });
 
 await t('卦档法门徽记与蓍草起卦', async () => {

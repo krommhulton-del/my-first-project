@@ -171,10 +171,14 @@
   .gongbox .g-verse { font-size: .88rem; text-align: left; margin-top: 8px; line-height: 1.7; }
   .badge { display: inline-block; border: 1px solid var(--gold); color: var(--gold); border-radius: 4px;
     font-size: .72rem; padding: 0 5px; vertical-align: middle; white-space: nowrap; }
-  .fenke { display: flex; flex-direction: column; gap: 12px; }
+  .fenke { display: flex; flex-direction: column; gap: 6px; }
   .fkgroup { }
-  .fkgh { color: var(--gold); font-size: .82rem; letter-spacing: .12em; margin-bottom: 6px; }
-  .fkrow { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fkgh { display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left; background: transparent;
+    border: none; border-bottom: 1px dashed var(--line); border-radius: 0; padding: 8px 2px;
+    color: var(--gold); font-size: .88rem; letter-spacing: .12em; cursor: pointer; }
+  .fkgh .tri { color: var(--dim); font-size: .78rem; }
+  .fkgh .gcnt { margin-left: auto; color: var(--dim); font-size: .74rem; letter-spacing: 0; }
+  .fkrow { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0 4px; }
   .fk { border: 1px solid var(--line); background: var(--panel2); border-radius: 18px;
     padding: 6px 14px; font-size: .92rem; letter-spacing: .05em; }
   .fk.on { border-color: var(--cinnabar); color: var(--cinnabar); background: #f6e9e0; }
@@ -214,6 +218,24 @@
   .qrow { display: flex; gap: 8px; flex-wrap: wrap; }
   .qrow input[type=text] { flex: 1 1 240px; }
   #q-gender { flex: 0 0 auto; }
+  #dw-q, #dw-fu { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px 12px; font-family: inherit; font-size: .95rem; min-height: 76px; resize: vertical; }
+  #dw-q:focus, #dw-fu:focus { outline: none; border-color: var(--gold); }
+  #dw-status { color: var(--dim); font-size: .9rem; margin-top: 10px; }
+  #dw-status.err { color: var(--cinnabar); }
+  #dw-plan { margin-top: 12px; }
+  .dwgroup { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+  .dwgh { display: flex; width: 100%; align-items: baseline; gap: 8px; background: var(--panel2); border: none;
+    border-radius: 0; padding: 10px 12px; text-align: left; cursor: pointer; color: var(--ink); font-size: .98rem; letter-spacing: .05em; }
+  .dwgh .tri { color: var(--dim); font-size: .78rem; }
+  .dwgh .why { color: var(--dim); font-size: .78rem; margin-left: auto; text-align: right; max-width: 55%; }
+  .dwbody { padding: 4px 12px 8px; }
+  .dwcast { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+  .dwcast:last-child { border-bottom: none; }
+  .dwcast .m { border: 1px solid var(--gold); color: var(--gold); border-radius: 4px; font-size: .72rem; padding: 0 5px; white-space: nowrap; }
+  .dwcast .q { flex: 1 1 200px; font-size: .95rem; }
+  .dwcast .res { color: var(--cinnabar); font-size: .85rem; }
+  .dwcast button { padding: 6px 16px; font-size: .9rem; }
   #duo-offer { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
   #duo-offer .duo-title { color: var(--dim); font-size: .9rem; margin-bottom: 8px; line-height: 1.7; }
   #duo-status { margin-top: 10px; color: var(--cinnabar); font-size: .95rem; letter-spacing: .03em; line-height: 1.7; }
@@ -243,7 +265,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.13</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.14</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -259,6 +281,28 @@
     <div class="fenke" id="fenke-chips"></div>
     <div id="fk-why">先点你要问的类别,再从最适合的几种卜卦法里挑一种;不选则自由问事。</div>
     <div id="fk-recommend" class="hidden"></div>
+  </section>
+
+  <section id="sec-dawen">
+    <h2>问 道 · 大问拆阵</h2>
+    <div class="note">一句装不下的大问(人生轨迹、未来十年、婚姻全貌……),先请东玄把它<b>拆成阵</b>:分板块、每卦配好卦法与小问;你逐个点「起卦」,起完汇总深断,把各卦应期串成一条时间线。</div>
+    <textarea id="dw-q" maxlength="600" placeholder="例:我的人生轨迹是什么样的?什么时候买房、什么时候换工作、以后干什么行当、什么时候生小孩、哪几年有坎哪几年有机遇、什么时候最接近成功?我和未来老公日常相处是什么样?"></textarea>
+    <div class="btnrow">
+      <button id="btn-dw-plan" class="primary">请东玄拆阵(AI)</button>
+      <button id="btn-dw-example" class="ghost">用现成「人生轨迹」阵</button>
+    </div>
+    <div id="dw-status"></div>
+    <div id="dw-plan"></div>
+    <div id="dw-actions" class="btnrow hidden">
+      <button id="btn-dw-read" class="primary">汇总深断</button>
+      <button id="btn-dw-clear" class="ghost">清空此阵</button>
+    </div>
+    <div id="dw-out" class="aiout hidden"></div>
+    <div id="dw-followup" class="hidden">
+      <div class="fuhint">就这套阵与批语接着追问:</div>
+      <textarea id="dw-fu" placeholder="例:置业那卦给的年份,和事业换工作的年份冲突吗?"></textarea>
+      <div class="btnrow"><button id="btn-dw-fu" class="primary">追 问</button></div>
+    </div>
   </section>
 
   <section id="sec-q">
@@ -289,6 +333,7 @@
       <div class="duo-title" id="duo-title"></div>
       <div class="btnrow">
         <button id="btn-duo-start" class="primary"></button>
+        <button id="btn-duo-start2" class="hidden"></button>
         <button id="btn-duo-single" class="ghost">就用单卦总断</button>
       </div>
     </div>
@@ -427,7 +472,11 @@
         <button class="fq" data-t="疑惑">你刚说的{},依据是什么?我有点不信,再解释解释</button>
       </div>
       <textarea id="fu-input" placeholder="直接打你想追问的,比如:那笔钱具体几月能到?/ 你说对方年长,凭啥?"></textarea>
-      <div class="btnrow"><button id="btn-followup" class="primary">追 问</button></div>
+      <div class="btnrow">
+        <button id="btn-followup" class="primary">直接追问(就前卦答)</button>
+        <button id="btn-followup-gua">以卦追问(另起一卦)</button>
+      </div>
+      <div class="note">直接追问:东玄就着已起的卦接着讲。以卦追问:为这个追问三钱另掷一卦,以新卦为准细断、兼与前卦对照——问到前卦覆盖不到的新事时用这个。</div>
     </div>
   </section>
 
@@ -448,7 +497,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.13 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.14 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -574,13 +623,18 @@
   // —— 分占连断:复杂之问(月运/年运/综合运)拆分项各占一卦,一卦一断 ——
   function offerDuo(fk) {
     if (!(fk && fk.duo)) { $('duo-offer').classList.add('hidden'); return; }
-    $('duo-title').textContent = `「${fk.label}」跨面广,单卦装不下所有分项。可走分占连断:${fk.duo.subs.map(s => s.k).join('、')},共 ${fk.duo.subs.length} 卦各管一路,一卦一断互不串,断得更细。`;
+    $('duo-title').textContent = `「${fk.label}」跨面广,单卦装不下所有分项。可走分占连断:${fk.duo.subs.map(s => s.k).join('、')},共 ${fk.duo.subs.length} 卦各管一路,一卦一断互不串,断得更细。` +
+      (fk.duo2 ? `另有「${fk.duo2.label}」${fk.duo2.subs.length} 卦:${fk.duo2.subs.map(s => s.k).join('、')}——时段卦与分路卦交叉印证,时间断得更准。` : '');
     $('btn-duo-start').textContent = `分占连断(${fk.duo.subs.length} 卦)`;
+    const b2 = $('btn-duo-start2');
+    if (fk.duo2) { b2.textContent = `${fk.duo2.label}·交叉印证(${fk.duo2.subs.length} 卦)`; b2.classList.remove('hidden'); }
+    else b2.classList.add('hidden');
     $('duo-offer').classList.remove('hidden');
   }
-  function startDuo() {
-    if (!(curFenke && curFenke.duo)) return;
-    duoPlan = { fkLabel: curFenke.label, mainQ: curFenke.q, subs: curFenke.duo.subs, rules: curFenke.duo.rules || '', idx: 0, done: [] };
+  function startDuo(planKey) {
+    const p = curFenke && (planKey === 'duo2' ? curFenke.duo2 : curFenke.duo);
+    if (!p) return;
+    duoPlan = { fkLabel: curFenke.label + (planKey === 'duo2' ? '·详占' : ''), mainQ: curFenke.q, subs: p.subs, rules: p.rules || '', idx: 0, done: [] };
     throws = []; currentCast = null; currentZhuang = null; renderTossLog();
     works.liuyao = null; results.liuyao = false;
     $('duo-offer').classList.add('hidden');
@@ -885,7 +939,20 @@
     if (!w || !w.convo) { setStatus('先做一次深断,再追问。', true); return; }
     const t = $('fu-input').value.trim();
     if (!t) { setStatus('先打上你要追问的话。', true); return; }
-    return runAI(t);
+    return runAI(t + '\n(就着这一卦、这个人这件事接着答,别换卦别重起;还是大白话、不许冒术语。若这一卦确实答不了这个追问,直说"这卦看不出来",不许硬编。)');
+  }
+  // 以卦追问:为追问三钱另掷一卦,以新卦为准断此问,前卦仅作对照
+  function followUpGua() {
+    const w = works[curTab];
+    if (!w || !w.convo) { setStatus('先做一次深断,再以卦追问。', true); return; }
+    const t = $('fu-input').value.trim();
+    if (!t) { setStatus('先打上你要追问的话,再另起一卦。', true); return; }
+    const cast = GuaCore.castHexagram();
+    const z = Najia.zhuangGua(cast.benId, new Date());
+    const plan = GuaCore.interpretationPlan(cast);
+    const jing = plan.focus.map(f => `${f.kind}:${f.text}`).join('\n');
+    const rep = GuaCore.buildReport(cast, t) + '\n' + panText(cast, z);
+    return runAI(`【以卦追问】${t}\n(为此追问,三钱另掷一卦如下。规矩:此问以新卦为断,前卦只作对照印证;两卦相左处以新卦为准并明说修正;一卦一断,仍是大白话、不冒术语。)\n${rep}\n【经文取材】\n${jing}`);
   }
 
   // 统一的多轮对话引擎:followupText 为 null 时是首断,否则是追问
@@ -907,64 +974,24 @@
       turns = [{ role: 'user', content: material }];
     } else {
       if (!w.convo || !w.convo.turns.length) { setStatus('先做一次深断,再追问。', true); return; }
-      const fu = followupText + '\n(就着这一卦、这个人这件事接着答,别换卦别重起;还是大白话、不许冒术语。若这一卦确实答不了这个追问,直说"这卦看不出来",不许硬编。)';
-      turns = w.convo.turns.concat([{ role: 'user', content: fu }]);
+      turns = w.convo.turns.concat([{ role: 'user', content: followupText }]);
     }
 
-    let url, headers, body;
-    if (providerId === 'deepseek') {
-      url = 'https://api.deepseek.com/chat/completions';
-      headers = { 'content-type': 'application/json', 'authorization': 'Bearer ' + key };
-      body = { model, stream: true, max_tokens: 8000, messages: [{ role: 'system', content: DONGXUAN_SYSTEM + DS_ADDENDUM }].concat(turns) };
-      if (model === 'deepseek-chat') body.temperature = 0.8;
-    } else {
-      url = 'https://api.anthropic.com/v1/messages';
-      headers = { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
-      body = { model, max_tokens: 16000, stream: true, system: DONGXUAN_SYSTEM, messages: turns };
-      if (model === 'claude-fable-5') { headers['anthropic-beta'] = 'server-side-fallback-2026-06-01'; body.fallbacks = [{ model: 'claude-opus-4-8' }]; }
-      else body.thinking = { type: 'adaptive' };
-    }
-
-    aiBusy = true; $('btn-deepread').disabled = true; $('btn-followup').disabled = true;
+    aiBusy = true; $('btn-deepread').disabled = true; $('btn-followup').disabled = true; $('btn-followup-gua').disabled = true;
     setStatus(followupText ? '东玄再想想……' : '东玄凝神观卦……');
     const out = $('ai-out'); out.classList.remove('hidden');
     if (!followupText) out.innerHTML = '';
-    else { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(followupText); out.appendChild(y); }
+    else { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(followupText.split('\n')[0]); out.appendChild(y); }
     curAns = document.createElement('div'); curAns.className = 'fq-ans'; curAns.innerHTML = '<span class="cursor">▍</span>'; out.appendChild(curAns);
 
-    let text = '', stopReason = null;
-    const feed = chunk => { text += chunk; curAns.textContent = text; curAns.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); };
+    let text = '';
     try {
-      const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
-      if (!resp.ok) {
-        let msg = 'HTTP ' + resp.status;
-        try { const j = await resp.json(); msg = (j.error && (j.error.message || j.error)) || msg; } catch (e) {}
-        if (resp.status === 401) msg = `${curProvider().label} API Key 无效或已失效,请重新设置。`;
-        if (resp.status === 402) msg = 'DeepSeek 账户余额不足,请充值后再试。';
-        throw new Error(msg);
-      }
-      const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
-      while (true) {
-        const { done, value } = await reader.read(); if (done) break;
-        buf += dec.decode(value, { stream: true }); const parts = buf.split('\n\n'); buf = parts.pop();
-        for (const part of parts) {
-          const dataLine = part.split('\n').find(l => l.startsWith('data:')); if (!dataLine) continue;
-          const payload = dataLine.replace(/^data:\s*/, ''); if (payload === '[DONE]') continue;
-          let ev; try { ev = JSON.parse(payload); } catch (e) { continue; }
-          if (providerId === 'deepseek') {
-            const ch = ev.choices && ev.choices[0];
-            if (ch && ch.delta && ch.delta.content) feed(ch.delta.content);
-            if (ch && ch.finish_reason) stopReason = ch.finish_reason;
-            if (ev.error) throw new Error(ev.error.message || 'DeepSeek 流式响应出错');
-          } else {
-            if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') feed(ev.delta.text);
-            else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
-            else if (ev.type === 'error') throw new Error((ev.error && ev.error.message) || '流式响应出错');
-          }
-        }
-      }
+      const r = await llmStream(turns, chunk => {
+        text += chunk; curAns.textContent = text; curAns.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>');
+      });
+      text = r.text;
       curAns.textContent = text;
-      if (stopReason === 'refusal' || stopReason === 'content_filter') {
+      if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') {
         setStatus('此问触发了模型方的安全过滤,换个问法再试。', true);
         if (!followupText) out.classList.add('hidden'); else curAns.remove();
       } else if (!text) { throw new Error('未收到内容'); }
@@ -975,26 +1002,253 @@
         else { setStatus('答毕。还有不明白的接着追问。'); $('fu-input').value = ''; }
       }
     } catch (e) {
-      const netErr = /Failed to fetch|NetworkError|TypeError|load failed/i.test(String(e));
-      let hint;
-      if (netErr) {
-        const inArtifact = location.hostname.endsWith('claude.ai') || location.hostname.endsWith('claudeusercontent.com') || location.ancestorOrigins && location.ancestorOrigins.length;
-        if (inArtifact || location.protocol === 'blob:') {
-          hint = '连不上网——你现在是在 claude.ai 预览里打开的,这种页面浏览器禁止一切外部联网,所以深断(不管 Claude 还是 DeepSeek)都连不上,这不是软件坏了。要用深断,二选一:①电脑上打开下载的 dongxuan.html 文件;②用 GitHub Pages 网址在手机/浏览器里打开。也可以直接复制上方「卦象回报」发给东玄。';
-        } else if (providerId === 'deepseek') {
-          hint = '连不上 DeepSeek 接口。先查网络;若网址版仍连不上,多半是 DeepSeek 未开放浏览器直连(跨域限制),可切到「Claude」通道再试(Claude 支持浏览器直连)。';
-        } else {
-          hint = '连不上网络,请检查网络连接后重试;或复制上方「卦象回报」发给东玄。';
-        }
-      } else {
-        hint = String(e.message || e);
-      }
-      setStatus((followupText ? '追问未成:' : '深断未成:') + hint, true);
+      setStatus((followupText ? '追问未成:' : '深断未成:') + aiErrHint(e, providerId), true);
       if (!text) { if (!followupText) out.classList.add('hidden'); else if (curAns) curAns.remove(); }
     } finally {
-      aiBusy = false; $('btn-deepread').disabled = false; $('btn-followup').disabled = false;
+      aiBusy = false; $('btn-deepread').disabled = false; $('btn-followup').disabled = false; $('btn-followup-gua').disabled = false;
     }
   }
+
+  // —— AI 传输层(深断/追问/拆阵共用):流式请求所选服务商,回传全文与停止原因 ——
+  async function llmStream(turns, feed, systemText) {
+    const providerId = $('ai-provider').value;
+    const key = getKey();
+    if (!key) throw new Error(`请先设置 ${curProvider().label} API Key`);
+    const model = $('ai-model').value;
+    let url, headers, body;
+    if (providerId === 'deepseek') {
+      url = 'https://api.deepseek.com/chat/completions';
+      headers = { 'content-type': 'application/json', 'authorization': 'Bearer ' + key };
+      body = { model, stream: true, max_tokens: 8000, messages: [{ role: 'system', content: systemText || (DONGXUAN_SYSTEM + DS_ADDENDUM) }].concat(turns) };
+      if (model === 'deepseek-chat') body.temperature = 0.8;
+    } else {
+      url = 'https://api.anthropic.com/v1/messages';
+      headers = { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+      body = { model, max_tokens: 16000, stream: true, system: systemText || DONGXUAN_SYSTEM, messages: turns };
+      if (model === 'claude-fable-5') { headers['anthropic-beta'] = 'server-side-fallback-2026-06-01'; body.fallbacks = [{ model: 'claude-opus-4-8' }]; }
+      else body.thinking = { type: 'adaptive' };
+    }
+    let text = '', stopReason = null;
+    const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+    if (!resp.ok) {
+      let msg = 'HTTP ' + resp.status;
+      try { const j = await resp.json(); msg = (j.error && (j.error.message || j.error)) || msg; } catch (e) {}
+      if (resp.status === 401) msg = `${curProvider().label} API Key 无效或已失效,请重新设置。`;
+      if (resp.status === 402) msg = 'DeepSeek 账户余额不足,请充值后再试。';
+      throw new Error(msg);
+    }
+    const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true }); const parts = buf.split('\n\n'); buf = parts.pop();
+      for (const part of parts) {
+        const dataLine = part.split('\n').find(l => l.startsWith('data:')); if (!dataLine) continue;
+        const payload = dataLine.replace(/^data:\s*/, ''); if (payload === '[DONE]') continue;
+        let ev; try { ev = JSON.parse(payload); } catch (e) { continue; }
+        if (providerId === 'deepseek') {
+          const ch = ev.choices && ev.choices[0];
+          if (ch && ch.delta && ch.delta.content) { text += ch.delta.content; if (feed) feed(ch.delta.content); }
+          if (ch && ch.finish_reason) stopReason = ch.finish_reason;
+          if (ev.error) throw new Error(ev.error.message || 'DeepSeek 流式响应出错');
+        } else {
+          if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') { text += ev.delta.text; if (feed) feed(ev.delta.text); }
+          else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
+          else if (ev.type === 'error') throw new Error((ev.error && ev.error.message) || '流式响应出错');
+        }
+      }
+    }
+    return { text, stopReason };
+  }
+  function aiErrHint(e, providerId) {
+    const netErr = /Failed to fetch|NetworkError|TypeError|load failed/i.test(String(e));
+    if (!netErr) return String(e.message || e);
+    const inArtifact = location.hostname.endsWith('claude.ai') || location.hostname.endsWith('claudeusercontent.com') || location.ancestorOrigins && location.ancestorOrigins.length;
+    if (inArtifact || location.protocol === 'blob:') {
+      return '连不上网——你现在是在 claude.ai 预览里打开的,这种页面浏览器禁止一切外部联网,所以深断(不管 Claude 还是 DeepSeek)都连不上,这不是软件坏了。要用深断,二选一:①电脑上打开下载的 dongxuan.html 文件;②用 GitHub Pages 网址在手机/浏览器里打开。也可以直接复制上方「卦象回报」发给东玄。';
+    }
+    if (providerId === 'deepseek') {
+      return '连不上 DeepSeek 接口。先查网络;若网址版仍连不上,多半是 DeepSeek 未开放浏览器直连(跨域限制),可切到「Claude」通道再试(Claude 支持浏览器直连)。';
+    }
+    return '连不上网络,请检查网络连接后重试;或复制上方「卦象回报」发给东玄。';
+  }
+
+  // —— 大问拆阵:一句大问 → 板块×小问×卦法之阵 → 逐卦起卦 → 汇总深断 ——
+  let dwPlan = null, dwConvo = null, dwBusy = false;
+  const DW_METHODS = { liuyao: '六爻', meihua: '梅花', xlr: '小六壬', qimen: '奇门' };
+  const DW_PLAN_SYSTEM = `你是精通六爻、梅花易数、小六壬、奇门遁甲的卦师东玄,擅长把一卦装不下的大问拆成可占之阵。术业有专攻:凡问成败吉凶、应期(何时)、人物画像、婚恋子女,派六爻;问趋势节奏、一事之全程,派梅花;问三五天内当下短线,派小六壬;问方位、择时、博弈求人、寻踪,派奇门。规矩:一卦只占一事,小问必须具体可占(带"什么时候/能不能/是什么样"这类能落断语的问法);人生轨迹类大问,阵中通常涵盖:大势总纲、事业行当、财与置业应期、婚恋(何时遇、其人如何、婚后日常相处)、子女应期、坎年与机遇年,并以一卦验证收尾——但必须按用户原话取舍增删:用户点名要的板块必须有且小问要贴着用户的原话问,用户没提的不硬塞。板块2到7个,每板块1到4卦,全阵合计不超过16卦。focus写这一卦必须给出的落地结论(时间给年份月份、数给区间、人给画像、相处给场景)。只输出JSON,不带任何多余文字、不带markdown围栏:{"note":"一句话阵法思路","groups":[{"title":"板块名","why":"为何这么拆(短)","casts":[{"method":"liuyao|meihua|xlr|qimen","q":"小问","focus":"此卦必须给出…"}]}]}`;
+  const LIFE_PLAN = {
+    q: '我的人生轨迹是什么样的?各方面未来如何、几时有坎几时有机遇?',
+    note: '人生轨迹一卦装不下:先立总纲看大势分段,再分路各占其事、各定其时,末卦验证。',
+    groups: [
+      { title: '大势总纲', why: '先看此生起伏节奏,后面各卦有个坐标', casts: [
+        { method: 'liuyao', q: '我此生大势如何,人生分几段、眼下在哪一段?', focus: '人生分段(每段大致年岁)、每段主调、当下所处位置与走向' }] },
+      { title: '事业行当', why: '立身之本,先定行当再定动时', casts: [
+        { method: 'liuyao', q: '我未来主要靠什么行当立身?', focus: '行当方向(两三个候选点名)、适合打工还是自立、成色几分' },
+        { method: 'liuyao', q: '我什么时候该换工作/转方向?', focus: '换动的年份月份、往哪个方向换、不动的代价' }] },
+      { title: '财与置业', why: '积蓄节奏定了,买房才有日子', casts: [
+        { method: 'liuyao', q: '我财运的大势与积蓄节奏如何?', focus: '哪几年聚财哪几年破财、量级台阶(何时上一个数量级)' },
+        { method: 'liuyao', q: '我什么时候能买房安家?', focus: '置业年份区间、大概什么价位档、钱从哪凑齐' }] },
+      { title: '姻缘家庭', why: '何时遇、其人如何、婚后什么光景、子女何时', casts: [
+        { method: 'liuyao', q: '我的正缘什么时候到、是什么样的人?', focus: '相遇年份月份、对方年龄长相性格职业画像、怎么认识' },
+        { method: 'liuyao', q: '我和未来伴侣婚后日常相处是什么光景?', focus: '日常相处的具体场景(谁管钱、拌嘴点、暖处)、长期和不和' },
+        { method: 'liuyao', q: '我什么时候生小孩合适、子女缘如何?', focus: '生育年份区间、子女缘厚薄、要注意什么' }] },
+      { title: '坎与机遇', why: '提前知道哪几年要稳、哪几年要冲', casts: [
+        { method: 'liuyao', q: '我未来哪几年有大坎要防?', focus: '坎年点名(年份)、坎在哪一路(财/健康/感情/官非)、怎么避轻' },
+        { method: 'liuyao', q: '我未来哪几年有大机遇、什么时候最接近成功?', focus: '机遇年点名、机遇长什么样(贵人/行情/位置)、抓住的关键动作' }] },
+      { title: '验证', why: '校前面诸卦断得实不实', casts: [
+        { method: 'liuyao', q: '以上诸卦所断,与我命途相符吗?', focus: '总体可信度、点名哪一板块要打折扣、建议重占哪卦' }] },
+    ],
+  };
+  function dwStatus(msg, err) { $('dw-status').textContent = msg; $('dw-status').classList.toggle('err', !!err); }
+  function dwTotal() { return dwPlan ? dwPlan.groups.reduce((s, g) => s + g.casts.length, 0) : 0; }
+  function dwDone() { return dwPlan ? dwPlan.groups.reduce((s, g) => s + g.casts.filter(c => c.done).length, 0) : 0; }
+  function renderDwPlan() {
+    if (!dwPlan) { $('dw-plan').innerHTML = ''; $('dw-actions').classList.add('hidden'); return; }
+    $('dw-plan').innerHTML = (dwPlan.note ? `<div class="note" style="margin:6px 0 10px"><b>阵法:</b>${esc(dwPlan.note)}</div>` : '') +
+      dwPlan.groups.map((g, gi) => `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why || '')}</span></button><div class="dwbody">` +
+        g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method] || '六爻'}</span><span class="q">${esc(c.q)}</span>` +
+          (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary dw-cast" data-g="${gi}" data-c="${ci}">起卦</button>`) +
+        `</div>`).join('') +
+      `</div></div>`).join('');
+    $('dw-actions').classList.toggle('hidden', dwDone() === 0);
+  }
+  // 各法门无界面起卦,产出回报文本与一句摘要
+  function dwCastOne(c) {
+    const now = new Date();
+    if (c.method === 'meihua') {
+      const lunar = Lunar.fromDate(now); const cast = Meihua.castByTime(lunar);
+      const a = Meihua.analyze(cast, Najia.ganZhi(now).monthZhi);
+      c.report = `【梅花起卦】${cast.how}\n本卦:${cast.ben.full}(体${cast.tiTri.name}${a.ti},用${cast.yongTri.name}${a.yong}),${POS[cast.moving - 1]}动\n互卦:${cast.hu.full} 变卦:${cast.bian.full}\n体用断:${a.rel},${a.lv}。${a.wang}\n经文:本卦辞「${cast.ben.guaCi}」;动爻辞「${cast.ben.yaoCi[cast.moving - 1]}」;变卦辞「${cast.bian.guaCi}」\n所问:${c.q}`;
+      c.summary = `${cast.ben.name}之${cast.bian.name}·${a.lv}`;
+    } else if (c.method === 'xlr') {
+      const k = Xiaoliuren.castByTime(Lunar.fromDate(now));
+      c.report = `【小六壬起课】${k.how}\n三宫:${k.gongs[0].name}(因)→${k.gongs[1].name}(过程)→${k.gongs[2].name}(果)\n果宫诗诀:${k.gongs[2].verse}\n所问:${c.q}`;
+      c.summary = `${k.gongs.map(g => g.name).join('·')}`;
+    } else if (c.method === 'qimen') {
+      const qc = Qimen.cast(now); const v = Qimen.verdict(qc);
+      c.report = Qimen.report(qc).trimEnd() + `\n程序初断:事落${v.name}宫得${v.gate},${v.lv}(${v.reasons.join(';')})\n所问:${c.q}`;
+      c.summary = `${qc.dun}·${v.name}宫${v.gate}·${v.lv}`;
+    } else {
+      const cast = GuaCore.castHexagram();
+      const z = Najia.zhuangGua(cast.benId, now);
+      const plan = GuaCore.interpretationPlan(cast);
+      const jing = plan.focus.map(f => `${f.kind}:${f.text}`).join('\n');
+      const r = GuaCore.interpret(cast);
+      c.report = GuaCore.buildReport(cast, c.q) + '\n' + panText(cast, z) + '\n【经文取材】\n' + jing;
+      c.summary = `${cast.ben.name}${cast.bian ? '之' + cast.bian.name : ''}·${r.level}`;
+    }
+    c.done = true;
+  }
+  async function dwMakePlan() {
+    if (dwBusy) return;
+    const q = $('dw-q').value.trim();
+    if (!q) { dwStatus('先把你的大问写下来,再拆阵。', true); return; }
+    if (!getKey()) { dwStatus(`AI 拆阵需先设置 ${curProvider().label} API Key(见「东玄深断」栏);也可直接用现成「人生轨迹」阵。`, true); return; }
+    dwBusy = true; $('btn-dw-plan').disabled = true; dwStatus('东玄正在拆阵……');
+    try {
+      const { text } = await llmStream([{ role: 'user', content: `大问:${q}${gender() ? `(问卦人:${gender()})` : ''}\n请拆阵,只回JSON。` }], null, DW_PLAN_SYSTEM);
+      const m = text.match(/\{[\s\S]*\}/);
+      const plan = JSON.parse(m ? m[0] : text);
+      if (!Array.isArray(plan.groups) || !plan.groups.length) throw new Error('阵形不完整');
+      plan.groups = plan.groups.slice(0, 8);
+      for (const g of plan.groups) {
+        g.casts = (g.casts || []).slice(0, 4).filter(c => c && c.q);
+        for (const c of g.casts) if (!DW_METHODS[c.method]) c.method = 'liuyao';
+      }
+      dwPlan = { q, note: plan.note || '', groups: plan.groups };
+      dwConvo = null; $('dw-out').classList.add('hidden'); $('dw-out').innerHTML = ''; $('dw-followup').classList.add('hidden');
+      renderDwPlan();
+      dwStatus(`阵已拆好:${dwPlan.groups.length} 个板块、共 ${dwTotal()} 卦。心里想着各卦小问,逐个点「起卦」;起完(或起到想问的为止)点「汇总深断」。`);
+    } catch (e) {
+      dwStatus('拆阵未成:' + aiErrHint(e, $('ai-provider').value) + ' 也可先用现成「人生轨迹」阵。', true);
+    } finally { dwBusy = false; $('btn-dw-plan').disabled = false; }
+  }
+  function dwUseExample() {
+    dwPlan = JSON.parse(JSON.stringify(LIFE_PLAN));
+    const typed = $('dw-q').value.trim();
+    if (typed) dwPlan.q = typed; else $('dw-q').value = LIFE_PLAN.q;
+    dwConvo = null; $('dw-out').classList.add('hidden'); $('dw-out').innerHTML = ''; $('dw-followup').classList.add('hidden');
+    renderDwPlan();
+    dwStatus(`「人生轨迹」阵已摆好:${dwPlan.groups.length} 个板块、共 ${dwTotal()} 卦。逐个点「起卦」,起完点「汇总深断」。`);
+  }
+  async function dwAsk(turns, isFollow) {
+    dwBusy = true; $('btn-dw-read').disabled = true; $('btn-dw-fu') && ($('btn-dw-fu').disabled = true);
+    dwStatus(isFollow ? '东玄再想想……' : '东玄凝神,汇总细批……');
+    const out = $('dw-out'); out.classList.remove('hidden');
+    if (isFollow) { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(turns[turns.length - 1].content.split('\n')[0]); out.appendChild(y); }
+    else out.innerHTML = '';
+    const ans = document.createElement('div'); ans.className = 'fq-ans'; ans.innerHTML = '<span class="cursor">▍</span>'; out.appendChild(ans);
+    let text = '';
+    try {
+      const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); });
+      text = r.text; ans.textContent = text;
+      if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { dwStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
+      else if (!text) throw new Error('未收到内容');
+      else {
+        dwConvo = { turns: turns.concat([{ role: 'assistant', content: text }]) };
+        $('dw-followup').classList.remove('hidden');
+        if (isFollow) { $('dw-fu').value = ''; dwStatus('答毕。可接着追问。'); }
+        else {
+          dwStatus('批毕。可在下方就这套阵追问。已存入卦档。');
+          const recId = saveRec({
+            method: '大问拆阵', question: (dwPlan.q || '').slice(0, 80),
+            headline: `${dwDone()}/${dwTotal()} 卦成阵`, level: '阵', dx: dwPlan.note || '',
+            report: dwPlan.groups.map(g => g.casts.filter(c => c.done).map(c => `【${g.title}】${c.q}\n${c.report}`).join('\n\n')).filter(Boolean).join('\n\n'),
+          });
+          attachAiReading(recId, $('ai-model').value, text);
+        }
+      }
+    } catch (e) {
+      dwStatus((isFollow ? '追问未成:' : '汇总深断未成:') + aiErrHint(e, $('ai-provider').value), true);
+      if (!text) ans.remove();
+    } finally { dwBusy = false; $('btn-dw-read').disabled = false; $('btn-dw-fu') && ($('btn-dw-fu').disabled = false); }
+  }
+  function dwRead() {
+    if (dwBusy || !dwPlan) return;
+    if (!dwDone()) { dwStatus('还没起卦——先在阵里点「起卦」。', true); return; }
+    if (!getKey()) { dwStatus(`汇总深断需先设置 ${curProvider().label} API Key(见「东玄深断」栏)。`, true); return; }
+    let material = `【大问拆阵 · 汇总细批】\n大问:${dwPlan.q || $('dw-q').value.trim()}\n阵法思路:${dwPlan.note || '(自定之阵)'}\n【规矩】逐板块细批:每卦只答其小问,并给足该卦标注的"必须给";跨卦结论只在末尾总揽时串联;凡人生轨迹类,总揽必须把各卦应期串成一条时间线(阳历年份/月份,按先后排,如"2027年上半年换方向→2029年前后置业→…"),坎年机遇年点名;若有验证卦,按其结果说明哪些板块可信、哪些打折;未起卦的板块直说"未起卦,不断",不许编。`;
+    for (const g of dwPlan.groups) {
+      const done = g.casts.filter(c => c.done);
+      if (!done.length) continue;
+      material += `\n\n════ 板块:${g.title}${g.why ? `(${g.why})` : ''} ════`;
+      for (const c of done) material += `\n——${DW_METHODS[c.method]}卦 · 所问:${c.q}\n(此卦必须给:${c.focus || '落地结论'})\n${c.report}`;
+    }
+    material += genderMaterialLine() + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
+    return dwAsk([{ role: 'user', content: material }], false);
+  }
+  function dwFollowUp() {
+    if (dwBusy) return;
+    if (!dwConvo) { dwStatus('先汇总深断,再追问。', true); return; }
+    const t = $('dw-fu').value.trim();
+    if (!t) { dwStatus('先打上你要追问的话。', true); return; }
+    return dwAsk(dwConvo.turns.concat([{ role: 'user', content: t + '\n(就着这套阵与已起之卦接着答,不另起卦;还是大白话。答不了就直说。)' }]), true);
+  }
+  $('btn-dw-plan').addEventListener('click', dwMakePlan);
+  $('btn-dw-example').addEventListener('click', dwUseExample);
+  $('btn-dw-read').addEventListener('click', dwRead);
+  $('btn-dw-fu').addEventListener('click', dwFollowUp);
+  $('btn-dw-clear').addEventListener('click', () => {
+    dwPlan = null; dwConvo = null; renderDwPlan();
+    $('dw-out').classList.add('hidden'); $('dw-out').innerHTML = ''; $('dw-followup').classList.add('hidden');
+    dwStatus('阵已清空。');
+  });
+  $('dw-plan').addEventListener('click', e => {
+    const gh = e.target.closest('.dwgh');
+    if (gh) {
+      const body = gh.parentElement.querySelector('.dwbody');
+      const nowHidden = body.classList.toggle('hidden');
+      gh.querySelector('.tri').textContent = nowHidden ? '▸' : '▾';
+      return;
+    }
+    const b = e.target.closest('.dw-cast');
+    if (!b || !dwPlan) return;
+    const c = dwPlan.groups[Number(b.dataset.g)].casts[Number(b.dataset.c)];
+    if (!c || c.done) return;
+    dwCastOne(c);
+    renderDwPlan();
+    dwStatus(`已起 ${dwDone()}/${dwTotal()} 卦。${dwDone() >= dwTotal() ? '全阵起毕,点「汇总深断」。' : ''}`);
+  });
 
   // —— 梅花易数 ——
   const MH_RULES = '【梅花断法】体卦为己、用卦为事应;用生体大吉,比和吉,体克用可成而迟,体生用耗泄不利,用克体凶。互卦察中间过程,变卦定结局;体卦旺衰以月令五行论;应期以体用卦数或变卦气数推,近取日时、远取月。八卦万物类象随所问细取。';
@@ -1159,7 +1413,7 @@
     const byGroup = {};
     Fenke.FENKE.forEach(f => { (byGroup[f.group] = byGroup[f.group] || []).push(f); });
     $('fenke-chips').innerHTML = Fenke.GROUPS.filter(g => byGroup[g]).map(g =>
-      `<div class="fkgroup"><div class="fkgh">${g}</div><div class="fkrow">` +
+      `<div class="fkgroup"><button class="fkgh" type="button"><span class="tri">▸</span>${g}<span class="gcnt">${byGroup[g].length} 科</span></button><div class="fkrow hidden">` +
       byGroup[g].map(f => `<button class="fk" data-id="${f.id}">${f.label}</button>`).join('') +
       `</div></div>`).join('');
   }
@@ -1189,7 +1443,13 @@
       </button>`;
     }).join('');
     const note = curFenke.note ? `<div class="fk-note"><b>提示:</b>${esc(curFenke.note)}</div>` : '';
-    $('fk-recommend').innerHTML = `<div class="rq">拟问:<b>${esc(curFenke.q)}</b></div>${opts}${note}`;
+    let dateRow = '';
+    if (curFenke.dateInput) {
+      const t = new Date();
+      const iso = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+      dateRow = `<div class="rq">看哪一天:<input type="date" id="fk-date" value="${iso}" min="${iso}" style="font-family:inherit;padding:6px 8px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--ink)"> <span style="color:var(--dim);font-size:.82rem">默认今天,可挑将来任何一天</span></div>`;
+    }
+    $('fk-recommend').innerHTML = `<div class="rq">拟问:<b>${esc(curFenke.q)}</b></div>${dateRow}${opts}${note}`;
     $('fk-recommend').classList.remove('hidden');
   }
   // 点方法:切到对应法门与起式,填问题,锁定本类断法规程
@@ -1198,7 +1458,14 @@
     const r = curFenke.recommend[i];
     if (!r) return;
     curPick = { method: r.method, mode: r.mode };
-    $('question').value = curFenke.q;
+    let pickedQ = curFenke.q;
+    if (curFenke.dateInput && $('fk-date') && $('fk-date').value) {
+      const [y, m, d] = $('fk-date').value.split('-').map(Number);
+      const t = new Date();
+      const isToday = y === t.getFullYear() && m === t.getMonth() + 1 && d === t.getDate();
+      if (!isToday) pickedQ = `我${y}年${m}月${d}日那天运势怎么样?宜做什么?`;
+    }
+    $('question').value = pickedQ;
     curTab = r.method;
     cancelDuo();
     if (r.method === 'liuyao') {
@@ -1218,6 +1485,13 @@
     $('sec-q').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   $('fenke-chips').addEventListener('click', e => {
+    const gh = e.target.closest('.fkgh');
+    if (gh) {
+      const row = gh.parentElement.querySelector('.fkrow');
+      const nowHidden = row.classList.toggle('hidden');
+      gh.querySelector('.tri').textContent = nowHidden ? '▸' : '▾';
+      return;
+    }
     const b = e.target.closest('.fk');
     if (b) openFenke(b.dataset.id);
   });
@@ -1245,6 +1519,7 @@
   }));
   $('btn-deepread').addEventListener('click', deepRead);
   $('btn-followup').addEventListener('click', followUp);
+  $('btn-followup-gua').addEventListener('click', followUpGua);
   document.querySelectorAll('.fq').forEach(b => b.addEventListener('click', () => {
     $('fu-input').value = b.textContent.replace('{}', '');
     $('fu-input').focus();
@@ -1273,7 +1548,8 @@
   $('btn-step').addEventListener('click', tossOnce);
   $('btn-auto').addEventListener('click', autoCast);
   $('btn-reset').addEventListener('click', () => resetBoard(true));
-  $('btn-duo-start').addEventListener('click', startDuo);
+  $('btn-duo-start').addEventListener('click', () => startDuo('duo'));
+  $('btn-duo-start2').addEventListener('click', () => startDuo('duo2'));
   $('btn-duo-single').addEventListener('click', () => $('duo-offer').classList.add('hidden'));
   if (localStorage.getItem(GKEY)) $('q-gender').value = localStorage.getItem(GKEY);
   $('q-gender').addEventListener('change', () => localStorage.setItem(GKEY, $('q-gender').value));
