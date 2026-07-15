@@ -185,6 +185,18 @@ t('分占体系:验证卦收尾、落细规程;财富量级六卦逐层锁定', 
   ok(cl.duo.rules.includes('取数规程') && cl.duo.rules.includes('先天卦数') && cl.duo.rules.includes('常识校验'), '财富量级须含四步取数规程');
   ok(cl.ai.includes('测数四步'), '单卦规程亦须取数四步');
 });
+t('问数问期专类:五卦互证、复筮取交集、验证收尾', () => {
+  ok(Fenke.GROUPS.includes('问数问期'), '应有问数问期分组');
+  for (const id of ['wenshu', 'wenqi']) {
+    const f = Fenke.FENKE.find(x => x.id === id);
+    ok(f && f.duo && f.duo.subs.length === 5, id + ' 应为五卦互证');
+    ok(f.duo.subs.some(s2 => s2.k === '复筮'), id + ' 应含复筮');
+    ok(f.duo.subs[f.duo.subs.length - 1].k === '验证', id + ' 末卦应为验证');
+    ok(f.duo.rules.includes('独立') && f.duo.rules.includes('可信度'), id + ' 规程须独立互证并给可信度');
+  }
+  ok(Fenke.FENKE.find(f => f.id === 'wenshu').duo.rules.includes('交集'), '问数须取交集');
+  ok(Fenke.FENKE.find(f => f.id === 'wenqi').duo.rules.includes('数路') || Fenke.FENKE.find(f => f.id === 'wenqi').duo.subs.some(s2 => s2.k === '数路'), '问期须含数路');
+});
 t('日运可择日;月运九卦详占、年运十卦详占(时段卦+路卦交叉印证)', () => {
   const ri = Fenke.FENKE.find(f => f.id === 'riyun');
   ok(ri.dateInput === true, '日运应支持择日');

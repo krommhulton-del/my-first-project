@@ -63,6 +63,11 @@
   button.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
   button.primary:hover { background: #a93226; }
   button.ghost { border-color: var(--line); color: var(--dim); }
+  button.gold { background: var(--gold); border-color: var(--gold); color: #fff; }
+  button.gold:hover { background: #75591f; }
+  .zone { display: flex; align-items: center; gap: 12px; color: var(--gold); letter-spacing: .35em;
+    font-size: .92rem; margin: 26px 0 14px; }
+  .zone::before, .zone::after { content: ''; flex: 1; border-top: 1px dashed var(--line); }
   .tosslog { margin-top: 16px; display: flex; flex-direction: column-reverse; gap: 6px; }
   .toss { display: flex; align-items: center; gap: 12px; background: var(--panel2);
     border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; font-size: .95rem; }
@@ -278,9 +283,9 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.19</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.20</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
-    <p class="guide"><b>怎么用:</b>① 填问卦人 → ② 在分科里挑要问的事(或直接往下写问题)→ ③ 起卦看解读 → ④ 请东玄深断、可追问。一句话装不下的大问用底部「大问拆阵」;近来不顺想调一调,用「转运」。</p>
+    <p class="guide"><b>怎么用:</b>① 填问卦人 → ② 在分科里挑要问的事(或直接往下写问题)→ ③ 起卦看解读 → ④ 请东玄深断、可追问。一句话装不下的大问用底部「大问拆阵」;近来不顺想调一调,用「转运」。<br><b>按钮颜色:</b>红色=起卦 · 金色=请东玄细断(需AI) · 灰色=辅助操作。</p>
   </header>
 
   <nav class="tabs">
@@ -290,6 +295,8 @@
     <button data-m="qimen">奇门遁甲</button>
   </nav>
 
+  <div class="zone">壹 · 问事起卦</div>
+
   <section id="sec-querent">
     <h2>问 卦 人</h2>
     <div class="qrow">
@@ -298,7 +305,7 @@
         <option value="男">我是男</option>
         <option value="女">我是女</option>
       </select>
-      <input type="number" id="q-age" min="1" max="120" placeholder="年龄·选填" title="问卦人年龄,选填;断应期与人生阶段更准">
+      <select id="q-age" title="问卦人年龄段,选填;断应期与人生阶段更准"><option value="">年龄·选填</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
       <span class="note" style="margin:0;align-self:center">选上断得更准:性别定看哪条线,年龄定人生阶段。填一次全程通用,之后不用再填。</span>
     </div>
   </section>
@@ -321,7 +328,7 @@
     <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
     <div class="qwho">为谁问:
       <select id="qg-q" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-      <input type="number" id="qa-q" min="1" max="120" placeholder="年龄" title="替别人问,就填那人的年龄">
+      <select id="qa-q" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
       <span class="qwhint" id="qh-q"></span>
     </div>
   </section>
@@ -451,10 +458,12 @@
     </div>
   </section>
 
+  <div class="zone hidden" id="zone-ai">贰 · 东玄深断</div>
+
   <section id="sec-ai" class="hidden">
     <h2>东玄深断 · AI 细批</h2>
     <div class="btnrow">
-      <button id="btn-deepread" class="primary">请东玄深断此卦</button>
+      <button id="btn-deepread" class="gold">请东玄深断此卦</button>
       <select id="ai-provider">
         <option value="claude">Claude(Anthropic)</option>
         <option value="deepseek">DeepSeek(深度求索)</option>
@@ -481,8 +490,8 @@
       </div>
       <textarea id="fu-input" placeholder="直接打你想追问的,比如:那笔钱具体几月能到?/ 你说对方年长,凭啥?"></textarea>
       <div class="btnrow">
-        <button id="btn-followup" class="primary">直接追问(就前卦答)</button>
-        <button id="btn-followup-gua">以卦追问(另起一卦)</button>
+        <button id="btn-followup" class="gold">直接追问(就前卦答)</button>
+        <button id="btn-followup-gua" class="gold">以卦追问(另起一卦)</button>
       </div>
       <div class="note">直接追问:东玄就着已起的卦接着讲。以卦追问:为这个追问三钱另掷一卦,以新卦为准细断、兼与前卦对照——问到前卦覆盖不到的新事时用这个。</div>
     </div>
@@ -496,6 +505,8 @@
     </div>
   </section>
 
+  <div class="zone">叁 · 专项与卦档</div>
+
   <section id="sec-dawen" class="fold">
     <h2 class="foldh">问 道 · 大问拆阵(一句大问,拆成一套卦)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
@@ -503,24 +514,24 @@
     <textarea id="dw-q" maxlength="600" placeholder="用你自己的话,把心里那个大问写在这里,越具体拆出来的阵越贴。例:我这几年诸事不顺,想看看往后五年整体走向,哪年转运、该往哪使劲?"></textarea>
     <div class="qwho">为谁问:
       <select id="qg-dw" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-      <input type="number" id="qa-dw" min="1" max="120" placeholder="年龄" title="替别人问,就填那人的年龄">
+      <select id="qa-dw" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
       <span class="qwhint" id="qh-dw"></span>
     </div>
     <div class="btnrow">
-      <button id="btn-dw-plan" class="primary">请东玄拆阵(AI)</button>
+      <button id="btn-dw-plan" class="gold">请东玄拆阵(AI)</button>
       <button id="btn-dw-example" class="ghost">用现成「命途总览」阵</button>
     </div>
     <div id="dw-status"></div>
     <div id="dw-plan"></div>
     <div id="dw-actions" class="btnrow hidden">
-      <button id="btn-dw-read" class="primary">汇总深断</button>
+      <button id="btn-dw-read" class="gold">汇总深断</button>
       <button id="btn-dw-clear" class="ghost">清空此阵</button>
     </div>
     <div id="dw-out" class="aiout hidden"></div>
     <div id="dw-followup" class="hidden">
       <div class="fuhint">就这套阵与批语接着追问:</div>
       <textarea id="dw-fu" placeholder="例:两个板块给的年份对不上,以哪个为准?"></textarea>
-      <div class="btnrow"><button id="btn-dw-fu" class="primary">追 问</button></div>
+      <div class="btnrow"><button id="btn-dw-fu" class="gold">追 问</button></div>
     </div>
   </div>
   </section>
@@ -531,7 +542,7 @@
     <div class="note">这里不看吉凶定数,只办两件实事:<b>近来不顺的根子在哪</b>,以及<b>接下来怎么做</b>。先诊断(现状、根源、什么最旺你),再给做法(宜忌、方位时机、补救步骤)——每一条都落到当天能做的事上。运有起落,事在人为。</div>
     <div class="qwho">为谁问:
       <select id="qg-zy" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-      <input type="number" id="qa-zy" min="1" max="120" placeholder="年龄" title="替别人问,就填那人的年龄">
+      <select id="qa-zy" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
       <span class="qwhint" id="qh-zy"></span>
     </div>
     <div class="btnrow">
@@ -540,14 +551,14 @@
     <div id="zy-status"></div>
     <div id="zy-plan"></div>
     <div id="zy-actions" class="btnrow hidden">
-      <button id="btn-zy-read" class="primary">汇总深断</button>
+      <button id="btn-zy-read" class="gold">汇总深断</button>
       <button id="btn-zy-clear" class="ghost">清空此阵</button>
     </div>
     <div id="zy-out" class="aiout hidden"></div>
     <div id="zy-followup" class="hidden">
       <div class="fuhint">就这份诊断和做法接着追问:</div>
       <textarea id="zy-fu" placeholder="例:补救那几步,先做哪一步最要紧?"></textarea>
-      <div class="btnrow"><button id="btn-zy-fu" class="primary">追 问</button></div>
+      <div class="btnrow"><button id="btn-zy-fu" class="gold">追 问</button></div>
     </div>
   </div>
   </section>
@@ -561,7 +572,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.19 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.20 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script>
@@ -3351,7 +3362,7 @@
   const XL = (star, tag, why, mode) => ({ method: 'xlr', mode: mode || 'time', star, tag, why });
   const QM = (star, tag, why) => ({ method: 'qimen', mode: 'time', star, tag, why });
 
-  const GROUPS = ['感情姻缘', '婚姻家庭', '事业工作', '求学考试', '财运钱财', '谋事求人', '出行搬迁', '健康疾病', '寻人寻物', '看某个人', '人际往来', '运势时运', '决策与择时', '官非风险'];
+  const GROUPS = ['感情姻缘', '婚姻家庭', '事业工作', '求学考试', '财运钱财', '谋事求人', '出行搬迁', '健康疾病', '寻人寻物', '看某个人', '人际往来', '运势时运', '决策与择时', '问数问期', '官非风险'];
 
   const FENKE = [
     // ——— 感情姻缘 ———
@@ -3684,6 +3695,32 @@
       recommend: [QM(3, '首选', '奇门择时本行:取吉门吉星临旺之日时并给方位,择吉最专业。'), LY(2, '次选', '六爻以用神旺相逢生之日为吉,逢冲破之日勿用。')],
       ai: '奇门取近期吉门(开休生)吉星旺相之日时、避空亡门迫,并配所利方位;六爻以所办之事的用神逢生旺之日为吉。必须给:近期两三个可用的好日子(落到阳历日期段)、每个配大概时段、务必避开的日子、办事朝哪个方位走利,四项。' },
 
+    // ——— 问数问期(多卦互证,专出具体数字与日期) ———
+    { id: 'wenshu', group: '问数问期', label: '问数(要个数字)', q: '这件事的数目到底是多少(钱/数量)?',
+      recommend: [LY(3, '首选', '五卦互证问数:主卦取数、复筮独立再取、只认两路交集,数字敢落且可复算。')],
+      note: '凡要一个具体数(金额/数量/多少),专走这里的分占连断:两卦各自独立取数、只认交集,再验虚实、再收窄、末卦验证——比单卦拍数可靠得多。',
+      duo: {
+        rules: '问数五卦互证。第1卦定盘:按取数四步(基数两路并取——用神地支序数与上下卦先天卦数;旺衰定倍率;两路取重叠;常识校验)得候选区间A;第2卦复筮:完全独立重取一次得区间B,两卦各算各的、禁止互相迁就;第3卦断虚实:此数是实是虚(空破打折)、一笔还是多笔、大概何时兑现;第4卦收窄:只在A与B的交集内定最终区间——若A、B无交集,以旺相之卦为主、休囚之卦为辅,并明说分歧;第5卦验证:校前四卦,给最终之数一个可信度(高/中/低),低则建议改日重问。落笔:最终答案必须是明确区间(上限不超过下限的两倍),推算路径大白话一句带过,不报术语。',
+        subs: [
+          { k: '定盘', q: '此数初断,落在什么范围?' },
+          { k: '复筮', q: '不看前卦,再占一次:此数落在什么范围?' },
+          { k: '虚实', q: '这个数是实是虚、一笔还是多笔?' },
+          { k: '收窄', q: '两路并看,最终数落在哪一段?' },
+          { k: '验证', q: '以上所断之数,与实情相符吗?' } ] },
+      ai: '单卦问数按取数四步(基数两路、旺衰定倍、取重叠、常识校验);要更准走分占连断五卦互证。必须给:数字区间(上限≤下限两倍)、是虚是实、兑现时点、可信度,四项;推算路径大白话一句带过。' },
+    { id: 'wenqi', group: '问数问期', label: '问期(要个日子)', q: '这件事到底什么时候应验/发生?',
+      recommend: [LY(3, '首选', '五卦互证问期:地支应期一路、复筮一路、卦数推期又一路,同指之期才落到旬和日。')],
+      note: '凡问"什么时候",专走这里的分占连断:三路独立推期(地支应期/复筮/卦数),同指者才敢落到旬甚至到日,末卦验证。',
+      duo: {
+        rules: '问期五卦互证。第1卦定期:以用神地支与旺衰推应期(旺待冲、衰待生、空待填实、动待合、静待冲),得候选之期A,落到月与旬;第2卦复筮:完全独立再推一次得B,禁止迁就前卦;第3卦数路:以本卦变卦之卦数推期(急事以日计、缓事以月计),得C;第4卦收窄:取A/B/C同指或两两重叠之期为准,落到旬、能到几号前后更好——三路各说各话时,以用神旺相之卦为主并明说分歧;第5卦验证:校前四卦,给最终之期可信度(高/中/低),低则直说、建议改日再问。落笔:最终答案必须是明确时间窗(近事不宽于一旬、远事不宽于一月),并点一个"最可能的日子"。',
+        subs: [
+          { k: '定期', q: '此事初断,应在何时?' },
+          { k: '复筮', q: '不看前卦,再占一次:此事应在何时?' },
+          { k: '数路', q: '以数推期,此事应在何时?' },
+          { k: '收窄', q: '三路并看,最终落在哪一旬、哪几日?' },
+          { k: '验证', q: '以上所断之期,与实情相符吗?' } ] },
+      ai: '单卦问期以用神地支与旺衰推应期;要更准走分占连断五卦互证(地支/复筮/卦数三路取同指)。必须给:时间窗(近事不宽于一旬、远事不宽于一月)、最可能的日子、可信度、有分歧明说,四项。' },
+
     // ——— 官非风险 ———
     { id: 'zhuihui', group: '官非风险', label: '被骗能否追回', q: '我被骗的钱/物,还能追回来吗?',
       recommend: [LY(3, '首选', '六爻财为被骗之财、官为立案追查,能不能回、回几成断得清。'), QM(2, '次选', '奇门以玄武落宫定骗方方位与踪迹。')],
@@ -3720,15 +3757,17 @@
     return local || $('q-gender').value;
   }
   function qAge(ctx) {
-    const lv = ctx && $('qa-' + ctx) ? parseInt($('qa-' + ctx).value, 10) : NaN;
-    if (lv >= 1 && lv <= 120) return lv;
-    const v = parseInt($('q-age').value, 10);
-    return (v >= 1 && v <= 120) ? v : null;
+    const lv = ctx && $('qa-' + ctx) ? $('qa-' + ctx).value : '';
+    return lv || $('q-age').value || null;
   }
+  function ageLabel(a) { return a === 'secret' ? '' : (a ? (a.includes('以') ? a : a + '岁') : ''); }
   function querentBrief(ctx) {
     const g = gender(ctx), a = qAge(ctx);
     if (!g && !a) return '';
-    return `${g || '性别未说明'}${a ? `,${a}岁` : ''}`;
+    let s2 = g || '性别未说明';
+    if (a === 'secret') s2 += '(年龄不愿透露)';
+    else if (a) s2 += ',' + ageLabel(a);
+    return s2;
   }
   function genderReportLine(ctx) { const b = querentBrief(ctx); return b ? `\n问卦人:${b}` : ''; }
   function genderMaterialLine(ctx) {
@@ -3736,7 +3775,8 @@
     if (!g && !a) return '';
     let s = `\n【问卦人:${querentBrief(ctx)}】此为所问之事的当事人(可能是替人问卦),一切口径以此人为准。`;
     if (g) s += `凡涉婚恋对方、看人画像、称谓,按此性别推断(男问姻缘以妻财为对方,女以官鬼为对方;画像按对应性别标准换算)。`;
-    if (a) s += `断应期与人生阶段以此年龄起算:婚嫁、生育、置业、事业转折等结论必须落在该年龄之后的合理区间,称谓与建议贴合此年纪的处境,不许给出与年龄相悖的说法。`;
+    if (a === 'secret') s += `年龄未透露:不以年龄设限,但凡给出婚嫁、生育、置业等人生阶段结论时,注明所依据的假设,不武断。`;
+    else if (a) s += `断应期与人生阶段以此年龄段(${ageLabel(a)})起算:婚嫁、生育、置业、事业转折等结论必须落在该年龄段之后的合理区间,称谓与建议贴合此年纪的处境,不许给出与年龄相悖的说法。`;
     return s;
   }
   // 各入口「为谁问」提示:空则提醒,有则显示当前口径
@@ -3765,6 +3805,7 @@
     document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === curTab));
     const w = works[curTab];
     $('sec-ai').classList.toggle('hidden', !w);
+    $('zone-ai').classList.toggle('hidden', !w);
     $('sec-report').classList.toggle('hidden', !w);
     if (w) $('report').value = w.report;
     // 切换法门时,还原该法门自己的深断/追问对话(存在 works[tab].convo)
@@ -4895,7 +4936,7 @@
   $('q-age').addEventListener('change', () => { localStorage.setItem(AKEY, $('q-age').value); updateQwho(); });
   for (const ctx of ['q', 'dw', 'zy']) {
     $('qg-' + ctx).addEventListener('change', updateQwho);
-    $('qa-' + ctx).addEventListener('input', updateQwho);
+    $('qa-' + ctx).addEventListener('change', updateQwho);
   }
   updateQwho();
   $('btn-copy').addEventListener('click', async () => {

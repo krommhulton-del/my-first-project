@@ -229,23 +229,22 @@ await t('分科可改选非首选方法(搬家改选六爻)', async () => {
   ok(await page.locator('#sec-cast').isVisible(), '改选六爻后应切到六爻面板');
 });
 
-await t('性别年龄:选男28岁起卦,回报注明问卦人;持久化', async () => {
+await t('性别年龄:选男26-30岁起卦,回报注明问卦人;持久化;可选不想透露', async () => {
   await page.click('.tabs button[data-m=liuyao]');
   await page.selectOption('#q-gender', '男');
-  await page.fill('#q-age', '28');
-  await page.locator('#q-age').dispatchEvent('change');
+  await page.selectOption('#q-age', '26-30');
   await page.fill('#question', '性别年龄口径内测一问');
   await page.check('input[name=ly-mode][value=coin]');
   await page.click('#btn-auto');
-  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:男,28岁'), null, { timeout: 9000 });
-  const rep = await page.inputValue('#report');
-  ok(rep.includes('问卦人:男,28岁'), '回报应注明性别年龄');
+  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:男,26-30岁'), null, { timeout: 9000 });
+  ok((await page.inputValue('#report')).includes('问卦人:男,26-30岁'), '回报应注明性别与年龄段');
   await page.reload({ waitUntil: 'load' });
   ok((await page.inputValue('#q-gender')) === '男', '性别应持久化');
-  ok((await page.inputValue('#q-age')) === '28', '年龄应持久化');
+  ok((await page.inputValue('#q-age')) === '26-30', '年龄段应持久化');
+  await page.selectOption('#q-age', 'secret');
+  ok((await page.textContent('#qh-q')).includes('不愿透露'), '不想透露应入口径提示');
   await page.selectOption('#q-gender', '');
-  await page.fill('#q-age', '');
-  await page.locator('#q-age').dispatchEvent('change');
+  await page.selectOption('#q-age', '');
 });
 
 await t('分占连断:月运选六爻,六卦连占(含验证卦)出合并回报与总览', async () => {
@@ -398,13 +397,13 @@ await t('为谁问:问题旁单独填性别年龄(替人问),盖过顶栏默认'
   await page.click('.tabs button[data-m=liuyao]');
   ok((await page.textContent('#qh-q')).includes('未填'), '空缺时应有提醒');
   await page.selectOption('#qg-q', '女');
-  await page.fill('#qa-q', '35');
-  ok((await page.textContent('#qh-q')).includes('女,35岁'), '提示应显示当前口径');
+  await page.selectOption('#qa-q', '36-40');
+  ok((await page.textContent('#qh-q')).includes('女,36-40岁'), '提示应显示当前口径');
   await page.fill('#question', '替人问卦内测');
   await page.click('#btn-auto');
-  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:女,35岁'), null, { timeout: 9000 });
+  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:女,36-40岁'), null, { timeout: 9000 });
   await page.selectOption('#qg-q', '');
-  await page.fill('#qa-q', '');
+  await page.selectOption('#qa-q', '');
   ok((await page.locator('#qh-dw').count()) === 1 && (await page.locator('#qh-zy').count()) === 1, '拆阵与转运也应有为谁问');
 });
 
