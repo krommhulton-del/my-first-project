@@ -185,6 +185,18 @@ t('分占体系:验证卦收尾、落细规程;财富量级六卦逐层锁定', 
   ok(cl.duo.rules.includes('取数规程') && cl.duo.rules.includes('先天卦数') && cl.duo.rules.includes('常识校验'), '财富量级须含四步取数规程');
   ok(cl.ai.includes('测数四步'), '单卦规程亦须取数四步');
 });
+t('旺衰相性:人/城/司/宅四科,五卦分路、档位结论;核心运势可选时段', () => {
+  ok(Fenke.GROUPS.includes('旺衰相性'), '应有旺衰相性分组');
+  for (const id of ['wangren', 'wangdi', 'wanggs', 'wangzhai']) {
+    const f = Fenke.FENKE.find(x => x.id === id);
+    ok(f && f.duo && f.duo.subs.length === 5, id + ' 应为五卦分路');
+    ok(f.duo.subs[0].k === '总相性' && f.duo.subs[4].k === '验证', id + ' 首总相性末验证');
+    ok(f.duo.rules.includes('-10到+10') && f.duo.rules.includes('档位') || f.duo.rules.includes('旺我几分'), id + ' 应给分值与档位');
+  }
+  const yc = Fenke.FENKE.find(f => f.id === 'yunshi_core');
+  ok(yc && yc.rangeInput === true, '核心运势应支持选时段');
+  ok(yc.ai.includes('双轨') && yc.ai.includes('高点'), '核心运势规程须双轨与高低点');
+});
 t('问数问期专类:五卦互证、复筮取交集、验证收尾', () => {
   ok(Fenke.GROUPS.includes('问数问期'), '应有问数问期分组');
   for (const id of ['wenshu', 'wenqi']) {

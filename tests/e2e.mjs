@@ -393,6 +393,25 @@ await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折�
   ok((await page.locator('#dw-plan .dwgroup').count()) === 0, '清空后阵应无');
 });
 
+await t('核心运势选时段:近一月/指定某年,问题自动重组', async () => {
+  await expandGroups();
+  await page.click('.fk[data-id=yunshi_core]');
+  ok(await page.locator('#fk-range').isVisible(), '应有时段选择');
+  await page.selectOption('#fk-range', '近一个月');
+  await page.locator('#fk-recommend .mopt').first().click();
+  ok((await page.inputValue('#question')).includes('近一个月'), '问题应带时段:' + (await page.inputValue('#question')));
+  await expandGroups();
+  await page.click('.fk[data-id=yunshi_core]');
+  await page.click('.fk[data-id=yunshi_core]');
+  ok(await page.locator('#fk-year').evaluate(el => el.classList.contains('hidden')), '年份框默认隐藏');
+  await page.selectOption('#fk-range', 'year');
+  ok(!(await page.locator('#fk-year').evaluate(el => el.classList.contains('hidden'))), '选指定某年应现年份框');
+  await page.fill('#fk-year', '2028');
+  await page.locator('#fk-recommend .mopt').first().click();
+  ok((await page.inputValue('#question')).includes('2028年运势'), '问题应带年份:' + (await page.inputValue('#question')));
+  await page.click('.fk[data-id=yunshi_core]');
+});
+
 await t('为谁问:问题旁单独填性别年龄(替人问),盖过顶栏默认', async () => {
   await page.click('.tabs button[data-m=liuyao]');
   ok((await page.textContent('#qh-q')).includes('未填'), '空缺时应有提醒');
