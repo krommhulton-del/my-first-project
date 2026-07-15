@@ -266,7 +266,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.15</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.16</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -284,13 +284,26 @@
     <div id="fk-recommend" class="hidden"></div>
   </section>
 
+  <section id="sec-querent">
+    <h2>问 卦 人</h2>
+    <div class="qrow">
+      <select id="q-gender" title="问卦人性别,选填;问婚恋、看人时影响断法口径">
+        <option value="">性别·选填</option>
+        <option value="男">我是男</option>
+        <option value="女">我是女</option>
+      </select>
+      <input type="number" id="q-age" min="1" max="120" placeholder="年龄·选填" title="问卦人年龄,选填;断应期与人生阶段更准">
+      <span class="note" style="margin:0;align-self:center">选上断得更准:性别定看哪条线,年龄定人生阶段。填一次全程通用,之后不用再填。</span>
+    </div>
+  </section>
+
   <section id="sec-dawen">
     <h2>问 道 · 大问拆阵</h2>
-    <div class="note">一句装不下的大问(人生轨迹、未来十年、婚姻全貌……),先请东玄把它<b>拆成阵</b>:分板块、每卦配好卦法与小问;你逐个点「起卦」,起完汇总深断,把各卦应期串成一条时间线。</div>
-    <textarea id="dw-q" maxlength="600" placeholder="把你心里那个装不下的大问,用自己的话写在这里(越具体,拆出来的阵越贴)。例:我未来十年的大方向是什么?事业、家庭、财上各会怎么走,几时有坎、几时有机遇?"></textarea>
+    <div class="note">一卦装不下的大问,先请东玄把它<b>拆成阵</b>:分板块、每卦配好卦法与小问;你逐个点「起卦」,起完汇总深断,把各卦应期串成一条时间线。</div>
+    <textarea id="dw-q" maxlength="600" placeholder="用你自己的话,把心里那个大问写在这里,越具体拆出来的阵越贴。例:我这几年诸事不顺,想看看往后五年整体走向,哪年转运、该往哪使劲?"></textarea>
     <div class="btnrow">
       <button id="btn-dw-plan" class="primary">请东玄拆阵(AI)</button>
-      <button id="btn-dw-example" class="ghost">用现成「人生轨迹」阵</button>
+      <button id="btn-dw-example" class="ghost">用现成「命途总览」阵</button>
     </div>
     <div id="dw-status"></div>
     <div id="dw-plan"></div>
@@ -308,16 +321,7 @@
 
   <section id="sec-q">
     <h2>所 问 何 事</h2>
-    <div class="qrow">
-      <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
-      <select id="q-gender" title="问卦人性别,选填;问婚恋、看人时影响断法口径">
-        <option value="">性别·选填</option>
-        <option value="男">我是男</option>
-        <option value="女">我是女</option>
-      </select>
-      <input type="number" id="q-age" min="1" max="120" placeholder="年龄·选填" title="问卦人年龄,选填;断应期与人生阶段更准">
-    </div>
-    <div class="note">性别、年龄选上断得更准:性别定看哪条线(男女门道不同),年龄定人生阶段(同一卦,二十岁和四十岁问婚问业,应期与说法不一样)。填一次记住,之后不用再填。</div>
+    <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
   </section>
 
   <section id="sec-cast">
@@ -499,7 +503,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.15 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.16 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script>
@@ -4219,8 +4223,8 @@
   const DW_METHODS = { liuyao: '六爻', meihua: '梅花', xlr: '小六壬', qimen: '奇门' };
   const DW_PLAN_SYSTEM = `你是精通六爻、梅花易数、小六壬、奇门遁甲的卦师东玄,擅长把一卦装不下的大问拆成可占之阵。术业有专攻:凡问成败吉凶、应期(何时)、人物画像、婚恋子女,派六爻;问趋势节奏、一事之全程,派梅花;问三五天内当下短线,派小六壬;问方位、择时、博弈求人、寻踪,派奇门。规矩:一卦只占一事,小问必须具体可占(带"什么时候/能不能/是什么样"这类能落断语的问法);人生轨迹类大问,阵中通常涵盖:大势总纲、事业行当、财与置业应期、婚恋(何时遇、其人如何、婚后日常相处)、子女应期、坎年与机遇年,并以一卦验证收尾——但必须按用户原话取舍增删:用户点名要的板块必须有且小问要贴着用户的原话问,用户没提的不硬塞。板块2到7个,每板块1到4卦,全阵合计不超过16卦。focus写这一卦必须给出的落地结论(时间给年份月份、数给区间、人给画像、相处给场景)。只输出JSON,不带任何多余文字、不带markdown围栏:{"note":"一句话阵法思路","groups":[{"title":"板块名","why":"为何这么拆(短)","casts":[{"method":"liuyao|meihua|xlr|qimen","q":"小问","focus":"此卦必须给出…"}]}]}`;
   const LIFE_PLAN = {
-    q: '我此生的大方向如何?各方面走势、几时有坎、几时有机遇?',
-    note: '人生轨迹一卦装不下:先立总纲看大势分段,再分路各占其事、各定其时,末卦验证。',
+    q: '我此生的大方向如何?各路走势与紧要的年份?',
+    note: '命途总览一卦装不下:先立总纲看大势分段,再分路各占其事、各定其时,末卦验证。',
     groups: [
       { title: '大势总纲', why: '先看此生起伏节奏,后面各卦有个坐标', casts: [
         { method: 'liuyao', q: '我此生大势如何,人生分几段、眼下在哪一段?', focus: '人生分段(每段大致年岁)、每段主调、当下所处位置与走向' }] },
@@ -4244,10 +4248,13 @@
   function dwStatus(msg, err) { $('dw-status').textContent = msg; $('dw-status').classList.toggle('err', !!err); }
   function dwTotal() { return dwPlan ? dwPlan.groups.reduce((s, g) => s + g.casts.length, 0) : 0; }
   function dwDone() { return dwPlan ? dwPlan.groups.reduce((s, g) => s + g.casts.filter(c => c.done).length, 0) : 0; }
+  let dwCollapsed = false;
   function renderDwPlan() {
     if (!dwPlan) { $('dw-plan').innerHTML = ''; $('dw-actions').classList.add('hidden'); return; }
-    $('dw-plan').innerHTML = (dwPlan.note ? `<div class="note" style="margin:6px 0 10px"><b>阵法:</b>${esc(dwPlan.note)}</div>` : '') +
-      dwPlan.groups.map((g, gi) => `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why || '')}</span></button><div class="dwbody">` +
+    $('dw-plan').innerHTML =
+      `<div class="btnrow" style="margin:6px 0"><button type="button" class="ghost" id="btn-dw-toggle">${dwCollapsed ? `展开整阵 ▾(${dwDone()}/${dwTotal()} 卦已起)` : '收起整阵 ▴'}</button></div>` +
+      (dwPlan.note ? `<div class="note" style="margin:6px 0 10px"><b>阵法:</b>${esc(dwPlan.note)}</div>` : '') +
+      dwPlan.groups.map((g, gi) => `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">${dwCollapsed ? '▸' : '▾'}</span><b>${esc(g.title)}</b><span class="why">${esc(g.why || '')}</span></button><div class="dwbody${dwCollapsed ? ' hidden' : ''}">` +
         g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method] || '六爻'}</span><span class="q">${esc(c.q)}</span>` +
           (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary dw-cast" data-g="${gi}" data-c="${ci}">起卦</button>`) +
         `</div>`).join('') +
@@ -4285,7 +4292,7 @@
     if (dwBusy) return;
     const q = $('dw-q').value.trim();
     if (!q) { dwStatus('先把你的大问写下来,再拆阵。', true); return; }
-    if (!getKey()) { dwStatus(`AI 拆阵需先设置 ${curProvider().label} API Key(见「东玄深断」栏);也可直接用现成「人生轨迹」阵。`, true); return; }
+    if (!getKey()) { dwStatus(`AI 拆阵需先设置 ${curProvider().label} API Key(见「东玄深断」栏);也可直接用现成「命途总览」阵。`, true); return; }
     dwBusy = true; $('btn-dw-plan').disabled = true; dwStatus('东玄正在拆阵……');
     try {
       const { text } = await llmStream([{ role: 'user', content: `大问:${q}${querentBrief() ? `(问卦人:${querentBrief()})` : ''}\n请拆阵,只回JSON。` }], null, DW_PLAN_SYSTEM);
@@ -4297,21 +4304,23 @@
         g.casts = (g.casts || []).slice(0, 4).filter(c => c && c.q);
         for (const c of g.casts) if (!DW_METHODS[c.method]) c.method = 'liuyao';
       }
+      dwCollapsed = false;
       dwPlan = { q, note: plan.note || '', groups: plan.groups };
       dwConvo = null; $('dw-out').classList.add('hidden'); $('dw-out').innerHTML = ''; $('dw-followup').classList.add('hidden');
       renderDwPlan();
       dwStatus(`阵已拆好:${dwPlan.groups.length} 个板块、共 ${dwTotal()} 卦。心里想着各卦小问,逐个点「起卦」;起完(或起到想问的为止)点「汇总深断」。`);
     } catch (e) {
-      dwStatus('拆阵未成:' + aiErrHint(e, $('ai-provider').value) + ' 也可先用现成「人生轨迹」阵。', true);
+      dwStatus('拆阵未成:' + aiErrHint(e, $('ai-provider').value) + ' 也可先用现成「命途总览」阵。', true);
     } finally { dwBusy = false; $('btn-dw-plan').disabled = false; }
   }
   function dwUseExample() {
+    dwCollapsed = false;
     dwPlan = JSON.parse(JSON.stringify(LIFE_PLAN));
     const typed = $('dw-q').value.trim();
     if (typed) dwPlan.q = typed; else $('dw-q').value = LIFE_PLAN.q;
     dwConvo = null; $('dw-out').classList.add('hidden'); $('dw-out').innerHTML = ''; $('dw-followup').classList.add('hidden');
     renderDwPlan();
-    dwStatus(`「人生轨迹」阵已摆好:${dwPlan.groups.length} 个板块、共 ${dwTotal()} 卦。逐个点「起卦」,起完点「汇总深断」。`);
+    dwStatus(`「命途总览」阵已摆好:${dwPlan.groups.length} 个板块、共 ${dwTotal()} 卦。逐个点「起卦」,起完点「汇总深断」。`);
   }
   async function dwAsk(turns, isFollow) {
     dwBusy = true; $('btn-dw-read').disabled = true; $('btn-dw-fu') && ($('btn-dw-fu').disabled = true);
@@ -4376,6 +4385,7 @@
     dwStatus('阵已清空。');
   });
   $('dw-plan').addEventListener('click', e => {
+    if (e.target.closest('#btn-dw-toggle')) { dwCollapsed = !dwCollapsed; renderDwPlan(); return; }
     const gh = e.target.closest('.dwgh');
     if (gh) {
       const body = gh.parentElement.querySelector('.dwbody');

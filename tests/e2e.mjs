@@ -375,6 +375,12 @@ await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折�
   await page.locator('#dw-plan .dwgh').first().click();
   ok(await page.locator('#dw-plan .dwbody').first().evaluate(el => el.classList.contains('hidden')), '板块应可折叠');
   await page.locator('#dw-plan .dwgh').first().click();
+  // 整阵收起/展开
+  await page.click('#btn-dw-toggle');
+  ok(await page.locator('#dw-plan .dwbody').evaluateAll(els => els.every(el => el.classList.contains('hidden'))), '整阵应全部收起');
+  ok((await page.textContent('#btn-dw-toggle')).includes('展开整阵'), '按钮应变为展开');
+  await page.click('#btn-dw-toggle');
+  ok(await page.locator('#dw-plan .dwbody').evaluateAll(els => els.every(el => !el.classList.contains('hidden'))), '整阵应全部展开');
   // 无 Key 汇总深断 → 提示
   await page.click('#btn-dw-read');
   ok((await page.textContent('#dw-status')).includes('API Key'), '无Key应提示:' + (await page.textContent('#dw-status')));
