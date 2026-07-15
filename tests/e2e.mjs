@@ -229,18 +229,23 @@ await t('分科可改选非首选方法(搬家改选六爻)', async () => {
   ok(await page.locator('#sec-cast').isVisible(), '改选六爻后应切到六爻面板');
 });
 
-await t('性别选项:选男起卦,回报注明问卦人;持久化', async () => {
+await t('性别年龄:选男28岁起卦,回报注明问卦人;持久化', async () => {
   await page.click('.tabs button[data-m=liuyao]');
   await page.selectOption('#q-gender', '男');
-  await page.fill('#question', '性别口径内测一问');
+  await page.fill('#q-age', '28');
+  await page.locator('#q-age').dispatchEvent('change');
+  await page.fill('#question', '性别年龄口径内测一问');
   await page.check('input[name=ly-mode][value=coin]');
   await page.click('#btn-auto');
-  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:男'), null, { timeout: 9000 });
+  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:男,28岁'), null, { timeout: 9000 });
   const rep = await page.inputValue('#report');
-  ok(rep.includes('问卦人:男'), '回报应注明性别');
+  ok(rep.includes('问卦人:男,28岁'), '回报应注明性别年龄');
   await page.reload({ waitUntil: 'load' });
   ok((await page.inputValue('#q-gender')) === '男', '性别应持久化');
+  ok((await page.inputValue('#q-age')) === '28', '年龄应持久化');
   await page.selectOption('#q-gender', '');
+  await page.fill('#q-age', '');
+  await page.locator('#q-age').dispatchEvent('change');
 });
 
 await t('分占连断:月运选六爻,六卦连占(含验证卦)出合并回报与总览', async () => {
@@ -358,7 +363,7 @@ await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折�
   await page.click('#btn-dw-example');
   ok((await page.locator('#dw-plan .dwgroup').count()) >= 5, '应有五个以上板块');
   ok((await page.locator('#dw-plan .dw-cast').count()) >= 8, '应有八个以上起卦位');
-  ok((await page.inputValue('#dw-q')).includes('人生轨迹'), '大问框应填入示例问');
+  ok((await page.inputValue('#dw-q')).includes('大方向'), '大问框应填入示例问');
   // 起两卦
   await page.locator('#dw-plan .dw-cast').first().click();
   ok((await page.locator('#dw-plan .res').count()) === 1, '第一卦应显示✓摘要');

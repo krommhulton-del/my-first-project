@@ -218,6 +218,9 @@
   .qrow { display: flex; gap: 8px; flex-wrap: wrap; }
   .qrow input[type=text] { flex: 1 1 240px; }
   #q-gender { flex: 0 0 auto; }
+  #q-age { flex: 0 0 auto; width: 110px; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px 12px; font-size: .95rem; font-family: inherit; }
+  #q-age:focus { outline: none; border-color: var(--gold); }
   #dw-q, #dw-fu { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
     border-radius: 6px; padding: 10px 12px; font-family: inherit; font-size: .95rem; min-height: 76px; resize: vertical; }
   #dw-q:focus, #dw-fu:focus { outline: none; border-color: var(--gold); }
@@ -265,7 +268,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.14</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.15</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -286,7 +289,7 @@
   <section id="sec-dawen">
     <h2>问 道 · 大问拆阵</h2>
     <div class="note">一句装不下的大问(人生轨迹、未来十年、婚姻全貌……),先请东玄把它<b>拆成阵</b>:分板块、每卦配好卦法与小问;你逐个点「起卦」,起完汇总深断,把各卦应期串成一条时间线。</div>
-    <textarea id="dw-q" maxlength="600" placeholder="例:我的人生轨迹是什么样的?什么时候买房、什么时候换工作、以后干什么行当、什么时候生小孩、哪几年有坎哪几年有机遇、什么时候最接近成功?我和未来老公日常相处是什么样?"></textarea>
+    <textarea id="dw-q" maxlength="600" placeholder="把你心里那个装不下的大问,用自己的话写在这里(越具体,拆出来的阵越贴)。例:我未来十年的大方向是什么?事业、家庭、财上各会怎么走,几时有坎、几时有机遇?"></textarea>
     <div class="btnrow">
       <button id="btn-dw-plan" class="primary">请东玄拆阵(AI)</button>
       <button id="btn-dw-example" class="ghost">用现成「人生轨迹」阵</button>
@@ -300,7 +303,7 @@
     <div id="dw-out" class="aiout hidden"></div>
     <div id="dw-followup" class="hidden">
       <div class="fuhint">就这套阵与批语接着追问:</div>
-      <textarea id="dw-fu" placeholder="例:置业那卦给的年份,和事业换工作的年份冲突吗?"></textarea>
+      <textarea id="dw-fu" placeholder="例:两个板块给的年份对不上,以哪个为准?"></textarea>
       <div class="btnrow"><button id="btn-dw-fu" class="primary">追 问</button></div>
     </div>
   </section>
@@ -314,8 +317,9 @@
         <option value="男">我是男</option>
         <option value="女">我是女</option>
       </select>
+      <input type="number" id="q-age" min="1" max="120" placeholder="年龄·选填" title="问卦人年龄,选填;断应期与人生阶段更准">
     </div>
-    <div class="note">问感情婚恋、看某个人这类,选上性别断得更准(男女看的门道不同);其余问题可不填。</div>
+    <div class="note">性别、年龄选上断得更准:性别定看哪条线(男女门道不同),年龄定人生阶段(同一卦,二十岁和四十岁问婚问业,应期与说法不一样)。填一次记住,之后不用再填。</div>
   </section>
 
   <section id="sec-cast">
@@ -497,7 +501,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.14 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.15 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -519,13 +523,23 @@
   let aiBusy = false;
   let duoPlan = null;    // 分占连断:{fkLabel, subs:[{k,q}], idx, done:[{k,q,cast,z,r,report,jing}]}
 
-  // —— 问卦人性别(选填,影响取用神与画像口径)——
-  const GKEY = 'dongxuan_gender';
+  // —— 问卦人性别与年龄(选填,影响取用神、应期与人生阶段口径)——
+  const GKEY = 'dongxuan_gender', AKEY = 'dongxuan_age';
   function gender() { return $('q-gender').value; }
-  function genderReportLine() { const g = gender(); return g ? `\n问卦人:${g}` : ''; }
+  function qAge() { const v = parseInt($('q-age').value, 10); return (v >= 1 && v <= 120) ? v : null; }
+  function querentBrief() {
+    const g = gender(), a = qAge();
+    if (!g && !a) return '';
+    return `${g || '性别未说明'}${a ? `,${a}岁` : ''}`;
+  }
+  function genderReportLine() { const b = querentBrief(); return b ? `\n问卦人:${b}` : ''; }
   function genderMaterialLine() {
-    const g = gender();
-    return g ? `\n【问卦人性别:${g}】凡涉婚恋对方、看人画像、称谓口径,均按此性别推断(男问姻缘以妻财为对方,女以官鬼为对方;身高长相等画像按对应性别标准换算)。` : '';
+    const g = gender(), a = qAge();
+    if (!g && !a) return '';
+    let s = `\n【问卦人:${querentBrief()}】`;
+    if (g) s += `凡涉婚恋对方、看人画像、称谓口径,按此性别推断(男问姻缘以妻财为对方,女以官鬼为对方;画像按对应性别标准换算)。`;
+    if (a) s += `断应期与人生阶段以此年龄起算:婚嫁、生育、置业、事业转折等结论必须落在该年龄之后的合理区间,称谓与建议贴合此年纪的处境,不许给出与年龄相悖的说法。`;
+    return s;
   }
 
   // —— 法门状态 ——
@@ -1077,7 +1091,7 @@
   const DW_METHODS = { liuyao: '六爻', meihua: '梅花', xlr: '小六壬', qimen: '奇门' };
   const DW_PLAN_SYSTEM = `你是精通六爻、梅花易数、小六壬、奇门遁甲的卦师东玄,擅长把一卦装不下的大问拆成可占之阵。术业有专攻:凡问成败吉凶、应期(何时)、人物画像、婚恋子女,派六爻;问趋势节奏、一事之全程,派梅花;问三五天内当下短线,派小六壬;问方位、择时、博弈求人、寻踪,派奇门。规矩:一卦只占一事,小问必须具体可占(带"什么时候/能不能/是什么样"这类能落断语的问法);人生轨迹类大问,阵中通常涵盖:大势总纲、事业行当、财与置业应期、婚恋(何时遇、其人如何、婚后日常相处)、子女应期、坎年与机遇年,并以一卦验证收尾——但必须按用户原话取舍增删:用户点名要的板块必须有且小问要贴着用户的原话问,用户没提的不硬塞。板块2到7个,每板块1到4卦,全阵合计不超过16卦。focus写这一卦必须给出的落地结论(时间给年份月份、数给区间、人给画像、相处给场景)。只输出JSON,不带任何多余文字、不带markdown围栏:{"note":"一句话阵法思路","groups":[{"title":"板块名","why":"为何这么拆(短)","casts":[{"method":"liuyao|meihua|xlr|qimen","q":"小问","focus":"此卦必须给出…"}]}]}`;
   const LIFE_PLAN = {
-    q: '我的人生轨迹是什么样的?各方面未来如何、几时有坎几时有机遇?',
+    q: '我此生的大方向如何?各方面走势、几时有坎、几时有机遇?',
     note: '人生轨迹一卦装不下:先立总纲看大势分段,再分路各占其事、各定其时,末卦验证。',
     groups: [
       { title: '大势总纲', why: '先看此生起伏节奏,后面各卦有个坐标', casts: [
@@ -1146,7 +1160,7 @@
     if (!getKey()) { dwStatus(`AI 拆阵需先设置 ${curProvider().label} API Key(见「东玄深断」栏);也可直接用现成「人生轨迹」阵。`, true); return; }
     dwBusy = true; $('btn-dw-plan').disabled = true; dwStatus('东玄正在拆阵……');
     try {
-      const { text } = await llmStream([{ role: 'user', content: `大问:${q}${gender() ? `(问卦人:${gender()})` : ''}\n请拆阵,只回JSON。` }], null, DW_PLAN_SYSTEM);
+      const { text } = await llmStream([{ role: 'user', content: `大问:${q}${querentBrief() ? `(问卦人:${querentBrief()})` : ''}\n请拆阵,只回JSON。` }], null, DW_PLAN_SYSTEM);
       const m = text.match(/\{[\s\S]*\}/);
       const plan = JSON.parse(m ? m[0] : text);
       if (!Array.isArray(plan.groups) || !plan.groups.length) throw new Error('阵形不完整');
@@ -1553,6 +1567,8 @@
   $('btn-duo-single').addEventListener('click', () => $('duo-offer').classList.add('hidden'));
   if (localStorage.getItem(GKEY)) $('q-gender').value = localStorage.getItem(GKEY);
   $('q-gender').addEventListener('change', () => localStorage.setItem(GKEY, $('q-gender').value));
+  if (localStorage.getItem(AKEY)) $('q-age').value = localStorage.getItem(AKEY);
+  $('q-age').addEventListener('change', () => localStorage.setItem(AKEY, $('q-age').value));
   $('btn-copy').addEventListener('click', async () => {
     const txt = $('report').value;
     try { await navigator.clipboard.writeText(txt); $('btn-copy').textContent = '已复制 ✓'; }
