@@ -283,7 +283,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.23</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.24</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
     <p class="guide"><b>怎么用:</b>① 填问卦人 → ② 在分科里挑要问的事(或直接往下写问题)→ ③ 起卦看解读 → ④ 请东玄深断、可追问。一句话装不下的大问用底部「大问拆阵」;近来不顺想调一调,用「转运」。<br><b>按钮颜色:</b>红色=起卦 · 金色=请东玄细断(需AI) · 灰色=辅助操作。</p>
   </header>
@@ -545,6 +545,11 @@
       <select id="qa-zy" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
       <span class="qwhint" id="qh-zy"></span>
     </div>
+    <div class="qwho">看哪个时段:
+      <select id="zy-range"><option value="">当下(最近这阵子)</option><option value="近一个月">近一个月</option><option value="近一个季度">近一个季度</option><option value="近半年">近半年</option><option value="近一年">近一年</option><option value="近三年">近三年</option><option value="year">指定某一年</option></select>
+      <input type="number" id="zy-year" class="hidden" style="width:100px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <span class="qwhint">六卦全按此时段问与断</span>
+    </div>
     <div class="btnrow">
       <button id="btn-zy-start" class="primary">开始(共 6 卦)</button>
     </div>
@@ -572,7 +577,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.23 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.24 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script>
@@ -4590,13 +4595,13 @@
     note: '先诊断后做法:前三卦看现状与根源,后三卦给可执行的做法。',
     groups: [
       { title: '第一步 · 诊断:现状与根源', why: '先弄清处境,做法才有的放矢', casts: [
-        { method: 'liuyao', q: '我最近这阵子运气到底怎么样,处在什么位置?', focus: '在低谷/平路/上坡哪一段、低到几分(十分制)、这段还要持续多久(落到旬或月)、是真不顺还是感受放大了' },
-        { method: 'liuyao', q: '我最近不顺,根子在哪?', focus: '从六路查:时段(流月不利,过了就好)/环境场所(常去或新去之地不合,含住处工位)/人(谁在耗你)/自身状态(作息、内耗、硬顶)/玄学冲犯(出入阴气重之地、居处不安、冲犯流年、沾了不明之物)/纯偶然——点名最重的一两路并给依据;若确实指向玄学一路,直说并郑重告诫怎么避怎么解,不许含糊带过' },
-        { method: 'liuyao', q: '眼下什么最旺我、哪条路最有气?', focus: '最有气的一条线(财/事业/人缘/学业/创作点名)、旺我的五行落到具体物事(颜色/场所/方向/哪类人)、眼下怎么用它' }] },
+        { method: 'liuyao', q: '我«T»运气到底怎么样,处在什么位置?', focus: '在低谷/平路/上坡哪一段、低到几分(十分制)、这段还要持续多久(落到旬或月)、是真不顺还是感受放大了' },
+        { method: 'liuyao', q: '我«T»的不顺(或坎),根子出在哪?', focus: '从六路查:时段(流月不利,过了就好)/环境场所(常去或新去之地不合,含住处工位)/人(谁在耗你)/自身状态(作息、内耗、硬顶)/玄学冲犯(出入阴气重之地、居处不安、冲犯流年、沾了不明之物)/纯偶然——点名最重的一两路并给依据;若确实指向玄学一路,直说并郑重告诫怎么避怎么解,不许含糊带过' },
+        { method: 'liuyao', q: '«T»什么最旺我、哪条路最有气?', focus: '最有气的一条线(财/事业/人缘/学业/创作点名)、旺我的五行落到具体物事(颜色/场所/方向/哪类人)、眼下怎么用它' }] },
       { title: '第二步 · 做法:宜忌、方位时机、补救', why: '全是当天就能做的事', casts: [
-        { method: 'liuyao', q: '近期我最宜做什么、最忌做什么?', focus: '宜三件+忌三件,每件都可执行、各配时段(本旬/本月),忌讳讲清代价' },
-        { method: 'qimen', q: '近期往哪个方向走旺、哪几天是吉窗?', focus: '吉方与忌方(以住处为原点,含常走动线怎么调)、近两周内的吉日窗、办要紧事挑什么时辰段' },
-        { method: 'liuyao', q: '已经落下的坑,怎么补救弥补?', focus: '补救三步(环境、人事、自身状态各一;若根源在玄学一路,给传统解法:避其方、择吉时、清理居处、静养、行善,讲清怎么做),排出先后、各自多久见效;不许推荐花钱消灾开光请物' }] },
+        { method: 'liuyao', q: '«T»我最宜做什么、最忌做什么?', focus: '宜三件+忌三件,每件都可执行、各配时段(本旬/本月),忌讳讲清代价' },
+        { method: 'qimen', q: '«T»往哪个方向走旺、哪些日子是吉窗?', focus: '吉方与忌方(以住处为原点,含常走动线怎么调)、近两周内的吉日窗、办要紧事挑什么时辰段' },
+        { method: 'liuyao', q: '«T»已落或将遇的坑,怎么补救弥补?', focus: '补救三步(环境、人事、自身状态各一;若根源在玄学一路,给传统解法:避其方、择吉时、清理居处、静养、行善,讲清怎么做),排出先后、各自多久见效;不许推荐花钱消灾开光请物' }] },
     ],
   };
   const ZY_RULES = '【转运断法】诊断加做法,精髓在有一说一:①倒霉的成因往往复杂,不许单一归因——时段流月、环境场所、人、自身状态、玄学冲犯,几路常常搅在一起,卦象指到哪几路就说哪几路,并分清主次轻重;②若卦象确实指向玄学一路(比如常出入阴气重的场所、居处不安、冲犯流年、沾了来历不明的东西、被是非口舌缠上),就直说,不遮掩、不故弄玄虚、也不硬往科学上套,并郑重告诫:哪些地方少去、哪些东西该处理、哪段时间该收敛什么——告诫要像告诫,让人记得住;③传统命理的讲究该给就给:避其方、择其时、穿用其色、动静进退、清理居处、静养、行善积德,这些都可入方;但不许推荐任何花钱消灾、开光、请购法物之类(防人受骗,此条不动);④直白,不隐晦不打太极:该重说的重说,纯属时段问题的也明说"熬过这段就好",别把小事说大、也别把大事说小;⑤禁空话:"调整心态""保持乐观""顺其自然"不许出现;⑥不拘一格:现状、根源、什么最旺、宜忌、方位时机、补救都要覆盖到,但详略和顺序按卦象轻重自定,哪路重就多讲哪路,不必平均用力、不必套固定模板;⑦末尾收束一两句,平实见筋骨,不灌鸡汤。';
@@ -4633,7 +4638,7 @@
         else {
           zyStatus('诊断与做法已出。可在下方追问。已存入卦档。');
           const recId = saveRec({
-            method: '转运', question: '转运(诊断+做法)',
+            method: '转运', question: `转运(${zyPlan.rangeLabel || '最近这阵子'}·诊断+做法)`,
             headline: `${zyDone()}/${zyTotal()} 卦`, level: '诊', dx: ZY_PLAN.note,
             report: zyPlan.groups.map(g => g.casts.filter(c => c.done).map(c => `【${g.title}】${c.q}\n${c.report}`).join('\n\n')).filter(Boolean).join('\n\n'),
           });
@@ -4645,17 +4650,27 @@
       if (!text) ans.remove();
     } finally { zyBusy = false; $('btn-zy-read').disabled = false; $('btn-zy-fu').disabled = false; }
   }
+  function zyPhrase() {
+    const rv = $('zy-range').value;
+    if (rv === 'year') { const y = parseInt($('zy-year').value, 10); return y ? `${y}年` : '最近这阵子'; }
+    return rv || '最近这阵子';
+  }
+  $('zy-range').addEventListener('change', () => $('zy-year').classList.toggle('hidden', $('zy-range').value !== 'year'));
+  $('zy-year').value = new Date().getFullYear() + 1; $('zy-year').min = new Date().getFullYear(); $('zy-year').max = new Date().getFullYear() + 30;
   $('btn-zy-start').addEventListener('click', () => {
+    const T = zyPhrase();
     zyPlan = JSON.parse(JSON.stringify(ZY_PLAN));
+    zyPlan.rangeLabel = T;
+    zyPlan.groups.forEach(g => g.casts.forEach(c => { c.q = c.q.replace(/«T»/g, T); }));
     zyConvo = null; $('zy-out').classList.add('hidden'); $('zy-out').innerHTML = ''; $('zy-followup').classList.add('hidden');
     renderZy();
-    zyStatus(`六卦已摆好:前三卦看现状与根源,后三卦给做法。心里想着自己近来的处境,逐个点「起卦」;起完点「汇总深断」。`);
+    zyStatus(`六卦已摆好(时段:${T}):前三卦看现状与根源,后三卦给做法。心里想着这段处境,逐个点「起卦」;起完点「汇总深断」。`);
   });
   $('btn-zy-read').addEventListener('click', () => {
     if (zyBusy || !zyPlan) return;
     if (!zyDone()) { zyStatus('还没起卦——先在阵里点「起卦」。', true); return; }
     if (!getKey()) { zyStatus(`汇总深断需先设置 ${curProvider().label} API Key(见「东玄深断」栏)。`, true); return; }
-    let material = `【转运 · 先诊断后做法】\n${ZY_RULES}\n【规矩】每卦只答其小问并给足"必须给";诊断三卦先立住(现状、根源、何为最旺),做法三卦全部落到可执行动作;未起之卦直说"未起卦,此项不断"。`;
+    let material = `【转运 · 先诊断后做法】\n【所问时段:${zyPlan.rangeLabel || '最近这阵子'}】诊断与做法全部落在此时段内;时窗粒度按时段自动定:月内落到旬与日、季度半年落到月、一年落到月、多年或指定某年落到季与月。\n${ZY_RULES}\n【规矩】每卦只答其小问并给足"必须给";诊断三卦先立住(现状、根源、何为最旺),做法三卦全部落到可执行动作;未起之卦直说"未起卦,此项不断"。`;
     for (const g of zyPlan.groups) {
       const done = g.casts.filter(c => c.done);
       if (!done.length) continue;

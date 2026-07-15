@@ -432,9 +432,13 @@ await t('为谁问:问题旁单独填性别年龄(替人问),盖过顶栏默认'
   ok((await page.locator('#qh-dw').count()) === 1 && (await page.locator('#qh-zy').count()) === 1, '拆阵与转运也应有为谁问');
 });
 
-await t('转运板块:六卦阵可摆、诊断开方分组、逐卦可起、无Key开方给提示', async () => {
+await t('转运板块:可选时段、六卦阵可摆、诊断开方分组、逐卦可起、无Key开方给提示', async () => {
   await page.click('#sec-zhuanyun .foldh');
+  ok(await page.locator('#zy-range').isVisible(), '转运应有时段选择');
+  await page.selectOption('#zy-range', '近一个月');
   await page.click('#btn-zy-start');
+  ok((await page.locator('#zy-plan .q').first().textContent()).includes('近一个月'), '卦问应带时段:' + (await page.locator('#zy-plan .q').first().textContent()));
+  ok((await page.textContent('#zy-status')).includes('近一个月'), '状态应注明时段');
   ok((await page.locator('#zy-plan .dwgroup').count()) === 2, '应有诊断/开方两组');
   ok((await page.locator('#zy-plan .zy-cast').count()) === 6, '应有六个起卦位');
   const badges = await page.locator('#zy-plan .m').allTextContents();
