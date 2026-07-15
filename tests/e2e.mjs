@@ -31,8 +31,10 @@ async function t(name, fn) {
 }
 const ok = (v, m) => { if (!v) throw new Error(m || '断言失败'); };
 // 分科组默认折叠;点分科片前先全部展开
-const expandGroups = () => page.evaluate(() =>
-  document.querySelectorAll('#fenke-chips .fkrow').forEach(r => r.classList.remove('hidden')));
+const expandGroups = () => page.evaluate(() => {
+  document.querySelectorAll('.fold .foldbody').forEach(el => el.classList.remove('hidden'));
+  document.querySelectorAll('#fenke-chips .fkrow').forEach(r => r.classList.remove('hidden'));
+});
 
 const URL0 = `http://127.0.0.1:${PORT}/`;
 await page.goto(URL0);
@@ -140,6 +142,7 @@ await t('历史持久化:刷新页面卦档仍在', async () => {
 });
 
 await t('卦档展开与删除', async () => {
+  await expandGroups();
   await page.click('#histlist .hist:first-child .head');
   ok(await page.locator('#histlist .hist:first-child .body pre').isVisible(), '展开后应见回报全文');
   await page.click('#histlist .hist:first-child .btn-delrec');
@@ -147,6 +150,7 @@ await t('卦档展开与删除', async () => {
 });
 
 await t('清空卦档', async () => {
+  await expandGroups();
   page.once('dialog', d => d.accept());
   await page.click('#btn-clearhist');
   await page.waitForFunction(() => document.querySelectorAll('#histlist .hist').length === 0);
@@ -365,7 +369,7 @@ await t('以卦追问:按钮在,未深断时给提示', async () => {
 });
 
 await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折叠', async () => {
-  await page.click('#sec-dawen .foldh');
+  await expandGroups();
   await page.click('#btn-dw-example');
   ok((await page.locator('#dw-plan .dwgroup').count()) >= 5, '应有五个以上板块');
   ok((await page.locator('#dw-plan .dw-cast').count()) >= 8, '应有八个以上起卦位');
@@ -440,7 +444,7 @@ await t('为谁问:问题旁单独填性别年龄(替人问),盖过顶栏默认'
 });
 
 await t('转运板块:可选时段、六卦阵可摆、诊断开方分组、逐卦可起、无Key开方给提示', async () => {
-  await page.click('#sec-zhuanyun .foldh');
+  await expandGroups();
   ok(await page.locator('#zy-range').isVisible(), '转运应有时段选择');
   await page.selectOption('#zy-range', '近一个月');
   await page.click('#btn-zy-start');
