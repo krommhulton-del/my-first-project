@@ -393,6 +393,26 @@ await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折�
   ok((await page.locator('#dw-plan .dwgroup').count()) === 0, '清空后阵应无');
 });
 
+await t('转运板块:六卦阵可摆、诊断开方分组、逐卦可起、无Key开方给提示', async () => {
+  await page.click('#btn-zy-start');
+  ok((await page.locator('#zy-plan .dwgroup').count()) === 2, '应有诊断/开方两组');
+  ok((await page.locator('#zy-plan .zy-cast').count()) === 6, '应有六个起卦位');
+  const badges = await page.locator('#zy-plan .m').allTextContents();
+  ok(badges.filter(b => b === '六爻').length === 5 && badges.includes('奇门'), '五六爻一奇门:' + badges.join(','));
+  await page.locator('#zy-plan .zy-cast').first().click();
+  ok((await page.locator('#zy-plan .res').count()) === 1, '第一卦应✓');
+  await page.locator('#zy-plan .zy-cast').first().click();
+  ok((await page.locator('#zy-plan .res').count()) === 2, '第二卦应✓');
+  ok(!(await page.locator('#zy-actions').evaluate(el => el.classList.contains('hidden'))), '开方入口应出现');
+  await page.click('#btn-zy-read');
+  ok((await page.textContent('#zy-status')).includes('API Key'), '无Key应提示:' + (await page.textContent('#zy-status')));
+  // 板块折叠
+  await page.locator('#zy-plan .dwgh').first().click();
+  ok(await page.locator('#zy-plan .dwbody').first().evaluate(el => el.classList.contains('hidden')), '诊断组应可折叠');
+  await page.click('#btn-zy-clear');
+  ok((await page.locator('#zy-plan .dwgroup').count()) === 0, '清空后应无阵');
+});
+
 await t('卦档法门徽记与蓍草起卦', async () => {
   const badges = await page.locator('#histlist .badge').allTextContents();
   ok(badges.includes('梅花') && badges.includes('小六壬'), '徽记:' + badges.join(','));

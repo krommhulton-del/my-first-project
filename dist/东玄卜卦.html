@@ -219,12 +219,12 @@
   #q-age { flex: 0 0 auto; width: 110px; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
     border-radius: 6px; padding: 10px 12px; font-size: .95rem; font-family: inherit; }
   #q-age:focus { outline: none; border-color: var(--gold); }
-  #dw-q, #dw-fu { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+  #dw-q, #dw-fu, #zy-fu { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
     border-radius: 6px; padding: 10px 12px; font-family: inherit; font-size: .95rem; min-height: 76px; resize: vertical; }
-  #dw-q:focus, #dw-fu:focus { outline: none; border-color: var(--gold); }
-  #dw-status { color: var(--dim); font-size: .9rem; margin-top: 10px; }
-  #dw-status.err { color: var(--cinnabar); }
-  #dw-plan { margin-top: 12px; }
+  #dw-q:focus, #dw-fu:focus, #zy-fu:focus { outline: none; border-color: var(--gold); }
+  #dw-status, #zy-status { color: var(--dim); font-size: .9rem; margin-top: 10px; }
+  #dw-status.err, #zy-status.err { color: var(--cinnabar); }
+  #dw-plan, #zy-plan { margin-top: 12px; }
   .dwgroup { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
   .dwgh { display: flex; width: 100%; align-items: baseline; gap: 8px; background: var(--panel2); border: none;
     border-radius: 0; padding: 10px 12px; text-align: left; cursor: pointer; color: var(--ink); font-size: .98rem; letter-spacing: .05em; }
@@ -266,7 +266,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.16</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.17</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
   </header>
 
@@ -316,6 +316,26 @@
       <div class="fuhint">就这套阵与批语接着追问:</div>
       <textarea id="dw-fu" placeholder="例:两个板块给的年份对不上,以哪个为准?"></textarea>
       <div class="btnrow"><button id="btn-dw-fu" class="primary">追 问</button></div>
+    </div>
+  </section>
+
+  <section id="sec-zhuanyun">
+    <h2>转 运 · 把牌打好</h2>
+    <div class="note">这里<b>不算命</b>。牌已经发到手里,好坏都改不了——但打牌的是你:先摸清牌面(近况与根源),再看哪张牌最能打(什么最旺你),然后拿到打法(宜忌、吉方吉时、补救三步)。哪怕这把牌不好,也要打得漂亮。</div>
+    <div class="btnrow">
+      <button id="btn-zy-start" class="primary">摆转运阵(6 卦)</button>
+    </div>
+    <div id="zy-status"></div>
+    <div id="zy-plan"></div>
+    <div id="zy-actions" class="btnrow hidden">
+      <button id="btn-zy-read" class="primary">开转运方</button>
+      <button id="btn-zy-clear" class="ghost">清空此阵</button>
+    </div>
+    <div id="zy-out" class="aiout hidden"></div>
+    <div id="zy-followup" class="hidden">
+      <div class="fuhint">就这套转运方接着追问:</div>
+      <textarea id="zy-fu" placeholder="例:补救那三步,先做哪步最要紧?"></textarea>
+      <div class="btnrow"><button id="btn-zy-fu" class="primary">追 问</button></div>
     </div>
   </section>
 
@@ -503,7 +523,7 @@
     </div>
   </section>
 
-  <footer>东玄卜卦 v0.16 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.17 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script>
@@ -4400,6 +4420,116 @@
     dwCastOne(c);
     renderDwPlan();
     dwStatus(`已起 ${dwDone()}/${dwTotal()} 卦。${dwDone() >= dwTotal() ? '全阵起毕,点「汇总深断」。' : ''}`);
+  });
+
+  // —— 转运:先诊断(牌面/根源/底牌),后开方(宜忌/方时/补救)——不算命,给打法 ——
+  let zyPlan = null, zyConvo = null, zyBusy = false;
+  const ZY_PLAN = {
+    note: '先诊断后开方:前三卦摸牌面,后三卦给打法。',
+    groups: [
+      { title: '诊断 · 先摸清牌面', why: '不清楚牌面,打法无从谈起', casts: [
+        { method: 'liuyao', q: '我最近这阵子运气到底怎么样,处在什么位置?', focus: '在低谷/平路/上坡哪一段、低到几分(十分制)、这段还要持续多久(落到旬或月)、是真不顺还是感受放大了' },
+        { method: 'liuyao', q: '我最近不顺,根子在哪?', focus: '从五路查:时段(流月不利,过了就好)/环境场所(常去或新去之地不合,含住处工位)/人(谁在耗你)/自身状态(作息、内耗、硬顶)/纯偶然波动——点名最重的一两路并给依据,不吓唬、不谈邪祟' },
+        { method: 'liuyao', q: '眼下我手里哪张牌最能打,什么最旺我?', focus: '最有气的一条线(财/事业/人缘/学业/创作点名)、旺我的五行落到具体物事(颜色/场所/方向/哪类人)、这张牌眼下怎么打' }] },
+      { title: '开方 · 把牌打漂亮', why: '全是当天就能做的动作', casts: [
+        { method: 'liuyao', q: '近期我最宜做什么、最忌做什么?', focus: '宜三件+忌三件,每件都可执行、各配时段(本旬/本月),忌讳讲清代价' },
+        { method: 'qimen', q: '近期往哪个方向走旺、哪几天是吉窗?', focus: '吉方与忌方(以住处为原点,含常走动线怎么调)、近两周内的吉日窗、办要紧事挑什么时辰段' },
+        { method: 'liuyao', q: '已经落下的坑,怎么补救弥补?', focus: '补救三步(环境上一步/人事上一步/自身状态上一步),排出先后,各自多久见效' }] },
+    ],
+  };
+  const ZY_RULES = '【转运方铁律】这不是算命,是给打法:①不吓唬、不宿命、不谈冲撞邪祟鬼神,不推荐任何花钱消灾开光之物;②把"运"拆成四要素讲:时段、环境、人、自身状态;③所有建议必须是普通人当天就能落手的动作(去哪/避哪/几点办事/穿用什么颜色/找谁/怎么歇),禁止"调整心态""保持乐观"这类空话;④若根源卦指向环境场所,就落到具体:哪类地方少去、住处工位怎么调(通风采光动线整理这类实在话)、多去哪类旺你的场所;⑤输出结构:牌面(现状几句+还要多久)→根源(点名主因与依据)→最旺的牌与打法→宜忌清单(各三条带时段)→吉方吉窗→补救三步(排先后)→末尾一句收束,把"就算这把牌不好也要打得漂亮"的精气神点出来,不灌鸡汤。';
+  function zyStatus(msg, err) { $('zy-status').textContent = msg; $('zy-status').classList.toggle('err', !!err); }
+  function zyDone() { return zyPlan ? zyPlan.groups.reduce((s, g) => s + g.casts.filter(c => c.done).length, 0) : 0; }
+  function zyTotal() { return zyPlan ? zyPlan.groups.reduce((s, g) => s + g.casts.length, 0) : 0; }
+  function renderZy() {
+    if (!zyPlan) { $('zy-plan').innerHTML = ''; $('zy-actions').classList.add('hidden'); return; }
+    $('zy-plan').innerHTML = zyPlan.groups.map((g, gi) =>
+      `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why)}</span></button><div class="dwbody">` +
+      g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method]}</span><span class="q">${esc(c.q)}</span>` +
+        (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary zy-cast" data-g="${gi}" data-c="${ci}">起卦</button>`) +
+      `</div>`).join('') +
+      `</div></div>`).join('');
+    $('zy-actions').classList.toggle('hidden', zyDone() === 0);
+  }
+  async function zyAsk(turns, isFollow) {
+    zyBusy = true; $('btn-zy-read').disabled = true; $('btn-zy-fu').disabled = true;
+    zyStatus(isFollow ? '东玄再想想……' : '东玄凝神,开转运方……');
+    const out = $('zy-out'); out.classList.remove('hidden');
+    if (isFollow) { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(turns[turns.length - 1].content.split('\n')[0]); out.appendChild(y); }
+    else out.innerHTML = '';
+    const ans = document.createElement('div'); ans.className = 'fq-ans'; ans.innerHTML = '<span class="cursor">▍</span>'; out.appendChild(ans);
+    let text = '';
+    try {
+      const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); });
+      text = r.text; ans.textContent = text;
+      if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { zyStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
+      else if (!text) throw new Error('未收到内容');
+      else {
+        zyConvo = { turns: turns.concat([{ role: 'assistant', content: text }]) };
+        $('zy-followup').classList.remove('hidden');
+        if (isFollow) { $('zy-fu').value = ''; zyStatus('答毕。可接着追问。'); }
+        else {
+          zyStatus('转运方已开。可在下方追问。已存入卦档。');
+          const recId = saveRec({
+            method: '转运', question: '转运方(先诊断后开方)',
+            headline: `${zyDone()}/${zyTotal()} 卦成方`, level: '方', dx: ZY_PLAN.note,
+            report: zyPlan.groups.map(g => g.casts.filter(c => c.done).map(c => `【${g.title}】${c.q}\n${c.report}`).join('\n\n')).filter(Boolean).join('\n\n'),
+          });
+          attachAiReading(recId, $('ai-model').value, text);
+        }
+      }
+    } catch (e) {
+      zyStatus((isFollow ? '追问未成:' : '开方未成:') + aiErrHint(e, $('ai-provider').value), true);
+      if (!text) ans.remove();
+    } finally { zyBusy = false; $('btn-zy-read').disabled = false; $('btn-zy-fu').disabled = false; }
+  }
+  $('btn-zy-start').addEventListener('click', () => {
+    zyPlan = JSON.parse(JSON.stringify(ZY_PLAN));
+    zyConvo = null; $('zy-out').classList.add('hidden'); $('zy-out').innerHTML = ''; $('zy-followup').classList.add('hidden');
+    renderZy();
+    zyStatus(`转运阵已摆好:先诊断三卦,再开方三卦。心里想着自己近来的处境,逐个点「起卦」;起完点「开转运方」。`);
+  });
+  $('btn-zy-read').addEventListener('click', () => {
+    if (zyBusy || !zyPlan) return;
+    if (!zyDone()) { zyStatus('还没起卦——先在阵里点「起卦」。', true); return; }
+    if (!getKey()) { zyStatus(`开转运方需先设置 ${curProvider().label} API Key(见「东玄深断」栏)。`, true); return; }
+    let material = `【转运 · 先诊断后开方】\n${ZY_RULES}\n【规矩】每卦只答其小问并给足"必须给";诊断三卦先立住(牌面、根源、底牌),开方三卦全部落到可执行动作;未起之卦直说"未起卦,此项不断"。`;
+    for (const g of zyPlan.groups) {
+      const done = g.casts.filter(c => c.done);
+      if (!done.length) continue;
+      material += `\n\n════ ${g.title} ════`;
+      for (const c of done) material += `\n——${DW_METHODS[c.method]}卦 · 所问:${c.q}\n(此卦必须给:${c.focus})\n${c.report}`;
+    }
+    material += genderMaterialLine() + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
+    return zyAsk([{ role: 'user', content: material }], false);
+  });
+  $('btn-zy-fu').addEventListener('click', () => {
+    if (zyBusy) return;
+    if (!zyConvo) { zyStatus('先开转运方,再追问。', true); return; }
+    const t = $('zy-fu').value.trim();
+    if (!t) { zyStatus('先打上你要追问的话。', true); return; }
+    return zyAsk(zyConvo.turns.concat([{ role: 'user', content: t + '\n(就着这套转运方接着答,建议仍须可执行;答不了直说。)' }]), true);
+  });
+  $('btn-zy-clear').addEventListener('click', () => {
+    zyPlan = null; zyConvo = null; renderZy();
+    $('zy-out').classList.add('hidden'); $('zy-out').innerHTML = ''; $('zy-followup').classList.add('hidden');
+    zyStatus('阵已清空。');
+  });
+  $('zy-plan').addEventListener('click', e => {
+    const gh = e.target.closest('.dwgh');
+    if (gh) {
+      const body = gh.parentElement.querySelector('.dwbody');
+      const nowHidden = body.classList.toggle('hidden');
+      gh.querySelector('.tri').textContent = nowHidden ? '▸' : '▾';
+      return;
+    }
+    const b = e.target.closest('.zy-cast');
+    if (!b || !zyPlan) return;
+    const c = zyPlan.groups[Number(b.dataset.g)].casts[Number(b.dataset.c)];
+    if (!c || c.done) return;
+    dwCastOne(c);
+    renderZy();
+    zyStatus(`已起 ${zyDone()}/${zyTotal()} 卦。${zyDone() >= zyTotal() ? '全阵起毕,点「开转运方」。' : ''}`);
   });
 
   // —— 梅花易数 ——
