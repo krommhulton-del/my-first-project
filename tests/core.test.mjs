@@ -54,12 +54,12 @@ t('八卦表:bits 自下而上、方位与数齐全', () => {
 });
 
 console.log('【二】三钱法掷爻数学');
-t('铜钱组合→爻值:三字=9老阳动,三背=6老阴动,二字一背=8少阴,一字二背=7少阳', () => {
+t('铜钱组合→爻值(火珠林口诀):三背=重9老阳动,三字=交6老阴动,二背一字=拆8少阴,一背二字=单7少阳', () => {
   const mk = bits => { let i = 0; return () => bits[i++]; };
-  let l = GuaCore.tossLine(mk([1, 1, 1])); eq(l.sum, 9); ok(l.yang && l.moving, '9=老阳动');
-  l = GuaCore.tossLine(mk([0, 0, 0])); eq(l.sum, 6); ok(!l.yang && l.moving, '6=老阴动');
-  l = GuaCore.tossLine(mk([1, 1, 0])); eq(l.sum, 8); ok(!l.yang && !l.moving, '8=少阴静');
-  l = GuaCore.tossLine(mk([1, 0, 0])); eq(l.sum, 7); ok(l.yang && !l.moving, '7=少阳静');
+  let l = GuaCore.tossLine(mk([0, 0, 0])); eq(l.sum, 9); ok(l.yang && l.moving, '三背=9老阳动');
+  l = GuaCore.tossLine(mk([1, 1, 1])); eq(l.sum, 6); ok(!l.yang && l.moving, '三字=6老阴动');
+  l = GuaCore.tossLine(mk([0, 0, 1])); eq(l.sum, 8); ok(!l.yang && !l.moving, '二背一字=8少阴静');
+  l = GuaCore.tossLine(mk([0, 1, 1])); eq(l.sum, 7); ok(l.yang && !l.moving, '一背二字=7少阳静');
 });
 t('非法爻值报错', () => {
   let threw = false;

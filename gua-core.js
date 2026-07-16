@@ -19,11 +19,12 @@
     return buf[0] & 1;
   }
 
-  // ——— 掷一爻:三枚铜钱,字=3 背=2,求和 6/7/8/9 ———
+  // ——— 掷一爻:三枚铜钱,背=3 字=2,求和 6/7/8/9 ———
+  // 火珠林正宗口诀:一背为单(7 少阳)、二背为拆(8 少阴)、三背为重(9 老阳)、三字为交(6 老阴)。
   function tossLine(rngBit) {
     const bit = rngBit || cryptoBit;
     const coins = [bit(), bit(), bit()].map(b => (b ? '字' : '背'));
-    const sum = coins.reduce((s, c) => s + (c === '字' ? 3 : 2), 0);
+    const sum = coins.reduce((s, c) => s + (c === '背' ? 3 : 2), 0);
     return makeLine(sum, coins);
   }
 

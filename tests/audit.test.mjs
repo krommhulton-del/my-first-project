@@ -1,0 +1,155 @@
+// 内测·铁案审计:拿行内公认的标准答案对全系统(node tests/audit.test.mjs)
+// 覆盖:纳甲歌八宫全表、世应安法、六亲、旬空、干支日历史锚点、农历春节/中秋铁案、
+//       节气月建切换、梅花「观梅占」原例、小六壬起课、三钱/大衍概率分布。
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const Najia = require('../najia.js');
+const Lunar = require('../lunar.js');
+const Meihua = require('../meihua.js');
+const Xlr = require('../xiaoliuren.js');
+const GuaCore = require('../gua-core.js');
+
+let pass = 0, fail = 0;
+function t(name, fn) {
+  try { fn(); pass++; console.log('  ✓', name); }
+  catch (e) { fail++; console.error('  ✗', name, '——', e.message); }
+}
+function eq(a, b, msg) { if (a !== b) throw new Error(`${msg || ''} 期望 ${JSON.stringify(b)},得到 ${JSON.stringify(a)}`); }
+function ok(v, msg) { if (!v) throw new Error(msg || '断言失败'); }
+
+console.log('【一】京房纳甲歌·八宫全表(甲子外壬午/乙未外癸丑…逐爻对)');
+const NAJIA_EXPECT = {
+  '111111': ['甲子', '甲寅', '甲辰', '壬午', '壬申', '壬戌'], // 乾为天
+  '000000': ['乙未', '乙巳', '乙卯', '癸丑', '癸亥', '癸酉'], // 坤为地
+  '100100': ['庚子', '庚寅', '庚辰', '庚午', '庚申', '庚戌'], // 震为雷
+  '011011': ['辛丑', '辛亥', '辛酉', '辛未', '辛巳', '辛卯'], // 巽为风
+  '010010': ['戊寅', '戊辰', '戊午', '戊申', '戊戌', '戊子'], // 坎为水
+  '101101': ['己卯', '己丑', '己亥', '己酉', '己未', '己巳'], // 离为火
+  '001001': ['丙辰', '丙午', '丙申', '丙戌', '丙子', '丙寅'], // 艮为山
+  '110110': ['丁巳', '丁卯', '丁丑', '丁亥', '丁酉', '丁未'], // 兑为泽
+};
+t('八纯卦四十八爻干支与纳甲歌逐一相符', () => {
+  for (const [id, exp] of Object.entries(NAJIA_EXPECT)) {
+    const z = Najia.zhuangGua(id);
+    z.lines.forEach((l, i) => eq(l.ganZhi, exp[i], `卦${id}第${i + 1}爻`));
+  }
+});
+t('世应安法:八纯世上应三;一世姤世初应四;游魂晋世四;归魂大有世三', () => {
+  eq(Najia.zhuangGua('111111').shi, 6, '乾为天世'); eq(Najia.zhuangGua('111111').ying, 3, '乾为天应');
+  eq(Najia.zhuangGua('011111').shi, 1, '天风姤世'); eq(Najia.zhuangGua('011111').ying, 4, '天风姤应');
+  eq(Najia.zhuangGua('000101').shi, 4, '火地晋(游魂)世');
+  eq(Najia.zhuangGua('111101').shi, 3, '火天大有(归魂)世');
+});
+t('六亲(乾宫属金):子水子孙、寅木妻财、辰土父母、午火官鬼、申金兄弟', () => {
+  const z = Najia.zhuangGua('111111');
+  eq(z.palaceWx, '金', '乾宫五行');
+  const qin = z.lines.map(l => l.liuQin).join(',');
+  eq(qin, '子孙,妻财,父母,官鬼,兄弟,父母', '乾为天六亲自下而上');
+});
+t('晋、大有归乾宫(游魂归魂不离本宫)', () => {
+  eq(Najia.zhuangGua('000101').palace, '乾', '火地晋');
+  eq(Najia.zhuangGua('111101').palace, '乾', '火天大有');
+});
+
+console.log('【二】干支历铁案');
+t('2000-01-07 甲子日(锚点),旬空戌亥', () => {
+  const g = Najia.ganZhi(new Date(2000, 0, 7, 12));
+  eq(g.day, '甲子');
+  eq(g.xunKong.join(''), '戌亥', '甲子旬空');
+});
+t('1949-10-01 开国大典为甲子日(独立历史锚点)', () => {
+  eq(Najia.ganZhi(new Date(1949, 9, 1, 12)).day, '甲子');
+});
+t('立春换月建:2026-02-03 仍丑月,2026-02-05 已寅月;年柱同界切换', () => {
+  const before = Najia.ganZhi(new Date(2026, 1, 3, 12));
+  const after = Najia.ganZhi(new Date(2026, 1, 5, 12));
+  eq(before.monthZhi, '丑', '立春前');
+  eq(after.monthZhi, '寅', '立春后');
+  eq(before.year, '乙巳', '立春前属旧岁');
+  eq(after.year, '丙午', '立春后属新岁');
+});
+
+console.log('【三】农历铁案(官方历对照)');
+t('春节三连:2024-02-10 甲辰正月初一;2025-01-29 乙巳;2026-02-17 丙午', () => {
+  const a = Lunar.fromDate(new Date(2024, 1, 10, 12));
+  eq(`${a.yearGZ}${a.lMonth}-${a.lDay}`, '甲辰1-1', '2024');
+  const b = Lunar.fromDate(new Date(2025, 0, 29, 12));
+  eq(`${b.yearGZ}${b.lMonth}-${b.lDay}`, '乙巳1-1', '2025');
+  const c = Lunar.fromDate(new Date(2026, 1, 17, 12));
+  eq(`${c.yearGZ}${c.lMonth}-${c.lDay}`, '丙午1-1', '2026');
+});
+t('2025-10-06 中秋=八月十五', () => {
+  const l = Lunar.fromDate(new Date(2025, 9, 6, 12));
+  eq(`${l.lMonth}-${l.lDay}`, '8-15');
+});
+
+console.log('【四】梅花易数·邵雍「观梅占」原例复刻');
+t('辰年十二月十七日申时:泽火革、互天风姤、初爻动变泽山咸、兑金为体离火克之断凶', () => {
+  // 年5(辰)+月12+日17=34→上卦兑(2);+时9(申)=43→下卦离(3);43÷6余1→初爻动
+  const lunar = { yearBranchNum: 5, lMonth: 12, lDay: 17, hourNum: 9, yearGZ: '甲辰', monthName: '腊月', dayName: '十七', hourBranch: '申' };
+  const c = Meihua.castByTime(lunar);
+  eq(c.ben.full, '泽火革', '本卦');
+  eq(c.hu.full, '天风姤', '互卦');
+  eq(c.moving, 1, '动爻');
+  eq(c.bian.full, '泽山咸', '变卦');
+  eq(c.tiTri.name, '兑', '体卦(动在下,体为上兑)');
+  eq(c.yongTri.name, '离', '用卦');
+  const a = Meihua.analyze(c);
+  eq(a.rel, '用克体', '生克');
+  eq(a.lv, '凶', '断级——史例果有女子折花伤股');
+});
+
+console.log('【五】小六壬起课');
+t('宫序大安→留连→速喜→赤口→小吉→空亡;正月初一子时三宫全大安', () => {
+  eq(Xlr.GONG.map(g => g.name).join(''), '大安留连速喜赤口小吉空亡', '宫序');
+  const c = Xlr.castByTime({ lMonth: 1, lDay: 1, hourNum: 1, yearGZ: '', monthName: '正月', dayName: '初一', hourBranch: '子' });
+  eq(c.gongs.map(g => g.name).join(','), '大安,大安,大安');
+});
+t('月上起日、日上起时连环推:五月初五午时=小吉/速喜/速喜', () => {
+  const c = Xlr.castByTime({ lMonth: 5, lDay: 5, hourNum: 7, yearGZ: '', monthName: '五月', dayName: '初五', hourBranch: '午' });
+  eq(c.gongs.map(g => g.name).join(','), '小吉,速喜,速喜');
+});
+
+console.log('【六】随机性与概率分布(CSPRNG 实测)');
+t('三钱法四万爻:6=1/8、7=3/8、8=3/8、9=1/8,偏差<1.5%', () => {
+  const n = 40000, cnt = { 6: 0, 7: 0, 8: 0, 9: 0 };
+  for (let i = 0; i < n; i++) cnt[GuaCore.tossLine().sum]++;
+  const expct = { 6: .125, 7: .375, 8: .375, 9: .125 };
+  for (const k of [6, 7, 8, 9]) {
+    const p = cnt[k] / n;
+    ok(Math.abs(p - expct[k]) < .015, `${k}:实测${(p * 100).toFixed(2)}% 期望${expct[k] * 100}%`);
+  }
+});
+t('三钱逐位无偏:每一枚钱字面占比 50%±1.5%(排除位置偏差)', () => {
+  const n = 30000, pos = [0, 0, 0];
+  for (let i = 0; i < n; i++) {
+    const l = GuaCore.tossLine();
+    l.coins.forEach((c, j) => { if (c === '字') pos[j]++; });
+  }
+  pos.forEach((c, j) => ok(Math.abs(c / n - .5) < .015, `第${j + 1}枚:${(c / n * 100).toFixed(2)}%`));
+});
+t('大衍蓍草四万爻:6=1/16、7=5/16、8=7/16、9=3/16,偏差<1.5%(与三钱分布不同,老阳多于老阴)', () => {
+  const n = 40000, cnt = { 6: 0, 7: 0, 8: 0, 9: 0 };
+  for (let i = 0; i < n; i++) cnt[GuaCore.dayanLine().sum]++;
+  const expct = { 6: 1 / 16, 7: 5 / 16, 8: 7 / 16, 9: 3 / 16 };
+  for (const k of [6, 7, 8, 9]) {
+    const p = cnt[k] / n;
+    ok(Math.abs(p - expct[k]) < .015, `${k}:实测${(p * 100).toFixed(2)}% 期望${(expct[k] * 100).toFixed(2)}%`);
+  }
+});
+t('成卦无偏:一万卦中六十四卦皆现,最热门与最冷门差距在统计噪声内', () => {
+  const n = 10000, cnt = {};
+  for (let i = 0; i < n; i++) {
+    const c = GuaCore.castHexagram();
+    cnt[c.ben.full] = (cnt[c.ben.full] || 0) + 1;
+  }
+  const names = Object.keys(cnt);
+  eq(names.length, 64, '六十四卦全该出现');
+  const vals = names.map(k => cnt[k]);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  // 每卦期望 156.25,σ≈12.4;min/max 容±5σ
+  ok(min > 156.25 - 62 && max < 156.25 + 62, `min=${min} max=${max}`);
+});
+
+console.log(`\n结果:${pass} 通过,${fail} 失败`);
+process.exit(fail ? 1 : 0);
