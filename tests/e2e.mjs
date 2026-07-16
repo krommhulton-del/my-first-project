@@ -484,6 +484,19 @@ await t('卦档法门徽记与蓍草起卦', async () => {
   ok(badges2.includes('六爻·蓍草'), '蓍草徽记:' + badges2.join(','));
 });
 
+await t('日间/夜间主题切换与记忆', async () => {
+  ok((await page.evaluate(() => document.documentElement.dataset.theme || 'light')) === 'light', '默认应为日间');
+  await page.click('#btn-theme');
+  ok((await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark', '点一下应变夜间');
+  ok((await page.textContent('#btn-theme')).includes('日间'), '按钮文案应变「日间」');
+  ok((await page.evaluate(() => document.querySelector('meta[name=theme-color]').content)) === '#141414', 'meta 主题色应跟随');
+  await page.reload();
+  await page.waitForSelector('#btn-theme');
+  ok((await page.evaluate(() => document.documentElement.dataset.theme)) === 'dark', '刷新后应记住夜间');
+  await page.click('#btn-theme');
+  ok((await page.evaluate(() => document.documentElement.dataset.theme || 'light')) === 'light', '再点应回日间');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
