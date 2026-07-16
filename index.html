@@ -284,7 +284,45 @@
   #duo-offer { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
   #duo-offer .duo-title { color: var(--dim); font-size: .9rem; margin-bottom: 8px; line-height: 1.7; }
   #duo-status { margin-top: 10px; color: var(--cinnabar); font-size: .95rem; letter-spacing: .03em; line-height: 1.7; }
+  .jr-nav { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; flex-wrap: wrap; }
+  .jr-nav b { font-family: var(--disp); letter-spacing: .1em; font-size: 1.05rem; min-width: 7.5em; text-align: center; }
+  .jr-nav button { padding: 6px 14px; font-size: .9rem; }
+  .jr-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .jr-wd { text-align: center; color: var(--dim); font-size: .78rem; padding: 4px 0; letter-spacing: .1em; }
+  .jr-cell { background: var(--panel2); border: 1px solid var(--hair); border-radius: 10px; padding: 6px 4px 5px;
+    min-height: 72px; cursor: pointer; text-align: center; display: flex; flex-direction: column; gap: 1px;
+    font-family: inherit; transition: background .15s; }
+  .jr-cell:hover { background: var(--hover); }
+  .jr-cell .dnum { font-size: 1.02rem; line-height: 1.3; }
+  .jr-cell .dlun { color: var(--dim); font-size: .68rem; }
+  .jr-cell .dgz { color: var(--dim); font-size: .68rem; }
+  .jr-cell.today { border-color: var(--cinnabar); box-shadow: 0 0 0 1px var(--cinnabar) inset; }
+  .jr-cell.sel { background: var(--accent-soft); border-color: var(--cinnabar); }
+  .jrlv { display: inline-block; border-radius: 999px; font-size: .68rem; padding: 0 7px; line-height: 1.5; margin: 1px auto 0; }
+  .l-sj { background: var(--cinnabar); color: #fff; }
+  .l-ji { border: 1px solid var(--cinnabar); color: var(--cinnabar); }
+  .l-ping { border: 1px solid var(--line); color: var(--dim); }
+  .l-shen { border: 1px solid var(--blue); color: var(--blue); }
+  .l-jji { background: var(--ink); color: var(--paper); opacity: .75; }
+  .l-chong { background: #1c1a17; color: #ff8a70; border: 1px solid #ff8a70; }
+  .jr-legend { color: var(--dim); font-size: .8rem; margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #jr-detail { margin-top: 12px; background: var(--panel2); border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; padding: 12px 14px; line-height: 1.85; }
+  #jr-detail .jt { font-size: 1.02rem; margin-bottom: 4px; }
+  #jr-detail .jrow b { color: var(--gold); font-weight: normal; }
+  #jr-detail .jsum { margin-top: 6px; color: var(--cinnabar); }
+  .jr-pickrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; color: var(--dim); font-size: .92rem; }
+  .jr-pickrow select { padding: 6px 8px; font-size: .9rem; }
+  .jr-pickrow button { padding: 7px 18px; font-size: .92rem; }
+  #jr-picked { margin-top: 8px; }
+  .jp-row { display: flex; align-items: baseline; gap: 10px; padding: 8px 2px; border-bottom: 1px dashed var(--line); flex-wrap: wrap; cursor: pointer; }
+  .jp-row:hover { background: var(--hover); }
+  .jp-row .jpd { min-width: 9em; }
+  .jp-row .jpw { color: var(--dim); font-size: .85rem; flex: 1 1 240px; }
   @media (max-width: 560px) {
+    .jr-cell { min-height: 58px; padding: 4px 2px 4px; border-radius: 8px; }
+    .jr-cell .dgz { display: none; }
+    .jr-cell .dnum { font-size: .95rem; }
+    .jrlv { font-size: .62rem; padding: 0 5px; }
     .qmcell { min-height: 82px; padding: 6px 3px; }
     .qmcell .qgan { font-size: .92rem; } .qmcell .qstar, .qmcell .qgate { font-size: .78rem; }
     .qmcell .qshen, .qmcell .qpos { font-size: .68rem; }
@@ -315,7 +353,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.28</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.29</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide"><b>三步用法:</b>① 填问卦人 → ② 写下所问(或点开「分科」挑类别)→ ③ 起卦、请东玄深断、追问。大问用「大问拆阵」,调运用「转运」。<b>按钮:</b>红=起卦 · 蓝=请东玄深断 · 灰=辅助。</p>
   </header>
@@ -604,6 +642,32 @@
   </div>
   </section>
 
+  <section id="sec-jiri" class="fold">
+    <h2 class="foldh">吉 日 历 · 挑好日子(黄历 × 你的生辰)<span class="foldtri">▸</span></h2>
+    <div class="foldbody hidden">
+    <div class="note">老规矩看日子分三层:<b>①这天本身</b>(建除十二神、黄道黑道值神)、<b>②冲不冲你</b>(日支冲你生肖=冲日,大事勿用;三合六合=顺)、<b>③帮不帮你</b>(流日五行对你日主是生是克)。填了生日才有②③;拿不准的日子,点「起一卦细看」用卦复核——历法初筛、卦象定夺,两头对得上才叫稳。</div>
+    <div class="qwho">你的生日:
+      <input type="date" id="jr-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <span class="qwhint">按公历填。只想看通用黄历可不填。</span>
+    </div>
+    <div class="jr-nav">
+      <button id="jr-prev" class="ghost">◀ 上月</button>
+      <b id="jr-title"></b>
+      <button id="jr-next" class="ghost">下月 ▶</button>
+      <button id="jr-today" class="ghost">回今天</button>
+    </div>
+    <div class="jr-grid" id="jr-grid"></div>
+    <div class="jr-legend">标记:<span class="jrlv l-sj">上吉</span><span class="jrlv l-ji">吉</span><span class="jrlv l-ping">平</span><span class="jrlv l-shen">慎</span><span class="jrlv l-jji">忌</span><span class="jrlv l-chong">冲你</span> · 点任何一天看细账</div>
+    <div id="jr-detail" class="hidden"></div>
+    <div class="jr-pickrow">要办什么事:
+      <select id="jr-event"></select>
+      <select id="jr-span"><option value="30">未来30天</option><option value="60" selected>未来60天</option><option value="90">未来90天</option></select>
+      <button id="jr-pickbtn">挑出好日子</button>
+    </div>
+    <div id="jr-picked"></div>
+  </div>
+  </section>
+
   <section id="sec-hist" class="fold">
     <h2 class="foldh">卦 档 · 历史记录(点开查看)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
@@ -615,7 +679,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.28 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.29 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -626,6 +690,7 @@
 <script src="xiaoliuren.js"></script>
 <script src="qimen.js"></script>
 <script src="fenke.js"></script>
+<script src="jiri.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -1927,6 +1992,122 @@
     const hid = b.classList.toggle('hidden');
     h.querySelector('.foldtri').textContent = hid ? '▸' : '▾';
   }));
+
+  // —— 吉日历:黄历(建除/值神/冲煞)× 本人生辰,按事挑日,可转起卦复核 ——
+  const BKEY = 'dongxuan_birth';
+  const JR_WD = ['一', '二', '三', '四', '五', '六', '日'];
+  const JR_LVCLS = { 上吉: 'l-sj', 吉: 'l-ji', 平: 'l-ping', 慎: 'l-shen', 忌: 'l-jji', 冲: 'l-chong' };
+  const JR_SUM = {
+    上吉: '黄历与你的生辰两头都顺,大事可用。',
+    吉: '是个好日子,正事可办。',
+    平: '平常日子,小事无妨,大事另挑一天。',
+    慎: '这天有亏欠,能缓则缓;非办不可,起一卦把细节看清。',
+    忌: '黄历大凶当头,别硬碰,换一天。',
+    冲: '这天正冲你,大事勿用,直接换一天。',
+  };
+  let jrY = new Date().getFullYear(), jrM = new Date().getMonth() + 1;
+  let jrSel = '', jrGrid = null, jrInit = false;
+  const jrIsoToday = () => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
+  function jrBirth() {
+    const v = $('jr-birth').value;
+    if (!v) return null;
+    const [y, m, d] = v.split('-').map(Number);
+    const dt = new Date(y, m - 1, d, 12);
+    return isNaN(dt) ? null : dt;
+  }
+  function renderJiri() {
+    const g = Jiri.monthGrid(jrY, jrM, jrBirth());
+    jrGrid = g;
+    $('jr-title').textContent = `${jrY}年${jrM}月`;
+    const tIso = jrIsoToday();
+    let html = JR_WD.map(w => `<div class="jr-wd">${w}</div>`).join('');
+    html += '<div></div>'.repeat(g.firstWeek);
+    html += g.days.map(d =>
+      `<button type="button" class="jr-cell${d.iso === tIso ? ' today' : ''}${d.iso === jrSel ? ' sel' : ''}" data-iso="${d.iso}">` +
+      `<span class="dnum">${d.d}</span><span class="dlun">${esc(d.lunarText)}</span><span class="dgz">${d.gz.day}日</span>` +
+      `<span class="jrlv ${JR_LVCLS[d.level]}">${d.level}</span></button>`).join('');
+    $('jr-grid').innerHTML = html;
+  }
+  function jrShowDetail(info) {
+    const canCast = info.iso >= jrIsoToday();
+    const per = info.personal
+      ? `<div class="jrow"><b>对你(属${esc(info.personal.animal)}、日主${info.personal.selfGan}):</b>` +
+        (info.personal.marks.length ? info.personal.marks.map(esc).join(';') + ';' : '') +
+        esc(info.personal.wx.note) + '。</div>'
+      : '<div class="jrow"><b>对你:</b>上面填了生日,才算得出这天冲不冲你、帮不帮你。</div>';
+    $('jr-detail').innerHTML =
+      `<div class="jt">${info.m}月${info.d}日 周${JR_WD[info.week]} · ${info.gz.year}年${info.gz.month}月<b>${info.gz.day}日</b>${info.lunar ? ' · 农历' + esc(info.lunar.monthName + info.lunar.dayName) : ''}</div>` +
+      `<div class="jrow"><b>建除:</b>${info.jianchu.name}日 —— ${esc(info.jianchu.gist)}。宜${esc(info.jianchu.yi)};忌${esc(info.jianchu.ji)}。</div>` +
+      `<div class="jrow"><b>值神:</b>${info.zhishen.name}(${info.zhishen.huang ? '黄道' : '黑道'})—— ${esc(info.zhishen.note)}。</div>` +
+      `<div class="jrow"><b>冲煞:</b>冲${info.chongAnimal}(${info.chongZhi})煞${info.shaDir} —— 属${info.chongAnimal}的这天大事勿用;${info.shaDir}方动土远行多个心眼。</div>` +
+      per +
+      `<div class="jsum">综合:「${info.level}」—— ${JR_SUM[info.level]}</div>` +
+      (canCast ? `<div class="btnrow"><button type="button" class="primary" id="jr-cast" data-iso="${info.iso}">拿这天起一卦细看</button></div>` : '');
+    $('jr-detail').classList.remove('hidden');
+    const cb = $('jr-cast');
+    if (cb) cb.addEventListener('click', () => jrToCast(cb.dataset.iso));
+  }
+  // 转起卦:走「日运(可择日)」分科老路,日期代入,首选法门直接就位
+  function jrToCast(isoDate) {
+    const fb = document.querySelector('#sec-fenke .foldbody');
+    if (fb && fb.classList.contains('hidden')) {
+      fb.classList.remove('hidden');
+      const tri = document.querySelector('#sec-fenke .foldtri');
+      if (tri) tri.textContent = '▾';
+    }
+    if (!curFenke || curFenke.id !== 'riyun') openFenke('riyun');
+    const fd = $('fk-date');
+    if (fd) fd.value = isoDate;
+    pickMethod(0);
+  }
+  function jrEnsure() {
+    if (jrInit) return;
+    jrInit = true;
+    try { const b = localStorage.getItem(BKEY); if (b) $('jr-birth').value = b; } catch (e) {}
+    $('jr-event').innerHTML = Object.entries(Jiri.EVENTS).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
+    renderJiri();
+    $('jr-grid').addEventListener('click', e => {
+      const c = e.target.closest('.jr-cell');
+      if (!c || !jrGrid) return;
+      jrSel = c.dataset.iso;
+      document.querySelectorAll('.jr-cell').forEach(el => el.classList.toggle('sel', el.dataset.iso === jrSel));
+      const info = jrGrid.days.find(d => d.iso === jrSel);
+      if (info) jrShowDetail(info);
+    });
+    $('jr-prev').addEventListener('click', () => { jrM--; if (jrM < 1) { jrM = 12; jrY--; } renderJiri(); });
+    $('jr-next').addEventListener('click', () => { jrM++; if (jrM > 12) { jrM = 1; jrY++; } renderJiri(); });
+    $('jr-today').addEventListener('click', () => { const t = new Date(); jrY = t.getFullYear(); jrM = t.getMonth() + 1; jrSel = jrIsoToday(); renderJiri(); const info = jrGrid.days.find(d => d.iso === jrSel); if (info) jrShowDetail(info); });
+    $('jr-birth').addEventListener('change', () => {
+      try { localStorage.setItem(BKEY, $('jr-birth').value || ''); } catch (e) {}
+      renderJiri();
+      if (jrSel && jrGrid) { const info = jrGrid.days.find(d => d.iso === jrSel); if (info) jrShowDetail(info); }
+    });
+    $('jr-pickbtn').addEventListener('click', () => {
+      const key = $('jr-event').value, span = parseInt($('jr-span').value, 10) || 60;
+      const picks = Jiri.pickDays(key, new Date(), span, jrBirth(), 5);
+      if (!picks.length) {
+        $('jr-picked').innerHTML = `<div class="note">这${span}天里没有既合这桩事、又不犯忌不冲你的日子——不凑合推荐。把时段放宽再挑,或挑个「平」日起一卦细看。</div>`;
+        return;
+      }
+      $('jr-picked').innerHTML = picks.map(p =>
+        `<div class="jp-row" data-iso="${p.info.iso}">
+          <span class="jpd"><b>${p.info.m}月${p.info.d}日</b> 周${JR_WD[p.info.week]} ${p.info.gz.day}日</span>
+          <span class="jrlv ${JR_LVCLS[p.info.level]}">${p.info.level}</span>
+          <span class="jpw">${p.why.map(esc).join(';')}</span>
+        </div>`).join('') +
+        `<div class="note">点某天看细账;大事之前,建议再起一卦复核——历法与卦象两头对上才稳。</div>`;
+      $('jr-picked').querySelectorAll('.jp-row').forEach(r => r.addEventListener('click', () => {
+        const [y, m] = r.dataset.iso.split('-').map(Number);
+        jrY = y; jrM = m; jrSel = r.dataset.iso;
+        renderJiri();
+        const info = jrGrid.days.find(d => d.iso === jrSel);
+        if (info) jrShowDetail(info);
+        $('jr-grid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }));
+    });
+  }
+  // 首次展开该板块时才铺日历(月历要算一整月朔与节气,不拖累开屏)
+  document.querySelector('#sec-jiri .foldh').addEventListener('click', () => setTimeout(jrEnsure, 0));
 
   // —— 日间/夜间主题(<head> 里的小脚本已提前上色,避免闪白)——
   const TKEY = 'dongxuan_theme';

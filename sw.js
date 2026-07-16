@@ -1,5 +1,5 @@
 // 东玄卜卦 Service Worker:预缓存全部静态资源,离线可用
-const CACHE = 'dongxuan-v0.28.0';
+const CACHE = 'dongxuan-v0.29.0';
 const ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ASSETS = [
   './xiaoliuren.js',
   './qimen.js',
   './fenke.js',
+  './jiri.js',
   './bazi.js',
   './yunshi.js',
   './yunshi.html',

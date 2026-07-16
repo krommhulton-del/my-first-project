@@ -4,7 +4,7 @@
   "private": true,
   "description": "东玄卜卦 · 三钱法起卦与解读一体的静态网页程序(内测)",
   "scripts": {
-    "test": "node tests/core.test.mjs && node tests/najia.test.mjs && node tests/fangmen.test.mjs && node tests/qimen.test.mjs && node tests/yunshi.test.mjs",
+    "test": "node tests/core.test.mjs && node tests/najia.test.mjs && node tests/fangmen.test.mjs && node tests/qimen.test.mjs && node tests/yunshi.test.mjs && node tests/jiri.test.mjs",
     "e2e": "node tests/e2e.mjs && node tests/yunshi-e2e.mjs"
   },
   "devDependencies": {

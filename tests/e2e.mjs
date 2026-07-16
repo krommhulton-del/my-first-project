@@ -484,6 +484,49 @@ await t('卦档法门徽记与蓍草起卦', async () => {
   ok(badges2.includes('六爻·蓍草'), '蓍草徽记:' + badges2.join(','));
 });
 
+await t('吉日历:月历渲染、点日细账、生日个人化、按事挑日、转起卦', async () => {
+  // 若此前 expandGroups 已展开,先合上,保证下面这一点是「展开+初始化」
+  await page.evaluate(() => {
+    const b = document.querySelector('#sec-jiri .foldbody');
+    if (b && !b.classList.contains('hidden')) document.querySelector('#sec-jiri .foldh').click();
+  });
+  await page.click('#sec-jiri .foldh');
+  await page.waitForSelector('.jr-cell', { timeout: 8000 });
+  const cells = await page.locator('.jr-cell').count();
+  ok(cells >= 28 && cells <= 31, `月历格数=${cells}`);
+  const now = new Date();
+  ok((await page.textContent('#jr-title')).includes(`${now.getFullYear()}年`), '标题应为当前年月');
+  ok((await page.locator('.jr-cell.today').count()) === 1, '今天应有标记');
+  // 点开今天的细账
+  await page.locator('.jr-cell.today').click();
+  const det = await page.textContent('#jr-detail');
+  ok(det.includes('建除') && det.includes('值神') && det.includes('冲') && det.includes('综合'), '细账四要素:' + det.slice(0, 60));
+  ok(det.includes('填了生日'), '未填生日应提示');
+  // 填生日 → 个人化生效并持久
+  await page.fill('#jr-birth', '1990-06-15');
+  await page.dispatchEvent('#jr-birth', 'change');
+  const det2 = await page.textContent('#jr-detail');
+  ok(det2.includes('属马') && det2.includes('日主'), '个人层应现生肖与日主:' + det2.slice(-120));
+  ok((await page.evaluate(() => localStorage.getItem('dongxuan_birth'))) === '1990-06-15', '生日应持久化');
+  // 翻月
+  await page.click('#jr-next');
+  ok(!(await page.textContent('#jr-title')).includes(`${now.getFullYear()}年${now.getMonth() + 1}月`), '翻月后标题应变');
+  await page.click('#jr-today');
+  // 按事挑日
+  await page.selectOption('#jr-event', 'kaiye');
+  await page.click('#jr-pickbtn');
+  const rows = await page.locator('.jp-row').count();
+  ok(rows >= 1 && rows <= 5, `挑日行数=${rows}`);
+  ok((await page.textContent('#jr-picked')).includes('复核'), '应提示起卦复核');
+  // 点推荐行 → 细账 → 转起卦
+  await page.locator('.jp-row').first().click();
+  await page.waitForSelector('#jr-cast', { timeout: 5000 });
+  await page.click('#jr-cast');
+  const q = await page.inputValue('#question');
+  ok(/\d{4}年\d{1,2}月\d{1,2}日/.test(q) || q.includes('今天'), '问题应带日期:' + q);
+  ok((await page.textContent('#fk-why')).includes('日运'), '应已选定日运分科');
+});
+
 await t('日间/夜间主题切换与记忆', async () => {
   ok((await page.evaluate(() => document.documentElement.dataset.theme || 'light')) === 'light', '默认应为日间');
   await page.click('#btn-theme');
