@@ -573,6 +573,34 @@ await t('心愿板块:旺你牌、吉日窗、六卦阵、无Key深断给提示'
   ok((await page.locator('#xy-plan .dwgroup').count()) === 0, '清空后应无阵');
 });
 
+await t('未来镜:三卦成景、文体视角可选、无Key成文给提示、追问双轨在位', async () => {
+  await page.evaluate(() => {
+    const b = document.querySelector('#sec-wj .foldbody');
+    if (b && b.classList.contains('hidden')) document.querySelector('#sec-wj .foldh').click();
+  });
+  await page.fill('#wj-q', '一年后我的日子是什么样');
+  await page.selectOption('#wj-style', '短篇小说');
+  await page.selectOption('#wj-pov', '第三人称');
+  await page.selectOption('#wj-far', '一年后');
+  await page.click('#btn-wj-start');
+  ok((await page.locator('#wj-plan .wj-cast').count()) === 3, '应有三个起卦位');
+  const badges = await page.locator('#wj-plan .m').allTextContents();
+  ok(badges.join(',') === '六爻,梅花,小六壬', '三法各司其职:' + badges.join(','));
+  ok((await page.locator('#wj-plan .q').first().textContent()).includes('一年后我的日子'), '卦问应带所看');
+  // 起满三卦
+  for (let i = 0; i < 3; i++) await page.locator('#wj-plan .wj-cast').first().click();
+  ok((await page.locator('#wj-plan .res').count()) === 3, '三卦应✓');
+  ok(!(await page.locator('#wj-actions').evaluate(el => el.classList.contains('hidden'))), '成文入口应出现');
+  await page.click('#btn-wj-read');
+  ok((await page.textContent('#wj-status')).includes('API Key'), '无Key应提示:' + (await page.textContent('#wj-status')));
+  // 追问双轨按钮存在(未成文时点击给提示)
+  await page.evaluate(() => document.querySelector('#wj-followup').classList.remove('hidden'));
+  await page.click('#btn-wj-fugua');
+  ok((await page.textContent('#wj-status')).includes('先解卦成文'), '未成文追卦应拦:' + (await page.textContent('#wj-status')));
+  await page.click('#btn-wj-clear');
+  ok((await page.locator('#wj-plan .dwgroup').count()) === 0, '清空后应无阵');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

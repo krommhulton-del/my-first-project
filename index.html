@@ -353,7 +353,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.31</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.32</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide"><b>三步用法:</b>① 填问卦人 → ② 写下所问(或点开「分科」挑类别)→ ③ 起卦、请东玄深断、追问。大问用「大问拆阵」,调运用「转运」。<b>按钮:</b>红=起卦 · 蓝=请东玄深断 · 灰=辅助。</p>
   </header>
@@ -682,6 +682,39 @@
   </div>
   </section>
 
+  <section id="sec-wj" class="fold">
+    <h2 class="foldh">未 来 镜 · 把未来写给你看(写实 / 小说)<span class="foldtri">▸</span></h2>
+    <div class="foldbody hidden">
+    <div class="note">想看未来某件事的<b>实景</b>?这里起三卦:六爻定主线骨架、梅花定人物环境、小六壬定气氛节奏。东玄<b>先解卦、后动笔</b>,把断出来的未来写成一篇短故事——成败聚散、时节、人物、气氛全部来自卦象,细节血肉适当想象;文末附<b>「本篇从何而来」</b>,关键情节逐一交代来处,能追溯、看得懂。凶就写凶,不粉饰。</div>
+    <div class="qwho">想看:
+      <input type="text" id="wj-q" placeholder="例:一年后的这个时候,我的日子是什么样" style="flex:1 1 240px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.95rem">
+    </div>
+    <div class="qwho">怎么写:
+      <select id="wj-style"><option value="写实还原">写实还原(纪实白描)</option><option value="短篇小说">短篇小说(有起伏)</option></select>
+      <select id="wj-pov"><option value="第一人称">第一人称(我的眼睛)</option><option value="第三人称">第三人称(旁观镜头)</option><option value="对方视角">对方视角(另一主角的眼睛)</option></select>
+      <select id="wj-far"><option value="">看多远:由卦象定</option><option value="三个月后">三个月后</option><option value="半年后">半年后</option><option value="一年后">一年后</option><option value="三年后">三年后</option><option value="十年后">十年后</option></select>
+    </div>
+    <div class="btnrow">
+      <button id="btn-wj-start" class="primary">起景(共 3 卦)</button>
+    </div>
+    <div id="wj-status"></div>
+    <div id="wj-plan"></div>
+    <div id="wj-actions" class="btnrow hidden">
+      <button id="btn-wj-read" class="gold">解卦成文</button>
+      <button id="btn-wj-clear" class="ghost">清空</button>
+    </div>
+    <div id="wj-out" class="aiout hidden"></div>
+    <div id="wj-followup" class="hidden">
+      <div class="fuhint">就着这篇未来接着来——左键直接续写,右键再起一卦、依新卦续写:</div>
+      <textarea id="wj-fu" placeholder="例:把结尾那天放大写细;换成对方的视角重写;或空着直接点「再起一卦续写」看后来"></textarea>
+      <div class="btnrow">
+        <button id="btn-wj-fu" class="gold">接着写</button>
+        <button id="btn-wj-fugua" class="primary">再起一卦续写</button>
+      </div>
+    </div>
+  </div>
+  </section>
+
   <section id="sec-jiri" class="fold">
     <h2 class="foldh">吉 日 历 · 挑好日子(黄历 × 你的生辰)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
@@ -719,7 +752,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.31 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.32 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -1837,6 +1870,134 @@
   });
   // 生日与吉日历板块共用一份(BKEY),进来先带出来
   try { const b0 = localStorage.getItem(BKEY); if (b0) { $('xy-birth').value = b0; renderXyBazi(); } } catch (e) {}
+
+  // —— 未来镜:三卦成景,先解卦后成文,情节可溯源 ——
+  let wjPlan = null, wjConvo = null, wjBusy = false;
+  const WJ_PLAN = {
+    note: '三卦成景:主线骨架、人物环境、气氛节奏,先断透再动笔。',
+    groups: [
+      { title: '三卦成景', why: '故事骨架全取于此', casts: [
+        { method: 'liuyao', q: '我想看:«Q»——未来实景如何?', focus: '主线骨架:成败聚散、起伏的先后节点、应期落到季节月份、主人公彼时的处境与心气' },
+        { method: 'meihua', q: '围绕«Q»,那时身边的人与环境是什么模样?', focus: '关键人物(几人、性别、大致相貌性情、与主人公远近)、场所环境(城乡、屋宇、行业、新旧)、人事是聚是散' },
+        { method: 'xlr', q: '«Q»到时的节奏与气氛如何?', focus: '气氛底色(安稳/纠缠/快喜/口舌/吉庆/落空)与节拍快慢,入景化作天气、光线、声响' }] },
+    ],
+  };
+  const WJ_SYSTEM = `你是一位精通《周易》的卦师,道号「东玄」,同时是一位笔力扎实的小说家。今次的活儿:先解卦,后把断出的未来写成一篇故事。解卦按老规矩在心里断透(六爻按纳甲六亲世应旺衰,梅花按体用互变,小六壬按三宫)——吉凶成败、应期、人物、环境、气氛,都先有数,再落笔。好就写好、凶就写凶,不粉饰、不吓唬。
+
+【写作规矩——本次以此为准】
+一、正文是一篇完整短篇:800至1500字。开头直接进场景,禁止"让我为你还原""接下来你将看到"这类开场白;要有对话、细节、气味声音光线;情节起伏跟着卦里断出的吉凶起伏走;结尾停在有余味的一幕,不写总结句、不写道理。
+二、骨架必须来自卦象:成败聚散、事情先后、时节季候、场所方位、人物几人/性别/大致相貌性情、气氛节拍——全部取自三卦断出的结论。卦象没有的重大事实不许立:卦无添丁不写添丁,卦无横财不写横财,卦无远行不写远行。血肉可以想象:名字、街景、对话措辞随你编,但不得顶撞骨架。
+三、应期入景:断出的时间就是故事的时间背景,季节、天气、衣着、节令跟着走;问一年后就写一年后,人物年龄相应长,身份处境按材料里的问卦人信息推。
+四、视角与文体照用户所选:第一人称=问卦人本人的眼睛(性别年龄照材料);第三人称=旁观镜头;对方视角=卦中另一位主角的眼睛,其言行须合卦中对此人的画像。写实还原=纪录片式白描与特写,克制不煽情;短篇小说=允许起承转合与心理描写。
+五、正文里一个卦名术语都不许出现,不引爻辞原文;卦辞意象可以化进场景(如"密云不雨"化作憋着一场雨的黄昏),但不得直接当台词或点破。
+六、文末另起一行加一节【本篇从何而来】:用大白话把正文三到五处关键情节各自对应到卦上的来处,每条一行(比如"那场憋着没下的雨——来自主卦憋而未发之象""她最后没有回头——感情线上临的是散局"),不报卦名不报术语,让人能追溯、看得懂。这一节是体系的一部分,不许省。
+七、若材料里带【前文】与【续卦】,则是续写:接着前文的世界线往下写,新情节骨架取自续卦,已定的人物与事实不许改;【本篇从何而来】只交代新增情节的来处。
+八、纯文本输出,不用 markdown 记号。`;
+  function wjStatus(msg, err) { $('wj-status').textContent = msg; $('wj-status').classList.toggle('err', !!err); }
+  function wjDone() { return wjPlan ? wjPlan.groups[0].casts.filter(c => c.done).length : 0; }
+  function renderWj() {
+    if (!wjPlan) { $('wj-plan').innerHTML = ''; $('wj-actions').classList.add('hidden'); return; }
+    const g = wjPlan.groups[0];
+    $('wj-plan').innerHTML =
+      `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why)}</span></button><div class="dwbody">` +
+      g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method]}</span><span class="q">${esc(c.q)}</span>` +
+        (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary wj-cast" data-c="${ci}">起卦</button>`) +
+      `</div>`).join('') +
+      `</div></div>`;
+    $('wj-actions').classList.toggle('hidden', wjDone() === 0);
+  }
+  async function wjAsk(turns, isFollow) {
+    wjBusy = true; $('btn-wj-read').disabled = true; $('btn-wj-fu').disabled = true; $('btn-wj-fugua').disabled = true;
+    wjStatus(isFollow ? '东玄提笔,接着写……' : '东玄先解这三卦,再提笔成文……');
+    const out = $('wj-out'); out.classList.remove('hidden');
+    if (isFollow) { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>接着来:</b>' + esc(turns[turns.length - 1].content.split('\n')[0].slice(0, 60)); out.appendChild(y); }
+    else out.innerHTML = '';
+    const ans = document.createElement('div'); ans.className = 'fq-ans'; ans.innerHTML = '<span class="cursor">▍</span>'; out.appendChild(ans);
+    let text = '';
+    try {
+      const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); }, WJ_SYSTEM);
+      text = r.text; ans.textContent = text;
+      if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { wjStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
+      else if (!text) throw new Error('未收到内容');
+      else {
+        wjConvo = { turns: turns.concat([{ role: 'assistant', content: text }]) };
+        $('wj-followup').classList.remove('hidden');
+        if (isFollow) { $('wj-fu').value = ''; wjStatus('续毕。还可接着写,或再起一卦续写。'); }
+        else {
+          wjStatus('成文。文末「本篇从何而来」交代了每处情节的卦象来处。可续写或追卦。已存入卦档。');
+          const recId = saveRec({
+            method: '未来镜', question: `未来镜:${wjPlan.q}(${wjPlan.style}·${wjPlan.pov})`,
+            headline: `${wjDone()}/3 卦成景`, level: '景', dx: WJ_PLAN.note,
+            report: wjPlan.groups[0].casts.filter(c => c.done).map(c => `${c.q}\n${c.report}`).join('\n\n'),
+          });
+          attachAiReading(recId, $('ai-model').value, text);
+        }
+      }
+    } catch (e) {
+      wjStatus((isFollow ? '续写未成:' : '成文未成:') + aiErrHint(e, $('ai-provider').value), true);
+      if (!text) ans.remove();
+    } finally { wjBusy = false; $('btn-wj-read').disabled = false; $('btn-wj-fu').disabled = false; $('btn-wj-fugua').disabled = false; }
+  }
+  $('btn-wj-start').addEventListener('click', () => {
+    const q = $('wj-q').value.trim();
+    if (!q) { wjStatus('先写上你想看未来的什么。', true); return; }
+    wjPlan = JSON.parse(JSON.stringify(WJ_PLAN));
+    wjPlan.q = q;
+    wjPlan.style = $('wj-style').value; wjPlan.pov = $('wj-pov').value; wjPlan.far = $('wj-far').value;
+    wjPlan.groups[0].casts.forEach(c => { c.q = c.q.replace(/«Q»/g, q); });
+    wjConvo = null; $('wj-out').classList.add('hidden'); $('wj-out').innerHTML = ''; $('wj-followup').classList.add('hidden');
+    renderWj();
+    wjStatus(`三卦已摆好。心里想着「${q}」,逐个点「起卦」;起完点「解卦成文」。`);
+  });
+  $('btn-wj-read').addEventListener('click', () => {
+    if (wjBusy || !wjPlan) return;
+    if (!wjDone()) { wjStatus('还没起卦——先在阵里点「起卦」。', true); return; }
+    if (!getKey()) { wjStatus(`解卦成文需先设置 ${curProvider().label} API Key(见「东玄深断」栏)。`, true); return; }
+    let material = `【未来镜 · 先解卦,后成文】\n【所看:${wjPlan.q}】\n【文体:${wjPlan.style}|视角:${wjPlan.pov}|看多远:${wjPlan.far || '由卦象定(应期从主卦断,断到哪年哪季,故事就落在那时)'}${wjPlan.far ? '(故事时间以此为准;若卦象强指别的应期,以卦为准并在溯源小节说明)' : ''}】\n【规矩】三卦先各自断透再动笔;未起之卦的那一路(骨架/人物环境/气氛)按已起之卦从简处理,不硬编。`;
+    for (const c of wjPlan.groups[0].casts.filter(x => x.done)) {
+      material += `\n\n——${DW_METHODS[c.method]}卦 · 所问:${c.q}\n(此卦供给:${c.focus})\n${c.report}`;
+    }
+    material += genderMaterialLine('q') + '\n' + nowAnchor();
+    return wjAsk([{ role: 'user', content: material }], false);
+  });
+  $('btn-wj-fu').addEventListener('click', () => {
+    if (wjBusy) return;
+    if (!wjConvo) { wjStatus('先解卦成文,再接着写。', true); return; }
+    const t = $('wj-fu').value.trim();
+    if (!t) { wjStatus('先写上想怎么接着来(或点「再起一卦续写」让卦定后事)。', true); return; }
+    return wjAsk(wjConvo.turns.concat([{ role: 'user', content: t + '\n(就着前文的世界线与既定事实来;若是换视角或放大某段,骨架不变;文末照附【本篇从何而来】,只写新增或改写部分的来处。)' }]), true);
+  });
+  $('btn-wj-fugua').addEventListener('click', () => {
+    if (wjBusy) return;
+    if (!wjConvo) { wjStatus('先解卦成文,再追卦续写。', true); return; }
+    const t = $('wj-fu').value.trim() || '后来呢?往下会怎么走?';
+    const c = { method: 'liuyao', q: `${wjPlan.q}——${t}` };
+    dwCastOne(c);
+    const material = `【续卦】所问:${c.q}\n${c.report}\n【前文】即上一篇。接着前文的世界线往下续写成文:新情节的骨架取自这一续卦(先断透再写),已定的人物与事实不许改;文末照附【本篇从何而来】,只交代新增情节的来处。`;
+    wjStatus(`已为续篇起一卦(${c.summary || '成卦'}),依卦续写中……`);
+    return wjAsk(wjConvo.turns.concat([{ role: 'user', content: material }]), true);
+  });
+  $('btn-wj-clear').addEventListener('click', () => {
+    wjPlan = null; wjConvo = null; renderWj();
+    $('wj-out').classList.add('hidden'); $('wj-out').innerHTML = ''; $('wj-followup').classList.add('hidden');
+    wjStatus('已清空。');
+  });
+  $('wj-plan').addEventListener('click', e => {
+    const gh = e.target.closest('.dwgh');
+    if (gh) {
+      const body = gh.parentElement.querySelector('.dwbody');
+      const nowHidden = body.classList.toggle('hidden');
+      gh.querySelector('.tri').textContent = nowHidden ? '▸' : '▾';
+      return;
+    }
+    const b = e.target.closest('.wj-cast');
+    if (!b || !wjPlan) return;
+    const c = wjPlan.groups[0].casts[Number(b.dataset.c)];
+    if (!c || c.done) return;
+    dwCastOne(c);
+    renderWj();
+    wjStatus(`已起 ${wjDone()}/3 卦。${wjDone() >= 3 ? '三卦齐了,点「解卦成文」。' : ''}`);
+  });
 
   // —— 梅花易数 ——
   const MH_RULES = '【梅花断法】体卦为己、用卦为事应;用生体大吉,比和吉,体克用可成而迟,体生用耗泄不利,用克体凶。互卦察中间过程,变卦定结局;体卦旺衰以月令五行论;应期以体用卦数或变卦气数推,近取日时、远取月。八卦万物类象随所问细取。';
