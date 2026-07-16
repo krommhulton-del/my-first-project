@@ -313,6 +313,8 @@ await t('分科日运首选小六壬、年运首选蓍草', async () => {
 
 await t('分科组折叠:默认收起,点组名展开/收起', async () => {
   await page.reload();
+  ok(await page.locator('#sec-fenke .foldbody').first().evaluate(el => el.classList.contains('hidden')), '分科整区默认应折叠');
+  await page.click('#sec-fenke .foldh');
   ok((await page.locator('#fenke-chips .fkgroup').count()) >= 14, '组框应在');
   ok(await page.locator('#fenke-chips .fkrow').first().evaluate(el => el.classList.contains('hidden')), '默认应收起');
   await page.locator('#fenke-chips .fkgh').first().click();
