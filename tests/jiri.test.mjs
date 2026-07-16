@@ -160,5 +160,31 @@ t('全部十事项:60天内均能荐出日子,均带理由', () => {
   }
 });
 
+console.log('【七】心愿映射与旺衰用度');
+t('心愿→事项:恋爱/跳槽/旅行/开店/装修各归其类,认不出的走通用', () => {
+  eq(Jiri.wishEvent('我想谈恋爱').key, 'jiaqu');
+  eq(Jiri.wishEvent('想跳槽换个工作').key, 'shangren');
+  eq(Jiri.wishEvent('计划出国旅行').key, 'chuxing');
+  eq(Jiri.wishEvent('开店做点小生意').key, 'kaiye');
+  eq(Jiri.wishEvent('家里想装修').key, 'dongtu');
+  eq(Jiri.wishEvent('想搬家换个环境').key, 'ruzhai');
+  eq(Jiri.wishEvent('想变得更有钱').key, 'tongyong');
+});
+t('通用事项也能在60天里挑出日子', () => {
+  const picks = Jiri.pickDays('tongyong', new Date(2026, 6, 16, 12), 60, null, 5);
+  ok(picks.length >= 1, '通用应有推荐');
+});
+t('五行用度表五行齐全,颜色方位数字时段四样不缺', () => {
+  for (const wx of ['木', '火', '土', '金', '水']) {
+    const g = Jiri.WX_GOODS[wx];
+    ok(g && g.colors && g.dir && g.nums && g.hours, wx);
+  }
+});
+t('生肖贵人:午年三合得虎狗、六合得羊', () => {
+  const a = Jiri.zodiacAllies(6);
+  eq(a.sanhe.sort().join(''), ['虎', '狗'].sort().join(''), '三合');
+  eq(a.liuhe, '羊', '六合');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

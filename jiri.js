@@ -144,7 +144,41 @@
     shangren: { label: '上任面试', yi: ['建', '定', '成', '开'], ji: ['破', '闭', '收'], bonus: ['明堂', '青龙', '司命'], malus: ['天牢', '勾陈'] },
     kaoshi: { label: '考试文书', yi: ['建', '成', '开'], ji: ['破', '闭'], bonus: ['明堂', '玉堂'], malus: ['朱雀'] },
     jisi: { label: '祭祀祈福', yi: ['满', '平', '除', '成', '开'], ji: ['破'], bonus: ['天德', '明堂'], malus: [] },
+    tongyong: { label: '要紧事(通用)', yi: ['定', '成', '开'], ji: ['破', '闭'], bonus: ['青龙', '天德'], malus: [] },
   };
+
+  // ——— 心愿→事项:按关键词把一句心愿落到最贴的择日事项 ———
+  const WISH_MAP = [
+    { re: /(恋爱|脱单|表白|复合|相亲|结婚|订婚|求婚|领证|对象|追(他|她|人))/, key: 'jiaqu' },
+    { re: /(装修|动工|动土|翻新|施工)/, key: 'dongtu' },
+    { re: /(买房|搬家|入宅|搬去|租房|乔迁|新居)/, key: 'ruzhai' },
+    { re: /(开店|创业|开业|摆摊|开公司|做生意|上新|发布)/, key: 'kaiye' },
+    { re: /(跳槽|换工作|求职|面试|入职|升职|上任|转岗|谈加薪)/, key: 'shangren' },
+    { re: /(考试|考证|考研|考公|备考|答辩|申请学校|留学)/, key: 'kaoshi' },
+    { re: /(签约|签合同|谈判|合作|融资|投标)/, key: 'qianyue' },
+    { re: /(旅行|旅游|出行|出国|出差|自驾|远行)/, key: 'chuxing' },
+    { re: /(看病|手术|治疗|体检|就医|调理)/, key: 'qiuyi' },
+    { re: /(祈福|拜佛|上香|还愿|祭祖)/, key: 'jisi' },
+  ];
+  function wishEvent(text) {
+    const t = String(text || '');
+    for (const w of WISH_MAP) if (w.re.test(t)) return { key: w.key, label: EVENTS[w.key].label };
+    return { key: 'tongyong', label: EVENTS.tongyong.label };
+  }
+
+  // ——— 五行旺衰用度表(旺你/背运的颜色方位数字时段)———
+  const WX_GOODS = {
+    木: { colors: '绿、青、原木色', dir: '东', nums: '3、8', hours: '清晨5点到9点(寅卯时)' },
+    火: { colors: '红、紫、橙', dir: '南', nums: '2、7', hours: '上午9点到午后1点(巳午时)' },
+    土: { colors: '黄、咖啡、米色', dir: '西南与东北', nums: '5、10', hours: '午后1点到3点(未时)前后' },
+    金: { colors: '白、银、金色', dir: '西', nums: '4、9', hours: '午后3点到7点(申酉时)' },
+    水: { colors: '黑、蓝、灰', dir: '北', nums: '1、6', hours: '晚9点到凌晨1点(亥子时)' },
+  };
+  // 生肖贵人:与本命年支三合、六合的属相
+  function zodiacAllies(yearZhiIdx) {
+    const he = LIUHE[yearZhiIdx];
+    return { sanhe: sanheMates(yearZhiIdx).map(z => ANIMALS[z]), liuhe: ANIMALS[he] };
+  }
 
   function pickDays(eventKey, fromDate, nDays, birth, topN) {
     const ev = EVENTS[eventKey];
@@ -174,5 +208,5 @@
     return out.slice(0, topN || 5);
   }
 
-  return { JIANCHU, ZHISHEN, EVENTS, ANIMALS, jianchuOf, zhishenOf, wxRelation, dayInfo, monthGrid, pickDays };
+  return { JIANCHU, ZHISHEN, EVENTS, ANIMALS, WX_GOODS, jianchuOf, zhishenOf, wxRelation, dayInfo, monthGrid, pickDays, wishEvent, zodiacAllies };
 }));

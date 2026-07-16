@@ -540,6 +540,39 @@ await t('日间/夜间主题切换与记忆', async () => {
   ok((await page.evaluate(() => document.documentElement.dataset.theme || 'light')) === 'light', '再点应回日间');
 });
 
+await t('心愿板块:旺你牌、吉日窗、六卦阵、无Key深断给提示', async () => {
+  await page.evaluate(() => {
+    const b = document.querySelector('#sec-xinyuan .foldbody');
+    if (b && b.classList.contains('hidden')) document.querySelector('#sec-xinyuan .foldh').click();
+  });
+  // 上一批用例已把生日 1990-06-15 存入本机,重载后应自动带出 → 旺你牌直接在
+  ok((await page.inputValue('#xy-birth')) === '1990-06-15', '生日应从吉日历共用带出');
+  const bazi = await page.textContent('#xy-bazi');
+  ok(bazi.includes('日主') && bazi.includes('旺你的五行') && bazi.includes('贵人属相'), '旺你牌:' + bazi.slice(0, 50));
+  // 点现成心愿条 → 吉日窗
+  await page.locator('#xy-chips .fq').first().click();
+  ok((await page.inputValue('#xy-wish')) === '谈恋爱', '心愿应填入');
+  const days = await page.textContent('#xy-days');
+  ok(days.includes('吉日窗') || days.includes('挑不出'), '吉日窗应有结果:' + days.slice(0, 40));
+  // 摆阵:六卦(五六爻一奇门)
+  await page.click('#btn-xy-start');
+  ok((await page.locator('#xy-plan .xy-cast').count()) === 6, '应有六个起卦位');
+  const badges = await page.locator('#xy-plan .m').allTextContents();
+  ok(badges.filter(b => b === '六爻').length === 5 && badges.includes('奇门'), '五六爻一奇门:' + badges.join(','));
+  ok((await page.locator('#xy-plan .q').first().textContent()).includes('谈恋爱'), '卦问应带心愿');
+  // 起两卦
+  await page.locator('#xy-plan .xy-cast').first().click();
+  ok((await page.locator('#xy-plan .res').count()) === 1, '第一卦应✓');
+  await page.locator('#xy-plan .xy-cast').first().click();
+  ok((await page.locator('#xy-plan .res').count()) === 2, '第二卦应✓');
+  // 无 Key 深断给提示
+  ok(!(await page.locator('#xy-actions').evaluate(el => el.classList.contains('hidden'))), '深断入口应出现');
+  await page.click('#btn-xy-read');
+  ok((await page.textContent('#xy-status')).includes('API Key'), '无Key应提示:' + (await page.textContent('#xy-status')));
+  await page.click('#btn-xy-clear');
+  ok((await page.locator('#xy-plan .dwgroup').count()) === 0, '清空后应无阵');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

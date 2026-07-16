@@ -351,7 +351,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.30</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.31</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide"><b>三步用法:</b>① 填问卦人 → ② 写下所问(或点开「分科」挑类别)→ ③ 起卦、请东玄深断、追问。大问用「大问拆阵」,调运用「转运」。<b>按钮:</b>红=起卦 · 蓝=请东玄深断 · 灰=辅助。</p>
   </header>
@@ -640,6 +640,46 @@
   </div>
   </section>
 
+  <section id="sec-xinyuan" class="fold">
+    <h2 class="foldh">心 愿 · 我想办件事(生日 × 卦阵 × 择日)<span class="foldtri">▸</span></h2>
+    <div class="foldbody hidden">
+    <div class="note">想办一件事(谈恋爱、换工作、开店、买房……),这里一站答四问:<b>成不成、什么时候最合适、怎么做最旺、什么最凶怎么避</b>,最后给转运做法。用三样东西合着断:你的生日(八字定什么旺你什么背你)、六卦卦阵(事情本身怎么走)、吉日历(把日子落到具体哪天)。填生日立刻能看「旺你牌」和吉日窗,不用等起卦。</div>
+    <div class="qwho">我想:
+      <input type="text" id="xy-wish" placeholder="用一句话写你想办的事" style="flex:1 1 200px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.95rem">
+    </div>
+    <div class="fuquick" id="xy-chips">
+      <button class="fq" type="button">谈恋爱、脱个单</button>
+      <button class="fq" type="button">换份工作</button>
+      <button class="fq" type="button">开店创业</button>
+      <button class="fq" type="button">买房搬家</button>
+      <button class="fq" type="button">备考上岸</button>
+      <button class="fq" type="button">表白</button>
+    </div>
+    <div class="qwho">生日:
+      <input type="date" id="xy-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <select id="xy-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
+      <span class="qwhint">替别人求就填那人的生日。只存这台设备。</span>
+    </div>
+    <div id="xy-bazi"></div>
+    <div id="xy-days"></div>
+    <div class="btnrow">
+      <button id="btn-xy-start" class="primary">摆阵(共 6 卦)</button>
+    </div>
+    <div id="xy-status"></div>
+    <div id="xy-plan"></div>
+    <div id="xy-actions" class="btnrow hidden">
+      <button id="btn-xy-read" class="gold">汇总深断</button>
+      <button id="btn-xy-clear" class="ghost">清空此阵</button>
+    </div>
+    <div id="xy-out" class="aiout hidden"></div>
+    <div id="xy-followup" class="hidden">
+      <div class="fuhint">就这份断语接着追问:</div>
+      <textarea id="xy-fu" placeholder="例:那几天里挑哪天最好?第一步先做什么?"></textarea>
+      <div class="btnrow"><button id="btn-xy-fu" class="gold">追 问</button></div>
+    </div>
+  </div>
+  </section>
+
   <section id="sec-jiri" class="fold">
     <h2 class="foldh">吉 日 历 · 挑好日子(黄历 × 你的生辰)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
@@ -677,7 +717,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.30 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.31 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script>
@@ -3909,6 +3949,157 @@
 
 </script>
 <script>
+// bazi.js — 八字排盘核心:四柱、十神、地支藏干、身强身弱、喜用忌神、大运
+// 依子平旺衰扶抑法(市面命理书主流):得令得地得生得助定强弱,
+// 身强喜耗泄(财官食伤)忌生扶(印比),身弱喜生扶忌克泄。历法复用 najia/lunar。
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(require('./najia.js'), require('./lunar.js'));
+  } else { root.Bazi = factory(root.Najia, root.Lunar); }
+}(typeof self !== 'undefined' ? self : this, function (Najia, Lunar) {
+  const GAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+  const ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+  const GAN_WX = { 甲: '木', 乙: '木', 丙: '火', 丁: '火', 戊: '土', 己: '土', 庚: '金', 辛: '金', 壬: '水', 癸: '水' };
+  const GAN_YY = { 甲: 1, 丙: 1, 戊: 1, 庚: 1, 壬: 1, 乙: 0, 丁: 0, 己: 0, 辛: 0, 癸: 0 }; // 1阳0阴
+  const ZHI_WX = { 子: '水', 丑: '土', 寅: '木', 卯: '木', 辰: '土', 巳: '火', 午: '火', 未: '土', 申: '金', 酉: '金', 戌: '土', 亥: '水' };
+  // 地支藏干(主气在前,含余气)
+  const CANGGAN = {
+    子: ['癸'], 丑: ['己', '癸', '辛'], 寅: ['甲', '丙', '戊'], 卯: ['乙'],
+    辰: ['戊', '乙', '癸'], 巳: ['丙', '庚', '戊'], 午: ['丁', '己'], 未: ['己', '丁', '乙'],
+    申: ['庚', '壬', '戊'], 酉: ['辛'], 戌: ['戊', '辛', '丁'], 亥: ['壬', '甲'],
+  };
+  const SHENG = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' }; // A生SHENG[A]
+  const KE = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' };    // A克KE[A]
+
+  // 十神:other(天干)相对日主 me
+  function shiShen(meGan, otherGan) {
+    const me = GAN_WX[meGan], ot = GAN_WX[otherGan];
+    const sameYY = GAN_YY[meGan] === GAN_YY[otherGan];
+    if (me === ot) return sameYY ? '比肩' : '劫财';
+    if (SHENG[me] === ot) return sameYY ? '食神' : '伤官'; // 我生
+    if (KE[me] === ot) return sameYY ? '偏财' : '正财';     // 我克
+    if (KE[ot] === me) return sameYY ? '七杀' : '正官';     // 克我
+    if (SHENG[ot] === me) return sameYY ? '偏印' : '正印';   // 生我
+    return '';
+  }
+  // 十神归五类(用于运势领域归类)
+  const SHISHEN_CLASS = {
+    比肩: '比劫', 劫财: '比劫', 食神: '食伤', 伤官: '食伤',
+    偏财: '财星', 正财: '财星', 七杀: '官杀', 正官: '官杀', 偏印: '印星', 正印: '印星',
+  };
+
+  // 时柱:五鼠遁(日干定子时干)
+  function hourPillar(dayGan, hourBranchIdx) {
+    const base = (GAN.indexOf(dayGan) % 5) * 2;
+    return GAN[(base + hourBranchIdx) % 10] + ZHI[hourBranchIdx];
+  }
+
+  // 主排盘:birth 为 Date(设备本地时刻,视为出生地时间)
+  function chart(birth, gender) {
+    const cal = Najia.ganZhi(birth);          // 年(立春界)、月(节气界)、日
+    const lunar = Lunar.fromDate(birth);      // 取时辰序号
+    const hourIdx = lunar.hourNum - 1;         // 子=0
+    const yearGZ = cal.year, monthGZ = cal.month, dayGZ = cal.day;
+    const dayGan = dayGZ[0], dayZhi = dayGZ[1];
+    const hourGZ = hourPillar(dayGan, hourIdx);
+    const pillars = {
+      year: { gz: yearGZ, gan: yearGZ[0], zhi: yearGZ[1] },
+      month: { gz: monthGZ, gan: monthGZ[0], zhi: monthGZ[1] },
+      day: { gz: dayGZ, gan: dayGan, zhi: dayZhi },
+      hour: { gz: hourGZ, gan: hourGZ[0], zhi: hourGZ[1] },
+    };
+    for (const k of Object.keys(pillars)) {
+      const p = pillars[k];
+      p.ganWx = GAN_WX[p.gan]; p.zhiWx = ZHI_WX[p.zhi];
+      p.ganShen = k === 'day' ? '日主' : shiShen(dayGan, p.gan);
+      p.cang = CANGGAN[p.zhi].map(g => ({ gan: g, wx: GAN_WX[g], shen: shiShen(dayGan, g) }));
+    }
+    const strength = judgeStrength(pillars, dayGan);
+    const yong = pickYongShen(dayGan, strength.strong);
+    return {
+      birth, gender: gender || '男',
+      pillars, dayGan, dayWx: GAN_WX[dayGan],
+      strength, yong,
+      lunarText: Lunar.format(lunar), calYear: cal.year, calMonth: cal.month, monthZhi: cal.monthZhi,
+      dayun: computeDayun(pillars, yearGZ[0], gender || '男', birth),
+    };
+  }
+
+  // 身强身弱:加权计分(月令最重),生扶 vs 克泄耗
+  function judgeStrength(pillars, dayGan) {
+    const me = GAN_WX[dayGan];
+    const helpEl = new Set([me, invSheng(me)]);      // 比劫 + 印(生我)
+    let help = 0, drain = 0;
+    const add = (wx, w) => { if (helpEl.has(wx)) help += w; else drain += w; };
+    // 天干(除日主)
+    for (const k of ['year', 'month', 'hour']) add(pillars[k].ganWx, 1.4);
+    // 地支藏干:月令主气权重最大
+    for (const k of ['year', 'month', 'day', 'hour']) {
+      const cang = pillars[k].cang;
+      cang.forEach((c, i) => {
+        let w = i === 0 ? 2 : 1;               // 主气2 余气1
+        if (k === 'month' && i === 0) w = 3.5;  // 月令主气加重
+        add(c.wx, w);
+      });
+    }
+    const strong = help >= drain;
+    const pct = Math.round(help / (help + drain) * 100);
+    return { strong, help: +help.toFixed(1), drain: +drain.toFixed(1), pct, deLing: getDeLing(pillars.month.zhi, me) };
+  }
+  function invSheng(el) { for (const a of Object.keys(SHENG)) if (SHENG[a] === el) return a; }
+  function getDeLing(monthZhi, me) {
+    const mz = ZHI_WX[monthZhi];
+    if (mz === me) return '当令';
+    if (SHENG[mz] === me) return '得月令之生';
+    if (KE[mz] === me) return '受月令克(失令)';
+    if (SHENG[me] === mz) return '泄于月令';
+    return '克月令(耗力)';
+  }
+
+  // 喜用忌:扶抑法。身强→喜克泄耗(财官食伤);身弱→喜生扶(印比)
+  function pickYongShen(dayGan, strong) {
+    const me = GAN_WX[dayGan];
+    const yin = invSheng(me), bi = me, shi = SHENG[me], cai = KE[me], guan = invKe(me);
+    const help = [bi, yin], drain = [shi, cai, guan];
+    const xi = strong ? drain : help;
+    const ji = strong ? help : drain;
+    return {
+      strong, xiWx: xi, jiWx: ji,
+      xiName: strong ? '食伤·财·官杀(耗泄)' : '比劫·印(生扶)',
+      jiName: strong ? '比劫·印' : '财·官杀·食伤',
+    };
+  }
+  function invKe(el) { for (const a of Object.keys(KE)) if (KE[a] === el) return a; }
+
+  // 大运:阳年男/阴年女顺行,阴年男/阳年女逆行;自月柱起排,起运岁由节气距离约算
+  function computeDayun(pillars, yearGan, gender, birth) {
+    const forward = (GAN_YY[yearGan] === 1) === (gender === '男');
+    const mgIdx = GAN.indexOf(pillars.month.gan), mzIdx = ZHI.indexOf(pillars.month.zhi);
+    // 起运岁:到下/上一节气的天数 ÷ 3(一柱十年)
+    const startAge = estimateStartAge(birth, forward);
+    const list = [];
+    for (let i = 1; i <= 8; i++) {
+      const g = ((mgIdx + (forward ? i : -i)) % 10 + 10) % 10;
+      const z = ((mzIdx + (forward ? i : -i)) % 12 + 12) % 12;
+      list.push({ gz: GAN[g] + ZHI[z], gan: GAN[g], zhi: ZHI[z], fromAge: startAge + (i - 1) * 10 });
+    }
+    return { forward, startAge, list };
+  }
+  function estimateStartAge(birth, forward) {
+    // 到相邻节气(每 15° 一节气,月建以每 30° 换月;起运数节令即每 30°)的天数
+    const lam = Najia.sunLongitude(birth.getTime());
+    const seg = ((lam - 315) % 360 + 360) % 360; // 立春起
+    const within = seg % 30;                       // 距本月节气起点的度数
+    const deg = forward ? (30 - within) : within;  // 顺数到下节,逆数到上节
+    const days = deg * (365.2422 / 360);            // 度→天(粗略)
+    return Math.max(1, Math.round(days / 3));
+  }
+
+  return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI };
+}));
+
+</script>
+<script>
 // jiri.js — 吉日历(择吉):建除十二神 + 黄黑道值神 + 冲煞合害 + 本命生克
 // 依据:建除自月建起顺行十二辰(「建满平收黑,除危定执黄,成开皆可用,破闭不相当」);
 // 值神青龙歌诀「寅申须加子,卯酉却居寅,辰戌龙位上,巳亥午中寻,子午临申地,丑未戌上行」,
@@ -4055,7 +4246,41 @@
     shangren: { label: '上任面试', yi: ['建', '定', '成', '开'], ji: ['破', '闭', '收'], bonus: ['明堂', '青龙', '司命'], malus: ['天牢', '勾陈'] },
     kaoshi: { label: '考试文书', yi: ['建', '成', '开'], ji: ['破', '闭'], bonus: ['明堂', '玉堂'], malus: ['朱雀'] },
     jisi: { label: '祭祀祈福', yi: ['满', '平', '除', '成', '开'], ji: ['破'], bonus: ['天德', '明堂'], malus: [] },
+    tongyong: { label: '要紧事(通用)', yi: ['定', '成', '开'], ji: ['破', '闭'], bonus: ['青龙', '天德'], malus: [] },
   };
+
+  // ——— 心愿→事项:按关键词把一句心愿落到最贴的择日事项 ———
+  const WISH_MAP = [
+    { re: /(恋爱|脱单|表白|复合|相亲|结婚|订婚|求婚|领证|对象|追(他|她|人))/, key: 'jiaqu' },
+    { re: /(装修|动工|动土|翻新|施工)/, key: 'dongtu' },
+    { re: /(买房|搬家|入宅|搬去|租房|乔迁|新居)/, key: 'ruzhai' },
+    { re: /(开店|创业|开业|摆摊|开公司|做生意|上新|发布)/, key: 'kaiye' },
+    { re: /(跳槽|换工作|求职|面试|入职|升职|上任|转岗|谈加薪)/, key: 'shangren' },
+    { re: /(考试|考证|考研|考公|备考|答辩|申请学校|留学)/, key: 'kaoshi' },
+    { re: /(签约|签合同|谈判|合作|融资|投标)/, key: 'qianyue' },
+    { re: /(旅行|旅游|出行|出国|出差|自驾|远行)/, key: 'chuxing' },
+    { re: /(看病|手术|治疗|体检|就医|调理)/, key: 'qiuyi' },
+    { re: /(祈福|拜佛|上香|还愿|祭祖)/, key: 'jisi' },
+  ];
+  function wishEvent(text) {
+    const t = String(text || '');
+    for (const w of WISH_MAP) if (w.re.test(t)) return { key: w.key, label: EVENTS[w.key].label };
+    return { key: 'tongyong', label: EVENTS.tongyong.label };
+  }
+
+  // ——— 五行旺衰用度表(旺你/背运的颜色方位数字时段)———
+  const WX_GOODS = {
+    木: { colors: '绿、青、原木色', dir: '东', nums: '3、8', hours: '清晨5点到9点(寅卯时)' },
+    火: { colors: '红、紫、橙', dir: '南', nums: '2、7', hours: '上午9点到午后1点(巳午时)' },
+    土: { colors: '黄、咖啡、米色', dir: '西南与东北', nums: '5、10', hours: '午后1点到3点(未时)前后' },
+    金: { colors: '白、银、金色', dir: '西', nums: '4、9', hours: '午后3点到7点(申酉时)' },
+    水: { colors: '黑、蓝、灰', dir: '北', nums: '1、6', hours: '晚9点到凌晨1点(亥子时)' },
+  };
+  // 生肖贵人:与本命年支三合、六合的属相
+  function zodiacAllies(yearZhiIdx) {
+    const he = LIUHE[yearZhiIdx];
+    return { sanhe: sanheMates(yearZhiIdx).map(z => ANIMALS[z]), liuhe: ANIMALS[he] };
+  }
 
   function pickDays(eventKey, fromDate, nDays, birth, topN) {
     const ev = EVENTS[eventKey];
@@ -4085,7 +4310,7 @@
     return out.slice(0, topN || 5);
   }
 
-  return { JIANCHU, ZHISHEN, EVENTS, ANIMALS, jianchuOf, zhishenOf, wxRelation, dayInfo, monthGrid, pickDays };
+  return { JIANCHU, ZHISHEN, EVENTS, ANIMALS, WX_GOODS, jianchuOf, zhishenOf, wxRelation, dayInfo, monthGrid, pickDays, wishEvent, zodiacAllies };
 }));
 
 </script>
@@ -5012,6 +5237,189 @@
     zyStatus(`已起 ${zyDone()}/${zyTotal()} 卦。${zyDone() >= zyTotal() ? '六卦起毕,点「汇总深断」。' : ''}`);
   });
 
+  // —— 心愿求吉:自定义心愿 × 八字旺衰 × 六卦阵 × 吉日窗 ——
+  const BKEY = 'dongxuan_birth'; // 生日与吉日历板块共用
+  let xyPlan = null, xyConvo = null, xyBusy = false, xyBazi = null, xyDaysTxt = '';
+  const XY_PLAN = {
+    note: '一站答四问:成不成、什么时候、怎么做最旺、什么最凶;末了给转运做法。',
+    groups: [
+      { title: '第一步 · 问天时:成不成、何时动手', why: '先定成算与时机,再谈做法', casts: [
+        { method: 'liuyao', q: '我想«W»,这愿望本身成不成、时机到没到?', focus: '成不成用几成把握说死;时机是已到/未到/将到,未到的说清还差什么、差多久' },
+        { method: 'liuyao', q: '我想«W»,最合适动手的时间落在哪一段?', focus: '应期落到月甚至旬,近事给到日子段,远事给年份;材料里有按黄历挑出的吉日窗,卦象与之对得上的直接点名哪几天,对不上以卦为准并明说' },
+        { method: 'qimen', q: '我想«W»,从哪个方向、哪条门路入手最旺?', focus: '吉方与忌方(以住处为原点)、走什么门路(熟人引荐/线上/直接上门,按卦象定)、办事挑什么时辰段' }] },
+      { title: '第二步 · 问做法:最旺、最凶、怎么转运', why: '全是能落地的动作', casts: [
+        { method: 'liuyao', q: '围绕«W»,我做什么最旺、押什么最有气?', focus: '旺我全套:五行、两三种颜色、方位、吉数、贵人生肖或类型、利发力的时段、具体押的事;材料里有八字喜用,卦与命对上的点明"两头都指这",不合以卦为准' },
+        { method: 'liuyao', q: '围绕«W»,什么最凶、哪些做法必须避开?', focus: '最凶的三样(做法/方向/时段/人),各讲清代价;有玄学冲犯之象按工具箱直断并给解法,无则一字不提' },
+        { method: 'liuyao', q: '围绕«W»,眼下怎么给自己转运蓄势?', focus: '转运三步,当天就能做、不花钱,排出先后、各自多久见效' }] },
+    ],
+  };
+  const XY_RULES = '【心愿断法】①先答成不成:几成把握+这一卦的凭据,含糊话不许;②「什么时候最合适」必须落到具体时间窗:材料里给了黄历吉日窗,卦象指向与吉日窗能对上的,直接点名日期;对不上的以卦为准并明说"卦另有所指";③「怎么做最旺」给全套(五行、颜色、方位、吉数、贵人、时段、具体动作),与材料里的八字喜用对照,相合处点明"卦与命两头都指这",冲突处以卦为主;④「什么最凶」必须依卦点名,讲清代价,不吓唬人也不轻描淡写;⑤转运做法当天可做、不花钱,禁止推荐花钱消灾开光请物;⑥八字与黄历是底色,断事以卦为主;⑦时间尺度跟着心愿走:近愿落月旬日,远愿落年份并按年龄核常识;⑧每一路不少于150字,直断防空话三关(结论关/依据关/做法关)逐路过;⑨凶就是凶,照直说,但只对所问之事。';
+  function xyStatus(msg, err) { $('xy-status').textContent = msg; $('xy-status').classList.toggle('err', !!err); }
+  function xyDone() { return xyPlan ? xyPlan.groups.reduce((s, g) => s + g.casts.filter(c => c.done).length, 0) : 0; }
+  function xyTotal() { return xyPlan ? xyPlan.groups.reduce((s, g) => s + g.casts.length, 0) : 0; }
+  function xyBirthDate() {
+    const v = $('xy-birth').value;
+    if (!v) return null;
+    const [y, m, d] = v.split('-').map(Number);
+    const hv = $('xy-hour').value;
+    const hour = hv === '' ? 12 : (Number(hv) === 0 ? 23 : Number(hv) * 2 - 1); // 时辰中点;子时取23点
+    const dt = new Date(y, m - 1, d, hour, 30);
+    return isNaN(dt) ? null : dt;
+  }
+  // 旺你牌:八字喜用→颜色方位数字时段;生肖→贵人与冲日(填了生日立刻能看,不用等起卦)
+  function renderXyBazi() {
+    const b = xyBirthDate();
+    if (!b) { xyBazi = null; $('xy-bazi').innerHTML = ''; return; }
+    try { xyBazi = Bazi.chart(b, gender('q') || '男'); } catch (e) { xyBazi = null; $('xy-bazi').innerHTML = ''; return; }
+    const c = xyBazi;
+    const xi = c.yong.xiWx, ji = c.yong.jiWx;
+    const g1 = Jiri.WX_GOODS[xi[0]], g2 = Jiri.WX_GOODS[xi[1] || xi[0]];
+    const jg = Jiri.WX_GOODS[ji[0]];
+    const byIdx = '子丑寅卯辰巳午未申酉戌亥'.indexOf(c.pillars.year.zhi);
+    const allies = Jiri.zodiacAllies(byIdx);
+    const chongZhi = '子丑寅卯辰巳午未申酉戌亥'[(byIdx + 6) % 12];
+    const hourNote = $('xy-hour').value === '' ? '(时辰未填,时柱按午间估,强弱有一两分误差)' : '';
+    $('xy-bazi').innerHTML =
+      `<div class="fblock"><span class="k">你的底牌${hourNote}</span><div class="t">日主<b>${c.dayGan}${c.dayWx}</b>,身${c.strength.strong ? '强' : '弱'}(生扶占${c.strength.pct}%)。` +
+      `旺你的五行是<b>${xi.join('、')}</b>:颜色穿用${g1.colors}${xi[1] ? ';' + g2.colors : ''},方位利<b>${g1.dir}${xi[1] ? '、' + g2.dir : ''}</b>,吉数${g1.nums}${xi[1] ? ';' + g2.nums : ''},发力时段${g1.hours}。` +
+      `背你的五行是${ji.join('、')},少碰${jg.colors}这些色、少往${jg.dir}边使劲。` +
+      `贵人属相:<b>${allies.sanhe.join('、')}${allies.liuhe ? '、' + allies.liuhe : ''}</b>;每逢<b>${chongZhi}日</b>冲你,大事绕开(吉日历里已标)。</div></div>`;
+  }
+  // 吉日窗:按心愿类别扫未来60天,给深断当底料
+  function renderXyDays() {
+    const wish = $('xy-wish').value.trim();
+    const b = xyBirthDate();
+    if (!wish) { xyDaysTxt = ''; $('xy-days').innerHTML = ''; return; }
+    const ev = Jiri.wishEvent(wish);
+    const picks = Jiri.pickDays(ev.key, new Date(), 60, b, 5);
+    if (!picks.length) {
+      xyDaysTxt = `【吉日窗】按「${ev.label}」扫了未来60天,没有既合事又不犯忌${b ? '不冲本人' : ''}的日子。`;
+      $('xy-days').innerHTML = `<div class="note">未来60天里按「${ev.label}」的老规矩挑不出干净日子——起卦后听卦象定夺。</div>`;
+      return;
+    }
+    xyDaysTxt = `【吉日窗(按「${ev.label}」扫未来60天,黄历×${b ? '本人生辰' : '通用'},供应期对照)】\n` +
+      picks.map(p => `${p.info.y}年${p.info.m}月${p.info.d}日(${p.info.gz.day}日,${p.info.level}):${p.why.join(';')}`).join('\n');
+    $('xy-days').innerHTML = `<div class="fblock"><span class="k">吉日窗 · 按「${esc(ev.label)}」扫未来60天${b ? '(已避开冲你的日子)' : '(填生日可再筛掉冲你的日子)'}</span><div class="t">` +
+      picks.map(p => `<b>${p.info.m}月${p.info.d}日</b>(周${['一', '二', '三', '四', '五', '六', '日'][p.info.week]},${p.info.level})`).join(' · ') +
+      `</div></div>`;
+  }
+  function renderXy() {
+    if (!xyPlan) { $('xy-plan').innerHTML = ''; $('xy-actions').classList.add('hidden'); return; }
+    $('xy-plan').innerHTML = xyPlan.groups.map((g, gi) =>
+      `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why)}</span></button><div class="dwbody">` +
+      g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method]}</span><span class="q">${esc(c.q)}</span>` +
+        (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary xy-cast" data-g="${gi}" data-c="${ci}">起卦</button>`) +
+      `</div>`).join('') +
+      `</div></div>`).join('');
+    $('xy-actions').classList.toggle('hidden', xyDone() === 0);
+  }
+  async function xyAsk(turns, isFollow) {
+    xyBusy = true; $('btn-xy-read').disabled = true; $('btn-xy-fu').disabled = true;
+    xyStatus(isFollow ? '东玄再想想……' : '东玄凝神,细批之中……');
+    const out = $('xy-out'); out.classList.remove('hidden');
+    if (isFollow) { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(turns[turns.length - 1].content.split('\n')[0]); out.appendChild(y); }
+    else out.innerHTML = '';
+    const ans = document.createElement('div'); ans.className = 'fq-ans'; ans.innerHTML = '<span class="cursor">▍</span>'; out.appendChild(ans);
+    let text = '';
+    try {
+      const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); });
+      text = r.text; ans.textContent = text;
+      if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { xyStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
+      else if (!text) throw new Error('未收到内容');
+      else {
+        xyConvo = { turns: turns.concat([{ role: 'assistant', content: text }]) };
+        $('xy-followup').classList.remove('hidden');
+        if (isFollow) { $('xy-fu').value = ''; xyStatus('答毕。可接着追问。'); }
+        else {
+          xyStatus('断语已出:成不成、何时、怎么旺、避什么、如何转运,都在上面。可追问。已存入卦档。');
+          const recId = saveRec({
+            method: '心愿', question: `心愿:${xyPlan.wish}`,
+            headline: `${xyDone()}/${xyTotal()} 卦`, level: '愿', dx: XY_PLAN.note,
+            report: xyPlan.groups.map(g => g.casts.filter(c => c.done).map(c => `【${g.title}】${c.q}\n${c.report}`).join('\n\n')).filter(Boolean).join('\n\n'),
+          });
+          attachAiReading(recId, $('ai-model').value, text);
+        }
+      }
+    } catch (e) {
+      xyStatus((isFollow ? '追问未成:' : '汇总未成:') + aiErrHint(e, $('ai-provider').value), true);
+      if (!text) ans.remove();
+    } finally { xyBusy = false; $('btn-xy-read').disabled = false; $('btn-xy-fu').disabled = false; }
+  }
+  $('xy-chips').addEventListener('click', e => {
+    const b = e.target.closest('.fq');
+    if (!b) return;
+    $('xy-wish').value = b.textContent.replace(/、.*$/, '').trim();
+    renderXyDays();
+  });
+  $('xy-wish').addEventListener('change', renderXyDays);
+  $('xy-birth').addEventListener('change', () => {
+    try { localStorage.setItem(BKEY, $('xy-birth').value || ''); } catch (e) {}
+    const jb = $('jr-birth'); if (jb) jb.value = $('xy-birth').value;
+    renderXyBazi(); renderXyDays();
+  });
+  $('xy-hour').addEventListener('change', () => { renderXyBazi(); });
+  $('btn-xy-start').addEventListener('click', () => {
+    const wish = $('xy-wish').value.trim();
+    if (!wish) { xyStatus('先写上你想办的事(或点上面的现成条)。', true); return; }
+    xyPlan = JSON.parse(JSON.stringify(XY_PLAN));
+    xyPlan.wish = wish;
+    xyPlan.groups.forEach(g => g.casts.forEach(c => { c.q = c.q.replace(/«W»/g, wish); }));
+    xyConvo = null; $('xy-out').classList.add('hidden'); $('xy-out').innerHTML = ''; $('xy-followup').classList.add('hidden');
+    renderXyBazi(); renderXyDays(); renderXy();
+    xyStatus(`六卦已摆好(心愿:${wish})。心里想着这件事,逐个点「起卦」;起完点「汇总深断」。${$('xy-birth').value ? '' : '生日没填也能断,填了断得更贴身。'}`);
+  });
+  $('btn-xy-read').addEventListener('click', () => {
+    if (xyBusy || !xyPlan) return;
+    if (!xyDone()) { xyStatus('还没起卦——先在阵里点「起卦」。', true); return; }
+    if (!getKey()) { xyStatus(`汇总深断需先设置 ${curProvider().label} API Key(见「东玄深断」栏)。`, true); return; }
+    let material = `【心愿求吉 · 一站四问】\n【心愿:${xyPlan.wish}】\n${XY_RULES}\n【规矩】每卦只答其小问并给足"必须给";未起之卦直说"未起卦,此项不断"。`;
+    if (xyBazi) {
+      const c = xyBazi;
+      material += `\n\n【八字底色(供对照,断事以卦为主)】日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}(生扶${c.strength.pct}%),喜用五行:${c.yong.xiWx.join('、')},忌:${c.yong.jiWx.join('、')};属相年支${c.pillars.year.zhi}。${$('xy-hour').value === '' ? '(时辰未填,时柱按午间估算,强弱结论留一分余地)' : ''}`;
+    } else {
+      material += '\n\n【八字底色】未填生日,此路不参;断事全依卦象。';
+    }
+    if (xyDaysTxt) material += '\n\n' + xyDaysTxt;
+    for (const g of xyPlan.groups) {
+      const done = g.casts.filter(c => c.done);
+      if (!done.length) continue;
+      material += `\n\n════ ${g.title} ════`;
+      for (const c of done) material += `\n——${DW_METHODS[c.method]}卦 · 所问:${c.q}\n(此卦必须给:${c.focus})\n${c.report}`;
+    }
+    material += genderMaterialLine('q') + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
+    return xyAsk([{ role: 'user', content: material }], false);
+  });
+  $('btn-xy-fu').addEventListener('click', () => {
+    if (xyBusy) return;
+    if (!xyConvo) { xyStatus('先汇总深断,再追问。', true); return; }
+    const t = $('xy-fu').value.trim();
+    if (!t) { xyStatus('先打上你要追问的话。', true); return; }
+    return xyAsk(xyConvo.turns.concat([{ role: 'user', content: t + '\n(就着这个心愿和这套卦接着答,答不了直说。)' }]), true);
+  });
+  $('btn-xy-clear').addEventListener('click', () => {
+    xyPlan = null; xyConvo = null; renderXy();
+    $('xy-out').classList.add('hidden'); $('xy-out').innerHTML = ''; $('xy-followup').classList.add('hidden');
+    xyStatus('阵已清空。');
+  });
+  $('xy-plan').addEventListener('click', e => {
+    const gh = e.target.closest('.dwgh');
+    if (gh) {
+      const body = gh.parentElement.querySelector('.dwbody');
+      const nowHidden = body.classList.toggle('hidden');
+      gh.querySelector('.tri').textContent = nowHidden ? '▸' : '▾';
+      return;
+    }
+    const b = e.target.closest('.xy-cast');
+    if (!b || !xyPlan) return;
+    const c = xyPlan.groups[Number(b.dataset.g)].casts[Number(b.dataset.c)];
+    if (!c || c.done) return;
+    dwCastOne(c);
+    renderXy();
+    xyStatus(`已起 ${xyDone()}/${xyTotal()} 卦。${xyDone() >= xyTotal() ? '六卦起毕,点「汇总深断」。' : ''}`);
+  });
+  // 生日与吉日历板块共用一份(BKEY),进来先带出来
+  try { const b0 = localStorage.getItem(BKEY); if (b0) { $('xy-birth').value = b0; renderXyBazi(); } } catch (e) {}
+
   // —— 梅花易数 ——
   const MH_RULES = '【梅花断法】体卦为己、用卦为事应;用生体大吉,比和吉,体克用可成而迟,体生用耗泄不利,用克体凶。互卦察中间过程,变卦定结局;体卦旺衰以月令五行论;应期以体用卦数或变卦气数推,近取日时、远取月。八卦万物类象随所问细取。';
   function doMeihua() {
@@ -5399,7 +5807,6 @@
   }));
 
   // —— 吉日历:黄历(建除/值神/冲煞)× 本人生辰,按事挑日,可转起卦复核 ——
-  const BKEY = 'dongxuan_birth';
   const JR_WD = ['一', '二', '三', '四', '五', '六', '日'];
   const JR_LVCLS = { 上吉: 'l-sj', 吉: 'l-ji', 平: 'l-ping', 慎: 'l-shen', 忌: 'l-jji', 冲: 'l-chong' };
   const JR_SUM = {
@@ -5484,6 +5891,8 @@
     $('jr-today').addEventListener('click', () => { const t = new Date(); jrY = t.getFullYear(); jrM = t.getMonth() + 1; jrSel = jrIsoToday(); renderJiri(); const info = jrGrid.days.find(d => d.iso === jrSel); if (info) jrShowDetail(info); });
     $('jr-birth').addEventListener('change', () => {
       try { localStorage.setItem(BKEY, $('jr-birth').value || ''); } catch (e) {}
+      const xb = $('xy-birth');
+      if (xb) { xb.value = $('jr-birth').value; renderXyBazi(); renderXyDays(); }
       renderJiri();
       if (jrSel && jrGrid) { const info = jrGrid.days.find(d => d.iso === jrSel); if (info) jrShowDetail(info); }
     });
