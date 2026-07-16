@@ -151,5 +151,56 @@ t('成卦无偏:一万卦中六十四卦皆现,最热门与最冷门差距在统
   ok(min > 156.25 - 62 && max < 156.25 + 62, `min=${min} max=${max}`);
 });
 
+console.log('【七】神煞口诀铁案(天乙/桃花/驿马/华盖/文昌/羊刃/红鸾天喜/空亡)');
+const Bazi = require('../bazi.js');
+t('天乙贵人:甲戊庚牛羊、乙己鼠猴、丙丁猪鸡、壬癸蛇兔、六辛虎马,十干全表', () => {
+  const exp = { 甲: '丑未', 戊: '丑未', 庚: '丑未', 乙: '子申', 己: '子申', 丙: '亥酉', 丁: '亥酉', 壬: '巳卯', 癸: '巳卯', 辛: '寅午' };
+  for (const [g, z] of Object.entries(exp)) eq(Bazi.TIANYI[g], z, g);
+});
+t('桃花/驿马/华盖按三合局:申子辰→酉寅辰,寅午戌→卯申戌,巳酉丑→午亥丑,亥卯未→子巳未', () => {
+  const cases = [['子', '酉', '寅', '辰'], ['午', '卯', '申', '戌'], ['酉', '午', '亥', '丑'], ['卯', '子', '巳', '未']];
+  for (const [z, th, ym, hg] of cases) {
+    const i = Bazi.sanheIdx(z);
+    eq(Bazi.TAOHUA[i], th, z + '桃花'); eq(Bazi.YIMA[i], ym, z + '驿马'); eq(Bazi.HUAGAI[i], hg, z + '华盖');
+  }
+});
+t('文昌:甲巳乙午、丙戊申、丁己酉、庚亥辛子、壬寅癸卯;羊刃四阳干', () => {
+  const wc = { 甲: '巳', 乙: '午', 丙: '申', 戊: '申', 丁: '酉', 己: '酉', 庚: '亥', 辛: '子', 壬: '寅', 癸: '卯' };
+  for (const [g, z] of Object.entries(wc)) eq(Bazi.WENCHANG[g], z, '文昌' + g);
+  eq(Bazi.YANGREN['甲'], '卯'); eq(Bazi.YANGREN['丙'], '午'); eq(Bazi.YANGREN['庚'], '酉'); eq(Bazi.YANGREN['壬'], '子');
+});
+t('红鸾自卯逆行、天喜对冲:子年红鸾卯天喜酉,午年红鸾酉天喜卯', () => {
+  eq(Bazi.HONGLUAN[0], '卯', '子年红鸾');
+  eq(Bazi.HONGLUAN[6], '酉', '午年红鸾');
+  const ZHI = '子丑寅卯辰巳午未申酉戌亥';
+  eq(ZHI[(ZHI.indexOf(Bazi.HONGLUAN[0]) + 6) % 12], '酉', '子年天喜');
+});
+t('空亡(天中殺):甲子旬戌亥空、甲戌旬申酉空、甲寅旬子丑空', () => {
+  eq(Bazi.kongOf('甲子').join(''), '戌亥');
+  eq(Bazi.kongOf('癸酉').join(''), '戌亥', '甲子旬末位');
+  eq(Bazi.kongOf('甲戌').join(''), '申酉');
+  eq(Bazi.kongOf('乙卯').join(''), '子丑', '甲寅旬中');
+});
+t('flowMarks 整合:命主流日触天乙/桃花/空亡/冲提纲各有其辞', () => {
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男'); // 庚午年生,日主自排
+  const kong = Bazi.kongOf(c.pillars.day.gz);
+  const tyZhi = Bazi.TIANYI[c.dayGan][0];
+  ok(Bazi.flowMarks(c, '甲', tyZhi).some(m => m.includes('天乙贵人')), '天乙');
+  const th = Bazi.TAOHUA[Bazi.sanheIdx(c.pillars.year.zhi)];
+  ok(Bazi.flowMarks(c, '甲', th).some(m => m.includes('桃花')), '桃花');
+  ok(Bazi.flowMarks(c, '甲', kong[0]).some(m => m.includes('天中殺')), '空亡');
+  const ZHI = '子丑寅卯辰巳午未申酉戌亥';
+  const chongYue = ZHI[(ZHI.indexOf(c.pillars.month.zhi) + 6) % 12];
+  ok(Bazi.flowMarks(c, '甲', chongYue).some(m => m.includes('冲提纲')), '冲提纲');
+});
+t('天中殺之年:十二年窗口里恰两年,且年支必落日柱旬空', () => {
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男');
+  const tz = Bazi.tianZhongShaYears(c, 2026, 12);
+  eq(tz.length, 2, '十二年中两年');
+  const kong = Bazi.kongOf(c.pillars.day.gz);
+  const ZHI = '子丑寅卯辰巳午未申酉戌亥';
+  tz.forEach(y => ok(kong.includes(ZHI[((y - 4) % 12 + 12) % 12]), y + '年支应在空亡'));
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

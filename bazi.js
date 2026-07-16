@@ -144,5 +144,65 @@
     return Math.max(1, Math.round(days / 3));
   }
 
-  return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI };
+  // ——— 神煞引擎(流运断事用)———
+  // 口诀依据:天乙「甲戊庚牛羊,乙己鼠猴乡,丙丁猪鸡位,壬癸蛇兔藏,六辛逢虎马」;
+  // 咸池(桃花)申子辰在酉、寅午戌在卯、巳酉丑在午、亥卯未在子;驿马寅申亥巳;华盖辰戌丑未;
+  // 文昌「甲乙巳午报君知,丙戊申宫丁己鸡,庚猪辛鼠壬逢虎,癸人见卯入云梯」;羊刃甲卯丙戊午庚酉壬子;
+  // 红鸾按年支子起卯逆行,天喜为其对冲;空亡(天中殺)依日柱旬。
+  const TIANYI = { 甲: '丑未', 戊: '丑未', 庚: '丑未', 乙: '子申', 己: '子申', 丙: '亥酉', 丁: '亥酉', 壬: '巳卯', 癸: '巳卯', 辛: '寅午' };
+  const sanheIdx = z => '申子辰'.includes(z) ? 0 : '寅午戌'.includes(z) ? 1 : '巳酉丑'.includes(z) ? 2 : 3;
+  const TAOHUA = ['酉', '卯', '午', '子'];
+  const YIMA = ['寅', '申', '亥', '巳'];
+  const HUAGAI = ['辰', '戌', '丑', '未'];
+  const WENCHANG = { 甲: '巳', 乙: '午', 丙: '申', 戊: '申', 丁: '酉', 己: '酉', 庚: '亥', 辛: '子', 壬: '寅', 癸: '卯' };
+  const YANGREN = { 甲: '卯', 丙: '午', 戊: '午', 庚: '酉', 壬: '子' };
+  const HONGLUAN = ['卯', '寅', '丑', '子', '亥', '戌', '酉', '申', '未', '午', '巳', '辰']; // 索引=年支序(子0)
+
+  // 日柱旬空(天中殺二支)
+  function kongOf(dayGZ) {
+    let idx = -1;
+    for (let i = 0; i < 60; i++) if (GAN[i % 10] === dayGZ[0] && ZHI[i % 12] === dayGZ[1]) { idx = i; break; }
+    const xunShou = idx - (idx % 10);
+    return [ZHI[(xunShou + 10) % 12], ZHI[(xunShou + 11) % 12]];
+  }
+
+  // 流运一支一干,对命局激起哪些星煞与动宫(返回大白话短语数组,供断事型)
+  function flowMarks(chart, flowGan, flowZhi) {
+    const P = chart.pillars, yz = P.year.zhi, mz = P.month.zhi, dz = P.day.zhi, hz = P.hour.zhi;
+    const dg = chart.dayGan;
+    const yzIdx = ZHI.indexOf(yz);
+    const marks = [];
+    if ((TIANYI[dg] || '').includes(flowZhi)) marks.push('天乙贵人临:贵人露面之应——求人、见要紧人物、谈事,应在此处');
+    if (flowZhi === TAOHUA[sanheIdx(yz)] || flowZhi === TAOHUA[sanheIdx(dz)]) marks.push('桃花动:人缘情事活络——单身宜走动见人,有主的防桃色是非');
+    if (flowZhi === YIMA[sanheIdx(yz)] || flowZhi === YIMA[sanheIdx(dz)]) marks.push('驿马动:奔波变动之应——出行、调动、搬迁、换事由,坐不住也不必硬坐');
+    if (flowZhi === HUAGAI[sanheIdx(yz)] || flowZhi === HUAGAI[sanheIdx(dz)]) marks.push('华盖临:宜独处清修——读书、研艺、谋划这类一个人的事最出活,不宜硬凑热闹');
+    if (WENCHANG[dg] === flowZhi) marks.push('文昌临:文书之利——考试、签字、投稿、递材料挑这个当口');
+    if (YANGREN[dg] === flowZhi) marks.push('羊刃现:火气冲——防口角动手、利器磕碰,车马慢行,忍一步海阔');
+    if (HONGLUAN[yzIdx] === flowZhi) marks.push('红鸾动:婚恋之喜的信号——感情事在这个当口容易落定');
+    if (ZHI[(ZHI.indexOf(HONGLUAN[yzIdx]) + 6) % 12] === flowZhi) marks.push('天喜临:喜庆临门——好消息、喜事、添置之应');
+    const kong = kongOf(P.day.gz);
+    if (kong.includes(flowZhi)) marks.push('空亡(天中殺):运气之冬——新起之事难留根,不宜开业、置产、定亲这类立根基的动作;宜守成、学习、清旧账、养精神,过了这段自回暖');
+    const chong = z => ZHI[(ZHI.indexOf(z) + 6) % 12];
+    if (chong(flowZhi) === mz) marks.push('冲提纲(月柱):工作与居所之宫动荡——岗位、流程、住处这阵子多变,别在风头上硬定大局');
+    if (chong(flowZhi) === dz) marks.push('冲日支(自身与婚姻宫):身边人与身体之事留心——伴侣情绪、旧疾复动,都在这个当口');
+    if (chong(flowZhi) === yz) marks.push('冲年支(根基宫):长辈、老家、祖上住所之事有动静');
+    if (chong(flowZhi) === hz) marks.push('冲时支(子女与计划宫):小辈之事或既定计划生变');
+    const LIUHE = { 子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午' };
+    if (LIUHE[flowZhi] === dz) marks.push('合动日支:有人贴近——亲近、说和、牵线之应');
+    return marks;
+  }
+
+  // 天中殺之年:未来 n 年里流年支落入日柱旬空的年份(算命学十二年中之两年)
+  function tianZhongShaYears(chart, fromYear, n) {
+    const kong = kongOf(chart.pillars.day.gz);
+    const out = [];
+    for (let y = fromYear; y < fromYear + (n || 12); y++) {
+      const z = ZHI[((y - 4) % 12 + 12) % 12];
+      if (kong.includes(z)) out.push(y);
+    }
+    return out;
+  }
+
+  return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI,
+    kongOf, flowMarks, tianZhongShaYears, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx };
 }));

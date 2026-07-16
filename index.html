@@ -353,7 +353,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.32</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.33</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide"><b>三步用法:</b>① 填问卦人 → ② 写下所问(或点开「分科」挑类别)→ ③ 起卦、请东玄深断、追问。大问用「大问拆阵」,调运用「转运」。<b>按钮:</b>红=起卦 · 蓝=请东玄深断 · 灰=辅助。</p>
   </header>
@@ -752,7 +752,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.32 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.33 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -1734,7 +1734,16 @@
       `<div class="fblock"><span class="k">你的底牌${hourNote}</span><div class="t">日主<b>${c.dayGan}${c.dayWx}</b>,身${c.strength.strong ? '强' : '弱'}(生扶占${c.strength.pct}%)。` +
       `旺你的五行是<b>${xi.join('、')}</b>:颜色穿用${g1.colors}${xi[1] ? ';' + g2.colors : ''},方位利<b>${g1.dir}${xi[1] ? '、' + g2.dir : ''}</b>,吉数${g1.nums}${xi[1] ? ';' + g2.nums : ''},发力时段${g1.hours}。` +
       `背你的五行是${ji.join('、')},少碰${jg.colors}这些色、少往${jg.dir}边使劲。` +
-      `贵人属相:<b>${allies.sanhe.join('、')}${allies.liuhe ? '、' + allies.liuhe : ''}</b>;每逢<b>${chongZhi}日</b>冲你,大事绕开(吉日历里已标)。</div></div>`;
+      `贵人属相:<b>${allies.sanhe.join('、')}${allies.liuhe ? '、' + allies.liuhe : ''}</b>;每逢<b>${chongZhi}日</b>冲你,大事绕开(吉日历里已标)。` +
+      (() => {
+        try {
+          const kong = Bazi.kongOf(c.pillars.day.gz);
+          const nowY = new Date().getFullYear();
+          const tz = Bazi.tianZhongShaYears(c, nowY, 12);
+          return `逢<b>${kong.join('、')}</b>之日月年为你的空亡(天中殺)——运气之冬,立新根基的事(开业、置产、定亲)放一放,守成与学习最相宜;近窗天中殺之年:${tz.join('、')}${tz.includes(nowY) ? '——<b>今年正在其中,大动作放缓</b>' : ''}。`;
+        } catch (e) { return ''; }
+      })() +
+      `</div></div>`;
   }
   // 吉日窗:按心愿类别扫未来60天,给深断当底料
   function renderXyDays() {
@@ -2421,6 +2430,14 @@
   }
   function jrShowDetail(info) {
     const canCast = info.iso >= jrIsoToday();
+    let shaLine = '';
+    if (info.personal) {
+      try {
+        const bc = Bazi.chart(jrBirth(), '男');
+        const marks = Bazi.flowMarks(bc, info.gz.day[0], info.gz.day[1]);
+        if (marks.length) shaLine = `<div class="jrow"><b>星煞:</b>${marks.map(m => esc(m.split('——')[0])).join(';')}。</div>`;
+      } catch (e) {}
+    }
     const per = info.personal
       ? `<div class="jrow"><b>对你(属${esc(info.personal.animal)}、日主${info.personal.selfGan}):</b>` +
         (info.personal.marks.length ? info.personal.marks.map(esc).join(';') + ';' : '') +
@@ -2431,7 +2448,7 @@
       `<div class="jrow"><b>建除:</b>${info.jianchu.name}日 —— ${esc(info.jianchu.gist)}。宜${esc(info.jianchu.yi)};忌${esc(info.jianchu.ji)}。</div>` +
       `<div class="jrow"><b>值神:</b>${info.zhishen.name}(${info.zhishen.huang ? '黄道' : '黑道'})—— ${esc(info.zhishen.note)}。</div>` +
       `<div class="jrow"><b>冲煞:</b>冲${info.chongAnimal}(${info.chongZhi})煞${info.shaDir} —— 属${info.chongAnimal}的这天大事勿用;${info.shaDir}方动土远行多个心眼。</div>` +
-      per +
+      per + shaLine +
       `<div class="jsum">综合:「${info.level}」—— ${JR_SUM[info.level]}</div>` +
       (canCast ? `<div class="btnrow"><button type="button" class="primary" id="jr-cast" data-iso="${info.iso}">拿这天起一卦细看</button></div>` : '');
     $('jr-detail').classList.remove('hidden');
