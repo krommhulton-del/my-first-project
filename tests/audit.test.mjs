@@ -202,5 +202,26 @@ t('天中殺之年:十二年窗口里恰两年,且年支必落日柱旬空', () 
   tz.forEach(y => ok(kong.includes(ZHI[((y - 4) % 12 + 12) % 12]), y + '年支应在空亡'));
 });
 
+console.log('【八】断语库客观性(敢报凶,不偏喜)');
+const GuaData = require('../gua-data.js');
+t('六十四卦断级:凶类不少于8卦、谨慎不少于10卦、大吉不超过8卦、吉类占比不过六成', () => {
+  const guas = Object.values(GuaData.BY_ID);
+  eq(guas.length, 64, '卦数');
+  const cnt = {};
+  guas.forEach(g => { cnt[g.lv] = (cnt[g.lv] || 0) + 1; });
+  const xiong = (cnt['凶'] || 0) + (cnt['大凶'] || 0);
+  const ji = (cnt['大吉'] || 0) + (cnt['吉'] || 0) + (cnt['小吉'] || 0) + (cnt['平吉'] || 0);
+  ok(xiong >= 8, `凶类=${xiong},断语库不许回避凶卦`);
+  ok((cnt['谨慎'] || 0) >= 10, `谨慎=${cnt['谨慎']}`);
+  ok((cnt['大吉'] || 0) <= 8, `大吉=${cnt['大吉']},不许滥报大吉`);
+  ok(ji / 64 <= 0.6, `吉类占比=${(ji / 64 * 100).toFixed(0)}%,不许偏喜`);
+});
+t('小六壬三吉三凶:大安速喜小吉为吉,留连赤口凶、空亡大凶', () => {
+  const g = Object.fromEntries(Xlr.GONG.map(x => [x.name, x.ji]));
+  ok(g['大安'].includes('吉') && g['速喜'].includes('吉') && g['小吉'].includes('吉'), '三吉');
+  ok(g['留连'].includes('凶') && g['赤口'].includes('凶'), '两凶');
+  ok(g['空亡'].includes('大凶'), '空亡大凶');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);
