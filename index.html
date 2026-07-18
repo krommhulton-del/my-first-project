@@ -353,7 +353,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.36</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.37</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide"><b>三步用法:</b>① 填问卦人 → ② 写下所问(或点开「分科」挑类别)→ ③ 起卦、请东玄深断、追问。大问用「大问拆阵」,调运用「转运」。<b>按钮:</b>红=起卦 · 蓝=请东玄深断 · 灰=辅助。</p>
   </header>
@@ -752,7 +752,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.36 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.37 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <script src="gua-data.js"></script>
@@ -765,6 +765,7 @@
 <script src="fenke.js"></script>
 <script src="bazi.js"></script>
 <script src="jiri.js"></script>
+<script src="yingqi.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -1193,11 +1194,14 @@
 问:这个月运势咋样?
 「这个月前半段顺、后半段容易卡壳,是那种"面上过得去、底下得省着劲"的月份。工作上,上半月(阳历6月中之前)最好使,想接新活、换个干法趁这会儿;过了月中会遇上配合不到位、流程卡壳,别硬推,推了也白推,有些事这个月收不了尾,别急。钱上多劳多得,这个月到手大概三五千这个数,但花得也多,应酬、路上、修东西容易走钱。感情上,上半月对方或身边环境会主动凑过来,有走近的机会;但到月底容易因为一句话没说明白闹别扭,单身的中旬前后容易碰上比你年长或性子偏热闹的人,下旬先别急着挑明,容易说错话。身体注意中旬往后别受潮,关节和肠胃容易闹腾,眼睛也悠着点,天天盯屏幕超八小时容易干涩发胀。」`;
 
+  const WANT_AMOUNT = /钱|财|收入|资产|价|多少|数额|工资|年薪|赚|万|元/;
   function buildMaterial(cast, z, question) {
     const plan = GuaCore.interpretationPlan(cast);
     const jing = plan.focus.map(f => `${f.kind}:${f.text}`).join('\n');
+    let anchor = '';
+    try { anchor = '\n' + Yingqi.material(cast, new Date(), WANT_AMOUNT.test(question || '')); } catch (e) {}
     return GuaCore.buildReport(cast, question) + '\n' + panText(cast, z) +
-      '\n【经文取材(已按解卦优先级选定)】\n' + jing +
+      '\n【经文取材(已按解卦优先级选定)】\n' + jing + anchor +
       '\n\n请依上述卦象、排盘与所问之事细断。';
   }
 
@@ -1453,7 +1457,9 @@
       const plan = GuaCore.interpretationPlan(cast);
       const jing = plan.focus.map(f => `${f.kind}:${f.text}`).join('\n');
       const r = GuaCore.interpret(cast);
-      c.report = GuaCore.buildReport(cast, c.q) + '\n' + panText(cast, z) + '\n【经文取材】\n' + jing;
+      let anchor = '';
+      try { anchor = '\n' + Yingqi.material(cast, now, WANT_AMOUNT.test(c.q || '')); } catch (e) {}
+      c.report = GuaCore.buildReport(cast, c.q) + '\n' + panText(cast, z) + '\n【经文取材】\n' + jing + anchor;
       c.summary = `${cast.ben.name}${cast.bian ? '之' + cast.bian.name : ''}·${r.level}`;
     }
     c.done = true;
