@@ -80,6 +80,54 @@
   const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const atNoon = (y, m, d) => new Date(y, m - 1, d, 12, 0, 0);
 
+  // ——— 二十八宿值日(通书体系,与七曜锁定:宿名中字即星曜)———
+  // 锚点:2026-07-18(星期六)= 柳土獐,与市售黄历比对确立;吉凶依通书十六吉十二凶。
+  const XIU = [
+    ['角木蛟', '吉', '造作嫁娶皆利,开门放水吉'], ['亢金龙', '凶', '造作婚姻忌之,诸事宜缓'], ['氐土貉', '凶', '造作下手多凶,宜守'],
+    ['房日兔', '吉', '造作田蚕旺,婚丧皆吉'], ['心月狐', '凶', '造作多凶,词讼尤忌'], ['尾火虎', '吉', '造作进田,婚姻嫁娶利'],
+    ['箕水豹', '吉', '造作开门放水吉,田蚕旺'], ['斗木獬', '吉', '造作兴旺,岁岁平安'], ['牛金牛', '凶', '造作婚姻皆不宜'],
+    ['女土蝠', '凶', '造作多灾,宜静不宜动'], ['虚日鼠', '凶', '造作有灾殃,诸事收敛'], ['危月燕', '凶', '造作忌高险,行船登高慎'],
+    ['室火猪', '吉', '造作进田牛,富贵之宿'], ['壁水㺄', '吉', '造作兴家,婚姻吉'], ['奎木狼', '吉', '造作得祯祥,出行吉'],
+    ['娄金狗', '吉', '造作田蚕盛,婚姻合卺吉'], ['胃土雉', '吉', '造作事如意,仓库田蚕旺'], ['昴日鸡', '凶', '造作多灾,婚姻不宜'],
+    ['毕月乌', '吉', '造作主兴隆,田蚕俱旺'], ['觜火猴', '凶', '造作多凶,葬埋尤忌'], ['参水猿', '吉', '造作旺人家,出行开门吉'],
+    ['井木犴', '吉', '造作旺蚕田,求学文书吉'], ['鬼金羊', '凶', '造作卒有灾,惟葬无碍'], ['柳土獐', '凶', '造作多遭官非,宜守静'],
+    ['星日马', '吉', '造作进庄田,嫁娶独忌'], ['张月鹿', '吉', '造作事亨通,百事和合'], ['翼火蛇', '凶', '造作多是非,婚姻不安'],
+    ['轸水蚓', '吉', '造作得安康,诸事皆吉'],
+  ];
+  const XIU_ANCHOR = Math.floor(Date.UTC(2026, 6, 18) / 86400000); // 该日柳宿(序23)
+  function xiuOf(date) {
+    const dn = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
+    const idx = ((dn - XIU_ANCHOR) % 28 + 28 + 23) % 28;
+    const x = XIU[idx];
+    return { name: x[0], luck: x[1], note: x[2], idx };
+  }
+
+  // ——— 彭祖百忌(逐日干支各一句)———
+  const PZ_GAN = { 甲: '甲不开仓,财物耗散', 乙: '乙不栽植,千株不长', 丙: '丙不修灶,必见灾殃', 丁: '丁不剃头,头必生疮', 戊: '戊不受田,田主不祥', 己: '己不破券,二比并亡', 庚: '庚不经络,织机虚张', 辛: '辛不合酱,主人不尝', 壬: '壬不泱水,更难提防', 癸: '癸不词讼,理弱敌强' };
+  const PZ_ZHI = { 子: '子不问卜,自惹祸殃', 丑: '丑不冠带,主不还乡', 寅: '寅不祭祀,神鬼不尝', 卯: '卯不穿井,水泉不香', 辰: '辰不哭泣,必主重丧', 巳: '巳不远行,财物伏藏', 午: '午不苫盖,屋主更张', 未: '未不服药,毒气入肠', 申: '申不安床,鬼祟入房', 酉: '酉不会客,醉坐颠狂', 戌: '戌不吃犬,作怪上床', 亥: '亥不嫁娶,不利新郎' };
+  const pengzuOf = gz => PZ_GAN[gz[0]] + ';' + PZ_ZHI[gz[1]];
+
+  // ——— 杨公忌日(农历十三日)与月忌日(初五、十四、廿三)———
+  const YANGGONG = { 1: [13], 2: [11], 3: [9], 4: [7], 5: [5], 6: [3], 7: [1, 29], 8: [27], 9: [25], 10: [23], 11: [21], 12: [19] };
+  function lunarFlags(lunar) {
+    if (!lunar) return { yanggong: false, yueji: false };
+    return {
+      yanggong: !lunar.isLeap && (YANGGONG[lunar.lMonth] || []).includes(lunar.lDay),
+      yueji: [5, 14, 23].includes(lunar.lDay),
+    };
+  }
+
+  // ——— 十二消息卦(卦气说:每节气月一卦,月运底色)———
+  const XIAOXI = {
+    寅: ['泰', '三阳开泰,天地气交——万事起头的月份,宜动宜谋'], 卯: ['大壮', '四阳壮盛,力有余而礼当守——宜进取,忌莽撞'],
+    辰: ['夬', '五阳决一阴,当断则断——了结旧事的月份'], 巳: ['乾', '六阳纯盛,如日中天——大事可为,亦防亢极'],
+    午: ['姤', '一阴初生,盛极有变——守成防变的月份'], 未: ['遯', '二阴渐长,君子以远小人——宜退步收敛,不宜强出头'],
+    申: ['否', '天地不交,内外隔阂——沟通多梗,宜蓄力待时'], 酉: ['观', '四阴在下,静观其变——看清再动的月份'],
+    戌: ['剥', '五阴剥一阳,山附于地——收尾护本,忌扩张'], 亥: ['坤', '六阴纯静,厚德载物——养精蓄锐的月份'],
+    子: ['复', '一阳来复,冬至生机——转机初现,宜谋新'], 丑: ['临', '二阳浸长,大亨以正——渐入佳境,可着手布局'],
+  };
+  const xiaoxiOf = monthZhi => { const x = XIAOXI[monthZhi]; return { gua: x[0], note: x[1] }; };
+
   // ——— 单日详情。birth 可选:{date: Date}(按出生日算年支生肖与日主天干)———
   function dayInfo(date, birth) {
     const gz = Najia.ganZhi(date);
@@ -90,7 +138,9 @@
     let lunar = null;
     try { lunar = Lunar.fromDate(date); } catch (e) { /* 历表越界时只缺农历显示 */ }
 
-    let score = jc.luck + zs.luck;
+    const xiu = xiuOf(date);
+    const flags = lunarFlags(lunar);
+    let score = jc.luck + zs.luck + (xiu.luck === '吉' ? 1 : -1) + (flags.yanggong ? -3 : 0) + (flags.yueji ? -1 : 0);
     let personal = null;
     if (birth && birth instanceof Date && !isNaN(birth)) {
       const bgz = Najia.ganZhi(birth);
@@ -118,7 +168,8 @@
       week: (date.getDay() + 6) % 7, // 0=周一
       gz, lunar,
       lunarText: lunar ? (lunar.lDay === 1 ? lunar.monthName : lunar.dayName) : '',
-      jianchu: jc, zhishen: zs,
+      jianchu: jc, zhishen: zs, xiu, pengzu: pengzuOf(gz.day), flags,
+      xiaoxi: xiaoxiOf(gz.monthZhi),
       chongAnimal: ANIMALS[chongZhi], chongZhi: ZHI[chongZhi], shaDir: SHA_DIR[dz],
       personal, score, level,
     };
@@ -190,6 +241,7 @@
       const info = dayInfo(d, birth);
       if (ev.ji.includes(info.jianchu.name)) continue;       // 建星犯忌,直接排除
       if (info.personal && info.personal.chong) continue;     // 冲本人,排除
+      if (info.flags.yanggong) continue;                      // 杨公忌日,大事一律不荐
       if (info.level === '忌') continue;
       let s = info.score;
       const why = [];
@@ -198,6 +250,7 @@
       if (ev.malus.includes(info.zhishen.name)) { s -= 2; why.push(`${info.zhishen.name}黑道有碍,列名但靠后`); }
       if (!ev.yi.includes(info.jianchu.name) && !why.length) continue; // 既不合建星又无神扶,不推
       if (info.zhishen.huang && !ev.bonus.includes(info.zhishen.name)) why.push(`${info.zhishen.name}黄道`);
+      if (info.xiu.luck === '吉') why.push(`${info.xiu.name}吉宿`);
       if (info.personal) {
         info.personal.marks.forEach(m => why.push(m.split('——')[0]));
         why.push(info.personal.wx.rel === '克我' ? '流日克你日主,稍费力' : info.personal.wx.note.split(',')[1] || info.personal.wx.rel);
@@ -208,5 +261,5 @@
     return out.slice(0, topN || 5);
   }
 
-  return { JIANCHU, ZHISHEN, EVENTS, ANIMALS, WX_GOODS, jianchuOf, zhishenOf, wxRelation, dayInfo, monthGrid, pickDays, wishEvent, zodiacAllies };
+  return { JIANCHU, ZHISHEN, EVENTS, ANIMALS, WX_GOODS, XIU, XIAOXI, jianchuOf, zhishenOf, wxRelation, dayInfo, monthGrid, pickDays, wishEvent, zodiacAllies, xiuOf, pengzuOf, lunarFlags, xiaoxiOf };
 }));

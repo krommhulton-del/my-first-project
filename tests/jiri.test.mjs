@@ -186,5 +186,52 @@ t('生肖贵人:午年三合得虎狗、六合得羊', () => {
   eq(a.liuhe, '羊', '六合');
 });
 
+console.log('【八】通书增补:二十八宿/彭祖百忌/杨公忌/消息卦');
+t('外验锚点(对市售黄历):2026-07-18=癸巳日、柳土獐凶宿、开日、值神玉堂', () => {
+  const info = Jiri.dayInfo(new Date(2026, 6, 18, 12));
+  eq(info.gz.day, '癸巳', '日柱');
+  eq(info.xiu.name, '柳土獐', '星宿');
+  eq(info.xiu.luck, '凶', '宿吉凶');
+  eq(info.jianchu.name, '开', '建除');
+  eq(info.zhishen.name, '玉堂', '值神');
+});
+t('宿与七曜锁定:宿名中字对星期,连验28天且二十八宿无一重复', () => {
+  const YAO = { 日: 0, 月: 1, 火: 2, 水: 3, 木: 4, 金: 5, 土: 6 };
+  const seen = new Set();
+  for (let i = 0; i < 28; i++) {
+    const d = new Date(2026, 6, 1 + i, 12);
+    const x = Jiri.xiuOf(d);
+    eq(YAO[x.name[1]], d.getDay(), x.name + '@' + d.toDateString());
+    seen.add(x.name);
+  }
+  eq(seen.size, 28, '28宿轮满');
+});
+t('彭祖百忌:句首干支与日柱相符(癸巳日=癸不词讼+巳不远行)', () => {
+  const info = Jiri.dayInfo(new Date(2026, 6, 18, 12));
+  ok(info.pengzu.startsWith('癸不词讼'), info.pengzu);
+  ok(info.pengzu.includes('巳不远行'), info.pengzu);
+});
+t('杨公忌:扫2026全年12-14天,含七月初一;挑日绝不荐杨公忌', () => {
+  let n = 0, has71 = false;
+  for (let i = 0; i < 365; i++) {
+    const info = Jiri.dayInfo(new Date(2026, 0, 1 + i, 12));
+    if (info.flags.yanggong) {
+      n++;
+      if (info.lunar.lMonth === 7 && info.lunar.lDay === 1) has71 = true;
+    }
+  }
+  ok(n >= 12 && n <= 14, `杨公忌=${n}天`);
+  ok(has71, '七月初一应在列');
+  const picks = Jiri.pickDays('tongyong', new Date(2026, 1, 20, 12), 90, null, 20);
+  ok(picks.every(p => !p.info.flags.yanggong), '荐日不得撞杨公忌');
+});
+t('十二消息卦:寅泰、未遯、子复、丑临,十二月支全有注', () => {
+  eq(Jiri.xiaoxiOf('寅').gua, '泰');
+  eq(Jiri.xiaoxiOf('未').gua, '遯');
+  eq(Jiri.xiaoxiOf('子').gua, '复');
+  eq(Jiri.xiaoxiOf('丑').gua, '临');
+  for (const z of '子丑寅卯辰巳午未申酉戌亥') ok(Jiri.xiaoxiOf(z).note.length > 6, z);
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);
