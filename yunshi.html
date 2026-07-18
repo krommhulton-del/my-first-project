@@ -67,6 +67,16 @@
   .body-sub { text-align: center; color: var(--dim); font-size: .86rem; margin-top: 6px; }
   /* 运势卡 */
   .yscard { background: var(--panel2); border-radius: 10px; padding: 15px 16px; margin-bottom: 12px; border-left: 4px solid var(--gold); }
+  .sm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0 12px; }
+  .sm-cell { background: var(--panel2); border-radius: 10px; padding: 10px 8px; text-align: center; min-height: 84px;
+    display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+  .sm-cell.blank { background: transparent; }
+  .sm-cell.center { border: 1.5px solid var(--gold); }
+  .sm-cell.sub { border: 1px dashed var(--dim); background: transparent; }
+  .sm-cell .cap { color: var(--dim); font-size: .7rem; line-height: 1.4; }
+  .sm-cell .star { font-size: 1.08rem; letter-spacing: .1em; margin: 2px 0; }
+  .sm-cell .hint { color: var(--dim); font-size: .74rem; line-height: 1.5; }
+  @media (max-width: 560px) { .sm-cell { min-height: 70px; padding: 7px 4px; } .sm-cell .star { font-size: .95rem; } .sm-cell .hint { font-size: .66rem; } }
   .yscard.good { border-left-color: var(--wx-mu); }
   .yscard.bad { border-left-color: var(--cinnabar); }
   .yscard .yh { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
@@ -127,6 +137,13 @@
     <div class="body-sub" id="body-sub"></div>
   </section>
 
+  <section id="sec-sanmei" class="hidden">
+    <h2>人 体 星 図 · 算命学(陽占)</h2>
+    <div class="note">算命学(高尾義政《原典算命学大系》一脉)以三柱排星:五颗<b>主星</b>定性格本质(胸口那颗是中心星),三颗<b>従星</b>定初年/中年/晚年的能量势,三星点数合计定你一生「量」的大小。</div>
+    <div class="sm-grid" id="sm-grid"></div>
+    <div class="body-sub" id="sm-sub"></div>
+  </section>
+
   <section id="sec-yun" class="hidden">
     <h2>运 势 · 大白话</h2>
     <div id="yun-cards"></div>
@@ -163,19 +180,34 @@
     <div id="ai-out" class="aiout hidden"></div>
   </section>
 
-  <footer>东玄运势 v0.1 内测 · 八字流年扶抑法 · 历法自实现(朔望/节气) · 排盘不联网</footer>
+  <footer>东玄运势 v0.2 内测 · 八字流年扶抑法 + 算命学陽占(原典算命学大系一脉) · 历法自实现(朔望/节气) · 排盘不联网</footer>
 </div>
 
 <script src="najia.js"></script>
 <script src="lunar.js"></script>
 <script src="bazi.js"></script>
 <script src="yunshi.js"></script>
+<script src="sanmei.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
   const WX_CLS = { 木: 'mu', 火: 'huo', 土: 'tu', 金: 'jin', 水: 'shui' };
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  let curChart = null, aiBusy = false, aiContext = null;
+  let curChart = null, aiBusy = false, aiContext = null, curSanmei = null;
+
+  // 人体星図:主星五位 + 従星三期(镜像面对读者:左肩在图右)
+  function renderSanmei(c) {
+    const s = c.stars, j = c.jusei;
+    const main = (cap, st, center) => `<div class="sm-cell${center ? ' center' : ''}"><div class="cap">${cap}</div><div class="star">${st.star}</div><div class="hint">${esc(st.gist.split(':')[0])}</div></div>`;
+    const sub = (cap, st) => `<div class="sm-cell sub"><div class="cap">${cap}</div><div class="star">${st.star}</div><div class="hint">${st.stage}·${st.pts}点</div></div>`;
+    $('sm-grid').innerHTML =
+      '<div class="sm-cell blank"></div>' + main('頭 · 目上/初年心象', s.head) + sub('左肩 · 初年期', j.shoulder) +
+      main('右手 · 看家本领/配偶位', s.rightHand) + main('胸 · 中心星(本命)', s.chest, true) + main('左手 · 社交之用', s.leftHand) +
+      sub('右足 · 晚年期', j.rightFoot) + main('腹 · 后辈/晚境心象', s.belly) + sub('左足 · 中年期', j.leftFoot);
+    $('sm-sub').innerHTML = `中心星<b>${s.chest.star}</b>:${esc(s.chest.gist)}。<br>` +
+      `従星能量合计 <b>${c.energy.total}</b> 点(满36)——${esc(c.energy.band)}。<br>` +
+      `<b>${c.tenchusatsu.type}</b>(空亡${c.tenchusatsu.kong.join('、')}):${esc(c.tenchusatsu.note)}。`;
+  }
 
   function wxSpan(ch, wx) { return `<span class="${WX_CLS[wx] || ''}">${ch}</span>`; }
 
@@ -189,10 +221,11 @@
     if (isNaN(birth.getTime()) || Y < 1900 || Y > 2100) { $('in-err').textContent = '日期看起来不对,检查一下。'; return; }
     curChart = Bazi.chart(birth, $('gender').value);
     renderMing(curChart);
+    try { curSanmei = Sanmei.chart(birth); renderSanmei(curSanmei); } catch (e) { curSanmei = null; }
     renderYun(curChart, new Date());
     renderDayun(curChart);
     $('qdate').value = todayStr();
-    ['sec-ming', 'sec-yun', 'sec-dayun', 'sec-ai'].forEach(s => $(s).classList.remove('hidden'));
+    ['sec-ming', 'sec-sanmei', 'sec-yun', 'sec-dayun', 'sec-ai'].forEach(s => $(s).classList.remove('hidden'));
     $('ai-out').classList.add('hidden'); $('ai-out').textContent = ''; $('ai-status').textContent = '';
     $('sec-ming').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -286,7 +319,7 @@
 今日(${y.day.span}):干支${y.day.gz},判「${y.day.level}」,${y.day.shen}。${dM.length ? '\n今日星煞与动宫:' + dM.join(';') : ''}
 【今天是什么日子——所有"今年/本月/今日"以此为准】阳历 ${nowText()}。${y.year.span}就是今年,${y.month.span}就是本月,${y.day.span}就是今天。给时间点落在合理范围,问本月别飘到别的月去。
 【落笔硬要求】读者是外行只想听人话:回答里不许出现"日主/用神/十神/喜忌/生克/旺衰/天干地支干支/正财偏财官杀印比食伤"这些字眼,全翻成大白话(比如别说"今年官杀为忌",要说"今年工作上压得慌、容易被管被挑刺")。每段先甩人话结论再说为啥,不用编号清单和markdown,像老先生当面唠。
-【断到事型——深断的硬要求】材料里给了十神、星煞与动宫,这是断"会发生什么事"的原料,必须用起来:①每一段都要点名事型——是情事(桃花红鸾)、是文书考试(文昌)、是奔波变动(驿马冲提纲)、是贵人露面(天乙)、是口舌冲动(羊刃)、还是守成清账(天中殺),对应到大白话的具体事上;②天中殺(空亡)所在的年月日,按"运气之冬"断:不宜立新根基(开业置产定亲),宜收尾学习养精神,并把回暖的时间点说出来;③材料给了未来十二年里的天中殺之年,看年运时提前打招呼;④十神所主之事要断细:管束认可(官)、突发压力小人(杀)、正路进财(正财)、外快与桃色(偏财)、文书长辈(印)、灵感失眠饭碗生变(枭)、口福才华(食)、顶撞出格文书坑(伤)、朋友分财(比劫)——哪个当值断哪个,喜则其吉象、忌则其凶象;⑤颜色方位只作末尾一句辅注,不许拿它凑深度。
+${curSanmei ? Sanmei.material(curSanmei) + '\n【算命学用法】人体星図是性格与时期论的底盘:中心星定本质与行事路数;従星三期把人生分成初年/中年/晚年,批到哪个年纪就用哪期従星的星性与点数说话(点数高的时期扛得动大事,点数低的时期以巧以静取胜);天中殺之年月日按「运气之冬」断。星名可以直接说给客人听(貫索星、天将星这些名字本身就是看点),但每个星名后面必须紧跟一句大白话解释。\n' : ''}【断到事型——深断的硬要求】材料里给了十神、星煞与动宫,这是断"会发生什么事"的原料,必须用起来:①每一段都要点名事型——是情事(桃花红鸾)、是文书考试(文昌)、是奔波变动(驿马冲提纲)、是贵人露面(天乙)、是口舌冲动(羊刃)、还是守成清账(天中殺),对应到大白话的具体事上;②天中殺(空亡)所在的年月日,按"运气之冬"断:不宜立新根基(开业置产定亲),宜收尾学习养精神,并把回暖的时间点说出来;③材料给了未来十二年里的天中殺之年,看年运时提前打招呼;④十神所主之事要断细:管束认可(官)、突发压力小人(杀)、正路进财(正财)、外快与桃色(偏财)、文书长辈(印)、灵感失眠饭碗生变(枭)、口福才华(食)、顶撞出格文书坑(伤)、朋友分财(比劫)——哪个当值断哪个,喜则其吉象、忌则其凶象;⑤颜色方位只作末尾一句辅注,不许拿它凑深度。
 请分「今年 / 本月 / 今日」三段,各用大白话细说这个人的运势:钱财、工作、感情、健康、贵人各挑要紧的说,该攻该守都点明,给具体月份或时间段。开头一句先给这一年的总基调。`;
   }
   function nowText() {

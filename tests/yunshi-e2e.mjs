@@ -47,6 +47,16 @@ await t('排盘:四柱四列、日主标注、身强弱大白话', async () => {
   ok(/身(强|偏强|弱|偏弱)/.test(bl) && /命/.test(bl), '身强弱白话:' + bl);
 });
 
+await t('人体星図:五主星三従星、中心星描边、能量点数与天中殺注解', async () => {
+  ok(!(await page.locator('#sec-sanmei').evaluate(el => el.classList.contains('hidden'))), '星図区应显示');
+  const stars = await page.locator('#sm-grid .sm-cell .star').allTextContents();
+  ok(stars.length === 8, `应八星,得${stars.length}:` + stars.join(','));
+  ok(stars.every(s => /星$/.test(s)), '皆以星结尾');
+  ok((await page.locator('#sm-grid .sm-cell.center').count()) === 1, '中心星唯一');
+  const sub = await page.textContent('#sm-sub');
+  ok(sub.includes('点') && sub.includes('天中殺') && sub.includes('中心星'), '能量与天中殺注解:' + sub.slice(0, 50));
+});
+
 await t('运势三卡:今日/本月/今年,含等级与领域,白话成句', async () => {
   await page.waitForSelector('#sec-yun:not(.hidden)');
   const cards = page.locator('#yun-cards .yscard');
