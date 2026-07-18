@@ -142,6 +142,7 @@ await t('历史持久化:刷新页面卦档仍在', async () => {
 });
 
 await t('卦档展开与删除', async () => {
+  await page.evaluate(() => dxShowView('hist'));
   await expandGroups();
   await page.click('#histlist .hist:first-child .head');
   ok(await page.locator('#histlist .hist:first-child .body pre').isVisible(), '展开后应见回报全文');
@@ -150,11 +151,13 @@ await t('卦档展开与删除', async () => {
 });
 
 await t('清空卦档', async () => {
+  await page.evaluate(() => dxShowView('hist'));
   await expandGroups();
   page.once('dialog', d => d.accept());
   await page.click('#btn-clearhist');
   await page.waitForFunction(() => document.querySelectorAll('#histlist .hist').length === 0);
   ok((await page.locator('#histlist .hist').count()) === 0, '应清空');
+  await page.evaluate(() => dxShowView('ask'));
 });
 
 await t('梅花易数:报数起卦出体用互变三卦', async () => {
@@ -371,6 +374,7 @@ await t('以卦追问:按钮在,未深断时给提示', async () => {
 });
 
 await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折叠', async () => {
+  await page.evaluate(() => dxOpenBoard('sec-dawen'));
   await expandGroups();
   await page.click('#btn-dw-example');
   ok((await page.locator('#dw-plan .dwgroup').count()) >= 5, '应有五个以上板块');
@@ -406,6 +410,7 @@ await t('大问拆阵:现成人生轨迹阵可摆、逐卦可起、板块可折�
 });
 
 await t('核心运势选时段:近一月/指定某年,问题自动重组', async () => {
+  await page.evaluate(() => dxShowView('ask'));
   await expandGroups();
   await page.click('.fk[data-id=yunshi_core]');
   ok(await page.locator('#fk-range').isVisible(), '应有时段选择');
@@ -446,6 +451,7 @@ await t('为谁问:问题旁单独填性别年龄(替人问),盖过顶栏默认'
 });
 
 await t('转运板块:可选时段、六卦阵可摆、诊断开方分组、逐卦可起、无Key开方给提示', async () => {
+  await page.evaluate(() => dxOpenBoard('sec-zhuanyun'));
   await expandGroups();
   ok(await page.locator('#zy-range').isVisible(), '转运应有时段选择');
   await page.selectOption('#zy-range', '近一个月');
@@ -474,6 +480,7 @@ await t('卦档法门徽记与蓍草起卦', async () => {
   const badges = await page.locator('#histlist .badge').allTextContents();
   ok(badges.includes('梅花') && badges.includes('小六壬'), '徽记:' + badges.join(','));
   // 蓍草大衍法起一卦
+  await page.evaluate(() => dxShowView('ask'));
   await page.click('.tabs button[data-m=liuyao]');
   await page.check('input[name=ly-mode][value=dayan]');
   await page.click('#btn-auto');
@@ -485,12 +492,7 @@ await t('卦档法门徽记与蓍草起卦', async () => {
 });
 
 await t('吉日历:月历渲染、点日细账、生日个人化、按事挑日、转起卦', async () => {
-  // 若此前 expandGroups 已展开,先合上,保证下面这一点是「展开+初始化」
-  await page.evaluate(() => {
-    const b = document.querySelector('#sec-jiri .foldbody');
-    if (b && !b.classList.contains('hidden')) document.querySelector('#sec-jiri .foldh').click();
-  });
-  await page.click('#sec-jiri .foldh');
+  await page.evaluate(() => dxShowView('jiri'));
   await page.waitForSelector('.jr-cell', { timeout: 8000 });
   const cells = await page.locator('.jr-cell').count();
   ok(cells >= 28 && cells <= 31, `月历格数=${cells}`);
@@ -541,10 +543,7 @@ await t('日间/夜间主题切换与记忆', async () => {
 });
 
 await t('心愿板块:旺你牌、吉日窗、六卦阵、无Key深断给提示', async () => {
-  await page.evaluate(() => {
-    const b = document.querySelector('#sec-xinyuan .foldbody');
-    if (b && b.classList.contains('hidden')) document.querySelector('#sec-xinyuan .foldh').click();
-  });
+  await page.evaluate(() => dxOpenBoard('sec-xinyuan'));
   // 上一批用例已把生日 1990-06-15 存入本机,重载后应自动带出 → 旺你牌直接在
   ok((await page.inputValue('#xy-birth')) === '1990-06-15', '生日应从吉日历共用带出');
   const bazi = await page.textContent('#xy-bazi');
@@ -574,10 +573,7 @@ await t('心愿板块:旺你牌、吉日窗、六卦阵、无Key深断给提示'
 });
 
 await t('未来镜:三卦成景、文体视角可选、无Key成文给提示、追问双轨在位', async () => {
-  await page.evaluate(() => {
-    const b = document.querySelector('#sec-wj .foldbody');
-    if (b && b.classList.contains('hidden')) document.querySelector('#sec-wj .foldh').click();
-  });
+  await page.evaluate(() => dxOpenBoard('sec-wj'));
   await page.fill('#wj-q', '一年后我的日子是什么样');
   await page.selectOption('#wj-style', '短篇小说');
   await page.selectOption('#wj-pov', '第三人称');

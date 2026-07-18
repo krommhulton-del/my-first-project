@@ -51,7 +51,7 @@
     line-height: 1.75;
     transition: color .25s;
     padding: calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
-             calc(60px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+             calc(96px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
     -webkit-tap-highlight-color: transparent;
   }
   .wrap { max-width: 860px; margin: 0 auto; }
@@ -257,8 +257,7 @@
   .qwho input[type=number]:focus { outline: none; border-color: var(--gold); }
   .qwhint { font-size: .82rem; }
   .qwhint.warn { color: var(--cinnabar); }
-  header .guide { color: var(--dim); font-size: .82rem; margin: 12px auto 0; line-height: 1.8; max-width: 640px;
-    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; text-align: left; }
+  header .guide { color: var(--dim); font-size: .8rem; margin: 10px auto 0; line-height: 1.7; max-width: 640px; text-align: center; }
   header .guide b { color: var(--gold); font-weight: normal; }
   .fold .foldh { cursor: pointer; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .foldtri { color: var(--dim); font-size: .8rem; flex: 0 0 auto; }
@@ -284,6 +283,31 @@
   #duo-offer { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
   #duo-offer .duo-title { color: var(--dim); font-size: .9rem; margin-bottom: 8px; line-height: 1.7; }
   #duo-status { margin-top: 10px; color: var(--cinnabar); font-size: .95rem; letter-spacing: .03em; line-height: 1.7; }
+  /* —— 视图路由与底部导航 —— */
+  .voff { display: none !important; }
+  .zone { display: none; }
+  .bottomnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex;
+    background: color-mix(in srgb, var(--panel) 86%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--hair); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
+  .bottomnav button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    background: transparent; border: none; border-radius: 12px; padding: 5px 0 3px; box-shadow: none; letter-spacing: .05em; }
+  .bottomnav button:hover { background: var(--hover); }
+  .bottomnav .ic { font-family: var(--disp); font-size: 1.12rem; line-height: 1.5; width: 34px; height: 30px;
+    display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+  .bottomnav .lb { font-size: .68rem; color: var(--dim); }
+  .bottomnav button.on .ic { background: var(--accent-soft); color: var(--cinnabar); }
+  .bottomnav button.on .lb { color: var(--cinnabar); }
+  .bmenu { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .bcard { display: flex; align-items: center; gap: 12px; text-align: left; background: var(--panel2);
+    border: 1px solid var(--hair); border-radius: 14px; padding: 14px; cursor: pointer; letter-spacing: 0; }
+  .bcard:hover { background: var(--hover); }
+  .bcard .bg { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 12px; background: var(--accent-soft);
+    color: var(--cinnabar); font-family: var(--disp); font-size: 1.35rem; display: flex; align-items: center; justify-content: center; }
+  .bcard .bt { display: block; font-size: 1.02rem; letter-spacing: .08em; }
+  .bcard .bd { display: block; color: var(--dim); font-size: .78rem; margin-top: 2px; line-height: 1.5; }
+  .bcard .bx { margin-left: auto; color: var(--dim); }
+  #board-back { margin: 0 0 10px; }
+  #board-back button { padding: 6px 14px; font-size: .88rem; }
   .jr-nav { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; flex-wrap: wrap; }
   .jr-nav b { font-family: var(--disp); letter-spacing: .1em; font-size: 1.05rem; min-width: 7.5em; text-align: center; }
   .jr-nav button { padding: 6px 14px; font-size: .9rem; }
@@ -353,9 +377,9 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.37</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.38</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
-    <p class="guide"><b>三步用法:</b>① 填问卦人 → ② 写下所问(或点开「分科」挑类别)→ ③ 起卦、请东玄深断、追问。大问用「大问拆阵」,调运用「转运」。<b>按钮:</b>红=起卦 · 蓝=请东玄深断 · 灰=辅助。</p>
+    <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
 
   <nav class="tabs">
@@ -579,7 +603,16 @@
   </div>
   </section>
 
-  <div class="zone">叁 · 专项与卦档</div>
+  <section id="board-menu" class="voff">
+    <h2>专 项 · 各有各的阵法</h2>
+    <div class="bmenu">
+      <button class="bcard" data-b="sec-dawen"><span class="bg">问</span><span><span class="bt">大问拆阵</span><span class="bd">一句大问,拆成一套卦阵逐个起,汇总深断</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-zhuanyun"><span class="bg">运</span><span><span class="bt">转 运</span><span class="bd">近来不顺?先诊断根源,再给能落地的做法</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-xinyuan"><span class="bg">愿</span><span><span class="bt">心 愿</span><span class="bd">想办件事:成不成、什么时候、怎么做最旺</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-wj"><span class="bg">镜</span><span><span class="bt">未来镜</span><span class="bd">起三卦,把断出的未来写成一篇故事</span></span><span class="bx">›</span></button>
+    </div>
+  </section>
+  <div id="board-back" class="voff"><button class="ghost" id="btn-board-back">‹ 回专项列表</button></div>
 
   <section id="sec-dawen" class="fold">
     <h2 class="foldh">问 道 · 大问拆阵(一句大问,拆成一套卦)<span class="foldtri">▸</span></h2>
@@ -752,8 +785,15 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.37 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.38 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
+
+<nav class="bottomnav" id="bottomnav">
+  <button data-v="ask" class="on"><span class="ic">卦</span><span class="lb">问卦</span></button>
+  <button data-v="boards"><span class="ic">阵</span><span class="lb">专项</span></button>
+  <button data-v="jiri"><span class="ic">历</span><span class="lb">吉日</span></button>
+  <button data-v="hist"><span class="ic">档</span><span class="lb">卦档</span></button>
+</nav>
 
 <script src="gua-data.js"></script>
 <script src="gua-core.js"></script>
@@ -2480,6 +2520,7 @@
   }
   // 转起卦:走「日运(可择日)」分科老路,日期代入,首选法门直接就位
   function jrToCast(isoDate) {
+    showView('ask');
     const fb = document.querySelector('#sec-fenke .foldbody');
     if (fb && fb.classList.contains('hidden')) {
       fb.classList.remove('hidden');
@@ -2541,6 +2582,57 @@
   }
   // 首次展开该板块时才铺日历(月历要算一整月朔与节气,不拖累开屏)
   document.querySelector('#sec-jiri .foldh').addEventListener('click', () => setTimeout(jrEnsure, 0));
+
+  // —— 视图路由:问卦 / 专项(卡片菜单→单板块)/ 吉日 / 卦档,一次只见一摊 ——
+  const VIEWS = {
+    ask: ['sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
+    boards: ['board-menu', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj'],
+    jiri: ['sec-jiri'],
+    hist: ['sec-hist'],
+  };
+  const BOARD_IDS = ['sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj'];
+  const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
+  let curView = 'ask', curBoard = null;
+  function unfoldSec(id) {
+    const fb = document.querySelector('#' + id + ' .foldbody');
+    if (fb) fb.classList.remove('hidden');
+    const tri = document.querySelector('#' + id + ' .foldtri');
+    if (tri) tri.textContent = '▾';
+  }
+  function showView(v) {
+    curView = v;
+    ALL_VIEW_IDS.forEach(id => { const el = $(id); if (el) el.classList.toggle('voff', !VIEWS[v].includes(id)); });
+    document.querySelector('.tabs').classList.toggle('voff', v !== 'ask');
+    if (v === 'boards') {
+      $('board-menu').classList.toggle('voff', !!curBoard);
+      BOARD_IDS.forEach(b => $(b).classList.toggle('voff', !curBoard || b !== curBoard));
+      $('board-back').classList.toggle('voff', !curBoard);
+    } else {
+      $('board-back').classList.add('voff');
+    }
+    document.querySelectorAll('#bottomnav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+    if (v === 'jiri') { unfoldSec('sec-jiri'); setTimeout(jrEnsure, 0); }
+    if (v === 'hist') unfoldSec('sec-hist');
+    window.scrollTo({ top: 0 });
+  }
+  function openBoard(id) {
+    curBoard = id;
+    unfoldSec(id);
+    showView('boards');
+  }
+  window.dxShowView = showView; window.dxOpenBoard = openBoard;
+  $('bottomnav').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.v === 'boards') curBoard = null; // 点「专项」总是回菜单
+    showView(b.dataset.v);
+  });
+  $('board-menu').addEventListener('click', e => {
+    const c = e.target.closest('.bcard');
+    if (c) openBoard(c.dataset.b);
+  });
+  $('btn-board-back').addEventListener('click', () => { curBoard = null; showView('boards'); });
+  showView('ask');
 
   // —— 日间/夜间主题(<head> 里的小脚本已提前上色,避免闪白)——
   const TKEY = 'dongxuan_theme';
