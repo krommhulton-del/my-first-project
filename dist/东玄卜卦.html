@@ -375,7 +375,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.39</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.40</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -604,6 +604,7 @@
   <section id="board-menu" class="voff">
     <h2>专 项 · 各有各的阵法</h2>
     <div class="bmenu">
+      <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dawen"><span class="bg">问</span><span><span class="bt">大问拆阵</span><span class="bd">一句大问,拆成一套卦阵逐个起,汇总深断</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-zhuanyun"><span class="bg">运</span><span><span class="bt">转 运</span><span class="bd">近来不顺?先诊断根源,再给能落地的做法</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-xinyuan"><span class="bg">愿</span><span><span class="bt">心 愿</span><span class="bd">想办件事:成不成、什么时候、怎么做最旺</span></span><span class="bx">›</span></button>
@@ -746,6 +747,36 @@
   </div>
   </section>
 
+  <section id="sec-yinyuan" class="fold">
+    <h2 class="foldh">姻 缘 · 恋爱专用(问正缘 / 断某人)<span class="foldtri">▸</span></h2>
+    <div class="foldbody hidden">
+    <div class="note">只办恋爱的事,只给正面答案:<b>是/否、几成、年月日、厘米、位数区间</b>,第一句就是答案。顶栏「问卦人」的性别决定断法取用(男看妻财、女看官鬼),先选上。</div>
+    <div class="qwho">还没对象,问正缘:
+      <button id="btn-yl-zl" class="primary">摆正缘八卦阵</button>
+      <span class="qwhint">何时·画像·身高·财富·职业·相识·TA的心思·验证,一次摆齐</span>
+    </div>
+    <div class="qwho" style="align-items:flex-start">心里有个人,断TA:
+      <textarea id="yl-p" placeholder="一两句就够:如「同事,男,大我3岁,最近常找我聊天」" style="flex:1 1 220px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.92rem;min-height:52px;resize:vertical"></textarea>
+      <button id="btn-yl-dr" class="primary">摆断人六卦阵</button>
+    </div>
+    <div id="yl-status"></div>
+    <div id="yl-plan"></div>
+    <div id="yl-actions" class="btnrow hidden">
+      <button id="btn-yl-read" class="gold">汇总深断</button>
+      <button id="btn-yl-clear" class="ghost">清空此阵</button>
+    </div>
+    <div id="yl-out" class="aiout hidden"></div>
+    <div id="yl-followup" class="hidden">
+      <div class="fuhint">接着问(左键就已起诸卦答;右键为新问题再掷一卦):</div>
+      <textarea id="yl-fu" placeholder="例:TA现在有对象吗?/ 我们哪一年结婚?"></textarea>
+      <div class="btnrow">
+        <button id="btn-yl-fu" class="gold">追 问</button>
+        <button id="btn-yl-fugua" class="primary">掷一卦再答</button>
+      </div>
+    </div>
+  </div>
+  </section>
+
   <section id="sec-jiri" class="fold">
     <h2 class="foldh">吉 日 历 · 挑好日子(黄历 × 你的生辰)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
@@ -783,7 +814,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.39 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.40 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -5875,6 +5906,153 @@
     wjStatus(`已起 ${wjDone()}/3 卦。${wjDone() >= 3 ? '三卦齐了,点「解卦成文」。' : ''}`);
   });
 
+  // —— 姻缘·恋爱专用:正缘八卦阵 / 断某人六卦阵 ——
+  let ylPlan = null, ylConvo = null, ylBusy = false;
+  const YL_ZL_PLAN = {
+    kind: 'zl', note: '正缘八卦阵:何时、其人、相逢、验证,每问一卦。',
+    groups: [
+      { title: '天时 · 何时开始', why: '先把日子钉死', casts: [
+        { method: 'liuyao', q: '我什么时候开始谈下一段恋爱?', focus: '应期落到公历年月日(材料有取期锚,采纳或依卦面取冲应/月应并明说),再给前后两周的窗;把握几成' }] },
+      { title: '其人 · 长什么样、什么家底', why: '画像画到能认出来', casts: [
+        { method: 'liuyao', q: '我的下一任是什么样的人?', focus: '年龄段(跨度≤10岁)、长相三笔(脸型肤色五官各一)、性格两笔、气质一句' },
+        { method: 'liuyao', q: 'TA的身高与身材具体如何?', focus: '身高给厘米区间且跨度≤8cm:以对方性别常人身高起基准(男172-178、女158-165),用神五行定形(木高瘦/土矮壮/金中等方正/水偏圆润/火中上尖削),旺相往上加、休囚往下减,当场算给出;体型两笔、最显眼的一处体貌一笔' },
+        { method: 'liuyao', q: 'TA的财富量级与年薪具体在哪个档?', focus: '家底位数点死+波动区间;年薪位数+区间(材料有取数锚,采纳或依卦面明说取法);钱是挣的攒的还是家里的,一笔' },
+        { method: 'liuyao', q: 'TA做什么行当?', focus: '两三个具体职业方向(按卦宫五行六亲类象点名到行业),体制内外点死,大概职级一笔' }] },
+      { title: '相逢 · 怎么认识、TA怎么看我', why: '场合方位与心思', casts: [
+        { method: 'qimen', q: '我们会怎么认识?在什么场合方向?是否异地?', focus: '认识途径四选一点死(熟人引荐/工作学业/网络/偶遇),场合具体到类型;方位;同城/异地/异省直答' },
+        { method: 'liuyao', q: '到时TA对我的看法如何?谁先动心?', focus: '第一眼观感一句;谁先主动点死;TA上心程度十分制打分' }] },
+      { title: '验证', why: '校前七卦', casts: [
+        { method: 'liuyao', q: '以上七卦所断,与我姻缘实情相符否?', focus: '可信度几成;点名哪一卦要打折扣、建议改日重占哪路' }] },
+    ],
+  };
+  const YL_DR_PLAN = {
+    kind: 'dr', note: '断人六卦阵:每问一卦,直判是否。',
+    groups: [
+      { title: '断这个人', why: '六问全是正面答案', casts: [
+        { method: 'liuyao', q: '«P»——TA会成为我的下一任对象吗?', focus: '第一句就是「会/不会」+几成;若会,几个月内落定(给月份窗)' },
+        { method: 'liuyao', q: '«P»——TA是不是我的正缘?', focus: '正缘/半路缘/劫缘三选一点死;凭据一句(用神持世临应、合冲)' },
+        { method: 'liuyao', q: '«P»——TA现在对我是什么心思?', focus: '喜欢/无感/暧昧观望三选一点死,上心程度十分制;TA最大的顾虑一笔' },
+        { method: 'liuyao', q: '«P»——TA会对我好吗?处得长久吗?', focus: '对我好到几分(十分制);长久几成;最大的坎点名' },
+        { method: 'liuyao', q: '«P»——TA旺我还是耗我?', focus: '旺/耗/平三选一点死;旺在哪路或耗在哪路(财/事业/心气)点名' },
+        { method: 'liuyao', q: '以上五卦所断,与这个人的实情相符否?', focus: '可信度几成;打折之卦点名' }] },
+    ],
+  };
+  const YL_RULES = '【姻缘断法铁律】①取用:问卦人为男以妻财为用神、为女以官鬼为用神;顶栏性别未填则以世应论并开头明说一句。②正面答案铁律:每一路第一句必须就是答案——会/不会、是/否、几成、公历年月日、厘米区间、位数与区间、三选一点死——先答案,后凭据,再一笔细节;禁止任何铺垫句开头。③身高:必须给厘米数区间且跨度不超过8厘米,按focus里的基准加减法当场算,不许只说"中等偏高"。④财富年薪:位数点死、区间说满,取数锚采纳或明说取法,不许含糊到"条件不错"。⑤心思量化:凡问喜不喜欢、上不上心、对我好不好,一律十分制打分。⑥异地:同城/异地/异省三选一,不许"看缘分"。⑦零说教零感慨:不谈恋爱观、不劝"多接触看看"、不发"缘分"之类的感慨,连安慰都不要——问什么答什么,答案+凭据+细节,完。⑧凶就直说:不成、无心、劫缘、耗我,照实报,一句不绕。⑨一枝一卦:追问超出已起诸卦的,明说要再掷一卦。';
+  function ylStatus(msg, err) { $('yl-status').textContent = msg; $('yl-status').classList.toggle('err', !!err); }
+  function ylDone() { return ylPlan ? ylPlan.groups.reduce((s, g) => s + g.casts.filter(c => c.done).length, 0) : 0; }
+  function ylTotal() { return ylPlan ? ylPlan.groups.reduce((s, g) => s + g.casts.length, 0) : 0; }
+  function renderYl() {
+    if (!ylPlan) { $('yl-plan').innerHTML = ''; $('yl-actions').classList.add('hidden'); return; }
+    $('yl-plan').innerHTML = ylPlan.groups.map((g, gi) =>
+      `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why)}</span></button><div class="dwbody">` +
+      g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method]}</span><span class="q">${esc(c.q)}</span>` +
+        (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary yl-cast" data-g="${gi}" data-c="${ci}">起卦</button>`) +
+      `</div>`).join('') +
+      `</div></div>`).join('');
+    $('yl-actions').classList.toggle('hidden', ylDone() === 0);
+  }
+  async function ylAsk(turns, isFollow) {
+    ylBusy = true; $('btn-yl-read').disabled = true; $('btn-yl-fu').disabled = true; $('btn-yl-fugua').disabled = true;
+    ylStatus(isFollow ? '东玄接着断……' : '东玄凝神,逐路直断……');
+    const out = $('yl-out'); out.classList.remove('hidden');
+    if (isFollow) { const y = document.createElement('div'); y.className = 'fq-you'; y.innerHTML = '<b>你问:</b>' + esc(turns[turns.length - 1].content.split('\n')[0].slice(0, 60)); out.appendChild(y); }
+    else out.innerHTML = '';
+    const ans = document.createElement('div'); ans.className = 'fq-ans'; ans.innerHTML = '<span class="cursor">▍</span>'; out.appendChild(ans);
+    let text = '';
+    try {
+      const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); });
+      text = r.text; ans.textContent = text;
+      if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { ylStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
+      else if (!text) throw new Error('未收到内容');
+      else {
+        ylConvo = { turns: turns.concat([{ role: 'assistant', content: text }]) };
+        $('yl-followup').classList.remove('hidden');
+        if (isFollow) { $('yl-fu').value = ''; ylStatus('答毕。可接着问,新问题用「掷一卦再答」。'); }
+        else {
+          ylStatus('断语已出,每路第一句就是答案。可接着追问。已存入卦档。');
+          const recId = saveRec({
+            method: '姻缘', question: ylPlan.kind === 'zl' ? '姻缘:问正缘(八卦阵)' : `姻缘:断某人(${(ylPlan.p || '').slice(0, 20)})`,
+            headline: `${ylDone()}/${ylTotal()} 卦`, level: '缘', dx: ylPlan.note,
+            report: ylPlan.groups.map(g => g.casts.filter(c => c.done).map(c => `【${g.title}】${c.q}\n${c.report}`).join('\n\n')).filter(Boolean).join('\n\n'),
+          });
+          attachAiReading(recId, $('ai-model').value, text);
+        }
+      }
+    } catch (e) {
+      ylStatus((isFollow ? '追问未成:' : '汇总未成:') + aiErrHint(e, $('ai-provider').value), true);
+      if (!text) ans.remove();
+    } finally { ylBusy = false; $('btn-yl-read').disabled = false; $('btn-yl-fu').disabled = false; $('btn-yl-fugua').disabled = false; }
+  }
+  $('btn-yl-zl').addEventListener('click', () => {
+    ylPlan = JSON.parse(JSON.stringify(YL_ZL_PLAN));
+    ylConvo = null; $('yl-out').classList.add('hidden'); $('yl-out').innerHTML = ''; $('yl-followup').classList.add('hidden');
+    renderYl();
+    ylStatus(`正缘八卦阵已摆好${gender('q') ? '' : '(顶栏性别没填,断法只能按世应论——建议先去「问卦」页填上)'}。心里想着下一段感情,逐个点「起卦」;起完点「汇总深断」。`);
+  });
+  $('btn-yl-dr').addEventListener('click', () => {
+    const p = $('yl-p').value.trim();
+    if (!p) { ylStatus('先用一两句写下这个人(如「同事,男,大我3岁」)。', true); return; }
+    ylPlan = JSON.parse(JSON.stringify(YL_DR_PLAN));
+    ylPlan.p = p;
+    ylPlan.groups.forEach(g => g.casts.forEach(c => { c.q = c.q.replace(/«P»/g, p); }));
+    ylConvo = null; $('yl-out').classList.add('hidden'); $('yl-out').innerHTML = ''; $('yl-followup').classList.add('hidden');
+    renderYl();
+    ylStatus('断人六卦阵已摆好。心里想着这个人,逐个点「起卦」;起完点「汇总深断」。');
+  });
+  $('btn-yl-read').addEventListener('click', () => {
+    if (ylBusy || !ylPlan) return;
+    if (!ylDone()) { ylStatus('还没起卦——先在阵里点「起卦」。', true); return; }
+    if (!getKey()) { ylStatus(`汇总深断需先设置 ${curProvider().label} API Key(见「问卦」页「东玄深断」栏)。`, true); return; }
+    let material = `【姻缘专断 · ${ylPlan.kind === 'zl' ? '问正缘' : '断某人'}】\n${ylPlan.kind === 'dr' ? `【这个人:${ylPlan.p}】\n` : ''}${YL_RULES}\n【规矩】每卦只答其小问并给足focus所列;未起之卦直说"未起卦,此项不断"。`;
+    for (const g of ylPlan.groups) {
+      const done = g.casts.filter(c => c.done);
+      if (!done.length) continue;
+      material += `\n\n════ ${g.title} ════`;
+      for (const c of done) material += `\n——${DW_METHODS[c.method]}卦 · 所问:${c.q}\n(此卦必须给:${c.focus})\n${c.report}`;
+    }
+    material += genderMaterialLine('q') + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
+    return ylAsk([{ role: 'user', content: material }], false);
+  });
+  $('btn-yl-fu').addEventListener('click', () => {
+    if (ylBusy) return;
+    if (!ylConvo) { ylStatus('先汇总深断,再追问。', true); return; }
+    const t = $('yl-fu').value.trim();
+    if (!t) { ylStatus('先打上你要问的。', true); return; }
+    return ylAsk(ylConvo.turns.concat([{ role: 'user', content: t + '\n(就着已起诸卦答,第一句仍须是正面答案;此问若超出诸卦所覆,明说"要掷一卦再答",不许空断。)' }]), true);
+  });
+  $('btn-yl-fugua').addEventListener('click', () => {
+    if (ylBusy) return;
+    if (!ylConvo) { ylStatus('先汇总深断,再掷卦追问。', true); return; }
+    const t = $('yl-fu').value.trim();
+    if (!t) { ylStatus('先打上新问题,再掷一卦。', true); return; }
+    const c = { method: 'liuyao', q: t };
+    dwCastOne(c);
+    const material = `【追卦】所问:${t}\n${c.report}\n(依这一卦答此问,第一句就是正面答案;姻缘铁律照旧,与前文诸卦冲突处以本卦为准并明说。)`;
+    ylStatus(`已为此问掷一卦(${c.summary || '成卦'}),断中……`);
+    return ylAsk(ylConvo.turns.concat([{ role: 'user', content: material }]), true);
+  });
+  $('btn-yl-clear').addEventListener('click', () => {
+    ylPlan = null; ylConvo = null; renderYl();
+    $('yl-out').classList.add('hidden'); $('yl-out').innerHTML = ''; $('yl-followup').classList.add('hidden');
+    ylStatus('阵已清空。');
+  });
+  $('yl-plan').addEventListener('click', e => {
+    const gh = e.target.closest('.dwgh');
+    if (gh) {
+      const body = gh.parentElement.querySelector('.dwbody');
+      const nowHidden = body.classList.toggle('hidden');
+      gh.querySelector('.tri').textContent = nowHidden ? '▸' : '▾';
+      return;
+    }
+    const b = e.target.closest('.yl-cast');
+    if (!b || !ylPlan) return;
+    const c = ylPlan.groups[Number(b.dataset.g)].casts[Number(b.dataset.c)];
+    if (!c || c.done) return;
+    dwCastOne(c);
+    renderYl();
+    ylStatus(`已起 ${ylDone()}/${ylTotal()} 卦。${ylDone() >= ylTotal() ? '齐了,点「汇总深断」。' : ''}`);
+  });
+
   // —— 梅花易数 ——
   const MH_RULES = '【梅花断法】体卦为己、用卦为事应;用生体大吉,比和吉,体克用可成而迟,体生用耗泄不利,用克体凶。互卦察中间过程,变卦定结局;体卦旺衰以月令五行论;应期以体用卦数或变卦气数推,近取日时、远取月。八卦万物类象随所问细取。';
   function doMeihua() {
@@ -6395,11 +6573,11 @@
   // —— 视图路由:问卦 / 专项(卡片菜单→单板块)/ 吉日 / 卦档,一次只见一摊 ——
   const VIEWS = {
     ask: ['sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj'],
+    boards: ['board-menu', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj'];
+  const BOARD_IDS = ['sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {

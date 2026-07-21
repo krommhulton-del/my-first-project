@@ -597,6 +597,35 @@ await t('未来镜:三卦成景、文体视角可选、无Key成文给提示、�
   ok((await page.locator('#wj-plan .dwgroup').count()) === 0, '清空后应无阵');
 });
 
+await t('姻缘板块:正缘八卦阵、断人六卦阵、无Key深断给提示', async () => {
+  await page.evaluate(() => dxOpenBoard('sec-yinyuan'));
+  // 正缘阵:8卦,含一奇门
+  await page.click('#btn-yl-zl');
+  ok((await page.locator('#yl-plan .yl-cast').count()) === 8, '正缘阵应8卦');
+  const badges = await page.locator('#yl-plan .m').allTextContents();
+  ok(badges.filter(b => b === '六爻').length === 7 && badges.includes('奇门'), '七六爻一奇门:' + badges.join(','));
+  const qs = await page.locator('#yl-plan .q').allTextContents();
+  ok(qs.some(q => q.includes('身高与身材')) && qs.some(q => q.includes('财富量级')) && qs.some(q => q.includes('是否异地')), '八问应含身高/财富/异地专卦:' + qs.join('|').slice(0, 80));
+  // 起两卦 → 深断入口
+  await page.locator('#yl-plan .yl-cast').first().click();
+  await page.locator('#yl-plan .yl-cast').first().click();
+  ok((await page.locator('#yl-plan .res').count()) === 2, '两卦应✓');
+  ok(!(await page.locator('#yl-actions').evaluate(el => el.classList.contains('hidden'))), '深断入口应出现');
+  await page.click('#btn-yl-read');
+  ok((await page.textContent('#yl-status')).includes('API Key'), '无Key应提示');
+  // 断人阵:必填人,6卦,问题带人
+  await page.click('#btn-yl-dr');
+  ok((await page.textContent('#yl-status')).includes('一两句'), '空信息应拦');
+  await page.fill('#yl-p', '同事,男,大我3岁');
+  await page.click('#btn-yl-dr');
+  ok((await page.locator('#yl-plan .yl-cast').count()) === 6, '断人阵应6卦');
+  ok((await page.locator('#yl-plan .q').first().textContent()).includes('同事,男'), '卦问应带此人');
+  await page.locator('#yl-plan .yl-cast').first().click();
+  ok((await page.locator('#yl-plan .res').count()) === 1, '断人第一卦应✓');
+  await page.click('#btn-yl-clear');
+  ok((await page.locator('#yl-plan .dwgroup').count()) === 0, '清空后应无阵');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
