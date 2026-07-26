@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Claude 桌面宠物</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="stage">
+    <div id="bubble" class="interactive hidden"><span id="bubble-text"></span></div>
+
+    <div id="chatbox" class="interactive hidden">
+      <input id="chat-input" type="text" maxlength="200"
+             placeholder="和小 Claude 说点什么…(Esc 关闭)" autocomplete="off" />
+    </div>
+
+    <div id="shadow"></div>
+
+    <div id="pet" class="interactive">
+      <svg id="pet-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <g id="star">
+          <!-- 8 根光芒 -->
+          <g id="rays" fill="#D97757">
+            <rect x="92" y="28" width="16" height="46" rx="8" transform="rotate(0 100 108)" />
+            <rect x="92" y="28" width="16" height="46" rx="8" transform="rotate(45 100 108)" />
+            <rect x="92" y="28" width="16" height="46" rx="8" transform="rotate(90 100 108)" />
+            <rect x="92" y="28" width="16" height="46" rx="8" transform="rotate(135 100 108)" />
+            <rect x="92" y="28" width="16" height="46" rx="8" transform="rotate(180 100 108)" />
+            <rect x="92" y="28" width="16" height="46" rx="8" transform="rotate(225 100 108)" />
+            <rect x="92" y="28" width="16" height="46" rx="8" transform="rotate(270 100 108)" />
+            <rect x="92" y="28" width="16" height="46" rx="8" transform="rotate(315 100 108)" />
+          </g>
+
+          <!-- 身体 -->
+          <circle id="body-circle" cx="100" cy="108" r="52" fill="#E28963" />
+
+          <!-- 脸 -->
+          <g id="face">
+            <g id="eyes" fill="#38251C">
+              <ellipse class="eye" cx="82" cy="102" rx="6" ry="8.5" />
+              <ellipse class="eye" cx="118" cy="102" rx="6" ry="8.5" />
+            </g>
+            <g id="happy-eyes" stroke="#38251C" stroke-width="4" stroke-linecap="round" fill="none">
+              <path d="M73 104 q9 -10 18 0" />
+              <path d="M109 104 q9 -10 18 0" />
+            </g>
+            <g id="sleep-eyes" stroke="#38251C" stroke-width="4" stroke-linecap="round" fill="none">
+              <path d="M74 103 h16" />
+              <path d="M110 103 h16" />
+            </g>
+            <circle class="blush" cx="70" cy="117" r="7.5" fill="#F2A283" opacity="0.75" />
+            <circle class="blush" cx="130" cy="117" r="7.5" fill="#F2A283" opacity="0.75" />
+            <path id="mouth" d="M91 122 q9 9 18 0" stroke="#38251C" stroke-width="4"
+                  stroke-linecap="round" fill="none" />
+            <path id="mouth-o" d="M100 122 m-5 0 a5 6 0 1 0 10 0 a5 6 0 1 0 -10 0"
+                  fill="#38251C" />
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <script src="pet.js"></script>
+</body>
+</html>
