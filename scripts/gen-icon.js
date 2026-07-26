@@ -1,39 +1,34 @@
 // 生成 assets/icon.png(托盘 / 窗口图标)—— 零依赖,纯 Node 实现
-// 图案:Clawd,Claude Code 的经典 8-bit 像素螃蟹 🦀
+// 图案:官方 Clawd,Claude Code 启动画面字符画的逐格展开:
+//    ▐▛███▜▌
+//   ▝▜█████▛▘
+//     ▘▘ ▝▝
 // 用法:node scripts/gen-icon.js
 
 const zlib = require('zlib');
 const fs = require('fs');
 const path = require('path');
 
-// 与 renderer/index.html 中的 SVG 同一张 16x14 像素图
-// X = 橙色身体,E = 黑色眼睛,. = 透明
+// 与 renderer/index.html 中的 SVG 同一张 18x5 亚格图
+// X = 橙色,. = 透明(眼睛是原版的负空间缺口)
 const GRID = [
-  '.XX.XX....XX.XX.',
-  '.XXXXX....XXXXX.',
-  '..XXX......XXX..',
-  '...XXXXXXXXXX...',
-  '..XXXXXXXXXXXX..',
-  '.XXXXEEXXEEXXXX.',
-  '.XXXXEEXXEEXXXX.',
-  '.XXXXXXXXXXXXXX.',
-  '.XXXXXXXXXXXXXX.',
-  '.XXXXXXXXXXXXXX.',
-  '..XXXXXXXXXXXX..',
-  '...XXXXXXXXXX...',
-  '....X.X..X.X....',
-  '....X.X..X.X....',
+  '...XXXXXXXXXXXX...',
+  '...XX.XXXXXX.XX...',
+  '.XXXXXXXXXXXXXXXX.',
+  '...XXXXXXXXXXXX...',
+  '....X.X....X.X....',
 ];
 
-const CELL = 4;                       // 每格 4px
-const W = GRID[0].length * CELL;      // 64
-const H = GRID.length * CELL;         // 56
+// 终端半格字符的亚格宽高比是 1:2
+const CELL_W = 3;
+const CELL_H = 6;
+const W = GRID[0].length * CELL_W;    // 54
+const H = GRID.length * CELL_H;       // 30
 const SIZE = 64;                      // 画布 64x64,居中
 const OFF_X = Math.floor((SIZE - W) / 2);
 const OFF_Y = Math.floor((SIZE - H) / 2);
 
 const ORANGE = [217, 119, 87, 255]; // #D97757
-const DARK = [34, 22, 16, 255];     // 眼睛
 const NONE = [0, 0, 0, 0];
 
 // ---------- 最小 PNG 编码器 ----------
@@ -100,13 +95,10 @@ function encodePNG(width, height, rgba) {
 const rgba = Buffer.alloc(SIZE * SIZE * 4);
 
 function colorAt(px, py) {
-  const gx = Math.floor((px - OFF_X) / CELL);
-  const gy = Math.floor((py - OFF_Y) / CELL);
+  const gx = Math.floor((px - OFF_X) / CELL_W);
+  const gy = Math.floor((py - OFF_Y) / CELL_H);
   if (gy < 0 || gy >= GRID.length || gx < 0 || gx >= GRID[0].length) return NONE;
-  const ch = GRID[gy][gx];
-  if (ch === 'X') return ORANGE;
-  if (ch === 'E') return DARK;
-  return NONE;
+  return GRID[gy][gx] === 'X' ? ORANGE : NONE;
 }
 
 for (let y = 0; y < SIZE; y++) {

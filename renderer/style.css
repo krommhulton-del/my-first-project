@@ -38,9 +38,9 @@ body.preview {
   position: absolute;
   left: 50%;
   bottom: 2px;
-  width: 160px;
-  height: 160px;
-  margin-left: -80px;
+  width: 198px;
+  height: 110px;
+  margin-left: -99px;
   cursor: grab;
   transform-origin: 50% 100%;
   animation: bob 3.4s ease-in-out infinite;
@@ -56,11 +56,6 @@ body.flip #pet-svg {
   transform: scaleX(-1);
 }
 
-/* 钳子:像素风一格一格地上下夹动 */
-#claws {
-  animation: claw-bob 2.6s steps(1, end) infinite;
-}
-
 /* 走路时小短腿快速倒腾 */
 body.walk #legs {
   animation: skitter 0.24s steps(1, end) infinite;
@@ -71,9 +66,9 @@ body.walk #legs {
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: 96px;
+  width: 150px;
   height: 14px;
-  margin-left: -48px;
+  margin-left: -75px;
   border-radius: 50%;
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0) 70%);
   animation: shadow-bob 3.4s ease-in-out infinite;
@@ -86,44 +81,15 @@ body.fall #shadow {
   transform: scale(0.6);
 }
 
-/* ---------- 眼睛 / 表情 ---------- */
+/* ---------- 眼睛(原版负空间缺口) ----------
+   眨眼/睡觉 = 用身体同色的"眼皮"盖住缺口,造型本身零改动 */
 
-.eye {
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 0.08s ease;
-}
-
-body.blink .eye {
-  transform: scaleY(0.08);
-}
-
-body.drag .eye {
-  transform: scale(1.15, 1.35);
-}
-
-#happy-eyes,
-#sleep-eyes,
-#mouth-o {
+#eyelids {
   display: none;
 }
 
-body.happy #eyes,
-body.sleep #eyes {
-  display: none;
-}
-
-body.happy #happy-eyes {
-  display: block;
-}
-
-body.sleep #sleep-eyes {
-  display: block;
-}
-
-/* 拖拽 / 下落时露出 o 嘴(惊讶) */
-body.drag #mouth-o,
-body.fall #mouth-o {
+body.blink #eyelids,
+body.sleep #eyelids {
   display: block;
 }
 
@@ -251,14 +217,6 @@ body.wiggle #pet {
 @keyframes shadow-bob {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(0.92); opacity: 0.85; }
-}
-
-@keyframes claw-bob {
-  0%, 100% { transform: translateY(0); }
-  46% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-  62% { transform: translateY(-6px); }
-  66% { transform: translateY(0); }
 }
 
 @keyframes skitter {
