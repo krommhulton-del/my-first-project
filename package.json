@@ -3,21 +3,45 @@
   "version": "1.0.0",
   "description": "Clawd 🦀 住在你桌面上的 Claude Code 经典像素螃蟹 —— 透明置顶的 Electron 桌面宠物",
   "main": "main.js",
+  "author": "krommhulton-del",
   "scripts": {
     "start": "electron .",
-    "icon": "node scripts/gen-icon.js"
+    "icon": "node scripts/gen-icon.js",
+    "dist": "electron-builder --publish never"
   },
   "keywords": [
     "desktop-pet",
     "electron",
     "claude",
-    "shimeji"
+    "clawd"
   ],
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.110.0"
+    "@anthropic-ai/sdk": "^0.115.0"
   },
   "devDependencies": {
-    "electron": "^35.0.0"
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.0"
+  },
+  "build": {
+    "appId": "io.github.krommhulton-del.clawd-pet",
+    "productName": "Clawd",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**",
+      "assets/**"
+    ],
+    "win": {
+      "target": "portable"
+    },
+    "mac": {
+      "target": "zip",
+      "category": "public.app-category.entertainment"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Utility"
+    }
   }
 }

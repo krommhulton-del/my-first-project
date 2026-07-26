@@ -35,7 +35,20 @@
 - **系统托盘**:像素蟹图标,显示 / 隐藏、置顶开关、退出
 - **接入 Claude API 聊天**(可选):设置好 API Key 后,双击 Clawd 即可和真正的 Claude 对话
 
-## 🚀 运行
+## 📦 直接下载安装包(推荐)
+
+每次推送代码,GitHub Actions 都会自动打好三个平台的包:
+
+1. 打开仓库的 **Actions** 页面 → 点最新一次"打包桌面宠物"运行
+2. 在页面底部 **Artifacts** 区域下载对应系统的包(需登录 GitHub):
+
+| 系统 | 文件 | 用法 |
+|---|---|---|
+| Windows | `Clawd-Windows` → `Clawd *.exe` | 绿色版,双击即跑。SmartScreen 拦截时点"更多信息 → 仍要运行" |
+| macOS | `Clawd-macOS` → `Clawd-*-mac.zip` | 解压得到 Clawd.app。未签名,首次需**右键 → 打开** |
+| Linux | `Clawd-Linux` → `Clawd-*.AppImage` | `chmod +x` 后直接运行 |
+
+## 🚀 从源码运行
 
 需要 Node.js 18+。
 
@@ -45,6 +58,8 @@ cd my-first-project
 npm install
 npm start
 ```
+
+本地打包安装程序:`npm run dist`(产物在 `dist/` 目录)。
 
 ## 💬 开启真·聊天(可选)
 
