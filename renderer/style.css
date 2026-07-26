@@ -61,6 +61,125 @@ body.walk #legs {
   animation: skitter 0.24s steps(1, end) infinite;
 }
 
+/* ---------- 道具 & 形态 ---------- */
+
+.prop {
+  display: none;
+}
+
+/* 🛹 滑滑板:踩上滑板,整体抬高,身体随板颠簸 */
+body.skate #skateboard {
+  display: block;
+}
+
+#skateboard {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 176px;
+  height: 22px;
+  margin-left: -88px;
+  z-index: 1;
+}
+
+#skateboard::before {
+  /* 板面 */
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: #8a5a3d;
+  box-shadow: inset 0 -3px 0 #6f4530;
+}
+
+#skateboard .wheel {
+  position: absolute;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: #2e2a26;
+}
+
+#skateboard .wheel.w1 { left: 24px; }
+#skateboard .wheel.w2 { right: 24px; }
+
+body.skate #pet {
+  bottom: 24px;
+  animation: skate-bump 0.42s steps(1, end) infinite;
+}
+
+body.skate #skateboard {
+  animation: skate-bump 0.42s steps(1, end) infinite;
+}
+
+body.skate #legs {
+  animation: none; /* 双脚踩稳板面 */
+}
+
+body.skate #shadow {
+  transform: scaleX(1.08);
+}
+
+/* 💻 写代码:身前一台像素笔记本,屏幕上的代码行不停打字 */
+body.code #laptop {
+  display: block;
+}
+
+#laptop {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 72px;
+  margin-left: -36px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+#lap-screen {
+  position: relative;
+  width: 62px;
+  height: 44px;
+  margin: 0 auto;
+  background: #241f1b;
+  border: 4px solid #5a4c40;
+  overflow: hidden;
+}
+
+#lap-screen i {
+  display: block;
+  height: 5px;
+  margin: 5px 6px 0;
+  background: #d97757;
+  transform-origin: left center;
+}
+
+#lap-screen i:nth-child(1) { width: 78%; }
+#lap-screen i:nth-child(2) { width: 58%; background: #e8a17f; }
+#lap-screen i:nth-child(3) { width: 40%; }
+
+body.code #lap-screen i:nth-child(1) { animation: typeline 1.7s steps(7) infinite; }
+body.code #lap-screen i:nth-child(2) { animation: typeline 2.3s steps(9) infinite 0.4s; }
+body.code #lap-screen i:nth-child(3) { animation: typeline 1.3s steps(5) infinite 0.8s; }
+
+#lap-caret {
+  position: absolute;
+  left: 6px;
+  bottom: 5px;
+  width: 6px;
+  height: 8px;
+  background: #f0b48f;
+  animation: caret-blink 0.8s steps(1, end) infinite;
+}
+
+#lap-base {
+  width: 72px;
+  height: 9px;
+  background: #5a4c40;
+  box-shadow: inset 0 3px 0 #6d5c4d;
+}
+
 /* 地上的影子 */
 #shadow {
   position: absolute;
@@ -203,6 +322,14 @@ body.wiggle #pet {
   animation: float-up 2.6s ease-out forwards;
 }
 
+.floaty.code-bit {
+  color: #f0b48f;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  font-size: 13px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 .hidden {
   display: none !important;
 }
@@ -222,6 +349,21 @@ body.wiggle #pet {
 @keyframes skitter {
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(-5px); }
+}
+
+@keyframes skate-bump {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes typeline {
+  0% { transform: scaleX(0.12); }
+  100% { transform: scaleX(1); }
+}
+
+@keyframes caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 /* 横着走的小碎步(像素风,无旋转) */

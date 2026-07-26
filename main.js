@@ -122,6 +122,8 @@ ipcMain.on('pet:show-menu', (_e, state = {}) => {
   const template = [
     { label: '打个招呼 👋', click: () => send('talk') },
     { label: '出去散步 🚶', click: () => send('walk') },
+    { label: '滑滑板 🛹', click: () => send('skate') },
+    { label: '写代码 💻', click: () => send('code') },
     {
       label: state.sleeping ? '快起床!⏰' : '去睡觉 💤',
       click: () => send('toggle-sleep'),

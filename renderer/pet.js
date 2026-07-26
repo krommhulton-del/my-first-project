@@ -1,5 +1,5 @@
-// Claude 桌面宠物 —— 行为状态机
-// 状态:idle / walk / drag / fall / sleep / happy / chat
+// Clawd 桌面宠物 —— 行为状态机
+// 状态:idle / walk / skate / code / drag / fall / sleep / happy / chat
 // 没有 petAPI(直接在浏览器打开)时进入预览模式,宠物在页面内活动。
 
 (() => {
@@ -45,6 +45,8 @@
     sleeping: false,
     dragging: false,
     walking: false,
+    skating: false,
+    coding: false,
     falling: false,
     chatting: false,
     lastInteraction: Date.now(),
@@ -52,10 +54,13 @@
     walkX: 0, // 仅预览模式使用
   };
 
-  let walkTimer = null;
+  let moveTimer = null;
+  let moveEndTimer = null;
   let fallTimer = null;
   let bubbleTimer = null;
   let zzzTimer = null;
+  let codeFloatyTimer = null;
+  let codeEndTimer = null;
   let clickCount = 0;
   let clickTimer = null;
   let maybeDrag = null;
@@ -86,6 +91,21 @@
     '我的钳子除了卖萌,还会帮你夹住 bug',
   ];
 
+  const CODE_PHRASES = [
+    '咔嗒咔嗒……在写了在写了 ⌨️',
+    '进入心流模式,勿扰 🧑‍💻',
+    '让我修个 bug,马上好',
+    'npm install ing……进度 99%(卡住了)',
+  ];
+
+  const CODE_DONE_PHRASES = [
+    '搞定!git commit ✅',
+    '编译通过!奖励自己发个呆',
+    'bug 已夹出 🦀',
+  ];
+
+  const CODE_BITS = ['</>', '{ }', '01', 'λ', ';', '🐛'];
+
   const GREETING = '咔嚓!我是 Clawd 🦀\n双击和我聊天,右键有菜单哦';
 
   // ---------- 小工具 ----------
@@ -96,6 +116,11 @@
 
   function touch() {
     state.lastInteraction = Date.now();
+  }
+
+  function busy() {
+    return state.dragging || state.falling || state.walking ||
+           state.skating || state.coding || state.chatting;
   }
 
   // ---------- 气泡 ----------
@@ -118,14 +143,19 @@
     showBubble(pick(PHRASES), 4500);
   }
 
-  // ---------- 漂浮元素(爱心 / Zzz) ----------
+  // ---------- 漂浮元素(爱心 / Zzz / 代码碎片) ----------
 
   function spawnFloaty(text, className = '') {
     const el = document.createElement('div');
     el.className = `floaty ${className}`;
     el.textContent = text;
-    el.style.left = `${rand(70, 140)}px`;
-    el.style.bottom = `${rand(120, 150)}px`;
+    if (className.includes('code-bit')) {
+      el.style.left = `${rand(50, 150)}px`;
+      el.style.bottom = `${rand(60, 95)}px`;
+    } else {
+      el.style.left = `${rand(70, 140)}px`;
+      el.style.bottom = `${rand(100, 130)}px`;
+    }
     stage.appendChild(el);
     setTimeout(() => el.remove(), 2800);
   }
@@ -136,13 +166,13 @@
     setTimeout(() => {
       if (!state.sleeping && !state.dragging) {
         body.classList.add('blink');
-        setTimeout(() => body.classList.remove('blink'), 150);
+        setTimeout(() => body.classList.remove('blink'), 160);
         // 偶尔连眨两下
         if (Math.random() < 0.3) {
           setTimeout(() => {
             body.classList.add('blink');
-            setTimeout(() => body.classList.remove('blink'), 150);
-          }, 260);
+            setTimeout(() => body.classList.remove('blink'), 160);
+          }, 280);
         }
       }
       blinkLoop();
@@ -176,7 +206,8 @@
     state.sleeping = on;
     body.classList.toggle('sleep', on);
     if (on) {
-      stopWalk();
+      stopMove();
+      stopCode(true);
       hideBubble();
       closeChat();
       zzzTimer = setInterval(() => spawnFloaty('z', 'zzz'), 1600);
@@ -194,17 +225,20 @@
     }
   }
 
-  // ---------- 散步 ----------
+  // ---------- 移动(散步 / 滑滑板共用) ----------
 
-  async function startWalk(duration = rand(2500, 5000)) {
-    if (state.walking || state.dragging || state.falling || state.sleeping) return;
+  async function startMove(kind, speed, duration) {
+    if (state.walking || state.skating || state.dragging ||
+        state.falling || state.sleeping || state.coding) return;
     const geo = await api.getGeometry();
     const minX = geo.workArea.x + 4;
     const maxX = geo.workArea.x + geo.workArea.width - geo.width - 4;
     if (maxX <= minX) return;
 
-    state.walking = true;
-    body.classList.add('walk');
+    if (kind === 'walk') state.walking = true;
+    else state.skating = true;
+    body.classList.add(kind);
+
     let dir = Math.random() < 0.5 ? -1 : 1;
     let x = PREVIEW ? state.walkX : geo.x;
     setFlip(dir);
@@ -212,8 +246,8 @@
     // 预览模式在页面内活动的范围
     const half = Math.max(0, (geo.workArea.width - geo.width) / 2 - 8);
 
-    walkTimer = setInterval(() => {
-      x += dir * 2;
+    moveTimer = setInterval(() => {
+      x += dir * speed;
       if (PREVIEW) {
         if (x <= -half) { x = -half; dir = 1; setFlip(dir); }
         if (x >= half) { x = half; dir = -1; setFlip(dir); }
@@ -226,27 +260,61 @@
       }
     }, 16);
 
-    setTimeout(stopWalk, duration);
+    moveEndTimer = setTimeout(stopMove, duration);
   }
 
-  function stopWalk() {
-    if (!state.walking) return;
+  function stopMove() {
+    if (!state.walking && !state.skating) return;
+    clearInterval(moveTimer);
+    clearTimeout(moveEndTimer);
+    moveTimer = moveEndTimer = null;
     state.walking = false;
-    clearInterval(walkTimer);
-    walkTimer = null;
+    state.skating = false;
     body.classList.remove('walk');
+    body.classList.remove('skate');
     body.classList.remove('flip');
   }
 
+  const startWalk = (d = rand(2500, 5000)) => startMove('walk', 2, d);
+  const startSkate = (d = rand(3500, 6500)) => startMove('skate', 5, d);
+
   function setFlip(dir) {
-    // 朝右走时翻转(默认造型可以理解为朝左)
     body.classList.toggle('flip', dir > 0);
+  }
+
+  // ---------- 写代码 ----------
+
+  function startCode(duration = rand(7000, 11000)) {
+    if (state.coding || state.dragging || state.falling || state.sleeping) return;
+    stopMove();
+    state.coding = true;
+    body.classList.add('code');
+    showBubble(pick(CODE_PHRASES), 3500);
+    codeFloatyTimer = setInterval(
+      () => spawnFloaty(pick(CODE_BITS), 'code-bit'),
+      1300
+    );
+    codeEndTimer = setTimeout(() => stopCode(false), duration);
+  }
+
+  function stopCode(silent) {
+    if (!state.coding) return;
+    state.coding = false;
+    body.classList.remove('code');
+    clearInterval(codeFloatyTimer);
+    clearTimeout(codeEndTimer);
+    codeFloatyTimer = codeEndTimer = null;
+    if (!silent && Math.random() < 0.7) {
+      showBubble(pick(CODE_DONE_PHRASES), 3500);
+      doWiggle();
+    }
   }
 
   // ---------- 拖拽 & 下落 ----------
 
   function beginDrag() {
-    stopWalk();
+    stopMove();
+    stopCode(true);
     stopFall();
     state.dragging = true;
     body.classList.add('drag');
@@ -312,6 +380,7 @@
   function openChat() {
     wake();
     touch();
+    stopCode(true);
     state.chatting = true;
     chatboxEl.classList.remove('hidden');
     chatInput.focus();
@@ -462,7 +531,18 @@
         break;
       case 'walk':
         wake();
+        stopCode(true);
         startWalk(rand(3000, 6000));
+        break;
+      case 'skate':
+        wake();
+        stopCode(true);
+        stopMove();
+        startSkate(rand(4000, 7000));
+        break;
+      case 'code':
+        wake();
+        startCode();
         break;
       case 'toggle-sleep':
         if (state.sleeping) wake();
@@ -480,18 +560,18 @@
 
   function behaviorLoop() {
     setTimeout(() => {
-      const busy = state.dragging || state.falling || state.walking || state.chatting;
-
-      if (!busy && !state.sleeping) {
+      if (!busy() && !state.sleeping) {
         const r = Math.random();
-        if (r < 0.22) startWalk();
-        else if (r < 0.42) sayRandom();
-        else if (r < 0.52) doWiggle();
+        if (r < 0.18) startWalk();
+        else if (r < 0.26) startSkate();
+        else if (r < 0.38) startCode();
+        else if (r < 0.56) sayRandom();
+        else if (r < 0.64) doWiggle();
         // 其余时间安静地发呆
       }
 
       // 太久没人理 → 睡觉
-      if (!state.sleeping && !busy && Date.now() - state.lastInteraction > SLEEP_AFTER_MS) {
+      if (!state.sleeping && !busy() && Date.now() - state.lastInteraction > SLEEP_AFTER_MS) {
         setSleep(true);
       }
 
@@ -501,7 +581,13 @@
 
   // ---------- 启动 ----------
 
-  blinkLoop();
-  behaviorLoop();
-  setTimeout(() => showBubble(GREETING, 5000), 700);
+  // 调试 / 截图用:?pose=skate 或 ?pose=code 直接摆姿势
+  const forcedPose = new URLSearchParams(location.search).get('pose');
+  if (forcedPose === 'skate' || forcedPose === 'code') {
+    body.classList.add(forcedPose);
+  } else {
+    blinkLoop();
+    behaviorLoop();
+    setTimeout(() => showBubble(GREETING, 5000), 700);
+  }
 })();
