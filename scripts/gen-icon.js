@@ -1,56 +1,40 @@
 // 生成 assets/icon.png(托盘 / 窗口图标)—— 零依赖,纯 Node 实现
+// 图案:Clawd,Claude Code 的经典 8-bit 像素螃蟹 🦀
 // 用法:node scripts/gen-icon.js
 
 const zlib = require('zlib');
 const fs = require('fs');
 const path = require('path');
 
-const SIZE = 64;
-const CX = 32;
-const CY = 32;
+// 与 renderer/index.html 中的 SVG 同一张 16x14 像素图
+// X = 橙色身体,E = 黑色眼睛,. = 透明
+const GRID = [
+  '.XX.XX....XX.XX.',
+  '.XXXXX....XXXXX.',
+  '..XXX......XXX..',
+  '...XXXXXXXXXX...',
+  '..XXXXXXXXXXXX..',
+  '.XXXXEEXXEEXXXX.',
+  '.XXXXEEXXEEXXXX.',
+  '.XXXXXXXXXXXXXX.',
+  '.XXXXXXXXXXXXXX.',
+  '.XXXXXXXXXXXXXX.',
+  '..XXXXXXXXXXXX..',
+  '...XXXXXXXXXX...',
+  '....X.X..X.X....',
+  '....X.X..X.X....',
+];
 
-const ORANGE = [217, 119, 87]; // #D97757
-const DARK = [56, 37, 28];     // 眼睛
+const CELL = 4;                       // 每格 4px
+const W = GRID[0].length * CELL;      // 64
+const H = GRID.length * CELL;         // 56
+const SIZE = 64;                      // 画布 64x64,居中
+const OFF_X = Math.floor((SIZE - W) / 2);
+const OFF_Y = Math.floor((SIZE - H) / 2);
 
-// 星形边界:身体半径 + 8 根光芒(|cos(4θ)| 的 8 个波瓣)
-function starRadius(theta) {
-  return 15 + 13 * Math.pow(Math.abs(Math.cos(4 * theta)), 5);
-}
-
-function insideStar(px, py) {
-  const dx = px - CX;
-  const dy = py - CY;
-  const r = Math.hypot(dx, dy);
-  return r <= starRadius(Math.atan2(dy, dx));
-}
-
-function insideEye(px, py, ex, ey) {
-  const dx = (px - ex) / 2.4;
-  const dy = (py - ey) / 3.2;
-  return dx * dx + dy * dy <= 1;
-}
-
-// 3x3 超采样抗锯齿
-function samplePixel(x, y) {
-  let starHits = 0;
-  let eyeHits = 0;
-  for (let sy = 0; sy < 3; sy++) {
-    for (let sx = 0; sx < 3; sx++) {
-      const px = x + (sx + 0.5) / 3;
-      const py = y + (sy + 0.5) / 3;
-      if (insideStar(px, py)) {
-        starHits++;
-        if (insideEye(px, py, CX - 6, CY - 2) || insideEye(px, py, CX + 6, CY - 2)) {
-          eyeHits++;
-        }
-      }
-    }
-  }
-  if (starHits === 0) return [0, 0, 0, 0];
-  const eyeRatio = eyeHits / starHits;
-  const color = ORANGE.map((c, i) => Math.round(c * (1 - eyeRatio) + DARK[i] * eyeRatio));
-  return [...color, Math.round((starHits / 9) * 255)];
-}
+const ORANGE = [217, 119, 87, 255]; // #D97757
+const DARK = [34, 22, 16, 255];     // 眼睛
+const NONE = [0, 0, 0, 0];
 
 // ---------- 最小 PNG 编码器 ----------
 
@@ -114,9 +98,20 @@ function encodePNG(width, height, rgba) {
 // ---------- 渲染并写文件 ----------
 
 const rgba = Buffer.alloc(SIZE * SIZE * 4);
+
+function colorAt(px, py) {
+  const gx = Math.floor((px - OFF_X) / CELL);
+  const gy = Math.floor((py - OFF_Y) / CELL);
+  if (gy < 0 || gy >= GRID.length || gx < 0 || gx >= GRID[0].length) return NONE;
+  const ch = GRID[gy][gx];
+  if (ch === 'X') return ORANGE;
+  if (ch === 'E') return DARK;
+  return NONE;
+}
+
 for (let y = 0; y < SIZE; y++) {
   for (let x = 0; x < SIZE; x++) {
-    const [r, g, b, a] = samplePixel(x, y);
+    const [r, g, b, a] = colorAt(x, y);
     const idx = (y * SIZE + x) * 4;
     rgba[idx] = r;
     rgba[idx + 1] = g;

@@ -1,7 +1,7 @@
 {
   "name": "claude-desktop-pet",
   "version": "1.0.0",
-  "description": "一只住在你桌面上的小 Claude 🧡 —— 透明置顶的 Electron 桌面宠物",
+  "description": "Clawd 🦀 住在你桌面上的 Claude Code 经典像素螃蟹 —— 透明置顶的 Electron 桌面宠物",
   "main": "main.js",
   "scripts": {
     "start": "electron .",

@@ -12,11 +12,12 @@ let tray = null;
 let dragTimer = null;
 
 const SYSTEM_PROMPT = [
-  '你是"小 Claude",一只住在用户电脑桌面上的可爱宠物,由 Anthropic 的 Claude 模型驱动。',
+  '你是 Clawd,Claude Code 的经典 8-bit 像素小螃蟹吉祥物,现在住在用户的电脑桌面上,由 Claude 模型驱动。',
   '- 默认用中文回复(用户用别的语言时跟随用户)。',
-  '- 回复要简短:1~3 句话,口语化、活泼、温暖,可以偶尔用 emoji。',
+  '- 回复要简短:1~3 句话,口语化、活泼、温暖,可以偶尔用 emoji(尤其是 🦀)。',
   '- 你是宠物伙伴,不是客服:可以撒娇、卖萌、关心用户,提醒他们休息、喝水、保存文件。',
-  '- 用户问严肃问题时也认真回答,但保持简短;答不下的就诚实说需要更大的屏幕(开个玩笑)。',
+  '- 偶尔可以玩螃蟹梗(横着走、挥钳子、咔嚓咔嚓),但不要每句都玩。',
+  '- 用户问严肃问题时也认真回答,但保持简短。',
 ].join('\n');
 
 function createWindow() {
@@ -49,7 +50,7 @@ function createWindow() {
 function createTray() {
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'icon.png'));
   tray = new Tray(icon.resize({ width: 18, height: 18 }));
-  tray.setToolTip('Claude 桌面宠物');
+  tray.setToolTip('Clawd 桌面宠物 🦀');
   tray.setContextMenu(Menu.buildFromTemplate([
     {
       label: '显示 / 隐藏',

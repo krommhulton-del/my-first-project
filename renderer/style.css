@@ -56,10 +56,14 @@ body.flip #pet-svg {
   transform: scaleX(-1);
 }
 
-#rays {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: sway 7s ease-in-out infinite;
+/* 钳子:像素风一格一格地上下夹动 */
+#claws {
+  animation: claw-bob 2.6s steps(1, end) infinite;
+}
+
+/* 走路时小短腿快速倒腾 */
+body.walk #legs {
+  animation: skitter 0.24s steps(1, end) infinite;
 }
 
 /* 地上的影子 */
@@ -117,12 +121,7 @@ body.sleep #sleep-eyes {
   display: block;
 }
 
-/* 拖拽 / 下落时嘴巴变 O 型(惊讶) */
-body.drag #mouth,
-body.fall #mouth {
-  display: none;
-}
-
+/* 拖拽 / 下落时露出 o 嘴(惊讶) */
 body.drag #mouth-o,
 body.fall #mouth-o {
   display: block;
@@ -254,16 +253,27 @@ body.wiggle #pet {
   50% { transform: scale(0.92); opacity: 0.85; }
 }
 
-@keyframes sway {
-  0%, 100% { transform: rotate(-2.5deg); }
-  50% { transform: rotate(2.5deg); }
+@keyframes claw-bob {
+  0%, 100% { transform: translateY(0); }
+  46% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  62% { transform: translateY(-6px); }
+  66% { transform: translateY(0); }
 }
 
+@keyframes skitter {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-5px); }
+}
+
+/* 横着走的小碎步(像素风,无旋转) */
 @keyframes waddle {
-  0%, 100% { transform: rotate(-4deg) translateY(0); }
-  25% { transform: rotate(0deg) translateY(-4px); }
-  50% { transform: rotate(4deg) translateY(0); }
-  75% { transform: rotate(0deg) translateY(-4px); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+body.walk #pet {
+  animation-timing-function: steps(1, end);
 }
 
 @keyframes breathe {
@@ -286,11 +296,11 @@ body.wiggle #pet {
 }
 
 @keyframes wiggle-anim {
-  0%, 100% { transform: rotate(0); }
-  20% { transform: rotate(-8deg); }
-  45% { transform: rotate(8deg); }
-  70% { transform: rotate(-5deg); }
-  90% { transform: rotate(3deg); }
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  45% { transform: translateX(7px); }
+  70% { transform: translateX(-4px); }
+  90% { transform: translateX(2px); }
 }
 
 @keyframes pop {
