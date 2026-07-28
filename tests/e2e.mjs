@@ -572,12 +572,13 @@ await t('心愿板块:旺你牌、吉日窗、六卦阵、无Key深断给提示'
   ok((await page.locator('#xy-plan .dwgroup').count()) === 0, '清空后应无阵');
 });
 
-await t('未来镜:三卦成景、文体视角可选、无Key成文给提示、追问双轨在位', async () => {
+await t('未来镜:三卦成景、现成条零输入、无Key成文给提示、追问双轨在位', async () => {
   await page.evaluate(() => dxOpenBoard('sec-wj'));
+  // 现成条一点即填,不用自己写提示词
+  await page.locator('#wj-chips .fq').first().click();
+  ok((await page.inputValue('#wj-q')).includes('一年后'), '现成条应填入想看');
   await page.fill('#wj-q', '一年后我的日子是什么样');
-  await page.selectOption('#wj-style', '短篇小说');
   await page.selectOption('#wj-pov', '第三人称');
-  await page.selectOption('#wj-far', '一年后');
   await page.click('#btn-wj-start');
   ok((await page.locator('#wj-plan .wj-cast').count()) === 3, '应有三个起卦位');
   const badges = await page.locator('#wj-plan .m').allTextContents();

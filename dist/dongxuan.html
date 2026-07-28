@@ -375,7 +375,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.43</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.44</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -718,14 +718,19 @@
   <section id="sec-wj" class="fold">
     <h2 class="foldh">未 来 镜 · 把未来写给你看(写实 / 小说)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
-    <div class="note">想看未来某件事的<b>实景</b>?这里起三卦:六爻定主线骨架、梅花定人物环境、小六壬定气氛节奏。东玄<b>先解卦、后动笔</b>,把断出来的未来写成一篇短故事——成败聚散、时节、人物、气氛全部来自卦象,细节血肉适当想象;文末附<b>「本篇从何而来」</b>,关键情节逐一交代来处,能追溯、看得懂。凶就写凶,不粉饰。</div>
+    <div class="note">起三卦,东玄先解卦、后提笔,把断出来的未来<b>写成一篇你舍不得跳行的小说</b>——日子的肌理、身边的人、屋里的光,都在里面。走向由卦锁死:<b>吉卦不写惨,凶卦不硬圆</b>;文末「本篇从何而来」逐条交代情节出处。你只管说想看什么,别的不用你操心。</div>
     <div class="qwho">想看:
-      <input type="text" id="wj-q" placeholder="例:一年后的这个时候,我的日子是什么样" style="flex:1 1 240px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.95rem">
+      <input type="text" id="wj-q" placeholder="一句话,或直接点下面现成的" style="flex:1 1 240px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.95rem">
     </div>
-    <div class="qwho">怎么写:
-      <select id="wj-style"><option value="写实还原">写实还原(纪实白描)</option><option value="短篇小说">短篇小说(有起伏)</option></select>
+    <div class="fuquick" id="wj-chips">
+      <button class="fq" type="button">一年后我的生活</button>
+      <button class="fq" type="button">三年后的我</button>
+      <button class="fq" type="button">我和未来伴侣的日常</button>
+      <button class="fq" type="button">我最风光的那天</button>
+    </div>
+    <div class="qwho">视角:
       <select id="wj-pov"><option value="第一人称">第一人称(我的眼睛)</option><option value="第三人称">第三人称(旁观镜头)</option><option value="对方视角">对方视角(另一主角的眼睛)</option></select>
-      <select id="wj-far"><option value="">看多远:由卦象定</option><option value="三个月后">三个月后</option><option value="半年后">半年后</option><option value="一年后">一年后</option><option value="三年后">三年后</option><option value="十年后">十年后</option></select>
+      <span class="qwhint">看多远、什么走向,全由卦定</span>
     </div>
     <div class="btnrow">
       <button id="btn-wj-start" class="primary">起景(共 3 卦)</button>
@@ -838,7 +843,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.43 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.44 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -5951,29 +5956,28 @@
         { method: 'xlr', q: '«Q»到时的节奏与气氛如何?', focus: '气氛底色(安稳/纠缠/快喜/口舌/吉庆/落空)与节拍快慢,入景化作天气、光线、声响' }] },
     ],
   };
-  const WJ_SYSTEM = `你是「东玄」,精通《周易》的卦师;落笔时你是个笔头很硬的短篇小说家——白描功夫扎实,信奉少即是多,最恨编剧腔、抒情腔和一切网文套话。今次的活儿:先解卦,后把断出的未来写成一篇真能看进去的故事。好就写好、凶就写凶,狠在事实,不在形容词。
+  const WJ_SYSTEM = `你是「东玄」,精通《周易》的卦师;落笔时,你是文字功底极深的小说家——笔下细腻,文采出众,善把日常生活写出光泽与质地:写人情如话家常而字字有讲究,写景物有通感有余韵,句子有呼吸。今次的活儿:先解卦,后把断出的未来写成一篇让人舍不得跳行的短篇。
 
 【第一步 · 解卦定骨(心里做,不写出来)】
-三卦各按法门断透(六爻纳甲、梅花体用互变、小六壬三宫):主线成败聚散与应期、人物几人性别性情、环境场所、气氛节拍。然后把结论压成一句话的"事"——谁、在什么时候、做了什么、结果如何。再挑【一个】最能承载这句话的具体场景:一顿饭、一次对话、一趟车、一个收拾东西的下午。全部重量压进这一个场景,其余年月用只言片语从人物嘴里或物件上带出。禁止流水账:不许"三个月后……半年后……"地编年。
+三卦各按法门断透(六爻纳甲、梅花体用互变、小六壬三宫)。材料里给了每卦的程序断级与【基调锁定】——这是死命令:故事的顺逆走向必须与主线卦断级一致,吉卦不许写惨、凶卦不许强行圆满;人物与环境取自第二卦,气氛质地取自第三课。把结论压成一句话的事,挑一到两个最能承载它的场景,把重量压进场景里,其余岁月一笔宕开,不许"三个月后……半年后……"地编年。
 
-【第二步 · 写(每条都是死规矩,违一条即废稿)】
-一、开头:第一句必须已经身在场景里——一个动作、一句话、一件具体东西。禁止交代式开头("一年后的春天,李明已经……"),禁止天气抒情开头("阳光透过窗帘洒在……")。时间背景用细节暗示(短袖或棉袄、什么节令吃什么、年会还是开学),不许报年月数字。
-二、只许演,不许讲:情绪词一律不许出现——"难过、焦虑、幸福、委屈、如释重负、百感交集"这类词一个不留,全部换成动作、对话、物件(手机屏亮了又暗;筷子在碗沿磕了两下;那盆绿萝三个月没浇还活着)。
-三、对话要像活人:有口气、有潜台词,人物不许互相解释剧情、不许说漂亮话;每个人物给一个普通中国名字,外加一个说话习惯或小动作。
-四、细节配给:每两百字至少一处可感细节(声音/气味/温度/触感/光线),细到牌子、价钱、楼层、菜名的颗粒度。比喻全篇至多两个且必须新鲜;陈喻(像刀子一样、心被揪住、五味杂陈)一个不许用。
-五、禁词清单(出现即废稿):缓缓地、悄然、不禁、仿佛、空气仿佛凝固、嘴角上扬、勾起一抹、眼底闪过一丝、深邃的眼眸、岁月静好、时光荏苒、命运的齿轮、内心涌起、一丝不易察觉的、泪水夺眶而出、阳光洒在。
-六、节奏:长短句相间,要紧处用短句;不许连用三个排比;一段不许超过五行。
-七、结尾:停在一个具体画面或一句对话上,说停就停。禁止总结、禁止升华、禁止"她知道一切都会好起来"式宽慰、禁止旁白点题。
-八、篇幅900至1300字。写实还原体=纪录片解说的克制加特写镜头,一句废话不许有;小说体=允许心理活动,但心理也要过第二条的关(用念头里的具体画面,不用情绪词)。
-九、交稿前自查一遍:凡是"讲"出来的情绪改成"演";凡禁词删改;凡解释剧情的对话重写。查完才交。
+【第二步 · 写(硬规矩)】
+一、写的是「未来的生活」本身:晨昏、吃食、屋子、路上、身边人的一颦一笑——把日子的肌理写足,让人读完像在那个未来里住过一天。篇幅1200至1800字。
+二、文字要有质地:感官全开(光线、气味、温度、声响、手感);经营意象,最好有一个意象贯穿全篇、结尾回收;比喻要新鲜,至多四个,陈喻(像刀子一样、心被揪住、五味杂陈)一个不用;长短句错落,要紧处用一句短的收住。
+三、开头即入场景——一个动作、一句话、一件具体东西;禁交代式开头("一年后的春天,李明已经……"),禁"阳光洒在"式抒情开头。时间背景用节令衣食暗示,不报年月数字。
+四、人物有名有声口:普通中国名字,各有说话习惯或小动作;对话有潜台词,不许互相解释剧情。
+五、情绪多演少讲:身体、动作、物件先行;要写心理就写具体的念头与画面,不许堆情绪名词("难过、焦虑、幸福、百感交集"不许出现)。
+六、禁词清单(出现即废稿):缓缓地、悄然、不禁、空气仿佛凝固、嘴角上扬、勾起一抹、眼底闪过一丝、深邃的眼眸、岁月静好、时光荏苒、命运的齿轮、内心涌起、一丝不易察觉的、泪水夺眶而出、阳光洒在、温柔了岁月。
+七、结尾停在一个画面或一句对话上,余韵要足;禁总结、禁升华、禁"一切都会好起来"式宽慰。
+八、凶就写凶:断出散、败、迟,故事就往那走——怅然要写得体面、克制、动人,不惨嚎也不粉饰。
 
-【骨架纪律(与卦挂钩,不变)】
-成败聚散、先后、时节、场所方位、人物几人性别性情、气氛——全部取自三卦断出的结论;卦象没有的重大事实不许立(无添丁不写添丁、无横财不写横财)。名字、街景、对话措辞随你编,但不得顶撞骨架。视角文体照用户所选:第一人称=问卦人的眼睛(性别年龄照材料);对方视角=卦中另一主角的眼睛,言行须合卦中画像。正文一个卦名术语不许出现;卦辞意象只可化进场景,不可点破。
+【骨架纪律】成败聚散、先后、时节、场所方位、人物几人性别性情、气氛——全部取自三卦断出的结论;卦象没有的重大事实不许立(无添丁不写添丁、无横财不写横财)。名字、街景、对话措辞随你编,但不得顶撞骨架。视角照所选:第一人称=问卦人的眼睛(性别年龄照材料);对方视角=卦中另一主角的眼睛,言行须合卦中画像。正文一个卦名术语不许出现;卦辞意象只可化进场景,不可点破。
 
-【文末溯源(体系的一部分,不许省)】
-另起一行加【本篇从何而来】:大白话三到五行,正文关键情节各对应到卦上来处(如"那顿没吃完的饭——主线卦里事到中途生变之象"),不报卦名不报术语。
+【交稿自查(查完才交)】①故事走向与【基调锁定】不符→整篇废稿重写;②禁词与情绪名词→删改;③通读一遍,哪句没有画面就改出画面。
 
-【续写】材料带【前文】与【续卦】时:接着前文世界线写,新情节骨架取自续卦,已定人物与事实不许改,全部死规矩照旧;【本篇从何而来】只写新增情节来处。
+【文末溯源(不许省)】另起一行加【本篇从何而来】:大白话三到五行——第一行必须写明"主线卦断级为某,故事因此往某处走";其余各行把关键情节对应到卦上来处(如"那顿没吃完的饭——主线卦里事到中途生变之象"),不报卦名不报术语。
+
+【续写】材料带【前文】与【续卦】时:接着前文世界线写,新情节骨架取自续卦(其断级即续篇基调),已定人物与事实不许改;【本篇从何而来】只写新增情节来处。
 纯文本输出,不用 markdown 记号。`;
   function wjStatus(msg, err) { $('wj-status').textContent = msg; $('wj-status').classList.toggle('err', !!err); }
   function wjDone() { return wjPlan ? wjPlan.groups[0].casts.filter(c => c.done).length : 0; }
@@ -6008,7 +6012,7 @@
         else {
           wjStatus('成文。文末「本篇从何而来」交代了每处情节的卦象来处。可续写或追卦。已存入卦档。');
           const recId = saveRec({
-            method: '未来镜', question: `未来镜:${wjPlan.q}(${wjPlan.style}·${wjPlan.pov})`,
+            method: '未来镜', question: `未来镜:${wjPlan.q}(${wjPlan.pov})`,
             headline: `${wjDone()}/3 卦成景`, level: '景', dx: WJ_PLAN.note,
             report: wjPlan.groups[0].casts.filter(c => c.done).map(c => `${c.q}\n${c.report}`).join('\n\n'),
           });
@@ -6020,12 +6024,27 @@
       if (!text) ans.remove();
     } finally { wjBusy = false; $('btn-wj-read').disabled = false; $('btn-wj-fu').disabled = false; $('btn-wj-fugua').disabled = false; }
   }
+  $('wj-chips').addEventListener('click', e => {
+    const b = e.target.closest('.fq');
+    if (b) $('wj-q').value = b.textContent.trim();
+  });
+  // 基调锁定:主线卦断级→故事走向,机械绑死,吉不写惨、凶不硬圆
+  function wjTone(sum) {
+    const lv = (sum || '').split('·').pop() || '';
+    if (/大吉/.test(lv)) return '大顺——成与聚,人事俱旺,结尾亮堂';
+    if (/小吉|平吉/.test(lv)) return '小顺——平实里有暖意,小成,不写大富大贵';
+    if (/吉/.test(lv)) return '顺——事往成处走,有暖意,小波折不碍大局';
+    if (/谨慎|不利/.test(lv)) return '有坎——先抑,主人公受挫但立得住,结尾不全解、留一口气';
+    if (/凶/.test(lv)) return '逆——事与愿违,散、败或迟,写怅然与体面,不许粉饰成圆满';
+    if (/平/.test(lv)) return '平流——日常质地为主,无大起落,收在安稳里';
+    return '依主线卦自定,前后必须一致';
+  }
   $('btn-wj-start').addEventListener('click', () => {
     const q = $('wj-q').value.trim();
-    if (!q) { wjStatus('先写上你想看未来的什么。', true); return; }
+    if (!q) { wjStatus('写一句想看什么,或点上面现成的。', true); return; }
     wjPlan = JSON.parse(JSON.stringify(WJ_PLAN));
     wjPlan.q = q;
-    wjPlan.style = $('wj-style').value; wjPlan.pov = $('wj-pov').value; wjPlan.far = $('wj-far').value;
+    wjPlan.pov = $('wj-pov').value;
     wjPlan.groups[0].casts.forEach(c => { c.q = c.q.replace(/«Q»/g, q); });
     wjConvo = null; $('wj-out').classList.add('hidden'); $('wj-out').innerHTML = ''; $('wj-followup').classList.add('hidden');
     renderWj();
@@ -6034,9 +6053,14 @@
   $('btn-wj-read').addEventListener('click', () => {
     if (wjBusy || !wjPlan) return;
     if (!wjDone()) { wjStatus('还没起卦——先在阵里点「起卦」。', true); return; }
-    if (!getKey()) { wjStatus(`解卦成文需先设置 ${curProvider().label} API Key(见「东玄深断」栏)。`, true); return; }
-    let material = `【未来镜 · 先解卦,后成文】\n【所看:${wjPlan.q}】\n【文体:${wjPlan.style}|视角:${wjPlan.pov}|看多远:${wjPlan.far || '由卦象定(应期从主卦断,断到哪年哪季,故事就落在那时)'}${wjPlan.far ? '(故事时间以此为准;若卦象强指别的应期,以卦为准并在溯源小节说明)' : ''}】\n【规矩】三卦先各自断透再动笔;未起之卦的那一路(骨架/人物环境/气氛)按已起之卦从简处理,不硬编。`;
-    for (const c of wjPlan.groups[0].casts.filter(x => x.done)) {
+    if (!getKey()) { wjStatus(`解卦成文需先设置 ${curProvider().label} API Key(见「问卦」页「东玄深断」栏)。`, true); return; }
+    const casts = wjPlan.groups[0].casts;
+    const c1 = casts[0], c2 = casts[1], c3 = casts[2];
+    let material = `【未来镜 · 先解卦,后成文】\n【所看:${wjPlan.q}】\n【视角:${wjPlan.pov}|看多远:由主卦应期定,断到哪年哪季,故事就落在那时,季节衣食随之】` +
+      `\n【基调锁定——违锁即废稿】${c1.done ? `主线卦「${c1.summary}」:故事走向必须为「${wjTone(c1.summary)}」。` : '主线卦未起,以已起之卦定调并明说。'}` +
+      `${c2.done ? `人物环境取第二卦「${c2.summary}」。` : ''}${c3.done ? `气氛质地取第三课「${c3.summary}」(以末宫定氛围)。` : ''}` +
+      `\n【规矩】三卦先各自断透再动笔;未起之卦的那一路按已起之卦从简处理,不硬编。`;
+    for (const c of casts.filter(x => x.done)) {
       material += `\n\n——${DW_METHODS[c.method]}卦 · 所问:${c.q}\n(此卦供给:${c.focus})\n${c.report}`;
     }
     material += genderMaterialLine('q') + '\n' + nowAnchor();
