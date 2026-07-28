@@ -19,8 +19,8 @@ t('省份、城市、带后缀名皆可识别;胡写不认', () => {
   ok(Dili.find('内蒙古自治区'), '自治区');
   ok(!Dili.find('亚特兰蒂斯'), '不存在之地');
 });
-t('坐标全在中国范围(纬度18-54,经度73-136)', () => {
-  for (const p of Dili.PLACES) ok(p[1] > 17 && p[1] < 54 && p[2] > 73 && p[2] < 136, p[0]);
+t('坐标全在中国范围(纬度15-54,经度73-136,含三沙)', () => {
+  for (const p of Dili.PLACES) ok(p[1] > 15 && p[1] < 54 && p[2] > 73 && p[2] < 136, p[0]);
 });
 
 console.log('【二】方位角地理铁案');
@@ -77,6 +77,50 @@ t('换个命(喜金水忌火木)荐避大体对调', () => {
   const n1 = new Set(r1.good.map(g => g.name));
   const overlap = r2.good.filter(g => n1.has(g.name)).length;
   ok(overlap <= 2, `两命荐地重合=${overlap},应大体对调`);
+});
+
+console.log('【五】全国市州库与四层断法');
+const Bazi = require('../bazi.js');
+t('库容:330处以上、无重名、全在国境', () => {
+  ok(Dili.PLACES.length >= 330, '库容=' + Dili.PLACES.length);
+  const names = Dili.PLACES.map(p => p[0]);
+  eq(new Set(names).size, names.length, '无重名');
+  for (const p of Dili.PLACES) ok(p[1] > 16 && p[1] < 54 && p[2] > 73 && p[2] < 136 && !isNaN(p[1]) && !isNaN(p[2]), p[0]);
+});
+t('地级市抽查全认识:泉州南通潍坊临沂保定绵阳遵义大理襄阳赣州西双版纳恩施', () => {
+  for (const n of ['泉州', '南通', '潍坊', '临沂', '保定', '绵阳', '遵义', '大理', '襄阳', '赣州', '西双版纳', '恩施', '延边朝鲜族自治州', '湘西土家族苗族自治州']) ok(Dili.find(n), n);
+});
+t('新城方位铁案:武汉→襄阳西北、广州→汕头正东、成都→绵阳东北', () => {
+  const d = (a, b) => Dili.dirOf(Dili.bearing(Dili.find(a), Dili.find(b)));
+  eq(d('武汉', '襄阳'), '西北');
+  eq(d('广州', '汕头'), '正东');
+  eq(d('成都', '绵阳'), '东北');
+});
+t('内置神煞表与 bazi.js 口诀逐项一致(防两处抄错)', () => {
+  for (const g of '甲乙丙丁戊己庚辛壬癸') eq(Dili.TIANYI[g], Bazi.TIANYI[g], '天乙' + g);
+  for (const z of '子午卯酉') {
+    const i = Dili.sanheIdx(z);
+    eq(Dili.YIMA[i], Bazi.YIMA[Bazi.sanheIdx(z)], '驿马' + z);
+    eq(Dili.TAOHUA[i], Bazi.TAOHUA[Bazi.sanheIdx(z)], '桃花' + z);
+  }
+});
+t('四层断法:甲日主午年生人,西南向兼驿马+贵人;2026丙午年正北犯岁破', () => {
+  const c = { dayGan: '甲', yong: { xiWx: ['土', '金'], jiWx: ['水', '木'] }, pillars: { year: { zhi: '午' } } };
+  const r = Dili.judge(c, '北京', '成都', '午'); // 成都在京西南
+  ok(['西南', '正西'].includes(r.dir), '京→蓉:' + r.dir);
+  if (r.dir === '西南') {
+    ok(r.extras.some(x => x.includes('驿马')), '午年驿马申=西南:' + r.extras.join(';'));
+    ok(r.extras.some(x => x.includes('贵人')), '甲贵人未=西南');
+  }
+  const rn = Dili.judge(c, '广州', '北京', '午'); // 正北=子方,午年岁破
+  ok(rn.extras.some(x => x.includes('岁破')), '岁破应示警:' + rn.extras.join(';'));
+});
+t('挑旺地带城市清单与徽记字段', () => {
+  const c = { dayGan: '甲', yong: { xiWx: ['土', '金'], jiWx: ['水', '木'] }, pillars: { year: { zhi: '午' } } };
+  const r = Dili.recommend(c, '武汉', 8, '午');
+  ok(r.cities.length >= 3, '旺方城市应有货');
+  ok(r.good.every(g => typeof g.mark === 'string'), '徽记字段在');
+  ok(r.suiNote.includes('岁破'), '流年注在');
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

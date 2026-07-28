@@ -377,7 +377,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.42</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.43</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -840,7 +840,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.42 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.43 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -2290,15 +2290,19 @@
     if (!c) { dlStatus('先填生日——喜用神从八字来。', true); return; }
     const from = $('dl-from').value.trim();
     if (!from) { dlStatus('再填现居地(方位以它为原点)。', true); return; }
-    const r = Dili.recommend(c, from, 8);
+    const nowYZ = Najia.ganZhi(new Date()).year[1];
+    const r = Dili.recommend(c, from, 8, nowYZ);
     if (r.err) { dlStatus(r.err, true); return; }
     dlStatus('');
+    const tag = m => m ? ` <span class="badge">${m.split('').join('·')}</span>` : '';
     $('dl-out').innerHTML =
-      `<div class="fblock"><span class="k">你的喜忌</span><div class="t">日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}。旺你:${c.yong.xiWx.map(w => DL_WXTXT[w]).join('、')};背你:${c.yong.jiWx.map(w => DL_WXTXT[w]).join('、')}。自<b>${esc(r.from)}</b>论方位。</div></div>` +
-      `<div class="fblock"><span class="k">旺你的方向与去处(近→远)</span><div class="t">利往<b>${r.goodDirs.join('、')}</b>:` +
-      r.good.map(g => `<b>${g.name}</b>(${g.dir}${g.wx},约${g.km}公里)`).join(' · ') +
+      `<div class="fblock"><span class="k">你的喜忌</span><div class="t">日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}。旺你:${c.yong.xiWx.map(w => DL_WXTXT[w]).join('、')};背你:${c.yong.jiWx.map(w => DL_WXTXT[w]).join('、')}。自<b>${esc(r.from)}</b>论方位。徽记:马=驿马方(利变动)、贵=贵人方(利提携)、桃=桃花方(利情缘)。</div></div>` +
+      `<div class="fblock"><span class="k">旺你的省份(近→远)</span><div class="t">利往<b>${r.goodDirs.join('、')}</b>:` +
+      r.good.map(g => `<b>${g.name}</b>(${g.dir}${g.wx},约${g.km}公里)${tag(g.mark)}`).join(' · ') +
       `</div></div>` +
+      (r.cities.length ? `<div class="fblock"><span class="k">旺方向上的大城市</span><div class="t">` + r.cities.map(g => `<b>${g.name}</b>(${g.dir},${g.km}公里)${tag(g.mark)}`).join(' · ') + `</div></div>` : '') +
       (r.bad.length ? `<div class="fblock"><span class="k">背你的方向,常驻慎选</span><div class="t">忌往${r.badDirs.join('、')}:` + r.bad.map(b => `${b.name}(${b.dir})`).join(' · ') + `。出差短住无碍,安家常驻再想想。</div></div>` : '') +
+      (r.suiNote ? `<div class="note">${esc(r.suiNote)}</div>` : '') +
       `<div class="note">这是八字方位一层;定下候选后,拿具体地名「验这个地方」,再起一卦复核,两头对上才叫稳。</div>`;
   });
   $('btn-dl-judge').addEventListener('click', () => {
@@ -2306,13 +2310,15 @@
     if (!c) { dlStatus('先填生日——喜用神从八字来。', true); return; }
     const from = $('dl-from').value.trim(), to = $('dl-to').value.trim();
     if (!from || !to) { dlStatus('现居地和目标地都要填。', true); return; }
-    const r = Dili.judge(c, from, to);
+    const r = Dili.judge(c, from, to, Najia.ganZhi(new Date()).year[1]);
     if (r.err) { dlStatus(r.err, true); return; }
     dlStatus('');
     const vcls = { 大旺: 'var(--cinnabar)', 旺: 'var(--cinnabar)', 平: 'var(--dim)', 偏背: 'var(--blue)', 背: 'var(--blue)', 本地: 'var(--dim)' };
     $('dl-out').innerHTML =
       `<div class="fblock"><span class="k">${esc(r.from)} → ${esc(r.to)}${r.local ? '' : ` · ${r.dir}(方位角${r.deg}°)· 约${r.km}公里`}</span>` +
-      `<div class="t">判:<b style="color:${vcls[r.verdict]}">「${r.verdict}」</b>—— ${esc(r.note)}。</div></div>` +
+      `<div class="t">判:<b style="color:${vcls[r.verdict]}">「${r.verdict}」</b>—— ${esc(r.note)}。</div>` +
+      (r.extras && r.extras.length ? `<div class="t">${r.extras.map(x => '· ' + esc(x)).join('<br>')}</div>` : '') +
+      `</div>` +
       (r.local ? '' : `<div class="btnrow"><button type="button" class="primary" id="btn-dl-cast">起一卦复核此地</button></div>`);
     const cb = $('btn-dl-cast');
     if (cb) cb.addEventListener('click', () => {
