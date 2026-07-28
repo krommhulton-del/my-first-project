@@ -626,6 +626,25 @@ await t('姻缘板块:正缘八卦阵、断人六卦阵、无Key深断给提示'
   ok((await page.locator('#yl-plan .dwgroup').count()) === 0, '清空后应无阵');
 });
 
+await t('地利板块:挑旺地与验地实算方位、转起卦复核', async () => {
+  await page.evaluate(() => dxOpenBoard('sec-dili'));
+  await page.fill('#dl-birth', '1990-06-15');
+  await page.fill('#dl-from', '北京');
+  await page.click('#btn-dl-rec');
+  const out = await page.textContent('#dl-out');
+  ok(out.includes('旺你') && out.includes('公里') && out.includes('方向'), '挑旺地应有喜忌与去处:' + out.slice(0, 60));
+  await page.fill('#dl-to', '广州');
+  await page.click('#btn-dl-judge');
+  const out2 = await page.textContent('#dl-out');
+  ok(out2.includes('正南') && out2.includes('公里') && /「(大旺|旺|平|偏背|背)」/.test(out2), '验地应给方位与判语:' + out2.slice(0, 80));
+  await page.click('#btn-dl-cast');
+  ok((await page.inputValue('#question')).includes('广州'), '复核问应带地名');
+  await page.evaluate(() => dxOpenBoard('sec-dili'));
+  await page.fill('#dl-to', '亚特兰蒂斯');
+  await page.click('#btn-dl-judge');
+  ok((await page.textContent('#dl-status')).includes('不认识'), '胡写地名应拦');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

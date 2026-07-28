@@ -377,7 +377,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.40</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.41</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -611,6 +611,7 @@
       <button class="bcard" data-b="sec-zhuanyun"><span class="bg">运</span><span><span class="bt">转 运</span><span class="bd">近来不顺?先诊断根源,再给能落地的做法</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-xinyuan"><span class="bg">愿</span><span><span class="bt">心 愿</span><span class="bd">想办件事:成不成、什么时候、怎么做最旺</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-wj"><span class="bg">镜</span><span><span class="bt">未来镜</span><span class="bd">起三卦,把断出的未来写成一篇故事</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-dili"><span class="bg">地</span><span><span class="bt">地 利 · 去哪儿旺我</span><span class="bd">八字合方位,实算全国哪省哪市旺你、哪向背你</span></span><span class="bx">›</span></button>
     </div>
   </section>
   <div id="board-back" class="voff"><button class="ghost" id="btn-board-back">‹ 回专项列表</button></div>
@@ -779,6 +780,24 @@
   </div>
   </section>
 
+  <section id="sec-dili" class="fold">
+    <h2 class="foldh">地 利 · 去哪儿旺我(方位合命)<span class="foldtri">▸</span></h2>
+    <div class="foldbody hidden">
+    <div class="note">子平迁徙择向的老法:八字喜用神配八方五行(东木、南火、西金、北水、东北西南土),以<b>现居地为原点</b>实算目标地的方位角,五行入喜用则旺、犯忌神则背。内置全国省区与主要城市坐标,方向是真算出来的;拿不准的地方,再起一卦复核。</div>
+    <div class="qwho">生日:
+      <input type="date" id="dl-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      现居:<input type="text" id="dl-from" placeholder="省或大城市,如:武汉" style="width:130px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+    </div>
+    <div class="btnrow">
+      <button id="btn-dl-rec" class="primary">给我挑旺地</button>
+      <input type="text" id="dl-to" placeholder="或写个目标地验一验" style="flex:1 1 150px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit">
+      <button id="btn-dl-judge" class="primary">验这个地方</button>
+    </div>
+    <div id="dl-status"></div>
+    <div id="dl-out"></div>
+  </div>
+  </section>
+
   <section id="sec-jiri" class="fold">
     <h2 class="foldh">吉 日 历 · 挑好日子(黄历 × 你的生辰)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
@@ -816,7 +835,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.40 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.41 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -837,6 +856,7 @@
 <script src="bazi.js"></script>
 <script src="jiri.js"></script>
 <script src="yingqi.js"></script>
+<script src="dili.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -2251,6 +2271,59 @@
     ylStatus(`已起 ${ylDone()}/${ylTotal()} 卦。${ylDone() >= ylTotal() ? '齐了,点「汇总深断」。' : ''}`);
   });
 
+  // —— 地利:方位合命选旺地 ——
+  function dlStatus(msg, err) { $('dl-status').textContent = msg; $('dl-status').classList.toggle('err', !!err); }
+  function dlChart() {
+    const v = $('dl-birth').value;
+    if (!v) return null;
+    const [y, m, d] = v.split('-').map(Number);
+    try { return Bazi.chart(new Date(y, m - 1, d, 12), gender('q') || '男'); } catch (e) { return null; }
+  }
+  const DL_WXTXT = { 木: '木(东与东南)', 火: '火(正南)', 土: '土(西南与东北)', 金: '金(西与西北)', 水: '水(正北)' };
+  $('btn-dl-rec').addEventListener('click', () => {
+    const c = dlChart();
+    if (!c) { dlStatus('先填生日——喜用神从八字来。', true); return; }
+    const from = $('dl-from').value.trim();
+    if (!from) { dlStatus('再填现居地(方位以它为原点)。', true); return; }
+    const r = Dili.recommend(c, from, 8);
+    if (r.err) { dlStatus(r.err, true); return; }
+    dlStatus('');
+    $('dl-out').innerHTML =
+      `<div class="fblock"><span class="k">你的喜忌</span><div class="t">日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}。旺你:${c.yong.xiWx.map(w => DL_WXTXT[w]).join('、')};背你:${c.yong.jiWx.map(w => DL_WXTXT[w]).join('、')}。自<b>${esc(r.from)}</b>论方位。</div></div>` +
+      `<div class="fblock"><span class="k">旺你的方向与去处(近→远)</span><div class="t">利往<b>${r.goodDirs.join('、')}</b>:` +
+      r.good.map(g => `<b>${g.name}</b>(${g.dir}${g.wx},约${g.km}公里)`).join(' · ') +
+      `</div></div>` +
+      (r.bad.length ? `<div class="fblock"><span class="k">背你的方向,常驻慎选</span><div class="t">忌往${r.badDirs.join('、')}:` + r.bad.map(b => `${b.name}(${b.dir})`).join(' · ') + `。出差短住无碍,安家常驻再想想。</div></div>` : '') +
+      `<div class="note">这是八字方位一层;定下候选后,拿具体地名「验这个地方」,再起一卦复核,两头对上才叫稳。</div>`;
+  });
+  $('btn-dl-judge').addEventListener('click', () => {
+    const c = dlChart();
+    if (!c) { dlStatus('先填生日——喜用神从八字来。', true); return; }
+    const from = $('dl-from').value.trim(), to = $('dl-to').value.trim();
+    if (!from || !to) { dlStatus('现居地和目标地都要填。', true); return; }
+    const r = Dili.judge(c, from, to);
+    if (r.err) { dlStatus(r.err, true); return; }
+    dlStatus('');
+    const vcls = { 大旺: 'var(--cinnabar)', 旺: 'var(--cinnabar)', 平: 'var(--dim)', 偏背: 'var(--blue)', 背: 'var(--blue)', 本地: 'var(--dim)' };
+    $('dl-out').innerHTML =
+      `<div class="fblock"><span class="k">${esc(r.from)} → ${esc(r.to)}${r.local ? '' : ` · ${r.dir}(方位角${r.deg}°)· 约${r.km}公里`}</span>` +
+      `<div class="t">判:<b style="color:${vcls[r.verdict]}">「${r.verdict}」</b>—— ${esc(r.note)}。</div></div>` +
+      (r.local ? '' : `<div class="btnrow"><button type="button" class="primary" id="btn-dl-cast">起一卦复核此地</button></div>`);
+    const cb = $('btn-dl-cast');
+    if (cb) cb.addEventListener('click', () => {
+      showView('ask');
+      $('question').value = `我常驻${r.to}(自${r.from}往${r.dir}),此地旺我否?利哪几路、忌什么?`;
+      curTab = 'liuyao'; cancelDuo(); refreshTab();
+      $('sec-q').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+  try { const b0 = localStorage.getItem(BKEY); if (b0) $('dl-birth').value = b0; } catch (e) {}
+  $('dl-birth').addEventListener('change', () => {
+    try { localStorage.setItem(BKEY, $('dl-birth').value || ''); } catch (e) {}
+    const xb = $('xy-birth'); if (xb) xb.value = $('dl-birth').value;
+    const jb = $('jr-birth'); if (jb) jb.value = $('dl-birth').value;
+  });
+
   // —— 梅花易数 ——
   const MH_RULES = '【梅花断法】体卦为己、用卦为事应;用生体大吉,比和吉,体克用可成而迟,体生用耗泄不利,用克体凶。互卦察中间过程,变卦定结局;体卦旺衰以月令五行论;应期以体用卦数或变卦气数推,近取日时、远取月。八卦万物类象随所问细取。';
   function doMeihua() {
@@ -2771,11 +2844,11 @@
   // —— 视图路由:问卦 / 专项(卡片菜单→单板块)/ 吉日 / 卦档,一次只见一摊 ——
   const VIEWS = {
     ask: ['sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan'],
+    boards: ['board-menu', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan'];
+  const BOARD_IDS = ['sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {
