@@ -375,7 +375,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.41</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.42</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -751,7 +751,12 @@
   <section id="sec-yinyuan" class="fold">
     <h2 class="foldh">姻 缘 · 恋爱专用(问正缘 / 断某人)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
-    <div class="note">只办恋爱的事,只给正面答案:<b>是/否、几成、年月日、厘米、位数区间</b>,第一句就是答案。顶栏「问卦人」的性别决定断法取用(男看妻财、女看官鬼),先选上。</div>
+    <div class="note">只办恋爱的事,只给正面答案:<b>是/否、几成、年月日、厘米、位数区间</b>,第一句就是答案。性别定断法取用:男看妻财、女看官鬼。</div>
+    <div class="qwho">为谁问:
+      <select id="qg-yl" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
+      <select id="qa-yl" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+      <span class="qwhint" id="qh-yl"></span>
+    </div>
     <div class="qwho">还没对象,问正缘:
       <button id="btn-yl-zl" class="primary">摆正缘八卦阵</button>
       <span class="qwhint">何时·画像·身高·财富·职业·相识·TA的心思·验证,一次摆齐</span>
@@ -833,7 +838,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.41 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.42 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -4802,7 +4807,7 @@
   }
   // 各入口「为谁问」提示:空则提醒,有则显示当前口径
   function updateQwho() {
-    for (const ctx of ['q', 'dw', 'zy']) {
+    for (const ctx of ['q', 'dw', 'zy', 'yl']) {
       const el = $('qh-' + ctx);
       if (!el) continue;
       const b = querentBrief(ctx);
@@ -6108,7 +6113,7 @@
     ylPlan = JSON.parse(JSON.stringify(YL_ZL_PLAN));
     ylConvo = null; $('yl-out').classList.add('hidden'); $('yl-out').innerHTML = ''; $('yl-followup').classList.add('hidden');
     renderYl();
-    ylStatus(`正缘八卦阵已摆好${gender('q') ? '' : '(顶栏性别没填,断法只能按世应论——建议先去「问卦」页填上)'}。心里想着下一段感情,逐个点「起卦」;起完点「汇总深断」。`);
+    ylStatus(`正缘八卦阵已摆好${gender('yl') ? `(按「${querentBrief('yl')}」断)` : '(性别没填,断法只能按世应论——在上面「为谁问」选上,或去「问卦」页填顶栏)'}。心里想着下一段感情,逐个点「起卦」;起完点「汇总深断」。`);
   });
   $('btn-yl-dr').addEventListener('click', () => {
     const p = $('yl-p').value.trim();
@@ -6131,7 +6136,7 @@
       material += `\n\n════ ${g.title} ════`;
       for (const c of done) material += `\n——${DW_METHODS[c.method]}卦 · 所问:${c.q}\n(此卦必须给:${c.focus})\n${c.report}`;
     }
-    material += genderMaterialLine('q') + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
+    material += genderMaterialLine('yl') + '\n' + nowAnchor() + '\n' + ANTI_JARGON;
     return ylAsk([{ role: 'user', content: material }], false);
   });
   $('btn-yl-fu').addEventListener('click', () => {
@@ -6551,7 +6556,7 @@
   $('q-gender').addEventListener('change', () => { localStorage.setItem(GKEY, $('q-gender').value); updateQwho(); });
   if (localStorage.getItem(AKEY)) $('q-age').value = localStorage.getItem(AKEY);
   $('q-age').addEventListener('change', () => { localStorage.setItem(AKEY, $('q-age').value); updateQwho(); });
-  for (const ctx of ['q', 'dw', 'zy']) {
+  for (const ctx of ['q', 'dw', 'zy', 'yl']) {
     $('qg-' + ctx).addEventListener('change', updateQwho);
     $('qa-' + ctx).addEventListener('change', updateQwho);
   }

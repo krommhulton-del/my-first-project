@@ -599,8 +599,15 @@ await t('未来镜:三卦成景、文体视角可选、无Key成文给提示、�
 
 await t('姻缘板块:正缘八卦阵、断人六卦阵、无Key深断给提示', async () => {
   await page.evaluate(() => dxOpenBoard('sec-yinyuan'));
+  // 性别记忆联动:设主页问卦人性别 → 板内提示应显示口径;板内可单独盖过
+  await page.evaluate(() => { const g = document.getElementById('q-gender'); g.value = '女'; g.dispatchEvent(new Event('change')); });
+  ok((await page.textContent('#qh-yl')).includes('女'), '板内应显示主页性别记忆:' + (await page.textContent('#qh-yl')));
+  await page.selectOption('#qg-yl', '男');
+  ok((await page.textContent('#qh-yl')).includes('男'), '板内改选应盖过主页');
+  await page.selectOption('#qg-yl', '');
   // 正缘阵:8卦,含一奇门
   await page.click('#btn-yl-zl');
+  ok((await page.textContent('#yl-status')).includes('按「女'), '摆阵状态应报所用口径:' + (await page.textContent('#yl-status')).slice(0, 40));
   ok((await page.locator('#yl-plan .yl-cast').count()) === 8, '正缘阵应8卦');
   const badges = await page.locator('#yl-plan .m').allTextContents();
   ok(badges.filter(b => b === '六爻').length === 7 && badges.includes('奇门'), '七六爻一奇门:' + badges.join(','));
