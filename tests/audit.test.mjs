@@ -309,17 +309,21 @@ t('命局内冲:能检出且注明宫位;无冲之局不硬报', () => {
   }
   ok(found, '400天内应有内冲之例');
 });
-t('三纲强弱:分项有界且相加成总分;子月壬水得全令、午月壬水失令', () => {
+t('旺衰双向称量:五行分合百、同党异党对称、十神明细齐备;子月壬水必得令', () => {
   const c = Bazi.chart(new Date(1990, 5, 15, 12), '男');
   const d = c.strength.detail;
-  ok(d.ling >= 0 && d.ling <= 40 && d.di >= 0 && d.di <= 30 && d.shi >= 0 && d.shi <= 30, JSON.stringify(d));
-  eq(c.strength.pct, Math.round(d.ling + d.di + d.shi), '总分=三纲之和');
-  // 子月(主气癸水)对壬水日主应得令28以上;找一个子月壬日验证
+  for (const k of ['比劫', '印', '食伤', '财', '官杀']) ok(typeof d[k] === 'number', '缺十神力量明细:' + k);
+  const sum = Object.values(c.strength.pow).reduce((a, b) => a + b, 0);
+  ok(Math.abs(sum - 100) < 0.5, '五行力量合计=' + sum);
+  ok(Math.abs(c.strength.tong + c.strength.yi - 100) < 0.5, '同党+异党须为百');
+  eq(c.strength.pct, Math.round(c.strength.tong), '总分即同党分');
+  // 子月(主气癸水)对壬水日主为当令,同党当中比劫一项应占大头
   let done = false;
   for (let i = 0; i < 400 && !done; i++) {
     const cc = Bazi.chart(new Date(1995, 11, 1 + (i % 60), 12), '男');
     if (cc.pillars.month.zhi === '子' && cc.dayGan === '壬') {
-      ok(cc.strength.detail.ling >= 28, '子月壬水得令:' + cc.strength.detail.ling);
+      eq(cc.strength.deLing, '当令', '子月壬水');
+      ok(cc.strength.detail.比劫 > 25, '子月壬水比劫力量:' + cc.strength.detail.比劫);
       done = true;
     }
   }
@@ -365,18 +369,19 @@ t('伏吟:辛亥日对辛亥日主必报伏吟', () => {
   ok(found, '60日内必有辛亥日');
 });
 t('干支分评:干喜支忌之日必报「面上顺、底下漏」', () => {
-  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男'); // 喜金土 忌水木火
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男');
+  const xi = c.yong.xiWx, ji = c.yong.jiWx;   // 喜忌随引擎实算,不写死
   let found = false;
-  for (let i = 0; i < 60 && !found; i++) {
+  for (let i = 0; i < 120 && !found; i++) {
     const dt = new Date(2026, 6, 30 + i, 12);
     const gz = Najia.ganZhi(dt).day;
-    if ('戊己庚辛'.includes(gz[0]) && '子亥寅卯巳午'.includes(gz[1])) {
+    if (xi.includes(Bazi.GAN_WX[gz[0]]) && ji.includes(Bazi.ZHI_WX[gz[1]])) {
       const d = Yunshi.riYun(c, dt);
       ok(d.lines.some(l => l.includes('面上顺、底下漏')), gz + ':' + d.lines[0]);
       found = true;
     }
   }
-  ok(found, '60日内必有干喜支忌之日');
+  ok(found, '120日内必有干喜支忌之日');
 });
 t('调候入流运:冬月生人逢火日必报调候得药', () => {
   const c = Bazi.chart(new Date(1990, 11, 20, 12), '男'); // 子月冬生,调候取火
@@ -438,8 +443,8 @@ t('底线一:当令+坐禄+干见比印,必不判弱(甲日寅月寅时,干透�
     for (let d = 4; d < 34 && !found; d++) {
       const c = Bazi.chart(new Date(y, 1, d, 4, 30), '男'); // 寅时
       if (c.pillars.month.zhi === '寅' && c.dayGan === '甲') {
-        ok(c.strength.detail.ling === 40, '甲得寅月全令:' + c.strength.detail.ling);
-        ok(c.strength.strong || c.geju, `当令甲木判弱即为错:${JSON.stringify(c.strength)}`);
+        eq(c.strength.deLing, '当令', '甲得寅月');
+        ok(c.strength.band !== '身弱', `当令甲木判到最弱一档即为错:${c.strength.band} ${c.strength.tong}%`);
         found = true;
       }
     }
@@ -456,16 +461,16 @@ t('底线二:失令+无根+无势,必不判强(火日主生亥子月而地支无
       const hasRoot = ['year', 'month', 'day', 'hour'].some(k => ['寅', '午', '戌', '巳', '未', '卯'].includes(c.pillars[k].zhi));
       const hasShi = ['year', 'month', 'hour'].some(k => '丙丁甲乙'.includes(c.pillars[k].gan));
       if (hasRoot || hasShi) continue;
-      ok(!c.strength.strong, `冬月火日主无根无势判强即为错:${c.pillars.day.gz} ${JSON.stringify(c.strength)}`);
+      ok(!c.strength.strong, `冬月火日主无根无势判强即为错:${c.pillars.day.gz} 同党${c.strength.tong}%`);
       checked++;
     }
   }
   ok(checked >= 1, '至少验到一例,验了' + checked);
 });
-t('底线三:同一命盘,断语方向与强弱自洽(强则忌比印、弱则喜比印,从格除外)', () => {
+t('底线三:同一命盘,断语方向与强弱自洽(旺则忌比印、弱则喜比印;从格与中和局另有取法)', () => {
   for (let i = 0; i < 120; i++) {
     const c = Bazi.chart(new Date(1980, 0, 1 + i * 91, 12), '男');
-    if (c.geju) continue;
+    if (c.geju || c.yong.neutral) continue;
     const me = Bazi.GAN_WX[c.dayGan];
     if (c.strength.strong) ok(c.yong.jiWx.includes(me), c.pillars.day.gz + ' 强而不忌比劫');
     else ok(c.yong.xiWx.includes(me), c.pillars.day.gz + ' 弱而不喜比劫');

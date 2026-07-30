@@ -93,24 +93,32 @@
       day: { gz: dayGZ, gan: dayGan, zhi: dayZhi },
       hour: { gz: hourGZ, gan: hourGZ[0], zhi: hourGZ[1] },
     };
+    const kong = kongOf(dayGZ);
     for (const k of Object.keys(pillars)) {
       const p = pillars[k];
       p.ganWx = GAN_WX[p.gan]; p.zhiWx = ZHI_WX[p.zhi];
       p.ganShen = k === 'day' ? '日主' : shiShen(dayGan, p.gan);
-      p.cang = CANGGAN[p.zhi].map(g => ({ gan: g, wx: GAN_WX[g], shen: shiShen(dayGan, g) }));
+      p.cang = CANGGAN[p.zhi].map((g, i) => ({
+        gan: g, wx: GAN_WX[g], shen: shiShen(dayGan, g),
+        qi: i === 0 ? '本气' : (i === 1 ? '中气' : '余气'),
+      }));
+      p.nayin = nayin(p.gz);                 // 纳音
+      p.zizuo = changSheng(p.gan, p.zhi);    // 自坐十二运(本柱干坐本柱支)
+      p.xingyun = changSheng(dayGan, p.zhi); // 星运(日主行至此支的十二运)
+      p.kong = kong.includes(p.zhi);         // 是否落空亡
     }
-    const strength = judgeStrength(pillars, dayGan);
-    let yong = pickYongShen(dayGan, strength.strong);
-    // 从格:生扶极重为从强(顺其势喜帮扶),极轻为从弱(顺其势喜克泄)——喜忌翻转
-    let geju = null;
-    if (strength.pct >= 85) {
-      geju = '从强格(生扶极盛,顺势不逆)';
+    const days = daysIntoJie(birth);                  // 节入后第几天(定人元司令)
+    const siLing = siLingOf(monthGZ[1], days);
+    const strength = judgeStrength(pillars, dayGan, days);
+    const cong = judgeCong(strength, pillars, dayGan);
+    let yong = pickYongShen(dayGan, strength, tiaoHou(cal.monthZhi));
+    let geju = cong ? cong.name : null;
+    if (cong && cong.type === '从强') {
       const me = GAN_WX[dayGan], yin = invSheng(me);
       yong = { strong: true, xiWx: [me, yin], jiWx: [KE[me], invKe(me), SHENG[me]].filter((v, i, a) => a.indexOf(v) === i), xiName: '比劫·印(从其强势)', jiName: '克泄耗(逆势为忌)' };
-    } else if (strength.pct <= 15) {
-      geju = '从弱格(生扶极微,弃命从势)';
-      const me = GAN_WX[dayGan], yin = invSheng(me);
-      yong = { strong: false, xiWx: [KE[me], SHENG[me]], jiWx: [me, yin], xiName: '财官食伤(从其弱势)', jiName: '比劫·印(逆势为忌)' };
+    } else if (cong && cong.type === '从弱') {
+      const me = GAN_WX[dayGan];
+      yong = { strong: false, xiWx: [KE[me], SHENG[me], invKe(me)], jiWx: [me, invSheng(me)], xiName: '财官食伤(从其弱势)', jiName: '比劫·印(逆势为忌)' };
     }
     // 命局内支冲:宫位互冲入注(年=根基长辈,月=门户事业,日=自身婚姻,时=子女晚景)
     const GONG = { year: '根基宫(长辈)', month: '门户宫(事业)', day: '婚姻宫(自身)', hour: '子女宫(晚景)' };
@@ -124,41 +132,194 @@
       birth, gender: gender || '男',
       pillars, dayGan, dayWx: GAN_WX[dayGan],
       ziNote: lateZi ? '晚子时(23点后)出生,依主流子时换日法,日柱按次日排' : null,
-      strength, yong, geju, tiaohou: tiaoHou(cal.monthZhi), neiChong,
+      strength, yong, geju, cong, tiaohou: tiaoHou(cal.monthZhi), neiChong,
+      kong, taiYuan: taiYuan(monthGZ), daysIntoJie: days, siLing,
+      rel: strength.rel, wuxing: strength.pow, wuxingCount: countWuxing(pillars),
       lunarText: Lunar.format(lunar), calYear: cal.year, calMonth: cal.month, monthZhi: cal.monthZhi,
       dayun: computeDayun(pillars, yearGZ[0], gender || '男', birth),
     };
   }
 
-  // 身强身弱:三纲计分——得令(月令,满40)+得地(通根,满30)+得势(天干帮扶,满30),总分≥50为强
-  // 得令看月令主气是比劫(全令40)/印(得生28)/余气藏根(小得令12);
-  // 得地看四支藏干之根:本气根8、余气根4,印根减半,封顶30;
-  // 得势看年月时三干比劫印各计10。三项分开报,强弱有账可查。
-  function judgeStrength(pillars, dayGan) {
-    const me = GAN_WX[dayGan];
-    const yin = invSheng(me);
-    const mQi = CANGGAN[pillars.month.zhi][0];
-    let ling = 0;
-    if (GAN_WX[mQi] === me) ling = 40;
-    else if (GAN_WX[mQi] === yin) ling = 28;
-    else if (CANGGAN[pillars.month.zhi].some((g, i) => i > 0 && GAN_WX[g] === me)) ling = 12;
-    let di = 0;
+  // ————————————————————————————————————————————————
+  //  排盘补全:纳音、十二长生、人元司令、胎元、刑冲合害会
+  // ————————————————————————————————————————————————
+  const NAYIN = ['海中金', '炉中火', '大林木', '路旁土', '剑锋金', '山头火', '涧下水', '城头土', '白蜡金', '杨柳木',
+    '泉中水', '屋上土', '霹雳火', '松柏木', '长流水', '沙中金', '山下火', '平地木', '壁上土', '金箔金',
+    '覆灯火', '天河水', '大驿土', '钗钏金', '桑柘木', '大溪水', '沙中土', '天上火', '石榴木', '大海水'];
+  function jiaziIdx(gz) {
+    const gi = GAN.indexOf(gz[0]), zi = ZHI.indexOf(gz[1]);
+    if (gi < 0 || zi < 0) return -1;
+    for (let i = 0; i < 60; i++) if (i % 10 === gi && i % 12 === zi) return i;
+    return -1;
+  }
+  function nayin(gz) { const i = jiaziIdx(gz); return i < 0 ? '' : NAYIN[Math.floor(i / 2)]; }
+
+  // 十二长生(阳干顺行、阴干逆行,与禄刃位自洽:甲禄寅刃卯、庚禄申刃酉…)
+  const CS_NAMES = ['长生', '沐浴', '冠带', '临官', '帝旺', '衰', '病', '死', '墓', '绝', '胎', '养'];
+  const CS_START = { 甲: '亥', 丙: '寅', 戊: '寅', 庚: '巳', 壬: '申', 乙: '午', 丁: '酉', 己: '酉', 辛: '子', 癸: '卯' };
+  function changSheng(gan, zhi) {
+    const s = ZHI.indexOf(CS_START[gan]), z = ZHI.indexOf(zhi);
+    if (s < 0 || z < 0) return '';
+    return CS_NAMES[GAN_YY[gan] === 1 ? (z - s + 12) % 12 : (s - z + 12) % 12];
+  }
+
+  // 人元司令分野(《渊海子平》《三命通会》通行表,单位:日)
+  // 注:亥宫分野另列戊土七日,而通行藏干表「亥藏壬甲是真踪」不列戊,
+  //     故本程序按藏干表过滤后按比例折回三十日,避免两张表打架。
+  const SILING_RAW = {
+    寅: [['戊', 7], ['丙', 7], ['甲', 16]], 卯: [['甲', 10], ['乙', 20]], 辰: [['乙', 9], ['癸', 3], ['戊', 18]],
+    巳: [['戊', 5], ['庚', 9], ['丙', 16]], 午: [['丙', 10], ['己', 9], ['丁', 11]], 未: [['丁', 9], ['乙', 3], ['己', 18]],
+    申: [['戊', 7], ['壬', 7], ['庚', 16]], 酉: [['庚', 10], ['辛', 20]], 戌: [['辛', 9], ['丁', 3], ['戊', 18]],
+    亥: [['戊', 7], ['甲', 7], ['壬', 16]], 子: [['壬', 10], ['癸', 20]], 丑: [['癸', 9], ['辛', 3], ['己', 18]],
+  };
+  // 分野表与藏干表本是两张表:子月前十日壬水司令(壬是亥月余气),而藏干「子藏癸」只列本气。
+  // 两表各司其职——分野只用来定「谁在当令」,藏干只用来分配地支力量,不再互相削足适履。
+  const SILING = SILING_RAW;
+  // 节入后经过日数(节气定月,自出生日回溯至月支变化之日)
+  function daysIntoJie(date) {
+    const mz = Najia.ganZhi(date).monthZhi;
+    for (let i = 1; i <= 32; i++) {
+      const d = new Date(date.getFullYear(), date.getMonth(), date.getDate() - i, 12);
+      if (Najia.ganZhi(d).monthZhi !== mz) return i;
+    }
+    return 32;
+  }
+  function siLingOf(monthZhi, days) {
+    let acc = 0;
+    for (const [g, d] of SILING[monthZhi]) { acc += d; if (days <= acc) return { gan: g, days: d, upto: acc }; }
+    const last = SILING[monthZhi][SILING[monthZhi].length - 1];
+    return { gan: last[0], days: last[1], upto: 30 };
+  }
+  // 胎元:月干进一位、月支进三位
+  function taiYuan(monthGZ) {
+    return GAN[(GAN.indexOf(monthGZ[0]) + 1) % 10] + ZHI[(ZHI.indexOf(monthGZ[1]) + 3) % 12];
+  }
+
+  // 干支关系表
+  const LIUHE = { 子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午' };
+  const LIUHAI = { 子: '未', 未: '子', 丑: '午', 午: '丑', 寅: '巳', 巳: '寅', 卯: '辰', 辰: '卯', 申: '亥', 亥: '申', 酉: '戌', 戌: '酉' };
+  const SANXING = [[['寅', '巳', '申'], '无恩之刑'], [['丑', '戌', '未'], '恃势之刑']];
+  const ZIXING = ['辰', '午', '酉', '亥'];
+  const SANHE = [[['申', '子', '辰'], '水'], [['亥', '卯', '未'], '木'], [['寅', '午', '戌'], '火'], [['巳', '酉', '丑'], '金']];
+  const SANHUI = [[['亥', '子', '丑'], '水'], [['寅', '卯', '辰'], '木'], [['巳', '午', '未'], '火'], [['申', '酉', '戌'], '金']];
+  const GANHE = { 甲: ['己', '土'], 己: ['甲', '土'], 乙: ['庚', '金'], 庚: ['乙', '金'], 丙: ['辛', '水'], 辛: ['丙', '水'], 丁: ['壬', '木'], 壬: ['丁', '木'], 戊: ['癸', '火'], 癸: ['戊', '火'] };
+  const PILLAR_NAME = { year: '年', month: '月', day: '日', hour: '时' };
+
+  // 四柱刑冲合害会:逐对列出,不含大运流年(那是流运的事)
+  function relations(pillars) {
+    const ks = ['year', 'month', 'day', 'hour'];
+    const zs = ks.map(k => pillars[k].zhi), gs = ks.map(k => pillars[k].gan);
+    const out = { chong: [], he: [], hai: [], xing: [], sanhe: [], sanhui: [], ganhe: [], ganchong: [] };
+    for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+      const a = zs[i], b = zs[j], tag = PILLAR_NAME[ks[i]] + PILLAR_NAME[ks[j]];
+      if ((ZHI.indexOf(a) + 6) % 12 === ZHI.indexOf(b)) out.chong.push(`${tag}·${a}${b}相冲`);
+      if (LIUHE[a] === b) out.he.push(`${tag}·${a}${b}六合`);
+      if (LIUHAI[a] === b) out.hai.push(`${tag}·${a}${b}相害`);
+      if ((a === '子' && b === '卯') || (a === '卯' && b === '子')) out.xing.push(`${tag}·子卯相刑(无礼之刑)`);
+      if (a === b && ZIXING.includes(a)) out.xing.push(`${tag}·${a}${b}自刑`);
+      // 天干:五合与相冲(戊己居中不冲)
+      if (GANHE[gs[i]] && GANHE[gs[i]][0] === gs[j]) out.ganhe.push(`${tag}干·${gs[i]}${gs[j]}合化${GANHE[gs[i]][1]}`);
+      if (GAN_WX[gs[i]] === KE[GAN_WX[gs[j]]] || GAN_WX[gs[j]] === KE[GAN_WX[gs[i]]]) {
+        if (GAN_YY[gs[i]] === GAN_YY[gs[j]] && !'戊己'.includes(gs[i]) && !'戊己'.includes(gs[j])) out.ganchong.push(`${tag}干·${gs[i]}${gs[j]}相冲`);
+      }
+    }
+    for (const [trio, name] of SANXING) if (trio.every(z => zs.includes(z))) out.xing.push(`${trio.join('')}三刑(${name})`);
+    for (const [trio, wx] of SANHE) {
+      if (trio.every(z => zs.includes(z))) out.sanhe.push({ text: `${trio.join('')}三合${wx}局`, wx, full: true });
+      else { // 半合:必带旺神(子午卯酉)方论
+        const wang = trio[1];
+        if (zs.includes(wang) && (zs.includes(trio[0]) || zs.includes(trio[2]))) {
+          const other = zs.includes(trio[0]) ? trio[0] : trio[2];
+          out.sanhe.push({ text: `${wang}${other}半合${wx}`, wx, full: false });
+        }
+      }
+    }
+    for (const [trio, wx] of SANHUI) if (trio.every(z => zs.includes(z))) out.sanhui.push({ text: `${trio.join('')}三会${wx}方`, wx });
+    return out;
+  }
+
+  // ————————————————————————————————————————————————
+  //  旺衰:双向称量法(不是单报「帮身分」,而是同党/异党各自称重)
+  //  旧法之弊:只累加生扶、把 100−生扶 当作克泄,克泄一方从未真正称过,
+  //  于是「丙火时支坐禄」这种明明有根的盘也能掉进从格,喜忌整个翻转。
+  //  今法:八个字(四干四支)按位置定权,地支按藏干分野拆权,月支按人元司令比例拆,
+  //        天干有根加力、虚透减力,再计三会三合成势,归一到百分,
+  //        同党(比劫+印)与异党(食伤+财+官杀)正面对称。
+  // ————————————————————————————————————————————————
+  const POS_W = { dayGan: 9, monthGan: 9, yearGan: 8, hourGan: 8, monthZhi: 28, dayZhi: 16, yearZhi: 11, hourZhi: 11 };
+  const CANG_RATIO = { 1: [1], 2: [0.7, 0.3], 3: [0.6, 0.28, 0.12] };
+
+  function wuxingPower(pillars, dayGan, days) {
+    const add = {}; for (const w of ['木', '火', '土', '金', '水']) add[w] = 0;
+    const ks = ['year', 'month', 'day', 'hour'];
+    // 一、天干(日干本身也占位:日主即比肩,自己是自己的党)
+    const ganW = { year: POS_W.yearGan, month: POS_W.monthGan, day: POS_W.dayGan, hour: POS_W.hourGan };
+    const allZhi = ks.map(k => pillars[k].zhi);
+    const rooted = g => allZhi.some(z => CANGGAN[z].some(c => GAN_WX[c] === GAN_WX[g]));
+    for (const k of ks) {
+      const g = pillars[k].gan;
+      add[GAN_WX[g]] += ganW[k] * (rooted(g) ? 1.3 : 0.6); // 有根方能任事,虚透力减
+    }
+    // 二、地支(月支按人元司令比例,余支按本气/中气/余气)
+    const zhiW = { year: POS_W.yearZhi, month: POS_W.monthZhi, day: POS_W.dayZhi, hour: POS_W.hourZhi };
+    for (const k of ks) {
+      const z = pillars[k].zhi, cang = CANGGAN[z], W = zhiW[k];
+      if (k === 'month') {
+        // 月支力量仍按藏干本/中/余气分,再给「当令者」加权五成(当令者不在藏干里则不加)
+        const r = CANG_RATIO[cang.length] || CANG_RATIO[3];
+        const ruler = siLingOf(z, days).gan;
+        const parts = cang.map((g, i) => [g, (r[i] || 0) * (g === ruler ? 1.5 : 1)]);
+        const ps = parts.reduce((a, e) => a + e[1], 0) || 1;
+        parts.forEach(([g, w]) => { add[GAN_WX[g]] += W * w / ps; });
+      } else {
+        const r = CANG_RATIO[cang.length] || CANG_RATIO[3];
+        cang.forEach((g, i) => { add[GAN_WX[g]] += W * (r[i] || 0); });
+      }
+    }
+    // 三、成局成方(会方力大于合局,半合再次之)
+    const rel = relations(pillars);
+    const bonus = [];
+    for (const h of rel.sanhui) { add[h.wx] += 10; bonus.push(h.text + '(+10)'); }
+    for (const h of rel.sanhe) { const b = h.full ? 8 : 4; add[h.wx] += b; bonus.push(h.text + '(+' + b + ')'); }
+    // 四、归一到百分
+    const tot = Object.values(add).reduce((a, b) => a + b, 0) || 1;
+    const pow = {}; for (const w of Object.keys(add)) pow[w] = +(add[w] / tot * 100).toFixed(1);
+    return { pow, bonus, rel };
+  }
+
+  // 日主通根明细:本气根(禄刃/长生之类)最实,中气次之,余气(墓库)最虚
+  function rootsOf(pillars, dayGan) {
+    const me = GAN_WX[dayGan], out = [];
     for (const k of ['year', 'month', 'day', 'hour']) {
-      CANGGAN[pillars[k].zhi].forEach((g, i) => {
-        const w = i === 0 ? 8 : 4;
-        if (GAN_WX[g] === me) di += w;
-        else if (GAN_WX[g] === yin) di += w / 2;
+      const z = pillars[k].zhi;
+      CANGGAN[z].forEach((g, i) => {
+        if (GAN_WX[g] !== me) return;
+        const lv = i === 0 ? '本气根' : (i === 1 ? '中气根' : '余气根');
+        const cs = changSheng(dayGan, z);
+        out.push({ pos: PILLAR_NAME[k], zhi: z, gan: g, level: lv, cs, strong: i === 0 });
       });
     }
-    di = Math.min(30, +di.toFixed(1));
-    let shi = 0;
-    for (const k of ['year', 'month', 'hour']) {
-      const w = pillars[k].ganWx;
-      if (w === me || w === yin) shi += 10;
-    }
-    const total = +(ling + di + shi).toFixed(1);
-    return { strong: total >= 50, pct: Math.round(total), help: total, drain: +(100 - total).toFixed(1),
-      deLing: getDeLing(pillars.month.zhi, me), detail: { ling, di, shi } };
+    return out;
+  }
+
+  const BANDS = [[65, '身旺'], [55, '偏旺'], [45, '中和'], [35, '偏弱'], [-1, '身弱']];
+
+  function judgeStrength(pillars, dayGan, days) {
+    const me = GAN_WX[dayGan], yin = invSheng(me);
+    const { pow, bonus, rel } = wuxingPower(pillars, dayGan, days);
+    const tong = +(pow[me] + pow[yin]).toFixed(1);                    // 同党:比劫+印
+    const yi = +(100 - tong).toFixed(1);                              // 异党:食伤+财+官杀
+    const roots = rootsOf(pillars, dayGan);
+    const band = BANDS.find(b => tong >= b[0])[1];
+    const deLing = getDeLing(pillars.month.zhi, me);
+    return {
+      strong: tong >= 50, pct: Math.round(tong), band,
+      help: tong, drain: yi, tong, yi, pow, bonus, roots,
+      hasRoot: roots.length > 0, hasStrongRoot: roots.some(r => r.strong),
+      yinPower: pow[yin], biPower: pow[me], deLing,
+      detail: { 比劫: pow[me], 印: pow[yin], 食伤: pow[SHENG[me]], 财: pow[KE[me]], 官杀: pow[invKe(me)] },
+      rel,
+    };
   }
   function invSheng(el) { for (const a of Object.keys(SHENG)) if (SHENG[a] === el) return a; }
   function getDeLing(monthZhi, me) {
@@ -170,16 +331,62 @@
     return '克月令(耗力)';
   }
 
-  // 喜用忌:扶抑法。身强→喜克泄耗(财官食伤);身弱→喜生扶(印比)
-  function pickYongShen(dayGan, strong) {
+  // 从格判定:铁门槛「有根不从」——日主但凡在四支藏干里有一点根,就不许从。
+  // 真从弱:四支无一丝比劫之根、印又无力、同党极微;真从强:异党几近于无且月令当权。
+  function judgeCong(st, pillars, dayGan) {
+    const me = GAN_WX[dayGan], yin = invSheng(me);
+    if (!st.hasRoot && st.yinPower <= 8 && st.tong <= 20) {
+      return { type: '从弱', name: '从弱格(四支无根、印星无力,弃命从势)' };
+    }
+    if (st.yi <= 15 && st.tong >= 85 && ['当令', '得月令之生'].includes(st.deLing)) {
+      return { type: '从强', name: '从强格(满局生扶、克泄几无,顺其强势)' };
+    }
+    if (!st.hasRoot && st.tong <= 30) {
+      return { type: '假从', name: '假从(无根而印比尚存一线,不作真从论,仍以扶抑为主)' };
+    }
+    return null;
+  }
+
+  // 五行个数(排盘常列的「几木几火」,按八字字面数,藏干另计)
+  function countWuxing(pillars) {
+    const c = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 };
+    for (const k of ['year', 'month', 'day', 'hour']) { c[GAN_WX[pillars[k].gan]]++; c[ZHI_WX[pillars[k].zhi]]++; }
+    return c;
+  }
+
+  // 喜用忌:扶抑为主、调候为急。
+  //  身旺/偏旺 → 喜克泄耗(食伤财官杀),忌生扶;
+  //  身弱/偏弱 → 喜生扶(印比),忌克泄耗;
+  //  中和(45-55) → 扶抑无甚可扶,古法「中和之命取调候、取通关」:
+  //                先看寒暖(冬取火夏取水),无调候可取则补五行中最弱的一方,不硬分强弱。
+  function pickYongShen(dayGan, st, th) {
     const me = GAN_WX[dayGan];
-    const yin = invSheng(me), bi = me, shi = SHENG[me], cai = KE[me], guan = invKe(me);
-    const help = [bi, yin], drain = [shi, cai, guan];
-    const xi = strong ? drain : help;
-    const ji = strong ? help : drain;
+    const yin = invSheng(me), shi = SHENG[me], cai = KE[me], guan = invKe(me);
+    const help = [me, yin], drain = [shi, cai, guan];
+    const band = st.band || (st.strong ? '身旺' : '身弱');
+    if (band === '中和') {
+      // 中和之局:调候优先;无调候则取局中最弱的五行为药(通关补缺)
+      const weakest = Object.keys(st.pow).sort((x, y) => st.pow[x] - st.pow[y])[0];
+      const needTiao = th && st.pow[th.need] < 12;   // 调候只在确实缺那味药时才取
+      const xi = needTiao ? [th.need, weakest].filter((v, i, a) => a.indexOf(v) === i) : [weakest];
+      const strongest = Object.keys(st.pow).sort((x, y) => st.pow[y] - st.pow[x])[0];
+      return {
+        strong: st.strong, band, xiWx: xi, jiWx: [strongest].filter(w => !xi.includes(w)),
+        xiName: needTiao ? `调候取${th.need}(中和之局以寒暖为急),兼补最弱之${weakest}` : `补局中最弱之${weakest}(中和之局取通关补缺)`,
+        jiName: `局中已过旺之${strongest}`,
+        neutral: true,
+      };
+    }
+    const strong = band === '身旺' || band === '偏旺';
+    const xi = strong ? drain.slice() : help.slice();
+    const ji = strong ? help.slice() : drain.slice();
+    // 调候为急:冬生取火、夏生取水,纵与扶抑相左也须并列为药(古法「调候急于扶抑」)
+    let tiaoNote = '';
+    const lackTiao = th && st.pow[th.need] < 12 && !(strong && th.need === me);
+    if (lackTiao && !xi.includes(th.need)) { xi.push(th.need); tiaoNote = `;局中${th.need}仅${st.pow[th.need]}分,寒暖失衡,另调候急取${th.need}`; }
     return {
-      strong, xiWx: xi, jiWx: ji,
-      xiName: strong ? '食伤·财·官杀(耗泄)' : '比劫·印(生扶)',
+      strong, band, xiWx: xi, jiWx: ji.filter(w => !xi.includes(w)),
+      xiName: (strong ? '食伤·财·官杀(耗泄)' : '比劫·印(生扶)') + tiaoNote,
       jiName: strong ? '比劫·印' : '财·官杀·食伤',
     };
   }
@@ -299,5 +506,6 @@
   }
 
   return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI,
-    kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, trueSolarDate, eotMinutes, tiaoHou, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx };
+    kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, trueSolarDate, eotMinutes, tiaoHou, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx,
+    nayin, changSheng, taiYuan, siLingOf, SILING, daysIntoJie, relations, judgeStrength, judgeCong, wuxingPower, rootsOf, countWuxing, pickYongShen };
 }));

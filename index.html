@@ -379,7 +379,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.53</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.54</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -851,7 +851,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.53 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.54 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -1875,7 +1875,7 @@
     const chongZhi = '子丑寅卯辰巳午未申酉戌亥'[(byIdx + 6) % 12];
     const hourNote = $('xy-hour').value === '' ? '(时辰未填,时柱按午间估,强弱有一两分误差)' : '';
     $('xy-bazi').innerHTML =
-      `<div class="fblock"><span class="k">你的底牌${hourNote}</span><div class="t">日主<b>${c.dayGan}${c.dayWx}</b>,身${c.strength.strong ? '强' : '弱'}(生扶占${c.strength.pct}%)。` +
+      `<div class="fblock"><span class="k">你的底牌${hourNote}</span><div class="t">日主<b>${c.dayGan}${c.dayWx}</b>,<b>${c.strength.band}</b>(同党${c.strength.tong}对异党${c.strength.yi})。` +
       `旺你的五行是<b>${xi.join('、')}</b>:颜色穿用${g1.colors}${xi[1] ? ';' + g2.colors : ''},方位利<b>${g1.dir}${xi[1] ? '、' + g2.dir : ''}</b>,吉数${g1.nums}${xi[1] ? ';' + g2.nums : ''},发力时段${g1.hours}。` +
       `背你的五行是${ji.join('、')},少碰${jg.colors}这些色、少往${jg.dir}边使劲。` +
       `贵人属相:<b>${allies.sanhe.join('、')}${allies.liuhe ? '、' + allies.liuhe : ''}</b>;每逢<b>${chongZhi}日</b>冲你,大事绕开(吉日历里已标)。` +
@@ -1979,7 +1979,7 @@
     let material = `【心愿求吉 · 一站四问】\n【心愿:${xyPlan.wish}】\n${XY_RULES}\n【规矩】每卦只答其小问并给足"必须给";未起之卦直说"未起卦,此项不断"。`;
     if (xyBazi) {
       const c = xyBazi;
-      material += `\n\n【八字底色(供对照,断事以卦为主)】日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}(生扶${c.strength.pct}%),喜用五行:${c.yong.xiWx.join('、')},忌:${c.yong.jiWx.join('、')};属相年支${c.pillars.year.zhi}。${$('xy-hour').value === '' ? '(时辰未填,时柱按午间估算,强弱结论留一分余地)' : ''}`;
+      material += `\n\n【八字底色(供对照,断事以卦为主)】四柱${['year', 'month', 'day', 'hour'].map(k => c.pillars[k].gz).join(' ')};日主${c.dayGan}${c.dayWx},旺衰判「${c.strength.band}」(同党${c.strength.tong}∶异党${c.strength.yi},五行力量${['木', '火', '土', '金', '水'].map(w => w + c.strength.pow[w]).join(' ')}),喜用五行:${c.yong.xiWx.join('、')},忌:${c.yong.jiWx.join('、')};属相年支${c.pillars.year.zhi}。${$('xy-hour').value === '' ? '(时辰未填,时柱按午间估算,强弱结论留一分余地)' : ''}`;
     } else {
       material += '\n\n【八字底色】未填生日,此路不参;断事全依卦象。';
     }
@@ -2351,7 +2351,7 @@
     dlStatus('');
     const tag = m => m ? ` <span class="badge">${m.split('').join('·')}</span>` : '';
     $('dl-out').innerHTML =
-      `<div class="fblock"><span class="k">你的喜忌</span><div class="t">日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}。旺你:${c.yong.xiWx.map(w => DL_WXTXT[w]).join('、')};背你:${c.yong.jiWx.map(w => DL_WXTXT[w]).join('、')}。自<b>${esc(r.from)}</b>论方位。徽记:马=驿马方(利变动)、贵=贵人方(利提携)、桃=桃花方(利情缘)。</div></div>` +
+      `<div class="fblock"><span class="k">你的喜忌</span><div class="t">日主${c.dayGan}${c.dayWx},${c.strength.band}。旺你:${c.yong.xiWx.map(w => DL_WXTXT[w]).join('、')};背你:${c.yong.jiWx.map(w => DL_WXTXT[w]).join('、')}。自<b>${esc(r.from)}</b>论方位。徽记:马=驿马方(利变动)、贵=贵人方(利提携)、桃=桃花方(利情缘)。</div></div>` +
       `<div class="fblock"><span class="k">旺你的省份(近→远)</span><div class="t">利往<b>${r.goodDirs.join('、')}</b>:` +
       r.good.map(g => `<b>${g.name}</b>(${g.dir}${g.wx},约${g.km}公里)${tag(g.mark)}`).join(' · ') +
       `</div></div>` +
@@ -2834,7 +2834,7 @@
     const mk = arr => arr.length ? `<br><b>事型:</b>${arr.map(m => esc(m.split(':')[0])).join(';')}。` : '';
     const tz = z => kong.includes(z) ? '<br><b>天中殺:</b>此段为运气之冬——宜守成学习清旧账,不宜立新根基。' : '';
     const lvb = lv => `<span class="badge">${esc(lv)}</span>`;
-    const baseLine = `<div class="note" style="margin:0 0 6px">命盘底盘:四柱 ${['year', 'month', 'day', 'hour'].map(k => c.pillars[k].gz).join(' ')} · 日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}(得令${c.strength.detail.ling}/得地${c.strength.detail.di}/得势${c.strength.detail.shi})` +
+    const baseLine = `<div class="note" style="margin:0 0 6px">命盘底盘:四柱 ${['year', 'month', 'day', 'hour'].map(k => c.pillars[k].gz).join(' ')} · 日主${c.dayGan}${c.dayWx},<b>${c.strength.band}</b>(同党${c.strength.tong}∶异党${c.strength.yi};${['比劫', '印', '食伤', '财', '官杀'].map(k => k + c.strength.detail[k]).join(' ')})· ${c.strength.roots.length ? '根在' + c.strength.roots.map(r => r.zhi).join('') : '四支无根'} · ${c.siLing.gan}司令` +
       `${c.geju ? ' · ' + esc(c.geju.split('(')[0]) : ''}${c.tiaohou ? ' · 调候先取' + c.tiaohou.need : ''}` +
       `${c.neiChong && c.neiChong.length ? ' · ' + c.neiChong.map(n => esc(n.split(':')[0])).join('、') : ''}` +
       `${c.ziNote ? ' · ' + esc(c.ziNote) : ''}${c.dayun && c.dayun.startText ? ' · ' + esc(c.dayun.startText) : ''}` +

@@ -40,12 +40,15 @@ t('毛例:丁火生子月为失令,断身弱、喜木火(印比),与通行论命
     ok(c.yong.xiWx.includes('木') && c.yong.xiWx.includes('火'), '喜木火:' + c.yong.xiWx.join(''));
     ok(c.yong.jiWx.includes('水'), '忌水:' + c.yong.jiWx.join(''));
   }
-  eq(c.strength.detail.ling, 0, '子月主气癸水,丁火全然失令');
+  eq(c.strength.deLing, '受月令克(失令)', '子月癸水当权,丁火失令');
+  ok(!c.geju, '此局年支巳中有丙火之根、又双甲透印,判从格即为错');
 });
-t('蒋例:己土生戌月为当令,得令分应为满档40', () => {
+t('蒋例:己土生戌月为当令,通根戌未、巳午印生,当断身旺用泄耗', () => {
   const c = Bazi.chart(new Date(1887, 9, 31, 12, 0), '男');
   eq(c.dayGan, '己');
-  eq(c.strength.detail.ling, 40, '戌月主气戊土,己土当令');
+  eq(c.strength.deLing, '当令', '戌月主气戊土,己土当令');
+  ok(['身旺', '偏旺'].includes(c.strength.band), '应断旺,实得' + c.strength.band);
+  ok(c.yong.jiWx.includes('土'), '身旺当忌比劫土');
 });
 t('大运顺逆:毛例癸巳阴年男命逆行,蒋例丁亥阴年男命逆行(阳男阴女顺、阴男阳女逆)', () => {
   const mao = Bazi.chart(new Date(1893, 11, 26, 8, 0), '男');

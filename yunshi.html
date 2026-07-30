@@ -76,6 +76,29 @@
   .body-line { text-align: center; margin-top: 14px; font-size: 1.05rem; }
   .body-line b { color: var(--cinnabar); font-weight: normal; }
   .body-sub { text-align: center; color: var(--dim); font-size: .86rem; margin-top: 6px; }
+  /* 四柱藏干与排盘明细 */
+  .pcol .ss.top { margin-bottom: 2px; }
+  .pcol .cangwrap { display: flex; flex-direction: column; gap: 1px; margin: 4px 0 5px; }
+  .pcol .cg { font-size: .74rem; line-height: 1.45; }
+  .pcol .cg i { font-style: normal; color: var(--dim); margin-left: 3px; }
+  .pcol .kongmark { font-size: .62rem; vertical-align: super; color: var(--cinnabar); font-weight: normal; margin-left: 2px; }
+  .power-box { margin-top: 16px; background: var(--panel2); border-radius: 10px; padding: 12px 14px; }
+  .power-box .pwhead { text-align: center; font-size: .95rem; margin-bottom: 8px; }
+  .power-box .pwhead b { color: var(--cinnabar); font-weight: 600; }
+  .wxgrid { display: flex; flex-direction: column; gap: 3px; }
+  .wxrow { display: flex; align-items: center; gap: 8px; font-size: .82rem; }
+  .wxrow .wxn { width: 1.4em; text-align: center; }
+  .wxrow .wxbar { flex: 1; height: 9px; background: rgba(128,128,128,.16); border-radius: 5px; overflow: hidden; }
+  .wxrow .wxbar i { display: block; height: 100%; border-radius: 5px; }
+  .wxrow .wxv { width: 3em; text-align: right; color: var(--dim); }
+  .mub { background: var(--wx-mu); } .huob { background: var(--wx-huo); } .tub { background: var(--wx-tu); }
+  .jinb { background: var(--wx-jin); } .shuib { background: var(--wx-shui); }
+  .paipan-box { margin-top: 10px; font-size: .84rem; }
+  .pprow { display: flex; gap: 10px; padding: 5px 2px; border-bottom: 1px dashed var(--line); }
+  .pprow:last-child { border-bottom: 0; }
+  .pprow .ppk { flex: 0 0 5.2em; color: var(--gold); white-space: nowrap; }
+  .pprow .ppv { flex: 1; line-height: 1.7; }
+  @media (max-width: 520px) { .pcol .cg { font-size: .66rem; } .pprow .ppk { flex-basis: 4.4em; } }
   /* 运势卡 */
   .yscard { background: var(--panel2); border-radius: 10px; padding: 15px 16px; margin-bottom: 12px; border-left: 4px solid var(--gold); }
   .sm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0 12px; }
@@ -123,7 +146,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.53</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.54</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -147,6 +170,8 @@
     <div class="pillars" id="pillars"></div>
     <div class="body-line" id="body-line"></div>
     <div class="body-sub" id="body-sub"></div>
+    <div class="power-box" id="power-box"></div>
+    <div class="paipan-box" id="paipan-box"></div>
   </section>
 
   <section id="sec-sanmei" class="hidden">
@@ -250,23 +275,68 @@
     const P = c.pillars, cap = { year: '年柱', month: '月柱', day: '日柱', hour: '时柱' };
     $('pillars').innerHTML = ['year', 'month', 'day', 'hour'].map(k => {
       const p = P[k];
+      const cang = p.cang.map(x => `<span class="cg">${wxSpan(x.gan, x.wx)}<i>${esc(x.shen)}</i></span>`).join('');
       return `<div class="pcol"><div class="cap">${cap[k]}</div>
-        <div class="gz">${wxSpan(p.gan, p.ganWx)}${wxSpan(p.zhi, p.zhiWx)}</div>
-        <div class="ss">${k === 'day' ? '日主' : esc(p.ganShen)}</div></div>`;
+        <div class="ss top">${k === 'day' ? '日主' : esc(p.ganShen)}</div>
+        <div class="gz">${wxSpan(p.gan, p.ganWx)}${wxSpan(p.zhi, p.zhiWx)}${p.kong ? '<b class="kongmark" title="落空亡">空</b>' : ''}</div>
+        <div class="cangwrap">${cang}</div>
+        <div class="ss">星运 ${esc(p.xingyun)}</div>
+        <div class="ss">自坐 ${esc(p.zizuo)}</div>
+        <div class="ss">${esc(p.nayin)}</div></div>`;
     }).join('');
     const s = c.strength;
-    const qiang = s.strong ? '偏强' : '偏弱';
     const yongTalk = s.strong
-      ? `你这人底子<b>${qiang}</b>,自己有劲、有主见。对你添彩的是能"用掉、花掉、管住你"那股劲的五行——也就是${xiPlain(c)};最怕再有人一个劲儿给你加码。`
-      : `你这人底子<b>${qiang}</b>,劲儿容易不够使。对你添力的是"生你、帮你"的五行——也就是${xiPlain(c)};最怕再被消耗、被压。`;
-    $('body-line').innerHTML = `你是<b>${c.dayGan}${c.dayWx}命</b>(日主${c.dayWx}),身${qiang}。`;
+      ? `你这人底子<b>${esc(s.band)}</b>,自己有劲、有主见。对你添彩的是能"用掉、花掉、管住你"那股劲的五行——也就是${xiPlain(c)};最怕再有人一个劲儿给你加码。`
+      : (s.band === '中和'
+        ? `你这人底子<b>中和</b>——不偏强也不偏弱,这种局扶抑都使不上大劲,取用要看寒暖与缺口:${xiPlain(c)}。`
+        : `你这人底子<b>${esc(s.band)}</b>,劲儿容易不够使。对你添力的是"生你、帮你"的五行——也就是${xiPlain(c)};最怕再被消耗、被压。`);
+    $('body-line').innerHTML = `你是<b>${c.dayGan}${c.dayWx}命</b>(日主${c.dayWx}),<b>${esc(s.band)}</b>。`;
+
+    // —— 力量称重条:同党(比劫+印)对异党(食伤+财+官杀),两边都实打实称过 ——
+    const WXC = { 木: 'mu', 火: 'huo', 土: 'tu', 金: 'jin', 水: 'shui' };
+    const bar = ['木', '火', '土', '金', '水'].map(w =>
+      `<div class="wxrow"><span class="wxn ${WXC[w]}">${w}</span>
+        <span class="wxbar"><i class="${WXC[w]}b" style="width:${Math.min(100, s.pow[w] * 2)}%"></i></span>
+        <span class="wxv">${s.pow[w]}</span></div>`).join('');
+    const shen = ['比劫', '印', '食伤', '财', '官杀'].map(k => `${k}${s.detail[k]}`).join(' · ');
+    $('power-box').innerHTML =
+      `<div class="pwhead">同党(比劫+印)<b>${s.tong}</b> ⟺ <b>${s.yi}</b>异党(食伤+财+官杀) → <b>${esc(s.band)}</b></div>
+       <div class="wxgrid">${bar}</div>
+       <div class="note">十神力量:${esc(shen)}(百分制,月支最重,天干有根加力、虚透减力,三会三合另计)</div>`;
+
+    // —— 排盘明细:根、司令、胎元、空亡、刑冲合害会 ——
+    const rootTxt = s.roots.length
+      ? s.roots.map(r => `${r.pos}支${r.zhi}·${r.level}(${r.cs})`).join('、')
+      : '<b>四支无根</b>';
+    const rel = c.rel, relBits = [];
+    if (rel.sanhui.length) relBits.push('会方:' + rel.sanhui.map(x => x.text).join('、'));
+    if (rel.sanhe.length) relBits.push('合局:' + rel.sanhe.map(x => x.text).join('、'));
+    if (rel.chong.length) relBits.push('冲:' + rel.chong.join('、'));
+    if (rel.xing.length) relBits.push('刑:' + rel.xing.join('、'));
+    if (rel.he.length) relBits.push('六合:' + rel.he.join('、'));
+    if (rel.hai.length) relBits.push('害:' + rel.hai.join('、'));
+    if (rel.ganhe.length) relBits.push('干合:' + rel.ganhe.join('、'));
+    if (rel.ganchong.length) relBits.push('干冲:' + rel.ganchong.join('、'));
+    const cnt = c.wuxingCount;
+    const rows = [
+      ['日主之根', rootTxt + (s.hasStrongRoot ? '(有本气根,断不能作从格论)' : '')],
+      ['人元司令', `${c.siLing.gan}当令(节入后第${c.daysIntoJie}天,${esc(c.monthZhi)}月分野)`],
+      ['字面五行', ['木', '火', '土', '金', '水'].map(w => w + cnt[w]).join(' ') + (Object.values(cnt).some(v => v === 0) ? ' — 有缺' : '')],
+      ['空亡', c.kong.join('、') + '(旬空)' + (['year', 'month', 'day', 'hour'].some(k => P[k].kong) ? '(命局有柱落空)' : '')],
+      ['胎元', c.taiYuan],
+      ['干支关系', relBits.length ? relBits.join(' | ') : '四柱之间无刑冲合害会'],
+    ];
+    if (s.bonus.length) rows.push(['成局加权', s.bonus.join('、')]);
+    $('paipan-box').innerHTML = rows.map(r => `<div class="pprow"><span class="ppk">${r[0]}</span><span class="ppv">${esc(String(r[1])).replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>')}</span></div>`).join('');
+
     const pro = [];
     if (c.ziNote) pro.push(esc(c.ziNote));
     if (c.dayun && c.dayun.startText) pro.push(`大运${c.dayun.forward ? '顺' : '逆'}行,${esc(c.dayun.startText)}(出生距节令${c.dayun.startDays}天,三日折一年)`);
-    if (c.geju) pro.push(`<b>${esc(c.geju)}</b>——喜忌已按从格翻转`);
+    if (c.geju) pro.push(`<b>${esc(c.geju)}</b>${c.cong && c.cong.type === '假从' ? '' : '——喜忌已按从格翻转'}`);
     if (c.tiaohou) pro.push(esc(c.tiaohou.note));
     if (c.neiChong && c.neiChong.length) c.neiChong.forEach(n => pro.push(esc(n)));
-    $('body-sub').innerHTML = `${yongTalk}<br><span style="opacity:.8">命盘:${esc(c.lunarText)} · 三纲计分:得令${s.detail ? s.detail.ling : '-'}/40 得地${s.detail ? s.detail.di : '-'}/30 得势${s.detail ? s.detail.shi : '-'}/30,合${s.pct}分(≥50为强)· 日主${esc(s.deLing)}</span>` +
+    pro.push(`取用:${esc(c.yong.xiName)}`);
+    $('body-sub').innerHTML = `${yongTalk}<br><span style="opacity:.8">命盘:${esc(c.lunarText)} · 日主${esc(s.deLing)}</span>` +
       (pro.length ? `<br>${pro.join('<br>')}` : '');
   }
   function xiPlain(c) {
@@ -333,8 +403,16 @@
     const kong = Bazi.kongOf(c.pillars.day.gz);
     const tzYears = Bazi.tianZhongShaYears(c, new Date().getFullYear(), 12);
     return `【命主】${c.gender},生于 ${c.lunarText}。
-四柱:${four}。日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}(三纲:得令${c.strength.detail ? c.strength.detail.ling : '-'}/40、得地${c.strength.detail ? c.strength.detail.di : '-'}/30、得势${c.strength.detail ? c.strength.detail.shi : '-'}/30,合${c.strength.pct}分)。
-喜用五行:${c.yong.xiWx.join('、')};忌神五行:${c.yong.jiWx.join('、')}。
+四柱:${four}。逐柱明细:${['year', 'month', 'day', 'hour'].map(k => {
+      const p = c.pillars[k]; const nm = { year: '年', month: '月', day: '日', hour: '时' }[k];
+      return `${nm}柱${p.gz}(${k === 'day' ? '日主' : p.ganShen};藏干${p.cang.map(x => x.gan + x.shen).join('、')};纳音${p.nayin};日主行至此支为${p.xingyun};本柱自坐${p.zizuo}${p.kong ? ';落空亡' : ''})`;
+    }).join(' / ')}。
+人元司令:${c.siLing.gan}当令(节入后第${c.daysIntoJie}天)。胎元${c.taiYuan}。字面五行个数:${['木', '火', '土', '金', '水'].map(w => w + c.wuxingCount[w]).join('')}。
+【旺衰称重(百分制,同党异党两边都实算)】${['木', '火', '土', '金', '水'].map(w => w + c.strength.pow[w]).join(' ')};十神力量:${['比劫', '印', '食伤', '财', '官杀'].map(k => k + c.strength.detail[k]).join(' ')}。
+同党(比劫+印)${c.strength.tong} 对 异党(食伤+财+官杀)${c.strength.yi} → 判「${c.strength.band}」。
+日主之根:${c.strength.roots.length ? c.strength.roots.map(r => r.pos + '支' + r.zhi + r.level + '(' + r.cs + ')').join('、') : '四支无根'}。${c.strength.bonus.length ? '成局加权:' + c.strength.bonus.join('、') + '。' : ''}
+四柱刑冲合害会:${[...c.rel.sanhui.map(x => x.text), ...c.rel.sanhe.map(x => x.text), ...c.rel.chong, ...c.rel.xing, ...c.rel.he, ...c.rel.hai, ...c.rel.ganhe, ...c.rel.ganchong].join('、') || '无'}。
+喜用五行:${c.yong.xiWx.join('、')};忌神五行:${c.yong.jiWx.join('、')}。取用理由:${c.yong.xiName}。
 正走大运:${du}。空亡(天中殺)二支:${kong.join('、')};未来十二年中天中殺之年:${tzYears.join('、') || '(不在近窗)'}。
 ${c.geju ? '【格局】' + c.geju + '——喜忌已按从格翻转,断语随之。' : ''}${c.tiaohou ? '【调候】' + c.tiaohou.note + '。' : ''}${c.neiChong && c.neiChong.length ? '【命局内冲】' + c.neiChong.join(';') + '。' : ''}
 【所看时段】
