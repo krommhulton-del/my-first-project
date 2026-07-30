@@ -102,8 +102,8 @@
 
   function judge(chart, fromName, toName, nowYearZhi) {
     const a = find(fromName), b = find(toName);
-    if (!a) return { err: `不认识「${fromName}」——写到地级市或省份(全国市州都收录了)` };
-    if (!b) return { err: `不认识「${toName}」——写到地级市或省份(全国市州都收录了)` };
+    if (!a) return { err: `不认识「${fromName}」——写省份或地级市;县/区请写所属的市(如宝安写深圳)` };
+    if (!b) return { err: `不认识「${toName}」——写省份或地级市;县/区请写所属的市(如宝安写深圳)` };
     const km = distKm(a, b);
     if (km < 80) {
       return { from: a[0], to: b[0], km, local: true, verdict: '本地', extras: [],

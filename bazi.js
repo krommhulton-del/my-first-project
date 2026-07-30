@@ -122,26 +122,35 @@
     };
   }
 
-  // 身强身弱:加权计分(月令最重),生扶 vs 克泄耗
+  // 身强身弱:三纲计分——得令(月令,满40)+得地(通根,满30)+得势(天干帮扶,满30),总分≥50为强
+  // 得令看月令主气是比劫(全令40)/印(得生28)/余气藏根(小得令12);
+  // 得地看四支藏干之根:本气根8、余气根4,印根减半,封顶30;
+  // 得势看年月时三干比劫印各计10。三项分开报,强弱有账可查。
   function judgeStrength(pillars, dayGan) {
     const me = GAN_WX[dayGan];
-    const helpEl = new Set([me, invSheng(me)]);      // 比劫 + 印(生我)
-    let help = 0, drain = 0;
-    const add = (wx, w) => { if (helpEl.has(wx)) help += w; else drain += w; };
-    // 天干(除日主)
-    for (const k of ['year', 'month', 'hour']) add(pillars[k].ganWx, 1.4);
-    // 地支藏干:月令主气权重最大
+    const yin = invSheng(me);
+    const mQi = CANGGAN[pillars.month.zhi][0];
+    let ling = 0;
+    if (GAN_WX[mQi] === me) ling = 40;
+    else if (GAN_WX[mQi] === yin) ling = 28;
+    else if (CANGGAN[pillars.month.zhi].some((g, i) => i > 0 && GAN_WX[g] === me)) ling = 12;
+    let di = 0;
     for (const k of ['year', 'month', 'day', 'hour']) {
-      const cang = pillars[k].cang;
-      cang.forEach((c, i) => {
-        let w = i === 0 ? 2 : 1;               // 主气2 余气1
-        if (k === 'month' && i === 0) w = 3.5;  // 月令主气加重
-        add(c.wx, w);
+      CANGGAN[pillars[k].zhi].forEach((g, i) => {
+        const w = i === 0 ? 8 : 4;
+        if (GAN_WX[g] === me) di += w;
+        else if (GAN_WX[g] === yin) di += w / 2;
       });
     }
-    const strong = help >= drain;
-    const pct = Math.round(help / (help + drain) * 100);
-    return { strong, help: +help.toFixed(1), drain: +drain.toFixed(1), pct, deLing: getDeLing(pillars.month.zhi, me) };
+    di = Math.min(30, +di.toFixed(1));
+    let shi = 0;
+    for (const k of ['year', 'month', 'hour']) {
+      const w = pillars[k].ganWx;
+      if (w === me || w === yin) shi += 10;
+    }
+    const total = +(ling + di + shi).toFixed(1);
+    return { strong: total >= 50, pct: Math.round(total), help: total, drain: +(100 - total).toFixed(1),
+      deLing: getDeLing(pillars.month.zhi, me), detail: { ling, di, shi } };
   }
   function invSheng(el) { for (const a of Object.keys(SHENG)) if (SHENG[a] === el) return a; }
   function getDeLing(monthZhi, me) {

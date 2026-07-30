@@ -253,7 +253,7 @@
     if (c.geju) pro.push(`<b>${esc(c.geju)}</b>——喜忌已按从格翻转`);
     if (c.tiaohou) pro.push(esc(c.tiaohou.note));
     if (c.neiChong && c.neiChong.length) c.neiChong.forEach(n => pro.push(esc(n)));
-    $('body-sub').innerHTML = `${yongTalk}<br><span style="opacity:.8">命盘:${esc(c.lunarText)} · 生扶力 ${s.help} / 耗泄力 ${s.drain}(${s.pct}%)· 日主${esc(s.deLing)}</span>` +
+    $('body-sub').innerHTML = `${yongTalk}<br><span style="opacity:.8">命盘:${esc(c.lunarText)} · 三纲计分:得令${s.detail ? s.detail.ling : '-'}/40 得地${s.detail ? s.detail.di : '-'}/30 得势${s.detail ? s.detail.shi : '-'}/30,合${s.pct}分(≥50为强)· 日主${esc(s.deLing)}</span>` +
       (pro.length ? `<br>${pro.join('<br>')}` : '');
   }
   function xiPlain(c) {
@@ -319,7 +319,7 @@
     const kong = Bazi.kongOf(c.pillars.day.gz);
     const tzYears = Bazi.tianZhongShaYears(c, new Date().getFullYear(), 12);
     return `【命主】${c.gender},生于 ${c.lunarText}。
-四柱:${four}。日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}(生扶${c.strength.help}/耗泄${c.strength.drain})。
+四柱:${four}。日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}(三纲:得令${c.strength.detail ? c.strength.detail.ling : '-'}/40、得地${c.strength.detail ? c.strength.detail.di : '-'}/30、得势${c.strength.detail ? c.strength.detail.shi : '-'}/30,合${c.strength.pct}分)。
 喜用五行:${c.yong.xiWx.join('、')};忌神五行:${c.yong.jiWx.join('、')}。
 正走大运:${du}。空亡(天中殺)二支:${kong.join('、')};未来十二年中天中殺之年:${tzYears.join('、') || '(不在近窗)'}。
 ${c.geju ? '【格局】' + c.geju + '——喜忌已按从格翻转,断语随之。' : ''}${c.tiaohou ? '【调候】' + c.tiaohou.note + '。' : ''}${c.neiChong && c.neiChong.length ? '【命局内冲】' + c.neiChong.join(';') + '。' : ''}

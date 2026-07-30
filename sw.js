@@ -1,5 +1,5 @@
 // 东玄卜卦 Service Worker:预缓存全部静态资源,离线可用
-const CACHE = 'dongxuan-v0.47.0';
+const CACHE = 'dongxuan-v0.48.0';
 const ASSETS = [
   './',
   './index.html',
@@ -36,19 +36,16 @@ self.addEventListener('activate', e => {
   );
 });
 
-// 缓存优先,后台更新(stale-while-revalidate)
+// 网络优先(打开即最新版),断网回退缓存——保证改版即时可见,离线仍可用
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fetched = fetch(e.request).then(resp => {
-        if (resp.ok && new URL(e.request.url).origin === location.origin) {
-          const clone = resp.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return resp;
-      }).catch(() => cached);
-      return cached || fetched;
-    })
+    fetch(e.request).then(resp => {
+      if (resp.ok && new URL(e.request.url).origin === location.origin) {
+        const clone = resp.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+      }
+      return resp;
+    }).catch(() => caches.match(e.request))
   );
 });

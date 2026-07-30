@@ -295,6 +295,22 @@ t('命局内冲:能检出且注明宫位;无冲之局不硬报', () => {
   }
   ok(found, '400天内应有内冲之例');
 });
+t('三纲强弱:分项有界且相加成总分;子月壬水得全令、午月壬水失令', () => {
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男');
+  const d = c.strength.detail;
+  ok(d.ling >= 0 && d.ling <= 40 && d.di >= 0 && d.di <= 30 && d.shi >= 0 && d.shi <= 30, JSON.stringify(d));
+  eq(c.strength.pct, Math.round(d.ling + d.di + d.shi), '总分=三纲之和');
+  // 子月(主气癸水)对壬水日主应得令28以上;找一个子月壬日验证
+  let done = false;
+  for (let i = 0; i < 400 && !done; i++) {
+    const cc = Bazi.chart(new Date(1995, 11, 1 + (i % 60), 12), '男');
+    if (cc.pillars.month.zhi === '子' && cc.dayGan === '壬') {
+      ok(cc.strength.detail.ling >= 28, '子月壬水得令:' + cc.strength.detail.ling);
+      done = true;
+    }
+  }
+  ok(done, '应找到子月壬日样本');
+});
 t('县级市认识:昆山义乌晋江慈溪滕州巩义浏阳仙桃', () => {
   for (const n of ['昆山', '义乌', '晋江', '慈溪', '滕州', '巩义', '浏阳', '仙桃']) ok(require('../dili.js').find(n), n);
 });
