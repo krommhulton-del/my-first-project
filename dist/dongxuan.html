@@ -375,7 +375,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.49</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.50</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -610,6 +610,7 @@
       <button class="bcard" data-b="sec-xinyuan"><span class="bg">愿</span><span><span class="bt">心 愿</span><span class="bd">想办件事:成不成、什么时候、怎么做最旺</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-wj"><span class="bg">镜</span><span><span class="bt">未来镜</span><span class="bd">起三卦,把断出的未来写成一篇故事</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dili"><span class="bg">地</span><span><span class="bt">地 利 · 去哪儿旺我</span><span class="bd">八字合方位,实算全国哪省哪市旺你、哪向背你</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-href="yunshi.html"><span class="bg">命</span><span><span class="bt">看人运势 · 八字命盘</span><span class="bd">四柱排盘、人体星図、日月年运、东玄细批(独立一页)</span></span><span class="bx">›</span></button>
     </div>
   </section>
   <div id="board-back" class="voff"><button class="ghost" id="btn-board-back">‹ 回专项列表</button></div>
@@ -846,7 +847,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.49 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.50 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -7176,7 +7177,9 @@
   });
   $('board-menu').addEventListener('click', e => {
     const c = e.target.closest('.bcard');
-    if (c) openBoard(c.dataset.b);
+    if (!c) return;
+    if (c.dataset.href) { location.href = c.dataset.href; return; }
+    openBoard(c.dataset.b);
   });
   $('btn-board-back').addEventListener('click', () => { curBoard = null; showView('boards'); });
   showView('ask');
