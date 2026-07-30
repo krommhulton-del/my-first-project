@@ -408,5 +408,67 @@ t('起运精确折算:顺逆两向天数之和=一个节间隔(29-32天),起运�
   ok(Math.abs(m.dayun.list[0].fromAge - m.dayun.startAge) < 0.01, '首运起于起运岁');
 });
 
+console.log('【十三】断法专业底线(合成命局边界校验,越界即错)');
+function mkPillars(spec) { // spec: {yg,yz,mg,mz,dg,dz,hg,hz}
+  const GW = g => Bazi.GAN_WX[g], ZW = z => Bazi.ZHI_WX[z];
+  const p = {};
+  [['year', spec.yg, spec.yz], ['month', spec.mg, spec.mz], ['day', spec.dg, spec.dz], ['hour', spec.hg, spec.hz]]
+    .forEach(([k, g, z]) => { p[k] = { gz: g + z, gan: g, zhi: z, ganWx: GW(g), zhiWx: ZW(z) }; });
+  return p;
+}
+// judgeStrength 未导出,经 chart 不便造极端局——通过公开成员间接验:用真实日期逼近 + 合成规则口径
+t('底线一:当令+坐禄+干见比印,必不判弱(甲日寅月寅时,干透甲乙)', () => {
+  // 找真实日期:寅月甲日。扫描2020-2030年立春后数日
+  let found = false;
+  for (let y = 2020; y <= 2030 && !found; y++) {
+    for (let d = 4; d < 34 && !found; d++) {
+      const c = Bazi.chart(new Date(y, 1, d, 4, 30), '男'); // 寅时
+      if (c.pillars.month.zhi === '寅' && c.dayGan === '甲') {
+        ok(c.strength.detail.ling === 40, '甲得寅月全令:' + c.strength.detail.ling);
+        ok(c.strength.strong || c.geju, `当令甲木判弱即为错:${JSON.stringify(c.strength)}`);
+        found = true;
+      }
+    }
+  }
+  ok(found, '应找到寅月甲日样本');
+});
+t('底线二:失令+无根+无势,必不判强(火日主生亥子月而地支无火根)', () => {
+  let checked = 0;
+  for (let y = 1950; y <= 2025 && checked < 3; y += 1) {
+    for (let o = 0; o < 50 && checked < 3; o++) {
+      const c = Bazi.chart(new Date(y, 11, 7 + o, 8, 30), '男'); // 辰时,避免午时自带火根
+      if (!'丙丁'.includes(c.dayGan)) continue;
+      if (!'亥子丑'.includes(c.pillars.month.zhi)) continue;
+      const hasRoot = ['year', 'month', 'day', 'hour'].some(k => ['寅', '午', '戌', '巳', '未', '卯'].includes(c.pillars[k].zhi));
+      const hasShi = ['year', 'month', 'hour'].some(k => '丙丁甲乙'.includes(c.pillars[k].gan));
+      if (hasRoot || hasShi) continue;
+      ok(!c.strength.strong, `冬月火日主无根无势判强即为错:${c.pillars.day.gz} ${JSON.stringify(c.strength)}`);
+      checked++;
+    }
+  }
+  ok(checked >= 1, '至少验到一例,验了' + checked);
+});
+t('底线三:同一命盘,断语方向与强弱自洽(强则忌比印、弱则喜比印,从格除外)', () => {
+  for (let i = 0; i < 120; i++) {
+    const c = Bazi.chart(new Date(1980, 0, 1 + i * 91, 12), '男');
+    if (c.geju) continue;
+    const me = Bazi.GAN_WX[c.dayGan];
+    if (c.strength.strong) ok(c.yong.jiWx.includes(me), c.pillars.day.gz + ' 强而不忌比劫');
+    else ok(c.yong.xiWx.includes(me), c.pillars.day.gz + ' 弱而不喜比劫');
+  }
+});
+t('底线四:流运断向与喜忌自洽(喜用之年必不判凶,忌神之年必不判大吉——无冲时)', () => {
+  const Yun = require('../yunshi.js');
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男');
+  const xi = new Set(c.yong.xiWx), ji = new Set(c.yong.jiWx);
+  for (let i = 0; i < 120; i++) {
+    const d = Yun.riYun(c, new Date(2026, 0, 1 + i, 12));
+    const gw = Bazi.GAN_WX[d.gz[0]], zw = Bazi.ZHI_WX[d.gz[1]];
+    const hasChong = d.lines.some(l => l.includes('动宫') || l.includes('天克地冲'));
+    if (xi.has(gw) && xi.has(zw) && !hasChong) ok(d.score > 0, d.gz + ' 干支全喜而分数不正:' + d.score);
+    if (ji.has(gw) && ji.has(zw)) ok(d.level !== '大吉', d.gz + ' 干支全忌而判大吉');
+  }
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);
