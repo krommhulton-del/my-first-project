@@ -379,5 +379,34 @@ t('调候入流运:冬月生人逢火日必报调候得药', () => {
   ok(found, '30日内必有火日');
 });
 
+console.log('【十二】排盘行规三修(十神全表/晚子时换日/精确起运)');
+t('十神对照表(命理通行全表,阳阴日主各验十干)', () => {
+  const jia = { 甲: '比肩', 乙: '劫财', 丙: '食神', 丁: '伤官', 戊: '偏财', 己: '正财', 庚: '七杀', 辛: '正官', 壬: '偏印', 癸: '正印' };
+  for (const [g, s] of Object.entries(jia)) eq(Bazi.shiShen('甲', g), s, '甲见' + g);
+  const gui = { 癸: '比肩', 壬: '劫财', 乙: '食神', 甲: '伤官', 丁: '偏财', 丙: '正财', 己: '七杀', 戊: '正官', 辛: '偏印', 庚: '正印' };
+  for (const [g, s] of Object.entries(gui)) eq(Bazi.shiShen('癸', g), s, '癸见' + g);
+});
+t('晚子时换日(主流子时换日法):23:30生按次日日柱,22:59生按当日', () => {
+  const late = Bazi.chart(new Date(2026, 6, 30, 23, 30), '男');
+  const nextNoon = Bazi.chart(new Date(2026, 6, 31, 12, 0), '男');
+  eq(late.pillars.day.gz, nextNoon.pillars.day.gz, '晚子时日柱=次日');
+  eq(late.pillars.hour.zhi, '子', '时支子');
+  ok(late.ziNote && late.ziNote.includes('换日'), '应注明换日');
+  const early = Bazi.chart(new Date(2026, 6, 30, 22, 59), '男');
+  eq(early.pillars.day.gz, '乙巳', '23点前按当日');
+  ok(!early.ziNote, '非晚子时无注');
+});
+t('起运精确折算:顺逆两向天数之和=一个节间隔(29-32天),起运文本齐备', () => {
+  const b = new Date(1964, 8, 10, 12); // 甲辰阳年
+  const m = Bazi.chart(new Date(b), '男'); // 阳男顺
+  const f = Bazi.chart(new Date(b), '女'); // 阳女逆
+  ok(m.dayun.forward && !f.dayun.forward, '顺逆方向');
+  const sum = m.dayun.startDays + f.dayun.startDays;
+  ok(sum > 28 && sum < 33, `两向天数和=${sum.toFixed(2)},应为一个节间隔`);
+  ok(/^\d+岁\d+个月起运$/.test(m.dayun.startText), m.dayun.startText);
+  ok(m.dayun.startAge > 0 && m.dayun.startAge <= 10.4, '起运岁在常理内:' + m.dayun.startAge);
+  ok(Math.abs(m.dayun.list[0].fromAge - m.dayun.startAge) < 0.01, '首运起于起运岁');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

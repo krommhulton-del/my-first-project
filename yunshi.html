@@ -250,6 +250,8 @@
       : `你这人底子<b>${qiang}</b>,劲儿容易不够使。对你添力的是"生你、帮你"的五行——也就是${xiPlain(c)};最怕再被消耗、被压。`;
     $('body-line').innerHTML = `你是<b>${c.dayGan}${c.dayWx}命</b>(日主${c.dayWx}),身${qiang}。`;
     const pro = [];
+    if (c.ziNote) pro.push(esc(c.ziNote));
+    if (c.dayun && c.dayun.startText) pro.push(`大运${c.dayun.forward ? '顺' : '逆'}行,${esc(c.dayun.startText)}(出生距节令${c.dayun.startDays}天,三日折一年)`);
     if (c.geju) pro.push(`<b>${esc(c.geju)}</b>——喜忌已按从格翻转`);
     if (c.tiaohou) pro.push(esc(c.tiaohou.note));
     if (c.neiChong && c.neiChong.length) c.neiChong.forEach(n => pro.push(esc(n)));

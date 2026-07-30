@@ -72,12 +72,17 @@
   }
 
   // 主排盘:birth 为 Date(设备本地时刻,视为出生地时间;传 lon 则先校真太阳时)
+  // 晚子时(23点后)依当今主流「子时换日法」:日柱与五鼠遁均按次日排。
   function chart(birth, gender, lonDeg) {
     if (typeof lonDeg === 'number' && !isNaN(lonDeg)) birth = trueSolarDate(birth, lonDeg);
     const cal = Najia.ganZhi(birth);          // 年(立春界)、月(节气界)、日
     const lunar = Lunar.fromDate(birth);      // 取时辰序号
     const hourIdx = lunar.hourNum - 1;         // 子=0
-    const yearGZ = cal.year, monthGZ = cal.month, dayGZ = cal.day;
+    const yearGZ = cal.year, monthGZ = cal.month;
+    const lateZi = birth.getHours() >= 23;
+    const dayGZ = lateZi
+      ? Najia.ganZhi(new Date(birth.getFullYear(), birth.getMonth(), birth.getDate() + 1, 1)).day
+      : cal.day;
     const dayGan = dayGZ[0], dayZhi = dayGZ[1];
     const hourGZ = hourPillar(dayGan, hourIdx);
     const pillars = {
@@ -116,6 +121,7 @@
     return {
       birth, gender: gender || '男',
       pillars, dayGan, dayWx: GAN_WX[dayGan],
+      ziNote: lateZi ? '晚子时(23点后)出生,依主流子时换日法,日柱按次日排' : null,
       strength, yong, geju, tiaohou: tiaoHou(cal.monthZhi), neiChong,
       lunarText: Lunar.format(lunar), calYear: cal.year, calMonth: cal.month, monthZhi: cal.monthZhi,
       dayun: computeDayun(pillars, yearGZ[0], gender || '男', birth),
@@ -181,24 +187,31 @@
   function computeDayun(pillars, yearGan, gender, birth) {
     const forward = (GAN_YY[yearGan] === 1) === (gender === '男');
     const mgIdx = GAN.indexOf(pillars.month.gan), mzIdx = ZHI.indexOf(pillars.month.zhi);
-    // 起运岁:到下/上一节气的天数 ÷ 3(一柱十年)
-    const startAge = estimateStartAge(birth, forward);
+    const sa = estimateStartAge(birth, forward);
     const list = [];
     for (let i = 1; i <= 8; i++) {
       const g = ((mgIdx + (forward ? i : -i)) % 10 + 10) % 10;
       const z = ((mzIdx + (forward ? i : -i)) % 12 + 12) % 12;
-      list.push({ gz: GAN[g] + ZHI[z], gan: GAN[g], zhi: ZHI[z], fromAge: startAge + (i - 1) * 10 });
+      list.push({ gz: GAN[g] + ZHI[z], gan: GAN[g], zhi: ZHI[z], fromAge: +(sa.age + (i - 1) * 10).toFixed(1) });
     }
-    return { forward, startAge, list };
+    return { forward, startAge: sa.age, startText: sa.text, startDays: sa.days, list };
   }
+  // 起运岁(行规):阳男阴女顺数到下一节令、阴男阳女逆数到上一节令,
+  // 二分法求节令精确时刻,三日折一年、余数折月(一日折四月)。
   function estimateStartAge(birth, forward) {
-    // 到相邻节气(每 15° 一节气,月建以每 30° 换月;起运数节令即每 30°)的天数
-    const lam = Najia.sunLongitude(birth.getTime());
-    const seg = ((lam - 315) % 360 + 360) % 360; // 立春起
-    const within = seg % 30;                       // 距本月节气起点的度数
-    const deg = forward ? (30 - within) : within;  // 顺数到下节,逆数到上节
-    const days = deg * (365.2422 / 360);            // 度→天(粗略)
-    return Math.max(1, Math.round(days / 3));
+    const t = birth.getTime();
+    const lam = Najia.sunLongitude(t);
+    const seg = ((lam - 315) % 360 + 360) % 360;
+    const within = seg % 30;
+    const target = ((lam - within + (forward ? 30 : 0)) % 360 + 360) % 360;
+    const diff = ms => { let d = Najia.sunLongitude(ms) - target; while (d > 180) d -= 360; while (d < -180) d += 360; return d; };
+    let lo = forward ? t : t - 35 * 86400000;
+    let hi = forward ? t + 35 * 86400000 : t;
+    for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (diff(lo) * diff(mid) <= 0) hi = mid; else lo = mid; }
+    const days = Math.abs((lo + hi) / 2 - t) / 86400000;
+    const years = days / 3;
+    const y = Math.floor(years), m = Math.round((years - y) * 12);
+    return { age: Math.max(0.1, +years.toFixed(1)), days: +days.toFixed(2), text: `${y}岁${m}个月起运` };
   }
 
   // ——— 神煞引擎(流运断事用)———
