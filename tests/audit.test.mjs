@@ -223,5 +223,31 @@ t('小六壬三吉三凶:大安速喜小吉为吉,留连赤口凶、空亡大凶
   ok(g['空亡'].includes('大凶'), '空亡大凶');
 });
 
+console.log('【九】时辰吉凶引擎(日运精确到钟点)');
+t('五鼠遁:甲己日起甲子时、乙庚日丙子、丙辛日戊子、丁壬日庚子、戊癸日壬子', () => {
+  const exp = { 甲: '甲子', 己: '甲子', 乙: '丙子', 庚: '丙子', 丙: '戊子', 辛: '戊子', 丁: '庚子', 壬: '庚子', 戊: '壬子', 癸: '壬子' };
+  for (const [g, gz] of Object.entries(exp)) eq(Bazi.hourPillar(g, 0), gz, g + '日子时');
+});
+t('jiShi:十二时辰全、时柱随日干、冲本人年支之时必带避记且分数最低档', () => {
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男'); // 庚午年,冲支=子
+  const hs = Bazi.jiShi(c, '甲');
+  eq(hs.length, 12, '十二时辰');
+  eq(hs[0].gz, '甲子', '甲日首时柱');
+  const ziHour = hs.find(h => h.zhi === '子');
+  ok(ziHour.marks.some(m => m.includes('冲你年支')), '子时冲午年生人');
+  ok(ziHour.score <= -1, '冲时分数应低:' + ziHour.score);
+  const heHour = hs.find(h => h.zhi === '未');
+  ok(heHour.marks.some(m => m.includes('合你年支')), '未时合午年生人');
+});
+t('jiShi 评分与喜忌挂钩:喜用时干加分、忌神时干减分', () => {
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男'); // 日主辛,身弱喜金土忌水木火
+  const hs = Bazi.jiShi(c, '甲');
+  for (const h of hs) {
+    const wx = Bazi.GAN_WX[h.gz[0]];
+    if (c.yong.xiWx.includes(wx)) ok(h.marks.includes('时干扶你'), h.gz);
+    if (c.yong.jiWx.includes(wx)) ok(h.marks.includes('时干耗你'), h.gz);
+  }
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

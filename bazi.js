@@ -192,6 +192,29 @@
     return marks;
   }
 
+  // ——— 时辰吉凶(日运精确到钟点):流日日干五鼠遁排十二时柱,按喜忌与冲合本人年支评分 ———
+  const HOUR_SPAN = ['23-1点', '1-3点', '3-5点', '5-7点', '7-9点', '9-11点', '11-13点', '13-15点', '15-17点', '17-19点', '19-21点', '21-23点'];
+  function jiShi(chart, flowDayGan) {
+    const xi = chart.yong.xiWx, ji = chart.yong.jiWx;
+    const byZhi = chart.pillars.year.zhi;
+    const LIUHE_H = { 子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午' };
+    const out = [];
+    for (let i = 0; i < 12; i++) {
+      const gz = hourPillar(flowDayGan, i);
+      const g = gz[0], z = gz[1];
+      let s = 0;
+      const marks = [];
+      if (xi.includes(GAN_WX[g])) { s += 1; marks.push('时干扶你'); }
+      if (ji.includes(GAN_WX[g])) { s -= 1; marks.push('时干耗你'); }
+      if (xi.includes(ZHI_WX[z])) s += 0.5;
+      if (ji.includes(ZHI_WX[z])) s -= 0.5;
+      if (ZHI[(ZHI.indexOf(z) + 6) % 12] === byZhi) { s -= 2; marks.push('冲你年支,避'); }
+      if (LIUHE_H[z] === byZhi) { s += 1; marks.push('合你年支'); }
+      out.push({ gz, zhi: z, span: HOUR_SPAN[i], score: +s.toFixed(1), marks });
+    }
+    return out;
+  }
+
   // 天中殺之年:未来 n 年里流年支落入日柱旬空的年份(算命学十二年中之两年)
   function tianZhongShaYears(chart, fromYear, n) {
     const kong = kongOf(chart.pillars.day.gz);
@@ -204,5 +227,5 @@
   }
 
   return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI,
-    kongOf, flowMarks, tianZhongShaYears, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx };
+    kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx };
 }));

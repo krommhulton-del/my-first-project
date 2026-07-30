@@ -510,6 +510,16 @@ await t('吉日历:月历渲染、点日细账、生日个人化、按事挑日�
   const det2 = await page.textContent('#jr-detail');
   ok(det2.includes('属马') && det2.includes('日主'), '个人层应现生肖与日主:' + det2.slice(-120));
   ok((await page.evaluate(() => localStorage.getItem('dongxuan_birth'))) === '1990-06-15', '生日应持久化');
+  // 日/月/年运三卡 + 时辰吉凶
+  const yun = await page.textContent('#jr-yun');
+  ok(yun.includes('日运') && yun.includes('月运') && yun.includes('年运'), '三卡应齐:' + yun.slice(0, 50));
+  ok(yun.includes('吉时') && yun.includes('点'), '日运应含时辰钟点');
+  // 点另一天 → 日运跟着换
+  const other = await page.locator('.jr-cell:not(.today)').nth(5).getAttribute('data-iso');
+  await page.locator(`.jr-cell[data-iso="${other}"]`).click();
+  const yun2 = await page.textContent('#jr-yun');
+  const d2 = Number(other.split('-')[2]);
+  ok(yun2.includes(`月${d2}日`), '日运应换到所点之日:' + yun2.slice(0, 40));
   // 翻月
   await page.click('#jr-next');
   ok(!(await page.textContent('#jr-title')).includes(`${now.getFullYear()}年${now.getMonth() + 1}月`), '翻月后标题应变');

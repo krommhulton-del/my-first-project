@@ -377,7 +377,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.45</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.46</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -814,8 +814,9 @@
     <div class="note">老规矩看日子分三层:<b>①这天本身</b>(建除十二神、黄道黑道值神)、<b>②冲不冲你</b>(日支冲你生肖=冲日,大事勿用;三合六合=顺)、<b>③帮不帮你</b>(流日五行对你日主是生是克)。填了生日才有②③;拿不准的日子,点「起一卦细看」用卦复核——历法初筛、卦象定夺,两头对得上才叫稳。</div>
     <div class="qwho">你的生日:
       <input type="date" id="jr-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
-      <span class="qwhint">按公历填。只想看通用黄历可不填。</span>
+      <span class="qwhint">按公历填。填了即出你的日/月/年运;点日历任何一天,日运跟着换到那天。</span>
     </div>
+    <div id="jr-yun"></div>
     <div class="jr-nav">
       <button id="jr-prev" class="ghost">◀ 上月</button>
       <b id="jr-title"></b>
@@ -845,7 +846,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.45 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.46 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -864,6 +865,7 @@
 <script src="qimen.js"></script>
 <script src="fenke.js"></script>
 <script src="bazi.js"></script>
+<script src="yunshi.js"></script>
 <script src="jiri.js"></script>
 <script src="yingqi.js"></script>
 <script src="dili.js"></script>
@@ -2780,7 +2782,39 @@
       `<span class="jrlv ${JR_LVCLS[d.level]}">${d.level}</span></button>`).join('');
     $('jr-grid').innerHTML = html;
   }
+  // 本人运势三卡:日运(随所选之日,精确到时辰)+ 月运 + 年运
+  function jrYunRender(info) {
+    const b = jrBirth();
+    if (!b) { $('jr-yun').innerHTML = ''; return; }
+    let c;
+    try { c = Bazi.chart(b, gender('q') || '男'); } catch (e) { $('jr-yun').innerHTML = ''; return; }
+    const target = new Date(info.y, info.m - 1, info.d, 12);
+    let y;
+    try { y = Yunshi.all(c, target); } catch (e) { $('jr-yun').innerHTML = ''; return; }
+    const fm = (g, z) => { try { return Bazi.flowMarks(c, g, z); } catch (e) { return []; } };
+    const kong = Bazi.kongOf(c.pillars.day.gz);
+    const dayMarks = fm(info.gz.day[0], info.gz.day[1]);
+    const monMarks = fm(y.month.gz[0], y.month.gz[1]);
+    const yrMarks = fm(y.year.gz[0], y.year.gz[1]);
+    // 时辰吉凶:吉时取前三,忌时取分数≤-1者
+    let shiLine = '';
+    try {
+      const hs = Bazi.jiShi(c, info.gz.day[0]);
+      const good = hs.filter(h => h.score >= 1).sort((a, b2) => b2.score - a.score).slice(0, 3);
+      const bad = hs.filter(h => h.score <= -1).sort((a, b2) => a.score - b2.score).slice(0, 2);
+      shiLine = `<br><b>吉时:</b>${good.length ? good.map(h => `${h.zhi}时(${h.span})${h.marks.includes('合你年支') ? '·合' : ''}`).join('、') : '无上佳时辰,平时段办平事'};` +
+        `<b>避:</b>${bad.length ? bad.map(h => `${h.zhi}时(${h.span}${h.marks.includes('冲你年支,避') ? ',冲你' : ''})`).join('、') : '无必避时辰'}。`;
+    } catch (e) {}
+    const mk = arr => arr.length ? `<br><b>事型:</b>${arr.map(m => esc(m.split(':')[0])).join(';')}。` : '';
+    const tz = z => kong.includes(z) ? '<br><b>天中殺:</b>此段为运气之冬——宜守成学习清旧账,不宜立新根基。' : '';
+    const lvb = lv => `<span class="badge">${esc(lv)}</span>`;
+    $('jr-yun').innerHTML =
+      `<div class="fblock"><span class="k">日运 · ${info.m}月${info.d}日(${info.gz.day}日)${lvb(y.day.level)}</span><div class="t">${esc(y.day.text)}${mk(dayMarks)}${tz(info.gz.day[1])}${shiLine}</div></div>` +
+      `<div class="fblock"><span class="k">月运 · ${esc(y.month.span)}(${y.month.gz}月)${lvb(y.month.level)}</span><div class="t">${esc(y.month.text)}${mk(monMarks)}${tz(y.month.gz[1])}</div></div>` +
+      `<div class="fblock"><span class="k">年运 · ${esc(y.year.span)}(${y.year.gz}年)${lvb(y.year.level)}</span><div class="t">${esc(y.year.text)}${y.year.dayun ? ' 正走大运:' + esc(y.year.dayun) + '。' : ''}${mk(yrMarks)}${tz(y.year.gz[1])}</div></div>`;
+  }
   function jrShowDetail(info) {
+    jrYunRender(info);
     const canCast = info.iso >= jrIsoToday();
     let shaLine = '';
     if (info.personal) {
@@ -2831,7 +2865,9 @@
     jrInit = true;
     try { const b = localStorage.getItem(BKEY); if (b) $('jr-birth').value = b; } catch (e) {}
     $('jr-event').innerHTML = Object.entries(Jiri.EVENTS).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
+    jrSel = jrIsoToday();
     renderJiri();
+    { const info = jrGrid.days.find(d => d.iso === jrSel); if (info) jrShowDetail(info); }
     $('jr-grid').addEventListener('click', e => {
       const c = e.target.closest('.jr-cell');
       if (!c || !jrGrid) return;
@@ -2847,8 +2883,9 @@
       try { localStorage.setItem(BKEY, $('jr-birth').value || ''); } catch (e) {}
       const xb = $('xy-birth');
       if (xb) { xb.value = $('jr-birth').value; renderXyBazi(); renderXyDays(); }
+      if (!jrSel) jrSel = jrIsoToday();
       renderJiri();
-      if (jrSel && jrGrid) { const info = jrGrid.days.find(d => d.iso === jrSel); if (info) jrShowDetail(info); }
+      if (jrGrid) { const info = jrGrid.days.find(d => d.iso === jrSel); if (info) jrShowDetail(info); }
     });
     $('jr-pickbtn').addEventListener('click', () => {
       const key = $('jr-event').value, span = parseInt($('jr-span').value, 10) || 60;

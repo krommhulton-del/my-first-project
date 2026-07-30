@@ -17,6 +17,7 @@ html = html
   .replace('<script src="qimen.js"></script>', '<script>\n' + read('qimen.js') + '\n</script>')
   .replace('<script src="fenke.js"></script>', '<script>\n' + read('fenke.js') + '\n</script>')
   .replace('<script src="bazi.js"></script>', '<script>\n' + read('bazi.js') + '\n</script>')
+  .replace('<script src="yunshi.js"></script>', '<script>\n' + read('yunshi.js') + '\n</script>')
   .replace('<script src="jiri.js"></script>', '<script>\n' + read('jiri.js') + '\n</script>')
   .replace('<script src="yingqi.js"></script>', '<script>\n' + read('yingqi.js') + '\n</script>')
   .replace('<script src="dili.js"></script>', '<script>\n' + read('dili.js') + '\n</script>')
