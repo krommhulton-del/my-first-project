@@ -375,7 +375,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.46</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.47</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -810,9 +810,11 @@
     <h2 class="foldh">吉 日 历 · 挑好日子(黄历 × 你的生辰)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
     <div class="note">老规矩看日子分三层:<b>①这天本身</b>(建除十二神、黄道黑道值神)、<b>②冲不冲你</b>(日支冲你生肖=冲日,大事勿用;三合六合=顺)、<b>③帮不帮你</b>(流日五行对你日主是生是克)。填了生日才有②③;拿不准的日子,点「起一卦细看」用卦复核——历法初筛、卦象定夺,两头对得上才叫稳。</div>
-    <div class="qwho">你的生日:
+    <div class="qwho">你的生辰:
       <input type="date" id="jr-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
-      <span class="qwhint">按公历填。填了即出你的日/月/年运;点日历任何一天,日运跟着换到那天。</span>
+      <select id="jr-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
+      <input type="text" id="jr-place" placeholder="出生地(市/省)" style="width:120px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <span class="qwhint">生辰按公历;填出生地自动校真太阳时(经度差+均时差,86-91年夏令时回拨),时柱才排得准。填一次,全应用通用。</span>
     </div>
     <div id="jr-yun"></div>
     <div class="jr-nav">
@@ -844,7 +846,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.46 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.47 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -4128,8 +4130,37 @@
     return GAN[(base + hourBranchIdx) % 10] + ZHI[hourBranchIdx];
   }
 
-  // 主排盘:birth 为 Date(设备本地时刻,视为出生地时间)
-  function chart(birth, gender) {
+  // ——— 真太阳时:钟表时 → 出生地真太阳时(排时柱的行规) ———
+  // 三步:①1986-1991 夏令时回拨一小时;②经度差(每偏东经120°一度差4分钟);③均时差(±16分)。
+  const DST = { 1986: [5, 4, 9, 14], 1987: [4, 12, 9, 13], 1988: [4, 10, 9, 11], 1989: [4, 16, 9, 17], 1990: [4, 15, 9, 16], 1991: [4, 14, 9, 15] };
+  function eotMinutes(date) {
+    const start = Date.UTC(date.getFullYear(), 0, 1);
+    const n = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000) + 1;
+    const B = (360 * (n - 81) / 365) * Math.PI / 180;
+    return 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+  }
+  function trueSolarDate(birth, lonDeg) {
+    let t = birth.getTime();
+    const y = birth.getFullYear(), d = DST[y];
+    if (d) {
+      const s = new Date(y, d[0] - 1, d[1], 2).getTime(), e = new Date(y, d[2] - 1, d[3], 2).getTime();
+      if (t >= s && t < e) t -= 3600000; // 夏令时拨回
+    }
+    if (typeof lonDeg === 'number' && !isNaN(lonDeg)) t += (lonDeg - 120) * 4 * 60000; // 经度差
+    t += eotMinutes(birth) * 60000; // 均时差
+    return new Date(t);
+  }
+
+  // 调候(寒暖之要):冬生先取火暖局,夏生先取水润局——喜用之外此行亦作药
+  function tiaoHou(monthZhi) {
+    if ('亥子丑'.includes(monthZhi)) return { need: '火', note: '生于冬月,局寒——调候先取火(丙丁)暖局,穿用红紫、向南、午时发力皆是药' };
+    if ('巳午未'.includes(monthZhi)) return { need: '水', note: '生于夏月,局燥——调候先取水(壬癸)润局,黑蓝之色、向北、亥子时静养皆是药' };
+    return null;
+  }
+
+  // 主排盘:birth 为 Date(设备本地时刻,视为出生地时间;传 lon 则先校真太阳时)
+  function chart(birth, gender, lonDeg) {
+    if (typeof lonDeg === 'number' && !isNaN(lonDeg)) birth = trueSolarDate(birth, lonDeg);
     const cal = Najia.ganZhi(birth);          // 年(立春界)、月(节气界)、日
     const lunar = Lunar.fromDate(birth);      // 取时辰序号
     const hourIdx = lunar.hourNum - 1;         // 子=0
@@ -4149,11 +4180,30 @@
       p.cang = CANGGAN[p.zhi].map(g => ({ gan: g, wx: GAN_WX[g], shen: shiShen(dayGan, g) }));
     }
     const strength = judgeStrength(pillars, dayGan);
-    const yong = pickYongShen(dayGan, strength.strong);
+    let yong = pickYongShen(dayGan, strength.strong);
+    // 从格:生扶极重为从强(顺其势喜帮扶),极轻为从弱(顺其势喜克泄)——喜忌翻转
+    let geju = null;
+    if (strength.pct >= 85) {
+      geju = '从强格(生扶极盛,顺势不逆)';
+      const me = GAN_WX[dayGan], yin = invSheng(me);
+      yong = { strong: true, xiWx: [me, yin], jiWx: [KE[me], invKe(me), SHENG[me]].filter((v, i, a) => a.indexOf(v) === i), xiName: '比劫·印(从其强势)', jiName: '克泄耗(逆势为忌)' };
+    } else if (strength.pct <= 15) {
+      geju = '从弱格(生扶极微,弃命从势)';
+      const me = GAN_WX[dayGan], yin = invSheng(me);
+      yong = { strong: false, xiWx: [KE[me], SHENG[me]], jiWx: [me, yin], xiName: '财官食伤(从其弱势)', jiName: '比劫·印(逆势为忌)' };
+    }
+    // 命局内支冲:宫位互冲入注(年=根基长辈,月=门户事业,日=自身婚姻,时=子女晚景)
+    const GONG = { year: '根基宫(长辈)', month: '门户宫(事业)', day: '婚姻宫(自身)', hour: '子女宫(晚景)' };
+    const neiChong = [];
+    const ks = ['year', 'month', 'day', 'hour'];
+    for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+      const a = pillars[ks[i]].zhi, b = pillars[ks[j]].zhi;
+      if ((ZHI.indexOf(a) + 6) % 12 === ZHI.indexOf(b)) neiChong.push(`${a}${b}相冲:${GONG[ks[i]]}与${GONG[ks[j]]}互撼,此两处人生课题多动荡,逢冲之年应期尤验`);
+    }
     return {
       birth, gender: gender || '男',
       pillars, dayGan, dayWx: GAN_WX[dayGan],
-      strength, yong,
+      strength, yong, geju, tiaohou: tiaoHou(cal.monthZhi), neiChong,
       lunarText: Lunar.format(lunar), calYear: cal.year, calMonth: cal.month, monthZhi: cal.monthZhi,
       dayun: computeDayun(pillars, yearGZ[0], gender || '男', birth),
     };
@@ -4312,7 +4362,7 @@
   }
 
   return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI,
-    kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx };
+    kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, trueSolarDate, eotMinutes, tiaoHou, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx };
 }));
 
 </script>
@@ -4830,6 +4880,12 @@
     '*青海,36.6,101.8|西宁,36.6,101.8|海东,36.5,102.1|海北,37.0,100.9|黄南,35.5,102.0|海南州,36.3,100.6|果洛,34.5,100.2|玉树,33.0,97.0|海西,37.4,97.4|' +
     '*宁夏,38.5,106.2|银川,38.5,106.2|石嘴山,39.0,106.4|吴忠,38.0,106.2|固原,36.0,106.3|中卫,37.5,105.2|' +
     '*新疆,43.8,87.6|乌鲁木齐,43.8,87.6|克拉玛依,45.6,84.9|吐鲁番,43.0,89.2|哈密,42.8,93.5|昌吉,44.0,87.3|博尔塔拉,44.9,82.1|巴音郭楞,41.8,86.1|阿克苏,41.2,80.3|克孜勒苏,39.7,76.2|喀什,39.5,76.0|和田,37.1,79.9|伊犁,43.9,81.3|塔城,46.7,83.0|阿勒泰,47.9,88.1|' +
+    '昆山,31.4,121.0|江阴,31.9,120.3|常熟,31.7,120.7|张家港,31.9,120.5|太仓,31.5,121.1|宜兴,31.4,119.8|溧阳,31.4,119.5|丹阳,32.0,119.6|句容,31.9,119.2|海门,31.9,121.2|启东,31.8,121.7|如皋,32.4,120.6|东台,32.9,120.3|泰兴,32.2,120.0|靖江,32.0,120.3|兴化,32.9,119.8|高邮,32.8,119.4|' +
+    '义乌,29.3,120.1|东阳,29.3,120.2|永康,28.9,120.0|诸暨,29.7,120.2|嵊州,29.6,120.8|慈溪,30.2,121.3|余姚,30.0,121.2|温岭,28.4,121.4|临海,28.9,121.1|瑞安,27.8,120.7|乐清,28.1,120.9|海宁,30.5,120.7|桐乡,30.6,120.6|平湖,30.7,121.0|' +
+    '晋江,24.8,118.6|石狮,24.7,118.7|南安,25.0,118.4|福清,25.7,119.4|龙海,24.4,117.8|普宁,23.3,116.2|台山,22.3,112.8|开平,22.4,112.7|鹤山,22.8,112.9|恩平,22.2,112.3|廉江,21.6,110.3|雷州,20.9,110.1|高州,21.9,110.8|化州,21.7,110.6|信宜,22.4,110.9|兴宁,24.1,115.7|陆丰,22.9,116.0|英德,24.2,113.4|连州,24.8,112.4|' +
+    '滕州,35.1,117.2|荣成,37.2,122.4|乳山,36.9,121.5|莱西,36.9,120.5|平度,36.8,120.0|胶州,36.3,120.0|即墨,36.4,120.4|龙口,37.6,120.5|莱州,37.2,119.9|蓬莱,37.8,120.8|招远,37.4,120.4|邹城,35.4,117.0|新泰,35.9,117.8|肥城,36.2,116.8|' +
+    '巩义,34.7,113.0|荥阳,34.8,113.4|新郑,34.4,113.7|登封,34.5,113.0|禹州,34.2,113.5|长葛,34.2,113.8|邓州,32.7,112.1|永城,33.9,116.4|项城,33.4,114.9|' +
+    '仙桃,30.4,113.4|潜江,30.4,112.9|天门,30.7,113.2|浏阳,28.2,113.6|醴陵,27.7,113.5|冷水江,27.7,111.4|' +
     '*台湾,25.0,121.5|台北,25.0,121.5|高雄,22.6,120.3|台中,24.1,120.7|*香港,22.3,114.2|*澳门,22.2,113.5';
   const PLACES = RAW.split('|').map(s => {
     const prov = s[0] === '*';
@@ -5188,10 +5244,14 @@
     $('pan-body').innerHTML = rows;
   }
   function panText(cast, z) {
+    const chongZhi = zz => Najia.ZHI[(Najia.ZHI.indexOf(zz) + 6) % 12];
     const lines = z.lines.map((l, i) => {
       const cl = cast.lines[i];
+      const yuePo = z.cal && chongZhi(l.zhi) === z.cal.monthZhi;
+      const anDong = z.cal && !cl.moving && chongZhi(l.zhi) === z.cal.dayZhi;
       return `${GuaCore.POS_NAMES[i]} ${l.liuShen} ${l.liuQin}${l.ganZhi}${l.wx}` +
-        `${l.shi ? ' 世' : ''}${l.ying ? ' 应' : ''}${l.kong ? ' (旬空)' : ''}${cl.moving ? (cl.yang ? ' ○动' : ' ×动') : ''}`;
+        `${l.shi ? ' 世' : ''}${l.ying ? ' 应' : ''}${l.kong ? ' (旬空)' : ''}${cl.moving ? (cl.yang ? ' ○动' : ' ×动') : ''}` +
+        `${yuePo ? ' 月破' : ''}${anDong ? ' 暗动' : ''}`;
     });
     return [
       '【纳甲排盘】',
@@ -5200,6 +5260,7 @@
       `卦宫:${z.palace}宫 ${z.gen},世${GuaCore.POS_NAMES[z.shi - 1]} 应${GuaCore.POS_NAMES[z.ying - 1]}`,
       '六爻(自下而上):',
       ...lines,
+      '(月破=爻支被月建冲,事临破败须待出月;暗动=静爻被日辰冲,暗中已动、吉凶暗应)',
     ].join('\n');
   }
 
@@ -5877,7 +5938,24 @@
   });
 
   // —— 心愿求吉:自定义心愿 × 八字旺衰 × 六卦阵 × 吉日窗 ——
-  const BKEY = 'dongxuan_birth'; // 生日与吉日历板块共用
+  const BKEY = 'dongxuan_birth'; // 生日全应用共用
+  const HRKEY = 'dongxuan_birth_hour', PLKEY = 'dongxuan_birth_place';
+  // 共享排盘:生日+时辰+出生地(真太阳时校正)→ 八字
+  function dxBirthChart(ctx) {
+    const bd = ($('jr-birth') && $('jr-birth').value) || localStorage.getItem(BKEY) || '';
+    if (!bd) return null;
+    const [y, m, d] = bd.split('-').map(Number);
+    let hv = '';
+    try { hv = localStorage.getItem(HRKEY) || ''; } catch (e) {}
+    const hour = hv === '' ? 12 : (Number(hv) === 0 ? 23 : Number(hv) * 2 - 1);
+    const dt = new Date(y, m - 1, d, hour, 30);
+    let lon;
+    try {
+      const pl = localStorage.getItem(PLKEY) || '';
+      if (pl) { const p = Dili.find(pl); if (p) lon = p[2]; }
+    } catch (e) {}
+    try { return Bazi.chart(dt, gender(ctx || 'q') || '男', lon); } catch (e) { return null; }
+  }
   let xyPlan = null, xyConvo = null, xyBusy = false, xyBazi = null, xyDaysTxt = '';
   const XY_PLAN = {
     note: '一站答四问:成不成、什么时候、怎么做最旺、什么最凶;末了给转运做法。',
@@ -5907,9 +5985,10 @@
   }
   // 旺你牌:八字喜用→颜色方位数字时段;生肖→贵人与冲日(填了生日立刻能看,不用等起卦)
   function renderXyBazi() {
-    const b = xyBirthDate();
-    if (!b) { xyBazi = null; $('xy-bazi').innerHTML = ''; return; }
-    try { xyBazi = Bazi.chart(b, gender('q') || '男'); } catch (e) { xyBazi = null; $('xy-bazi').innerHTML = ''; return; }
+    if (!$('xy-birth').value) { xyBazi = null; $('xy-bazi').innerHTML = ''; return; }
+    try { localStorage.setItem(BKEY, $('xy-birth').value); localStorage.setItem(HRKEY, $('xy-hour').value); } catch (e) {}
+    xyBazi = dxBirthChart('q');
+    if (!xyBazi) { $('xy-bazi').innerHTML = ''; return; }
     const c = xyBazi;
     const xi = c.yong.xiWx, ji = c.yong.jiWx;
     const g1 = Jiri.WX_GOODS[xi[0]], g2 = Jiri.WX_GOODS[xi[1] || xi[0]];
@@ -6379,10 +6458,9 @@
   // —— 地利:方位合命选旺地 ——
   function dlStatus(msg, err) { $('dl-status').textContent = msg; $('dl-status').classList.toggle('err', !!err); }
   function dlChart() {
-    const v = $('dl-birth').value;
-    if (!v) return null;
-    const [y, m, d] = v.split('-').map(Number);
-    try { return Bazi.chart(new Date(y, m - 1, d, 12), gender('q') || '男'); } catch (e) { return null; }
+    if (!$('dl-birth').value) return null;
+    try { localStorage.setItem(BKEY, $('dl-birth').value); } catch (e) {}
+    return dxBirthChart('q');
   }
   const DL_WXTXT = { 木: '木(东与东南)', 火: '火(正南)', 土: '土(西南与东北)', 金: '金(西与西北)', 水: '水(正北)' };
   $('btn-dl-rec').addEventListener('click', () => {
@@ -6857,10 +6935,8 @@
   }
   // 本人运势三卡:日运(随所选之日,精确到时辰)+ 月运 + 年运
   function jrYunRender(info) {
-    const b = jrBirth();
-    if (!b) { $('jr-yun').innerHTML = ''; return; }
-    let c;
-    try { c = Bazi.chart(b, gender('q') || '男'); } catch (e) { $('jr-yun').innerHTML = ''; return; }
+    const c = dxBirthChart('q');
+    if (!c) { $('jr-yun').innerHTML = ''; return; }
     const target = new Date(info.y, info.m - 1, info.d, 12);
     let y;
     try { y = Yunshi.all(c, target); } catch (e) { $('jr-yun').innerHTML = ''; return; }
@@ -6881,7 +6957,11 @@
     const mk = arr => arr.length ? `<br><b>事型:</b>${arr.map(m => esc(m.split(':')[0])).join(';')}。` : '';
     const tz = z => kong.includes(z) ? '<br><b>天中殺:</b>此段为运气之冬——宜守成学习清旧账,不宜立新根基。' : '';
     const lvb = lv => `<span class="badge">${esc(lv)}</span>`;
-    $('jr-yun').innerHTML =
+    const baseLine = `<div class="note" style="margin:0 0 6px">命盘底盘:日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}` +
+      `${c.geju ? ' · ' + esc(c.geju.split('(')[0]) : ''}${c.tiaohou ? ' · 调候先取' + c.tiaohou.need : ''}` +
+      `${c.neiChong && c.neiChong.length ? ' · ' + c.neiChong.map(n => esc(n.split(':')[0])).join('、') : ''}` +
+      `${(() => { try { return localStorage.getItem(PLKEY) || ''; } catch (e) { return ''; } })() ? ' · 已按出生地校真太阳时' : ''}</div>`;
+    $('jr-yun').innerHTML = baseLine +
       `<div class="fblock"><span class="k">日运 · ${info.m}月${info.d}日(${info.gz.day}日)${lvb(y.day.level)}</span><div class="t">${esc(y.day.text)}${mk(dayMarks)}${tz(info.gz.day[1])}${shiLine}</div></div>` +
       `<div class="fblock"><span class="k">月运 · ${esc(y.month.span)}(${y.month.gz}月)${lvb(y.month.level)}</span><div class="t">${esc(y.month.text)}${mk(monMarks)}${tz(y.month.gz[1])}</div></div>` +
       `<div class="fblock"><span class="k">年运 · ${esc(y.year.span)}(${y.year.gz}年)${lvb(y.year.level)}</span><div class="t">${esc(y.year.text)}${y.year.dayun ? ' 正走大运:' + esc(y.year.dayun) + '。' : ''}${mk(yrMarks)}${tz(y.year.gz[1])}</div></div>`;
@@ -6892,8 +6972,8 @@
     let shaLine = '';
     if (info.personal) {
       try {
-        const bc = Bazi.chart(jrBirth(), '男');
-        const marks = Bazi.flowMarks(bc, info.gz.day[0], info.gz.day[1]);
+        const bc = dxBirthChart('q');
+        const marks = bc ? Bazi.flowMarks(bc, info.gz.day[0], info.gz.day[1]) : [];
         if (marks.length) shaLine = `<div class="jrow"><b>星煞:</b>${marks.map(m => esc(m.split('——')[0])).join(';')}。</div>`;
       } catch (e) {}
     }
@@ -6936,7 +7016,21 @@
   function jrEnsure() {
     if (jrInit) return;
     jrInit = true;
-    try { const b = localStorage.getItem(BKEY); if (b) $('jr-birth').value = b; } catch (e) {}
+    try {
+      const b = localStorage.getItem(BKEY); if (b) $('jr-birth').value = b;
+      const h = localStorage.getItem(HRKEY); if (h) $('jr-hour').value = h;
+      const p = localStorage.getItem(PLKEY); if (p) $('jr-place').value = p;
+    } catch (e) {}
+    const jrReSel = () => { if (jrGrid && jrSel) { const info = jrGrid.days.find(d => d.iso === jrSel); if (info) jrShowDetail(info); } };
+    $('jr-hour').addEventListener('change', () => {
+      try { localStorage.setItem(HRKEY, $('jr-hour').value); } catch (e) {}
+      const xh = $('xy-hour'); if (xh) xh.value = $('jr-hour').value;
+      jrReSel();
+    });
+    $('jr-place').addEventListener('change', () => {
+      try { localStorage.setItem(PLKEY, $('jr-place').value.trim()); } catch (e) {}
+      jrReSel();
+    });
     $('jr-event').innerHTML = Object.entries(Jiri.EVENTS).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
     jrSel = jrIsoToday();
     renderJiri();

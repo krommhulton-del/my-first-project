@@ -43,8 +43,37 @@
     return GAN[(base + hourBranchIdx) % 10] + ZHI[hourBranchIdx];
   }
 
-  // 主排盘:birth 为 Date(设备本地时刻,视为出生地时间)
-  function chart(birth, gender) {
+  // ——— 真太阳时:钟表时 → 出生地真太阳时(排时柱的行规) ———
+  // 三步:①1986-1991 夏令时回拨一小时;②经度差(每偏东经120°一度差4分钟);③均时差(±16分)。
+  const DST = { 1986: [5, 4, 9, 14], 1987: [4, 12, 9, 13], 1988: [4, 10, 9, 11], 1989: [4, 16, 9, 17], 1990: [4, 15, 9, 16], 1991: [4, 14, 9, 15] };
+  function eotMinutes(date) {
+    const start = Date.UTC(date.getFullYear(), 0, 1);
+    const n = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000) + 1;
+    const B = (360 * (n - 81) / 365) * Math.PI / 180;
+    return 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+  }
+  function trueSolarDate(birth, lonDeg) {
+    let t = birth.getTime();
+    const y = birth.getFullYear(), d = DST[y];
+    if (d) {
+      const s = new Date(y, d[0] - 1, d[1], 2).getTime(), e = new Date(y, d[2] - 1, d[3], 2).getTime();
+      if (t >= s && t < e) t -= 3600000; // 夏令时拨回
+    }
+    if (typeof lonDeg === 'number' && !isNaN(lonDeg)) t += (lonDeg - 120) * 4 * 60000; // 经度差
+    t += eotMinutes(birth) * 60000; // 均时差
+    return new Date(t);
+  }
+
+  // 调候(寒暖之要):冬生先取火暖局,夏生先取水润局——喜用之外此行亦作药
+  function tiaoHou(monthZhi) {
+    if ('亥子丑'.includes(monthZhi)) return { need: '火', note: '生于冬月,局寒——调候先取火(丙丁)暖局,穿用红紫、向南、午时发力皆是药' };
+    if ('巳午未'.includes(monthZhi)) return { need: '水', note: '生于夏月,局燥——调候先取水(壬癸)润局,黑蓝之色、向北、亥子时静养皆是药' };
+    return null;
+  }
+
+  // 主排盘:birth 为 Date(设备本地时刻,视为出生地时间;传 lon 则先校真太阳时)
+  function chart(birth, gender, lonDeg) {
+    if (typeof lonDeg === 'number' && !isNaN(lonDeg)) birth = trueSolarDate(birth, lonDeg);
     const cal = Najia.ganZhi(birth);          // 年(立春界)、月(节气界)、日
     const lunar = Lunar.fromDate(birth);      // 取时辰序号
     const hourIdx = lunar.hourNum - 1;         // 子=0
@@ -64,11 +93,30 @@
       p.cang = CANGGAN[p.zhi].map(g => ({ gan: g, wx: GAN_WX[g], shen: shiShen(dayGan, g) }));
     }
     const strength = judgeStrength(pillars, dayGan);
-    const yong = pickYongShen(dayGan, strength.strong);
+    let yong = pickYongShen(dayGan, strength.strong);
+    // 从格:生扶极重为从强(顺其势喜帮扶),极轻为从弱(顺其势喜克泄)——喜忌翻转
+    let geju = null;
+    if (strength.pct >= 85) {
+      geju = '从强格(生扶极盛,顺势不逆)';
+      const me = GAN_WX[dayGan], yin = invSheng(me);
+      yong = { strong: true, xiWx: [me, yin], jiWx: [KE[me], invKe(me), SHENG[me]].filter((v, i, a) => a.indexOf(v) === i), xiName: '比劫·印(从其强势)', jiName: '克泄耗(逆势为忌)' };
+    } else if (strength.pct <= 15) {
+      geju = '从弱格(生扶极微,弃命从势)';
+      const me = GAN_WX[dayGan], yin = invSheng(me);
+      yong = { strong: false, xiWx: [KE[me], SHENG[me]], jiWx: [me, yin], xiName: '财官食伤(从其弱势)', jiName: '比劫·印(逆势为忌)' };
+    }
+    // 命局内支冲:宫位互冲入注(年=根基长辈,月=门户事业,日=自身婚姻,时=子女晚景)
+    const GONG = { year: '根基宫(长辈)', month: '门户宫(事业)', day: '婚姻宫(自身)', hour: '子女宫(晚景)' };
+    const neiChong = [];
+    const ks = ['year', 'month', 'day', 'hour'];
+    for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+      const a = pillars[ks[i]].zhi, b = pillars[ks[j]].zhi;
+      if ((ZHI.indexOf(a) + 6) % 12 === ZHI.indexOf(b)) neiChong.push(`${a}${b}相冲:${GONG[ks[i]]}与${GONG[ks[j]]}互撼,此两处人生课题多动荡,逢冲之年应期尤验`);
+    }
     return {
       birth, gender: gender || '男',
       pillars, dayGan, dayWx: GAN_WX[dayGan],
-      strength, yong,
+      strength, yong, geju, tiaohou: tiaoHou(cal.monthZhi), neiChong,
       lunarText: Lunar.format(lunar), calYear: cal.year, calMonth: cal.month, monthZhi: cal.monthZhi,
       dayun: computeDayun(pillars, yearGZ[0], gender || '男', birth),
     };
@@ -227,5 +275,5 @@
   }
 
   return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI,
-    kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx };
+    kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, trueSolarDate, eotMinutes, tiaoHou, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx };
 }));

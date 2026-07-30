@@ -249,5 +249,55 @@ t('jiShi 评分与喜忌挂钩:喜用时干加分、忌神时干减分', () => {
   }
 });
 
+console.log('【十】真太阳时与专业环节');
+t('均时差全年有界(|EoT|≤17分),二月中在-14分上下、十一月初在+16分上下', () => {
+  for (let m = 0; m < 12; m++) ok(Math.abs(Bazi.eotMinutes(new Date(2026, m, 15))) <= 17, '月' + (m + 1));
+  ok(Bazi.eotMinutes(new Date(2026, 1, 12)) < -12, '二月中负极值');
+  ok(Bazi.eotMinutes(new Date(2026, 10, 3)) > 14, '十一月初正极值');
+});
+t('经度校正:乌鲁木齐(东经87.6°)约拨慢130分钟;120°地几乎不动', () => {
+  const d = new Date(1995, 6, 1, 12, 0);
+  const diffWlmq = (Bazi.trueSolarDate(d, 87.6) - d) / 60000;
+  ok(diffWlmq > -142 && diffWlmq < -118, '乌市差=' + diffWlmq.toFixed(1));
+  const diff120 = (Bazi.trueSolarDate(d, 120) - d) / 60000;
+  ok(Math.abs(diff120) <= 8, '120°差=' + diff120.toFixed(1));
+});
+t('夏令时回拨:1988-07-01 比 1992-07-01 多拨慢一小时', () => {
+  const a = (Bazi.trueSolarDate(new Date(1988, 6, 1, 12), 120) - new Date(1988, 6, 1, 12)) / 60000;
+  const b = (Bazi.trueSolarDate(new Date(1992, 6, 1, 12), 120) - new Date(1992, 6, 1, 12)) / 60000;
+  ok(Math.abs((a - b) + 60) <= 3, `88年=${a.toFixed(1)} 92年=${b.toFixed(1)}`);
+});
+t('真太阳时改时柱:乌鲁木齐生人时柱与钟表时排法不同', () => {
+  const d = new Date(1995, 6, 1, 12, 30);
+  const c1 = Bazi.chart(new Date(d), '男');
+  const c2 = Bazi.chart(new Date(d), '男', 87.6);
+  ok(c1.pillars.hour.gz !== c2.pillars.hour.gz, `钟表${c1.pillars.hour.gz} vs 真太阳${c2.pillars.hour.gz}`);
+});
+t('调候:冬月取火、夏月取水、春秋不另立', () => {
+  eq(Bazi.tiaoHou('子').need, '火'); eq(Bazi.tiaoHou('丑').need, '火');
+  eq(Bazi.tiaoHou('午').need, '水'); eq(Bazi.tiaoHou('巳').need, '水');
+  eq(Bazi.tiaoHou('卯'), null); eq(Bazi.tiaoHou('酉'), null);
+});
+t('从格:扫描三十年逐日,从强从弱皆有例,且喜忌确按顺势翻转', () => {
+  let cong = 0, congRuo = 0;
+  for (let i = 0; i < 10950 && (cong === 0 || congRuo === 0); i += 3) {
+    const c = Bazi.chart(new Date(1975, 0, 1 + i, 12), '男');
+    if (c.geju && c.geju.includes('从强')) { cong++; ok(c.yong.xiWx.includes(Bazi.GAN_WX[c.dayGan]), '从强喜比劫'); }
+    if (c.geju && c.geju.includes('从弱')) { congRuo++; ok(c.yong.jiWx.includes(Bazi.GAN_WX[c.dayGan]), '从弱忌比劫'); }
+  }
+  ok(cong + congRuo >= 1, `三十年中从格例数=${cong + congRuo}(极端格局本就少见,有例即可)`);
+});
+t('命局内冲:能检出且注明宫位;无冲之局不硬报', () => {
+  let found = false;
+  for (let i = 0; i < 400 && !found; i++) {
+    const c = Bazi.chart(new Date(1990, 0, 1 + i, 12), '男');
+    if (c.neiChong.length) { found = true; ok(c.neiChong[0].includes('宫'), c.neiChong[0]); }
+  }
+  ok(found, '400天内应有内冲之例');
+});
+t('县级市认识:昆山义乌晋江慈溪滕州巩义浏阳仙桃', () => {
+  for (const n of ['昆山', '义乌', '晋江', '慈溪', '滕州', '巩义', '浏阳', '仙桃']) ok(require('../dili.js').find(n), n);
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

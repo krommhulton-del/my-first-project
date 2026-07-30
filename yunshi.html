@@ -124,8 +124,9 @@
       <div class="fld"><label>性别</label>
         <select id="gender"><option value="男">男</option><option value="女">女</option></select>
       </div>
+      <div class="fld"><label>出生地(市/省,选填)</label><input type="text" id="bplace" placeholder="如:成都(校真太阳时)"></div>
     </div>
-    <div class="note">用阳历(公历)生日。不知道准确出生时间就填个大概，时辰只影响时柱与部分细断，日月年运主要看日柱。</div>
+    <div class="note">用阳历(公历)生日。填出生地会按经度差+均时差校<b>真太阳时</b>(1986-91年出生自动回拨夏令时),时柱才排得准;新疆西藏等偏西之地尤其要填。</div>
     <div class="formerr" id="in-err"></div>
     <div class="btnrow"><button id="btn-go" class="primary">排盘看运</button></div>
   </section>
@@ -188,6 +189,7 @@
 <script src="bazi.js"></script>
 <script src="yunshi.js"></script>
 <script src="sanmei.js"></script>
+<script src="dili.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -219,7 +221,9 @@
     const [h, mi] = tm.split(':').map(Number);
     const birth = new Date(Y, M - 1, D, h, mi || 0);
     if (isNaN(birth.getTime()) || Y < 1900 || Y > 2100) { $('in-err').textContent = '日期看起来不对,检查一下。'; return; }
-    curChart = Bazi.chart(birth, $('gender').value);
+    let lon;
+    try { const p = window.Dili && Dili.find($('bplace').value.trim()); if (p) lon = p[2]; } catch (e) {}
+    curChart = Bazi.chart(birth, $('gender').value, lon);
     renderMing(curChart);
     try { curSanmei = Sanmei.chart(birth); renderSanmei(curSanmei); } catch (e) { curSanmei = null; }
     renderYun(curChart, new Date());
@@ -245,7 +249,12 @@
       ? `你这人底子<b>${qiang}</b>,自己有劲、有主见。对你添彩的是能"用掉、花掉、管住你"那股劲的五行——也就是${xiPlain(c)};最怕再有人一个劲儿给你加码。`
       : `你这人底子<b>${qiang}</b>,劲儿容易不够使。对你添力的是"生你、帮你"的五行——也就是${xiPlain(c)};最怕再被消耗、被压。`;
     $('body-line').innerHTML = `你是<b>${c.dayGan}${c.dayWx}命</b>(日主${c.dayWx}),身${qiang}。`;
-    $('body-sub').innerHTML = `${yongTalk}<br><span style="opacity:.8">命盘:${esc(c.lunarText)} · 生扶力 ${s.help} / 耗泄力 ${s.drain}(${s.pct}%)· 日主${esc(s.deLing)}</span>`;
+    const pro = [];
+    if (c.geju) pro.push(`<b>${esc(c.geju)}</b>——喜忌已按从格翻转`);
+    if (c.tiaohou) pro.push(esc(c.tiaohou.note));
+    if (c.neiChong && c.neiChong.length) c.neiChong.forEach(n => pro.push(esc(n)));
+    $('body-sub').innerHTML = `${yongTalk}<br><span style="opacity:.8">命盘:${esc(c.lunarText)} · 生扶力 ${s.help} / 耗泄力 ${s.drain}(${s.pct}%)· 日主${esc(s.deLing)}</span>` +
+      (pro.length ? `<br>${pro.join('<br>')}` : '');
   }
   function xiPlain(c) {
     const names = { 木: '木(青绿、东方、春木、生发)', 火: '火(红、南方、热闹、表达)', 土: '土(黄、稳、地产、诚信)', 金: '金(白、西方、金属、决断)', 水: '水(黑蓝、北方、流动、智慧)' };
@@ -313,6 +322,7 @@
 四柱:${four}。日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}(生扶${c.strength.help}/耗泄${c.strength.drain})。
 喜用五行:${c.yong.xiWx.join('、')};忌神五行:${c.yong.jiWx.join('、')}。
 正走大运:${du}。空亡(天中殺)二支:${kong.join('、')};未来十二年中天中殺之年:${tzYears.join('、') || '(不在近窗)'}。
+${c.geju ? '【格局】' + c.geju + '——喜忌已按从格翻转,断语随之。' : ''}${c.tiaohou ? '【调候】' + c.tiaohou.note + '。' : ''}${c.neiChong && c.neiChong.length ? '【命局内冲】' + c.neiChong.join(';') + '。' : ''}
 【所看时段】
 今年(${y.year.span}):干支${y.year.gz},程序判为「${y.year.level}」,天干十神${y.year.shen}。${yM.length ? '\n今年星煞与动宫:' + yM.join(';') : ''}
 本月(${y.month.span}):干支${y.month.gz},判「${y.month.level}」,${y.month.shen}。${mM.length ? '\n本月星煞与动宫:' + mM.join(';') : ''}
