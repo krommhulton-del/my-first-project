@@ -289,13 +289,15 @@
   .bottomnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex;
     background: color-mix(in srgb, var(--panel) 86%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     border-top: 1px solid var(--hair); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
-  .bottomnav button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  .bottomnav button, .bottomnav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    text-decoration: none;
     background: transparent; border: none; border-radius: 12px; padding: 5px 0 3px; box-shadow: none; letter-spacing: .05em; }
-  .bottomnav button:hover { background: var(--hover); }
+  .bottomnav button:hover, .bottomnav a:hover { background: var(--hover); }
   .bottomnav .ic { font-family: var(--disp); font-size: 1.12rem; line-height: 1.5; width: 34px; height: 30px;
     display: flex; align-items: center; justify-content: center; border-radius: 10px; }
   .bottomnav .lb { font-size: .68rem; color: var(--dim); }
   .bottomnav button.on .ic { background: var(--accent-soft); color: var(--cinnabar); }
+  .bottomnav a .ic { color: var(--gold); }
   .bottomnav button.on .lb { color: var(--cinnabar); }
   .bmenu { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
   .bcard { display: flex; align-items: center; gap: 12px; text-align: left; background: var(--panel2);
@@ -377,7 +379,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.51</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.53</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -817,7 +819,7 @@
       <input type="date" id="jr-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
       <select id="jr-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
       <input type="text" id="jr-place" placeholder="出生地(市/省)" style="width:120px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
-      <span class="qwhint">生辰按公历;填出生地自动校真太阳时(经度差+均时差,86-91年夏令时回拨),时柱才排得准。填一次,全应用通用。</span>
+      <span class="qwhint">生辰按公历;86-91年生人一律自动回拨夏令时(不填出生地也拨),填了出生地再补经度差,时柱才排得最准。填一次,全应用通用。</span>
     </div>
     <div id="jr-yun"></div>
     <div class="jr-nav">
@@ -849,13 +851,14 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.51 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.53 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
   <button data-v="ask" class="on"><span class="ic">卦</span><span class="lb">问卦</span></button>
   <button data-v="boards"><span class="ic">阵</span><span class="lb">专项</span></button>
   <button data-v="jiri"><span class="ic">历</span><span class="lb">吉日</span></button>
+  <a href="yunshi.html" id="nav-yunshi"><span class="ic">运</span><span class="lb">运势</span></a>
   <button data-v="hist"><span class="ic">档</span><span class="lb">卦档</span></button>
 </nav>
 

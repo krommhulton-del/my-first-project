@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f4eee1">
+<script>try{if(localStorage.getItem('dongxuan_theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="东玄运势">
@@ -24,6 +25,16 @@
     --paper: #f4eee1; --panel: #faf6ec; --panel2: #ece4d0; --ink: #33291d;
     --dim: #8b8070; --line: #d8cdb2; --cinnabar: #b03a2a; --gold: #8a6a2f; --gold-fill: #c9a45c;
     --wx-mu: #3f7d4e; --wx-huo: #b03a2a; --wx-tu: #9a7b3a; --wx-jin: #9a8f6a; --wx-shui: #35617e;
+    --btn-hover: #ece2cb; --primary-ink: #fff; --primary-hover: #a93226;
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    /* 夜间:与卜卦主页面同一套影院黑,浮层内嵌时不刺眼 */
+    --paper: #141414; --panel: #1e1d1b; --panel2: #292724; --ink: #e8e4db;
+    --dim: #989185; --line: #383530; --cinnabar: #e0563f; --gold: #c9a45c; --gold-fill: #c9a45c;
+    --wx-mu: #6fbe83; --wx-huo: #e0563f; --wx-tu: #d3ad63; --wx-jin: #cfc4a0; --wx-shui: #7fb3d1;
+    --btn-hover: #33302b; --primary-ink: #141414; --primary-hover: #ef6a52;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--paper); color: var(--ink); min-height: 100vh;
@@ -37,7 +48,7 @@
   header p { color: var(--dim); font-size: .9rem; margin-top: 6px; }
   header .seal { border: 2px solid var(--cinnabar); color: var(--cinnabar); border-radius: 4px; padding: 0 8px; font-size: .82rem; margin-left: 6px; }
   header .nav { margin-top: 8px; font-size: .85rem; }
-  header .nav a { color: var(--gold); text-decoration: none; border-bottom: 1px dashed var(--gold); }
+  header .nav a { color: var(--gold); text-decoration: none; border-bottom: 1px dashed var(--gold); display: inline-block; margin: 2px 8px; }
   section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
   section h2 { font-size: 1.02rem; color: var(--gold); letter-spacing: .18em; margin-bottom: 14px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
   label { color: var(--dim); font-size: .88rem; display: block; margin-bottom: 5px; }
@@ -49,9 +60,9 @@
   .btnrow { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
   button { background: var(--panel2); color: var(--ink); border: 1px solid var(--gold); border-radius: 6px;
     padding: 11px 22px; font-size: 1rem; font-family: inherit; cursor: pointer; letter-spacing: .08em; min-height: 46px; }
-  button:hover { background: #ece2cb; }
-  button.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
-  button.primary:hover { background: #a93226; }
+  button:hover { background: var(--btn-hover); }
+  button.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: var(--primary-ink); font-weight: 600; }
+  button.primary:hover { background: var(--primary-hover); }
   button:disabled { opacity: .4; cursor: not-allowed; }
   .formerr { color: var(--cinnabar); font-size: .9rem; margin-top: 8px; }
   .note { color: var(--dim); font-size: .82rem; margin-top: 8px; line-height: 1.6; }
@@ -112,8 +123,8 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.1</span></p>
-    <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a></div>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.53</span></p>
+    <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
   <section id="sec-in">
@@ -126,7 +137,7 @@
       </div>
       <div class="fld"><label>出生地(市/省,选填)</label><input type="text" id="bplace" placeholder="如:成都(校真太阳时)"></div>
     </div>
-    <div class="note">用阳历(公历)生日。填出生地会按经度差+均时差校<b>真太阳时</b>(1986-91年出生自动回拨夏令时),时柱才排得准;新疆西藏等偏西之地尤其要填。</div>
+    <div class="note">用阳历(公历)生日。1986-91年出生的一律自动回拨<b>夏令时</b>,均时差也照校(不填出生地按国标东经120°算);填上出生地再补<b>经度差</b>,时柱才排得最准——新疆西藏等偏西之地能差两个时辰,务必填。</div>
     <div class="formerr" id="in-err"></div>
     <div class="btnrow"><button id="btn-go" class="primary">排盘看运</button></div>
   </section>
@@ -419,6 +430,28 @@ ${curSanmei ? Sanmei.material(curSanmei) + '\n【算命学用法】人体星図�
   $('ai-model').addEventListener('change', () => localStorage.setItem(prov().modelStore, $('ai-model').value));
   if (localStorage.getItem('dongxuan_ai_provider') && PROVIDERS[localStorage.getItem('dongxuan_ai_provider')]) $('ai-provider').value = localStorage.getItem('dongxuan_ai_provider');
   syncProv();
+
+  // 日间/夜间:与卜卦主程序共用 dongxuan_theme,单文件浮层里也跟着主程序走
+  const TKEY = 'dongxuan_theme';
+  let curTheme = 'light';
+  const applyTheme = t => {
+    if (t === 'dark') document.documentElement.dataset.theme = 'dark';
+    else delete document.documentElement.dataset.theme;
+    const tb = $('btn-theme');
+    if (tb) tb.textContent = t === 'dark' ? '☀ 日间' : '◐ 夜间';
+    const meta = document.querySelector('meta[name=theme-color]');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#141414' : '#f4eee1');
+  };
+  try { curTheme = localStorage.getItem(TKEY) === 'dark' ? 'dark' : 'light'; } catch (e) {}
+  if (document.documentElement.dataset.theme === 'dark') curTheme = 'dark';
+  applyTheme(curTheme);
+  const themeBtn = $('btn-theme');
+  if (themeBtn) themeBtn.addEventListener('click', e => {
+    e.preventDefault();
+    curTheme = curTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(curTheme);
+    try { localStorage.setItem(TKEY, curTheme); } catch (err) {}
+  });
 
   const shareBtn = $('btn-share');
   if (shareBtn) shareBtn.addEventListener('click', async (e) => {

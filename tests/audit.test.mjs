@@ -267,6 +267,20 @@ t('夏令时回拨:1988-07-01 比 1992-07-01 多拨慢一小时', () => {
   const b = (Bazi.trueSolarDate(new Date(1992, 6, 1, 12), 120) - new Date(1992, 6, 1, 12)) / 60000;
   ok(Math.abs((a - b) + 60) <= 3, `88年=${a.toFixed(1)} 92年=${b.toFixed(1)}`);
 });
+t('夏令时不看出生地也必须回拨:1986-91 年生人不填出生地,时柱仍按拨回一小时排', () => {
+  // 曾漏:夏令时回拨写在经度校正的同一道门里,不填出生地就整条不走,1986-91 年生人时柱整错一个时辰
+  const d = () => new Date(1990, 4, 20, 9, 30);           // 钟表 9:30 → 实为 8:30 标准时 → 辰时
+  eq(Bazi.chart(d(), '男').pillars.hour.zhi, '辰');
+  eq(Bazi.chart(d(), '男', 120.15).pillars.hour.zhi, '辰'); // 填了杭州,结论一致
+  eq(Bazi.chart(new Date(1992, 4, 20, 9, 30), '男').pillars.hour.zhi, '巳'); // 92 年已废夏令时,9:30 就是巳时
+});
+t('不填出生地也走均时差(按国标 120°E 计),只少经度这一项', () => {
+  const d = new Date(1995, 10, 3, 12, 0);                  // 十一月初 EoT 约 +16 分
+  const noPlace = (Bazi.trueSolarDate(new Date(d)) - d) / 60000;
+  ok(noPlace > 14 && noPlace < 18, '未填地校正=' + noPlace.toFixed(1));
+  const withPlace = (Bazi.trueSolarDate(new Date(d), 87.6) - d) / 60000;
+  ok(withPlace < noPlace - 100, '填乌市后再减经度差=' + withPlace.toFixed(1));
+});
 t('真太阳时改时柱:乌鲁木齐生人时柱与钟表时排法不同', () => {
   const d = new Date(1995, 6, 1, 12, 30);
   const c1 = Bazi.chart(new Date(d), '男');

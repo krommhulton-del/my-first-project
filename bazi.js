@@ -74,7 +74,9 @@
   // 主排盘:birth 为 Date(设备本地时刻,视为出生地时间;传 lon 则先校真太阳时)
   // 晚子时(23点后)依当今主流「子时换日法」:日柱与五鼠遁均按次日排。
   function chart(birth, gender, lonDeg) {
-    if (typeof lonDeg === 'number' && !isNaN(lonDeg)) birth = trueSolarDate(birth, lonDeg);
+    // 夏令时回拨与均时差是钟表时刻本身的事实,与是否填出生地无关(未填出生地按国标经线 120°E 计),
+    // 只有经度差要靠出生地——不填就少这一项,不能连夏令时都不拨,否则 1986-91 年生人时柱整整错一个时辰。
+    birth = trueSolarDate(birth, lonDeg);
     const cal = Najia.ganZhi(birth);          // 年(立春界)、月(节气界)、日
     const lunar = Lunar.fromDate(birth);      // 取时辰序号
     const hourIdx = lunar.hourNum - 1;         // 子=0
