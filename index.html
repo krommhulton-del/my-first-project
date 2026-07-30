@@ -377,7 +377,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.48</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.49</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -848,7 +848,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.48 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.49 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -2830,14 +2830,15 @@
     const mk = arr => arr.length ? `<br><b>事型:</b>${arr.map(m => esc(m.split(':')[0])).join(';')}。` : '';
     const tz = z => kong.includes(z) ? '<br><b>天中殺:</b>此段为运气之冬——宜守成学习清旧账,不宜立新根基。' : '';
     const lvb = lv => `<span class="badge">${esc(lv)}</span>`;
-    const baseLine = `<div class="note" style="margin:0 0 6px">命盘底盘:日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}` +
+    const baseLine = `<div class="note" style="margin:0 0 6px">命盘底盘:四柱 ${['year', 'month', 'day', 'hour'].map(k => c.pillars[k].gz).join(' ')} · 日主${c.dayGan}${c.dayWx},身${c.strength.strong ? '强' : '弱'}(得令${c.strength.detail.ling}/得地${c.strength.detail.di}/得势${c.strength.detail.shi})` +
       `${c.geju ? ' · ' + esc(c.geju.split('(')[0]) : ''}${c.tiaohou ? ' · 调候先取' + c.tiaohou.need : ''}` +
       `${c.neiChong && c.neiChong.length ? ' · ' + c.neiChong.map(n => esc(n.split(':')[0])).join('、') : ''}` +
       `${(() => { try { return localStorage.getItem(PLKEY) || ''; } catch (e) { return ''; } })() ? ' · 已按出生地校真太阳时' : ''}</div>`;
+    const steps = arr => arr && arr.length ? '<br>' + arr.map(l => '· ' + esc(l)).join('<br>') : '';
     $('jr-yun').innerHTML = baseLine +
-      `<div class="fblock"><span class="k">日运 · ${info.m}月${info.d}日(${info.gz.day}日)${lvb(y.day.level)}</span><div class="t">${esc(y.day.text)}${mk(dayMarks)}${tz(info.gz.day[1])}${shiLine}</div></div>` +
-      `<div class="fblock"><span class="k">月运 · ${esc(y.month.span)}(${y.month.gz}月)${lvb(y.month.level)}</span><div class="t">${esc(y.month.text)}${mk(monMarks)}${tz(y.month.gz[1])}</div></div>` +
-      `<div class="fblock"><span class="k">年运 · ${esc(y.year.span)}(${y.year.gz}年)${lvb(y.year.level)}</span><div class="t">${esc(y.year.text)}${y.year.dayun ? ' 正走大运:' + esc(y.year.dayun) + '。' : ''}${mk(yrMarks)}${tz(y.year.gz[1])}</div></div>`;
+      `<div class="fblock"><span class="k">日运 · ${info.m}月${info.d}日(${info.gz.day}日)${lvb(y.day.level)}</span><div class="t">${esc(y.day.text)}${steps(y.day.lines)}${mk(dayMarks)}${tz(info.gz.day[1])}${shiLine}</div></div>` +
+      `<div class="fblock"><span class="k">月运 · ${esc(y.month.span)}(${y.month.gz}月)${lvb(y.month.level)}</span><div class="t">${esc(y.month.text)}${steps(y.month.lines)}${mk(monMarks)}${tz(y.month.gz[1])}</div></div>` +
+      `<div class="fblock"><span class="k">年运 · ${esc(y.year.span)}(${y.year.gz}年)${lvb(y.year.level)}</span><div class="t">${esc(y.year.text)}${y.year.dayun ? ' 正走大运:' + esc(y.year.dayun) + '。' : ''}${steps(y.year.lines)}${mk(yrMarks)}${tz(y.year.gz[1])}</div></div>`;
   }
   function jrShowDetail(info) {
     jrYunRender(info);

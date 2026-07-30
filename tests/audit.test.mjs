@@ -315,5 +315,69 @@ t('县级市认识:昆山义乌晋江慈溪滕州巩义浏阳仙桃', () => {
   for (const n of ['昆山', '义乌', '晋江', '慈溪', '滕州', '巩义', '浏阳', '仙桃']) ok(require('../dili.js').find(n), n);
 });
 
+console.log('【十一】流运判读全规程(干支拆解/双层十神/动宫/天克地冲/伏吟/调候)');
+const Yunshi = require('../yunshi.js');
+t('动宫:巳日冲亥日主之支,日运必报婚姻宫动;十神两层行必在', () => {
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男'); // 日柱辛亥
+  const d = Yunshi.riYun(c, new Date(2026, 6, 30, 12)); // 乙巳日
+  ok(d.lines.some(l => l.includes('婚姻宫')), '巳冲亥应动婚姻宫:' + d.lines.join('|'));
+  ok(d.lines.some(l => l.includes('十神两层')), '十神两层');
+  ok(d.lines.some(l => l.includes('干支拆解')), '干支拆解');
+});
+t('天克地冲:丁巳日对辛亥日主(丁克辛+巳冲亥)必报大动之象', () => {
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男');
+  let found = false;
+  for (let i = 0; i < 60 && !found; i++) {
+    const dt = new Date(2026, 6, 30 + i, 12);
+    const gz = Najia.ganZhi(dt).day;
+    if (gz === '丁巳') {
+      const d = Yunshi.riYun(c, dt);
+      ok(d.lines.some(l => l.includes('天克地冲')), d.lines.join('|'));
+      found = true;
+    }
+  }
+  ok(found, '60日内必有丁巳日');
+});
+t('伏吟:辛亥日对辛亥日主必报伏吟', () => {
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男');
+  let found = false;
+  for (let i = 0; i < 60 && !found; i++) {
+    const dt = new Date(2026, 6, 30 + i, 12);
+    if (Najia.ganZhi(dt).day === '辛亥') {
+      ok(Yunshi.riYun(c, dt).lines.some(l => l.includes('伏吟')), '伏吟');
+      found = true;
+    }
+  }
+  ok(found, '60日内必有辛亥日');
+});
+t('干支分评:干喜支忌之日必报「面上顺、底下漏」', () => {
+  const c = Bazi.chart(new Date(1990, 5, 15, 12), '男'); // 喜金土 忌水木火
+  let found = false;
+  for (let i = 0; i < 60 && !found; i++) {
+    const dt = new Date(2026, 6, 30 + i, 12);
+    const gz = Najia.ganZhi(dt).day;
+    if ('戊己庚辛'.includes(gz[0]) && '子亥寅卯巳午'.includes(gz[1])) {
+      const d = Yunshi.riYun(c, dt);
+      ok(d.lines.some(l => l.includes('面上顺、底下漏')), gz + ':' + d.lines[0]);
+      found = true;
+    }
+  }
+  ok(found, '60日内必有干喜支忌之日');
+});
+t('调候入流运:冬月生人逢火日必报调候得药', () => {
+  const c = Bazi.chart(new Date(1990, 11, 20, 12), '男'); // 子月冬生,调候取火
+  ok(c.tiaohou && c.tiaohou.need === '火', '冬生调候火');
+  let found = false;
+  for (let i = 0; i < 30 && !found; i++) {
+    const dt = new Date(2026, 6, 30 + i, 12);
+    const gz = Najia.ganZhi(dt).day;
+    if ('丙丁'.includes(gz[0])) {
+      ok(Yunshi.riYun(c, dt).lines.some(l => l.includes('调候得药')), gz);
+      found = true;
+    }
+  }
+  ok(found, '30日内必有火日');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

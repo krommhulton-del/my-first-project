@@ -275,6 +275,7 @@
         <span class="ylv ${lvcls}">${esc(cd.level)}</span>
         <span class="yarea">${esc(cd.area)}</span></div>
       <div class="ytext">${esc(cd.text)}</div>
+      ${cd.lines && cd.lines.length ? `<div class="ytext" style="opacity:.88;font-size:.92em">${cd.lines.map(l => '· ' + esc(l)).join('<br>')}</div>` : ''}
       <div class="ymeta">${esc(cd.span)} · 天干${esc(cd.shen)}(${esc(cd.cls)})${cd.dayun ? ' · 正走 ' + esc(cd.dayun) : ''}</div>
     </div>`;
   }

@@ -66,7 +66,8 @@ await t('运势三卡:今日/本月/今年,含等级与领域,白话成句', asy
   for (let i = 0; i < 3; i++) {
     const lv = await cards.nth(i).locator('.ylv').textContent();
     ok(['大吉', '吉', '平顺', '小凶', '凶'].includes(lv), '等级:' + lv);
-    ok((await cards.nth(i).locator('.ytext').textContent()).length >= 15, '白话正文');
+    ok((await cards.nth(i).locator('.ytext').first().textContent()).length >= 15, '白话正文');
+    ok((await cards.nth(i).locator('.ytext').count()) >= 2, '应带分步细账(干支拆解/十神两层/动宫等)');
   }
 });
 
