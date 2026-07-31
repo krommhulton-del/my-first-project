@@ -57,6 +57,34 @@ t('调候表挂的是《穷通宝鉴》,就要逐格在原文里核得到', () =
   ok(tab._meta['收录口径'].includes('双重印证'), '数据文件须写明收录口径');
   ok(/出处待核/.test(bazi), '未收录的格子退回粗糙规则,那条必须标出处待核');
 });
+t('凡写了「出处:《某书》…原话」的地方,原话必须在那本书里搜得到', () => {
+  // 缘起:v0.67 开始给六爻各条挂真出处。规矩不变——搜得到才准挂。
+  // 这条测试把注释里以「「…」」括起的引文全捞出来,逐条回对应的原文文件核。
+  // 原文转录里夹着 <br> 之类的 HTML 断行,那是转录痕迹不是正文,比对前一并抹掉
+  const strip = x => x.replace(/<br\s*\/?>/gi, '').replace(/\/\//g, '').replace(/[\s，。、；：？！,.;:?!「」『』()（）《》〈〉·…﹐﹒﹕﹔﹑]/g, '');
+  const books = {};
+  for (const f of readdirSync(join(ROOT, 'data', 'classics')).filter(x => x.endsWith('.txt')))
+    books[f.replace(/\.txt$/, '')] = strip(readFileSync(join(ROOT, 'data', 'classics', f), 'utf8'));
+  let n = 0, bad = [];
+  for (const f of ['najia.js', 'bazi.js', 'geju.js', 'yingqi.js']) {
+    const txt = readFileSync(join(ROOT, f), 'utf8');
+    // 形如:出处:《增删卜易·月破章第二十七》「…」
+    for (const m of txt.matchAll(/出处:《([^》·]+)[^》]*》[^「]{0,40}「([^」]{6,})」/g)) {
+      const [, book, quote] = m;
+      n++;
+      const raw = books[book];
+      if (!raw) { bad.push(`${f}: 引了《${book}》,但 data/classics/ 里没有这本`); continue; }
+      // 引文里可能带「…」节略,拆开逐段核
+      for (const part of quote.split(/…|\.\.\./)) {
+        const q = strip(part);
+        if (q.length >= 5 && !raw.includes(q)) bad.push(`${f}: 《${book}》里搜不到「${part.slice(0, 24)}」`);
+      }
+    }
+  }
+  ok(n >= 3, '挂出处的条目太少,只有 ' + n);
+  ok(!bad.length, '这些出处核不到:\n      ' + bad.join('\n      '));
+  console.log(`      (共核了 ${n} 处挂出处的引文)`);
+});
 t('凡自称依某体例的模块,都注明了「出处待核」', () => {
   for (const f of ['najia.js', 'meihua.js', 'qimen.js', 'yunshi.js', 'wenji.js']) {
     const txt = readFileSync(join(ROOT, f), 'utf8');

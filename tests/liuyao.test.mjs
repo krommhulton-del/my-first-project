@@ -4,6 +4,7 @@
 // 本套件把断卦这边的地基逐条钉死,并用客观外部答案(京房八宫次序、三钱概率)对照。
 import GuaCore from '../gua-core.js';
 import Najia from '../najia.js';
+import GuaData from '../gua-data.js';
 
 let pass = 0, fail = 0;
 const t = (name, fn) => { try { fn(); pass++; console.log('  ✓', name); } catch (e) { fail++; console.log('  ✗', name, '\n     ', e.message); } };
@@ -231,12 +232,30 @@ t('化空、化月破、化伏吟、化反吟各能识别', () => {
   ok(po > 0, '未识别出化月破');
   eq(fan, 0, '爻级反吟受纳甲表所限,单爻变时结构上出不来——若出现说明纳甲表被改坏了');
 });
-t('卦级反吟:内外卦变成相冲之卦(震↔巽)时判得出', () => {
-  // 内卦震(100)全变为巽(011):震为雷 100100 → 011100
-  const g = Najia.zhuangGua('100100', DAY, { moving: [true, true, true, false, false, false], bianId: '011100' });
-  ok(g.bian.guaNotes.some(x => x.includes('内卦反吟')), '应判内卦反吟:' + JSON.stringify(g.bian.guaNotes));
-  const h = Najia.zhuangGua('100100', DAY, { moving: [false, false, false, true, true, true], bianId: '100011' });
-  ok(h.bian.guaNotes.some(x => x.includes('外卦反吟')), '应判外卦反吟:' + JSON.stringify(h.bian.guaNotes));
+// 2026-08 改过一次,而且是这条测试**原先钉错了**:它钉的是「震↔巽 为反吟」,
+// 可反吟指的是后天八卦上处于**对冲之位**的两卦,而震在正东、巽在东南,根本不对冲。
+// 拿本程序 gua-data.js 里自带的方位数据一配就露馅:真正的四对是
+// 乾(西北)↔巽(东南)、坎(正北)↔离(正南)、艮(东北)↔坤(西南)、震(正东)↔兑(正西)。
+// 旧代码只写了错的那一对,等于反吟从来没报对过。现按方位对冲改正,这条测试也跟着改。
+t('卦级反吟:四对对冲之卦都判得出,且不对冲的不许误报', () => {
+  const T = { 震: '100', 离: '101', 兑: '110', 乾: '111', 巽: '011', 坎: '010', 艮: '001', 坤: '000' };
+  const PAIRS = [['乾', '巽'], ['坎', '离'], ['艮', '坤'], ['震', '兑']];
+  for (const [a, b] of PAIRS) {
+    // 内卦 a 全变为 b(外卦不动)
+    const ben = T[a] + T[a], bian = T[b] + T[a];
+    const g = Najia.zhuangGua(ben, DAY, { moving: [true, true, true, false, false, false], bianId: bian });
+    ok(g.bian.guaNotes.some(x => x.includes('内卦反吟')), `${a}变${b} 应判内卦反吟:` + JSON.stringify(g.bian.guaNotes));
+  }
+  // 震↔巽 不对冲(正东 vs 东南),不许再报反吟
+  const bad = Najia.zhuangGua('100100', DAY, { moving: [true, true, true, false, false, false], bianId: '011100' });
+  ok(!bad.bian.guaNotes.some(x => x.includes('反吟')), '震变巽不该判反吟(两者方位不对冲):' + JSON.stringify(bad.bian.guaNotes));
+});
+t('反吟的四对,与本程序自带的八卦方位数据逐对对得上(外部可核)', () => {
+  const dir = {}; for (const k in GuaData.TRIGRAMS) dir[GuaData.TRIGRAMS[k].name] = GuaData.TRIGRAMS[k].dir;
+  const OPP = { 正北: '正南', 正南: '正北', 正东: '正西', 正西: '正东', 东北: '西南', 西南: '东北', 东南: '西北', 西北: '东南' };
+  for (const [a, b] of [['乾', '巽'], ['坎', '离'], ['艮', '坤'], ['震', '兑']]) {
+    eq(OPP[dir[a]], dir[b], `${a}(${dir[a]}) 与 ${b}(${dir[b]}) 应为对冲之位`);
+  }
 });
 
 console.log('【六】用神取法:问什么取哪一门六亲');
