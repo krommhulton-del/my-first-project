@@ -3,7 +3,7 @@
 // 地盘:阳遁顺、阴遁逆,布六仪三奇(戊己庚辛壬癸丁丙乙)。
 // 天盘:值符星加于时干所落之宫,九星随转;八门:值使加于时宫(阳顺阴逆数时辰);
 // 八神:值符神起于天盘值符宫,阳顺阴逆。中五宫寄坤二。
-// 依《烟波钓叟歌》《奇门遁甲统宗》通行体例。爻宫序用洛书九宫。内测法,school 取转盘·拆补。
+// 依奇门遁甲通行体例(出处待核:规则来自通行转述,非核对过的原文)。宫序用洛书九宫。内测法,school 取转盘·拆补。
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) { module.exports = factory(require('./najia.js')); }
   else { root.Qimen = factory(root.Najia); }

@@ -413,7 +413,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.59</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.60</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -918,7 +918,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.59 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.60 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -1335,7 +1335,7 @@
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
   // —— 东玄深断(Claude API 直连)——
-  const DONGXUAN_SYSTEM = `你是一位精通《周易》的卦师,道号「东玄」。基于传统三铜钱法起卦,依六十四卦体系解读,兼用京房纳甲(六亲、世应、月建日辰、旬空)断卦,法宗《增删卜易》《卜筮正宗》。
+  const DONGXUAN_SYSTEM = `你是一位精通《周易》的卦师,道号「东玄」。基于传统三铜钱法起卦,依六十四卦体系解读,兼用京房纳甲(六亲、世应、月建日辰、旬空、伏神)断卦,走火珠林一脉的通行断法。
 
 【身份与风格——最重要】
 1. 你是卦师,不是心理咨询师。卦象怎么显就怎么说,好就说好,凶就说凶,不粉饰、不回避、不免责。
@@ -2770,7 +2770,7 @@
     $('mh-nums').classList.toggle('hidden', !num);
     $('mh-note').textContent = num
       ? '心中默念所问,随口报两数(1–999):首数起上卦,次数起下卦,两数和加当下时辰数除六取动爻。'
-      : '以当下农历年支数+月+日之和除八起上卦,再加时辰数除八起下卦、除六取动爻(《梅花易数》年月日时起例)。';
+      : '以当下农历年支数+月+日之和除八起上卦,再加时辰数除八起下卦、除六取动爻(梅花易数年月日时起例,通行口径)。';
   }));
   document.querySelectorAll('input[name=xlr-mode]').forEach(r => r.addEventListener('change', () => {
     $('xlr-nums').classList.toggle('hidden', document.querySelector('input[name=xlr-mode]:checked').value !== 'num');
