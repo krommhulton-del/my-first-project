@@ -335,6 +335,9 @@
   #jr-detail { margin-top: 12px; background: var(--panel2); border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; padding: 12px 14px; line-height: 1.85; }
   #jr-detail .jt { font-size: 1.02rem; margin-bottom: 4px; }
   #jr-detail .jrow b { color: var(--gold); font-weight: normal; }
+  .jrprof { display: inline-flex; gap: 6px; align-items: center; }
+  .jrprof select { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-family: inherit; max-width: 46vw; }
+  .jrprof .mini { min-height: 32px; padding: 4px 10px; font-size: .86rem; letter-spacing: 0; }
   #jr-detail .jsum { margin-top: 6px; color: var(--cinnabar); }
   .jact { display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; margin-top: 5px; font-size: .92em; }
   .jact b { font-weight: normal; min-width: 3.4em; }
@@ -388,7 +391,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.56</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.57</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -828,6 +831,7 @@
       <input type="date" id="jr-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
       <select id="jr-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
       <input type="text" id="jr-place" placeholder="出生地(市/省)" style="width:120px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <span class="jrprof"><select id="jr-prof"><option value="">档案:未存档</option></select><button type="button" id="jr-prof-save" class="mini">存档</button></span>
       <span class="qwhint">生辰按公历;86-91年生人一律自动回拨夏令时(不填出生地也拨),填了出生地再补经度差,时柱才排得最准。填一次,全应用通用。</span>
     </div>
     <div id="jr-yun"></div>
@@ -860,7 +864,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.56 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.57 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -2818,6 +2822,49 @@
     const dt = new Date(y, m - 1, d, 12);
     return isNaN(dt) ? null : dt;
   }
+  // ——— 生辰档案簿(与运势页共用同一份本机存档)———
+  const PROFKEY = 'dongxuan_profiles_v1', PROFCUR = 'dongxuan_profile_cur';
+  const jrProfiles = () => { try { return JSON.parse(localStorage.getItem(PROFKEY) || '[]'); } catch (e) { return []; } };
+  function jrRenderProfiles() {
+    const sel = $('jr-prof'); if (!sel) return;
+    const list = jrProfiles();
+    let cur = ''; try { cur = localStorage.getItem(PROFCUR) || ''; } catch (e) {}
+    sel.innerHTML = '<option value="">档案:未存档</option>' +
+      list.map(p => `<option value="${esc(p.id)}">${esc(p.name)} · ${esc(p.date)}</option>`).join('');
+    sel.value = list.some(p => p.id === cur) ? cur : '';
+  }
+  function jrApplyProfile(id) {
+    const p = jrProfiles().find(x => x.id === id); if (!p) return;
+    if ($('jr-birth')) $('jr-birth').value = p.date || '';
+    try {
+      if (p.date) localStorage.setItem(BKEY, p.date);
+      if (p.time) { const h = Math.floor(((Number(p.time.split(':')[0]) + 1) % 24) / 2); localStorage.setItem(HRKEY, String(h)); if ($('jr-hour')) $('jr-hour').value = String(h); }
+      if (p.place !== undefined) { localStorage.setItem(PLKEY, p.place); if ($('jr-place')) $('jr-place').value = p.place; }
+      if (p.gender) localStorage.setItem(GKEY, p.gender);
+      localStorage.setItem(PROFCUR, id);
+    } catch (e) {}
+    renderJiri();
+  }
+  if ($('jr-prof')) {
+    jrRenderProfiles();
+    $('jr-prof').addEventListener('change', e => { if (e.target.value) jrApplyProfile(e.target.value); });
+    $('jr-prof-save').addEventListener('click', () => {
+      const date = $('jr-birth') ? $('jr-birth').value : '';
+      if (!date) { alert('先填出生日期再存档'); return; }
+      const name = (prompt('给这份生辰起个名(如:我 / 老妈 / 阿强)', '我') || '').trim();
+      if (!name) return;
+      const list = jrProfiles();
+      const hv = (() => { try { return localStorage.getItem(HRKEY) || ''; } catch (e) { return ''; } })();
+      const time = hv === '' ? '12:00' : String(Number(hv) === 0 ? 23 : Number(hv) * 2 - 1).padStart(2, '0') + ':30';
+      const rec = { id: 'p' + date.replace(/-/g, '') + '_' + list.length + '_' + name.length, name, date, time,
+        gender: (() => { try { return localStorage.getItem(GKEY) || '男'; } catch (e) { return '男'; } })(),
+        place: (() => { try { return localStorage.getItem(PLKEY) || ''; } catch (e) { return ''; } })() };
+      list.push(rec); 
+      try { localStorage.setItem(PROFKEY, JSON.stringify(list)); localStorage.setItem(PROFCUR, rec.id); } catch (e) {}
+      jrRenderProfiles();
+    });
+  }
+
   // 本人喜忌:与「运势」页同一副命盘、同一把尺,避免同一天两处结论打架
   function jrYong() {
     try { const c = dxBirthChart('jr'); return c ? c.yong : null; } catch (e) { return null; }

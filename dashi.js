@@ -254,6 +254,47 @@
     return uniq.length ? `${base}。具体到事:${uniq.slice(0, 2).join(';')}。` : base + '。';
   }
 
+  // ——— 流月:年定其事,月定其期 ———
+  // 大运定十年、流年定一年、流月定月份——只报到年份,应期就还差一层。
+  // 节气月为界:取每个公历月 20 日读月柱(必在该月节气之后),再回扫求起始日,得准确区间。
+  // 月名按月支定(节气月),不按公历月序——公历一月中旬多半还是丑月(腊月)
+  const ZHI_MONTH = { 寅: '正月', 卯: '二月', 辰: '三月', 巳: '四月', 午: '五月', 未: '六月', 申: '七月', 酉: '八月', 戌: '九月', 亥: '十月', 子: '冬月', 丑: '腊月' };
+  function monthsOf(chart, year, dayunGz) {
+    const out = [];
+    for (let m = 0; m < 12; m++) {
+      const probe = new Date(year, m, 20, 12);
+      const gz = Najia.ganZhi(probe).month;
+      // 回扫求节气月起始日
+      let startDay = 1;
+      for (let d = 19; d >= 1; d--) {
+        if (Najia.ganZhi(new Date(year, m, d, 12)).month !== gz) { startDay = d + 1; break; }
+      }
+      const ev = yearEvidence(chart, gz, dayunGz);
+      // 证据规则对年月通用,只有措辞得换口径:同一条规则用在流月上,不能还写「流年」「这一年」
+      const toMonth = x => String(x).replace(/流年/g, '流月').replace(/这一年/g, '这个月').replace(/整年/g, '整月');
+      const list = Object.keys(ev.cats).map(k => ({
+        key: k, label: CATS[k].label, score: ev.cats[k].score, dirSum: ev.cats[k].dirSum,
+        reasons: ev.cats[k].reasons.map(toMonth),
+        tips: (ev.cats[k].tips || []).map(t => ({ w: t.w, tip: toMonth(t.tip) })),
+      })).sort((a, b) => b.score - a.score);
+      const top = list[0] || null;
+      out.push({
+        idx: m + 1, gz, name: ZHI_MONTH[gz[1]] || '',
+        span: `${m + 1}月${startDay}日起`,
+        top, cats: list, flags: ev.flags.map(x => String(x).replace(/此年/g, '此月').replace(/之年/g, '之月')),
+        score: +((ev.gTag === '喜' ? 1 : ev.gTag === '忌' ? -1 : 0) + (ev.zTag === '喜' ? 1.2 : ev.zTag === '忌' ? -1.2 : 0)).toFixed(1),
+        kong: ev.isKong,
+      });
+    }
+    return out;
+  }
+  // 某一年里,该事型最应在哪几个月(应期落地)
+  function hotMonths(months, catKey) {
+    return months.filter(m => m.cats.some(c => c.key === catKey && c.score >= 2))
+      .map(m => ({ idx: m.idx, gz: m.gz, span: m.span, score: m.cats.find(c => c.key === catKey).score }))
+      .sort((a, b) => b.score - a.score).slice(0, 3).sort((a, b) => a.idx - b.idx);
+  }
+
   // 主函数:排一份大事年表
   // opts: { years: 推多少年(默认到 80 岁), nowYear, minScore }
   function timeline(chart, opts) {
@@ -337,6 +378,18 @@
     trimmed.sort((a, b) => a.year - b.year);
 
     const nextTen = yearly.filter(r => r.year >= nowYear && r.year < nowYear + 10);
+    // 只给要细看的年份算流月(节点年 + 近十年),不必给八十年全算
+    const needMonths = new Set(nextTen.map(r => r.year).concat(trimmed.map(n => n.year)));
+    for (const r of yearly) {
+      if (!needMonths.has(r.year)) continue;
+      const st = dayunAt(r.year);
+      r.months = monthsOf(chart, r.year, st ? st.gz : null);
+      r.hot = r.top ? hotMonths(r.months, r.top.key) : [];
+    }
+    for (const n of trimmed) {
+      const src = yearly.find(r => r.year === n.year);
+      if (src) { n.months = src.months; n.hot = src.hot; }
+    }
     return {
       birthYear, startYear, startText: dayun.startText, forward: dayun.forward,
       steps, turns, nodes: trimmed, allNodes: nodes, yearly, nextTen,
@@ -355,11 +408,17 @@
   // 交给 AI 的材料(结构化,断语已由程序算死,AI 只许解释不许另立结论)
   function material(chart, tl) {
     const nd = tl.nodes.slice(0, 24).map(n =>
-      `${n.year}年(${n.age}岁,${n.gz}${n.dayunGz ? ',走' + n.dayunGz + '运' : ''}):主${n.top.label}(分${n.top.score.toFixed(1)})——依据:${n.top.reasons.join(';')}${n.flags.length ? ';另:' + n.flags.join(';') : ''}`
+      `${n.year}年(${n.age}岁,${n.gz}${n.dayunGz ? ',走' + n.dayunGz + '运' : ''}):主${n.top.label}(分${n.top.score.toFixed(1)})` +
+      `${(n.hot || []).length ? ',应期落在' + n.hot.map(h => h.idx + '月(' + h.gz + ')').join('、') : ''}` +
+      `——依据:${n.top.reasons.join(';')}${n.flags.length ? ';另:' + n.flags.join(';') : ''}`
+    ).join('\n');
+    const ten = (tl.nextTen || []).map(r =>
+      `${r.year}年(${r.age}岁,${r.gz}):${(r.cats || []).slice(0, 3).map(c => c.label + c.score.toFixed(1)).join('、') || '无凸出信号'}` +
+      `${(r.hot || []).length ? ';热月' + r.hot.map(h => h.idx + '月').join('、') : ''}`
     ).join('\n');
     const st = tl.steps.map(s => s.theme).join('\n');
-    return `【人生大事年表(程序按大运流年算死,勿另立结论)】\n起运:${tl.startText},大运${tl.forward ? '顺' : '逆'}行。\n${tl.childhood}\n\n[大运分段]\n${st}\n\n[交运转折带]\n${tl.turns.map(t => t.note).join('\n')}\n\n[重要节点与依据]\n${nd}\n\n【写法要求】按时间顺序讲这个人一生的关键年份会发生什么,每个节点必须落到具体的事(结婚/生子/换工作/买房/搬城市/破财/开刀/打官司这类看得见的事),给出年份与年龄,并说清这一年该做什么、别做什么。不许用「机遇与挑战并存」「顺其自然」这类空话,不许把十神、喜忌、干支这些名目写给客人看。`;
+    return `【人生大事年表(程序按大运流年算死,勿另立结论)】\n起运:${tl.startText},大运${tl.forward ? '顺' : '逆'}行。\n${tl.childhood}\n\n[大运分段]\n${st}\n\n[交运转折带]\n${tl.turns.map(t => t.note).join('\n')}\n\n[重要节点与依据]\n${nd}\n\n[近十年逐年(含热月)]\n${ten}\n\n【写法要求】按时间顺序讲这个人一生的关键年份会发生什么,每个节点必须落到具体的事(结婚/生子/换工作/买房/搬城市/破财/开刀/打官司这类看得见的事),给出年份与年龄,并说清这一年该做什么、别做什么;凡材料给了「应期落月」的,必须把月份说出来,不许只说年份。不许用「机遇与挑战并存」「顺其自然」这类空话,不许把十神、喜忌、干支这些名目写给客人看。`;
   }
 
-  return { timeline, yearEvidence, material, CATS, ganZhiOfYear };
+  return { timeline, yearEvidence, material, CATS, ganZhiOfYear, monthsOf, hotMonths, ZHI_MONTH };
 }));

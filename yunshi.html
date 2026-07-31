@@ -110,6 +110,31 @@
   .dsnode .dcat.good { border-color: var(--wx-mu); color: var(--wx-mu); }
   .dsnode .dcat.bad { border-color: var(--cinnabar); color: var(--cinnabar); }
   .dsnode .dtx { line-height: 1.8; }
+  .yrow { background: var(--panel2); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+  .yrow.now { border: 1.5px solid var(--cinnabar); }
+  .yrow .yh { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+  .yrow .yy { font-size: 1.04rem; letter-spacing: .04em; }
+  .yrow .ya { color: var(--dim); font-size: .82rem; margin-right: 4px; }
+  .ycat { border: 1px solid var(--line); border-radius: 6px; padding: 0 7px; font-size: .82rem; }
+  .ycat.good { border-color: var(--wx-mu); color: var(--wx-mu); }
+  .ycat.bad { border-color: var(--cinnabar); color: var(--cinnabar); }
+  .ycat i { font-style: normal; opacity: .6; margin-left: 4px; font-size: .9em; }
+  .ywhy { color: var(--dim); font-size: .83rem; line-height: 1.7; margin-top: 4px; }
+  .yhot { margin-top: 5px; font-size: .84rem; display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; }
+  .yhot b { color: var(--gold); font-weight: normal; }
+  .yhot span { background: rgba(128,128,128,.15); border-radius: 6px; padding: 1px 8px; }
+  .yhot i { font-style: normal; color: var(--dim); font-size: .92em; }
+  .ymons { margin-top: 6px; }
+  .ymons > summary { cursor: pointer; color: var(--gold); font-size: .84rem; padding: 4px 0; }
+  .ymon { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; font-size: .82rem; padding: 3px 6px; border-bottom: 1px dashed var(--line); }
+  .ymon:last-child { border-bottom: 0; }
+  .ymon .mn { min-width: 2.6em; color: var(--gold); }
+  .ymon .mg { min-width: 2.6em; }
+  .ymon .ms { min-width: 5.4em; color: var(--dim); }
+  .ymon .mt { min-width: 4.4em; }
+  .ymon .mw { flex: 1 1 100%; color: var(--dim); line-height: 1.6; }
+  .ymon.good .mt { color: var(--wx-mu); } .ymon.bad .mt { color: var(--cinnabar); }
+  @media (min-width: 620px) { .ymon .mw { flex: 1 1 auto; } }
   .dspast { margin-bottom: 12px; }
   .dspast > summary { cursor: pointer; color: var(--gold); font-size: .88rem; padding: 6px 2px; }
   .dsnode .dwhy { color: var(--dim); font-size: .8rem; margin-top: 5px; border-top: 1px dashed var(--line); padding-top: 5px; line-height: 1.65; }
@@ -156,6 +181,13 @@
   @keyframes blink { 50% { opacity: 0; } }
   #ai-status { color: var(--dim); font-size: .9rem; margin-top: 10px; }
   #ai-status.err { color: var(--cinnabar); }
+  .profbar { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-bottom: 12px;
+    background: var(--panel2); border-radius: 9px; padding: 8px 10px; }
+  .profbar label { margin: 0; color: var(--gold); font-size: .86rem; }
+  .profbar select { width: auto; flex: 1 1 150px; min-width: 130px; padding: 7px 9px; font-size: .92rem; }
+  .profbar input { width: auto; flex: 1 1 170px; min-width: 140px; padding: 7px 9px; font-size: .92rem; }
+  .profbar button { min-height: 36px; padding: 5px 13px; font-size: .9rem; letter-spacing: 0; }
+  .profbar .pmsg { color: var(--wx-mu); font-size: .84rem; }
   .hidden { display: none !important; }
   input[type=password] { font-family: inherit; }
   footer { text-align: center; color: var(--dim); font-size: .8rem; margin-top: 28px; }
@@ -171,12 +203,20 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.56</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.57</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
   <section id="sec-in">
     <h2>报 生 辰</h2>
+    <div class="profbar">
+      <label for="prof-sel">档案</label>
+      <select id="prof-sel"><option value="">(未存档 · 手填)</option></select>
+      <input type="text" id="prof-name" placeholder="给这份生辰起个名,如:我 / 老妈 / 阿强" maxlength="12">
+      <button type="button" id="btn-prof-save">存档</button>
+      <button type="button" id="btn-prof-del">删除</button>
+      <span class="pmsg" id="prof-msg"></span>
+    </div>
     <div class="grid">
       <div class="fld"><label>出生日期(阳历/公历)</label><input type="date" id="bdate" min="1900-01-01" max="2100-12-31"></div>
       <div class="fld"><label>出生时间(几点)</label><input type="time" id="btime" value="12:00"></div>
@@ -188,6 +228,7 @@
     <div class="note">用阳历(公历)生日。1986-91年出生的一律自动回拨<b>夏令时</b>,均时差也照校(不填出生地按国标东经120°算);填上出生地再补<b>经度差</b>,时柱才排得最准——新疆西藏等偏西之地能差两个时辰,务必填。</div>
     <div class="formerr" id="in-err"></div>
     <div class="btnrow"><button id="btn-go" class="primary">排盘看运</button></div>
+    <div class="note">档案只存在你自己这台设备的浏览器里,不上传、不外传;换设备要重填。</div>
   </section>
 
   <section id="sec-ming" class="hidden">
@@ -210,9 +251,15 @@
     <h2>运 势 · 大白话</h2>
     <div id="yun-cards"></div>
     <div class="datepick">
-      <div style="flex:1 1 160px"><label>查某一天的运</label><input type="date" id="qdate"></div>
-      <button id="btn-qday">看这天</button>
+      <div style="flex:2 1 170px"><label>看哪一天(日运随之改)</label><input type="date" id="qdate"></div>
+      <div style="flex:1 1 110px"><label>看哪一年</label><input type="number" id="qyear" min="1900" max="2100" step="1"></div>
+      <div style="flex:1 1 110px"><label>看哪个月</label>
+        <select id="qmonth"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
+      </div>
+      <button id="btn-qday" class="primary">看这一天/月/年</button>
+      <button id="btn-qtoday">回到今天</button>
     </div>
+    <div class="note" id="qhint"></div>
   </section>
 
   <section id="sec-dayun" class="hidden">
@@ -302,6 +349,7 @@
     renderYun(curChart, new Date());
     renderDayun(curChart);
     renderDashi(curChart);
+    syncQPickers();
     $('qdate').value = todayStr();
     ['sec-ming', 'sec-sanmei', 'sec-yun', 'sec-dayun', 'sec-dashi', 'sec-ai'].forEach(s => $(s).classList.remove('hidden'));
     $('ai-out').classList.add('hidden'); $('ai-out').textContent = ''; $('ai-status').textContent = '';
@@ -403,6 +451,7 @@
         <div class="dh"><span class="dyr">${n.year}年</span><span class="dage">${n.age}岁 · ${esc(n.gz)}${n.dayunGz ? ' · 走' + esc(n.dayunGz) + '运' : ''}${soon ? '' : ''}</span>
           <span class="dcat ${cls}">${esc(n.top.label)}</span>${n.big ? '<span class="dcat bad">大变之年</span>' : ''}${n.kong ? '<span class="dcat">空亡年</span>' : ''}</div>
         <div class="dtx">${esc(n.text)}</div>
+        ${(n.hot || []).length ? `<div class="yhot"><b>应期落月</b>${n.hot.map(h => `<span>${h.idx}月(${esc(h.gz)})</span>`).join('')}<i>这几个月最集中</i></div>` : ''}
         <div class="dwhy">依据:${n.top.reasons.map(esc).join(';')}${n.flags.length ? '。另:' + n.flags.map(esc).join(';') : ''}</div>
       </div>`;
     };
@@ -411,13 +460,29 @@
       (past.length ? `<details class="dspast"><summary>往年节点 ${past.length} 条(点开可拿去跟自己经历对账——对不上的当场驳回我)</summary>${past.map(nodeHtml).join('')}</details>` : '') +
       (future.length ? future.map(nodeHtml).join('')
         : '<div class="note">今后在设定门槛内没有凸出节点,按大运分段与近十年细账看即可。</div>');
-    const rows = tl.nextTen;
-    $('ds-ten').innerHTML =
-      '<thead><tr><th>年份</th><th>岁</th><th>干支</th><th>主事</th><th>要点</th></tr></thead><tbody>' +
-      rows.map(r => `<tr${r.year === nowY ? ' class="now"' : ''}><td>${r.year}</td><td>${r.age}</td><td>${esc(r.gz)}</td>` +
-        `<td>${r.top ? esc(r.top.label) : '平'}</td>` +
-        `<td style="white-space:normal;text-align:left">${r.top ? esc(r.top.reasons[0]) : '无凸出信号,按部就班之年'}${r.kong ? ';落空亡' : ''}</td></tr>`).join('') +
-      '</tbody>';
+    // 逐年细账:每年列全部事型(不只主事)+ 应期落到月份 + 可展开十二流月
+    $('ds-ten').outerHTML = '<div id="ds-ten"></div>';
+    $('ds-ten').innerHTML = tl.nextTen.map(r => {
+      const cats = (r.cats || []).slice(0, 4).map(c => {
+        const d = c.dirSum, cl = Math.abs(d) < 0.6 ? '' : (d > 0 ? 'good' : 'bad');
+        return `<span class="ycat ${cl}">${esc(c.label)}<i>${c.score.toFixed(1)}</i></span>`;
+      }).join('') || '<span class="ycat">无凸出信号 · 按部就班之年</span>';
+      const hot = (r.hot || []).length
+        ? `<div class="yhot"><b>应期落月</b>${r.hot.map(h => `<span>${h.idx}月(${esc(h.gz)})</span>`).join('')}<i>这几个月是这一年该事最集中的当口</i></div>` : '';
+      const why = r.top ? `<div class="ywhy">${r.top.reasons.slice(0, 3).map(esc).join(';')}${r.kong ? ';此年落空亡' : ''}</div>` : '';
+      const mons = (r.months || []).map(m => {
+        const t = m.top;
+        const d = t ? t.dirSum : 0, cl = !t ? '' : (Math.abs(d) < 0.6 ? '' : (d > 0 ? 'good' : 'bad'));
+        return `<div class="ymon ${cl}"><span class="mn">${esc(m.name)}</span><span class="mg">${esc(m.gz)}</span>` +
+          `<span class="ms">${esc(m.span)}</span><span class="mt">${t ? esc(t.label) : '平'}${m.kong ? ' · 空' : ''}</span>` +
+          `<span class="mw">${t ? esc(t.reasons[0]) : '这个月没有凸出信号'}</span></div>`;
+      }).join('');
+      return `<div class="yrow${r.year === nowY ? ' now' : ''}">
+        <div class="yh"><span class="yy">${r.year}年</span><span class="ya">${r.age}岁 · ${esc(r.gz)}</span>${cats}</div>
+        ${why}${hot}
+        ${mons ? `<details class="ymons"><summary>展开这一年的十二个流月(应期精确到月)</summary>${mons}</details>` : ''}
+      </div>`;
+    }).join('');
   }
 
   function renderYun(c, target) {
@@ -442,12 +507,37 @@
       <div class="ymeta">${esc(cd.span)} · 天干${esc(cd.shen)}(${esc(cd.cls)})${cd.dayun ? ' · 正走 ' + esc(cd.dayun) : ''}</div>
     </div>`;
   }
+  // 三档时间各自可选:日运看哪一天、月运看哪个月、年运看哪一年
   function qday() {
     if (!curChart) return;
-    const d = $('qdate').value; if (!d) return;
-    const [Y, M, D] = d.split('-').map(Number);
-    const target = new Date(Y, M - 1, D, 12, 0);
+    const d = $('qdate').value;
+    const yv = parseInt($('qyear').value, 10), mv = parseInt($('qmonth').value, 10);
+    let Y, M, D;
+    if (d) { [Y, M, D] = d.split('-').map(Number); } else {
+      const n = new Date(); Y = n.getFullYear(); M = n.getMonth() + 1; D = n.getDate();
+    }
+    // 年/月单独改过就以它为准(日取该月中旬,避开节气交界的歧义)
+    let ty = yv || Y, tm = mv || M, td = D;
+    if ((yv && yv !== Y) || (mv && mv !== M)) { td = 15; }
+    const last = new Date(ty, tm, 0).getDate();
+    if (td > last) td = last;
+    const target = new Date(ty, tm - 1, td, 12, 0);
+    const iso = `${ty}-${String(tm).padStart(2, '0')}-${String(td).padStart(2, '0')}`;
+    $('qdate').value = iso; $('qyear').value = ty; $('qmonth').value = tm;
     renderYun(curChart, target);
+    $('qhint').textContent = `现在看的是 ${iso} 这一天、以及它所在的月与年。改年月会自动取该月十五日(避开节气交界)。`;
+  }
+  function qtoday() {
+    const n = new Date();
+    $('qdate').value = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+    $('qyear').value = n.getFullYear(); $('qmonth').value = n.getMonth() + 1;
+    qday();
+  }
+  function syncQPickers(target) {
+    const d = target || new Date();
+    if (!$('qdate').value) $('qdate').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (!$('qyear').value) $('qyear').value = d.getFullYear();
+    if ($('qmonth')) $('qmonth').value = d.getMonth() + 1;
   }
 
   function renderDayun(c) {
@@ -582,8 +672,70 @@ ${curDashi ? Dashi.material(c, curDashi) + '\n' : ''}${curSanmei ? Sanmei.materi
   }
 
   // 事件
+  // ——— 生辰档案簿:多档留存,切换即重排(只存本机浏览器)———
+  const PKEY = 'dongxuan_profiles_v1', PCUR = 'dongxuan_profile_cur';
+  const readProfiles = () => { try { return JSON.parse(localStorage.getItem(PKEY) || '[]'); } catch (e) { return []; } };
+  const writeProfiles = a => { try { localStorage.setItem(PKEY, JSON.stringify(a)); } catch (e) {} };
+  function profMsg(t, bad) { const e = $('prof-msg'); if (!e) return; e.textContent = t; e.style.color = bad ? 'var(--cinnabar)' : 'var(--wx-mu)'; setTimeout(() => { e.textContent = ''; }, 2600); }
+  function renderProfiles(selId) {
+    const list = readProfiles(), sel = $('prof-sel');
+    if (!sel) return;
+    const cur = selId !== undefined ? selId : (localStorage.getItem(PCUR) || '');
+    sel.innerHTML = '<option value="">(未存档 · 手填)</option>' +
+      list.map(p => `<option value="${esc(p.id)}">${esc(p.name)} · ${esc(p.date)}${p.time ? ' ' + esc(p.time) : ''}</option>`).join('');
+    sel.value = list.some(p => p.id === cur) ? cur : '';
+  }
+  function applyProfile(id) {
+    const p = readProfiles().find(x => x.id === id);
+    if (!p) return;
+    $('bdate').value = p.date || '';
+    $('btime').value = p.time || '12:00';
+    $('gender').value = p.gender || '男';
+    $('bplace').value = p.place || '';
+    $('prof-name').value = p.name || '';
+    try { localStorage.setItem(PCUR, id); } catch (e) {}
+    if (p.date) go();                     // 选中即重排,不用再点一次
+  }
+  if ($('prof-sel')) {
+    renderProfiles();
+    $('prof-sel').addEventListener('change', e => {
+      const v = e.target.value;
+      if (!v) { try { localStorage.removeItem(PCUR); } catch (err) {} $('prof-name').value = ''; return; }
+      applyProfile(v);
+    });
+    $('btn-prof-save').addEventListener('click', () => {
+      const date = $('bdate').value;
+      if (!date) { profMsg('先填出生日期再存档', true); return; }
+      const name = ($('prof-name').value || '').trim() || ('生辰' + date);
+      const list = readProfiles();
+      const cur = $('prof-sel').value;
+      const rec = { id: cur || ('p' + date.replace(/-/g, '') + '_' + list.length + '_' + name.length),
+        name, date, time: $('btime').value || '12:00', gender: $('gender').value, place: $('bplace').value || '' };
+      const i = list.findIndex(x => x.id === rec.id);
+      if (i >= 0) list[i] = rec; else list.push(rec);
+      writeProfiles(list);
+      try { localStorage.setItem(PCUR, rec.id); } catch (e) {}
+      renderProfiles(rec.id);
+      profMsg(i >= 0 ? `「${name}」已更新` : `「${name}」已存档,下次直接选`);
+    });
+    $('btn-prof-del').addEventListener('click', () => {
+      const cur = $('prof-sel').value;
+      if (!cur) { profMsg('先在档案里选一份再删', true); return; }
+      const list = readProfiles(), rec = list.find(x => x.id === cur);
+      writeProfiles(list.filter(x => x.id !== cur));
+      try { localStorage.removeItem(PCUR); } catch (e) {}
+      renderProfiles('');
+      $('prof-name').value = '';
+      profMsg(`「${rec ? rec.name : ''}」已删除`);
+    });
+    // 开页自动套用上次那份
+    const cur = (() => { try { return localStorage.getItem(PCUR) || ''; } catch (e) { return ''; } })();
+    if (cur && readProfiles().some(p => p.id === cur)) setTimeout(() => applyProfile(cur), 0);
+  }
+
   $('btn-go').addEventListener('click', go);
   $('btn-qday').addEventListener('click', qday);
+  $('btn-qtoday').addEventListener('click', qtoday);
   $('btn-ai').addEventListener('click', deepRead);
   $('ai-provider').addEventListener('change', () => { localStorage.setItem('dongxuan_ai_provider', $('ai-provider').value); syncProv(); setStatus(''); });
   $('btn-togglekey').addEventListener('click', () => { $('keybox').classList.toggle('hidden'); $('api-key').value = getKey(); });

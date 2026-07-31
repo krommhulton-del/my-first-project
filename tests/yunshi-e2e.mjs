@@ -102,6 +102,49 @@ await t('无横向溢出、全程无脚本错误', async () => {
   ok(errs.length === 0, '脚本错误:' + errs.join('; '));
 });
 
+await t('生辰档案簿:存两份、切换即重排、刷新自动套用上次那份', async () => {
+  await page.evaluate(() => { try { localStorage.removeItem('dongxuan_profiles_v1'); localStorage.removeItem('dongxuan_profile_cur'); } catch (e) {} });
+  await page.reload();
+  await page.fill('#bdate', '1990-05-20'); await page.fill('#btime', '09:30'); await page.fill('#prof-name', '甲');
+  await page.click('#btn-go'); await page.waitForTimeout(400);
+  await page.click('#btn-prof-save'); await page.waitForTimeout(300);
+  await page.evaluate(() => { document.getElementById('prof-sel').value = ''; });
+  await page.fill('#bdate', '1985-08-03'); await page.fill('#btime', '20:00');
+  await page.selectOption('#gender', '女'); await page.fill('#prof-name', '乙');
+  await page.click('#btn-go'); await page.waitForTimeout(400);
+  await page.click('#btn-prof-save'); await page.waitForTimeout(300);
+  const opts = await page.locator('#prof-sel option').allTextContents();
+  ok(opts.length === 3 && opts.join().includes('甲') && opts.join().includes('乙'), '两份档案都该在下拉里:' + opts.join(' | '));
+  const firstId = await page.evaluate(() => JSON.parse(localStorage.getItem('dongxuan_profiles_v1'))[0].id);
+  await page.selectOption('#prof-sel', firstId);
+  await page.waitForTimeout(800);
+  ok(await page.inputValue('#bdate') === '1990-05-20', '切档案后生日字段应跟着换');
+  ok(await page.locator('#sec-ming').isVisible(), '切档案应自动重排');
+  await page.reload(); await page.waitForTimeout(1000);
+  ok(await page.inputValue('#bdate') === '1990-05-20', '刷新后应自动套用上次那份');
+  ok(await page.locator('#sec-ming').isVisible(), '刷新后命盘应直接就位');
+});
+
+await t('三档时间各自可选:日/月/年分别指定,还能一键回到今天', async () => {
+  await page.fill('#qyear', '2030');
+  await page.selectOption('#qmonth', '9');
+  await page.click('#btn-qday');
+  await page.waitForTimeout(600);
+  const yTxt = await page.locator('#yun-cards').innerText();
+  ok(yTxt.includes('2030') || yTxt.includes('庚戌'), '年运月运应随之改:' + yTxt.slice(0, 100));
+  await page.click('#btn-qtoday');
+  await page.waitForTimeout(500);
+  ok((await page.inputValue('#qyear')) === String(new Date().getFullYear()), '「回到今天」应把三档拨回当下');
+});
+
+await t('逐年细账:每年列多事型、可展开十二流月(应期落到月)', async () => {
+  const yrow = page.locator('.yrow').first();
+  ok((await yrow.locator('.ycat').count()) >= 1, '每年应列出事型');
+  await page.evaluate(() => { const d = document.querySelector('.ymons'); if (d) d.open = true; });
+  await page.waitForTimeout(300);
+  ok((await page.locator('.yrow').first().locator('.ymon').count()) === 12, '展开后应有十二个流月');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

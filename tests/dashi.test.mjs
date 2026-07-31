@@ -155,7 +155,48 @@ t('神煞带来的具体事项确实进了清单(文昌→递材料、羊刃→�
   ok(kw > 0, '空亡之日未见「不宜立根基」');
 });
 
-console.log('【四】材料交付 AI 时,结论已由程序算死');
+console.log('【四】流月:应期落到月份');
+t('十二流月齐全、月名按月支定、起始日落在节气之后', () => {
+  const NAMES = ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '冬月', '腊月'];
+  for (const c of charts) {
+    const ms = Dashi.monthsOf(c, 2027, null);
+    eq(ms.length, 12);
+    const seen = new Set(ms.map(m => m.gz));
+    eq(seen.size, 12, '十二个月柱不该重复');
+    for (const m of ms) {
+      ok(NAMES.includes(m.name), '月名须按月支定:' + m.name + ' ' + m.gz);
+      eq(m.name, ({ 寅: '正月', 卯: '二月', 辰: '三月', 巳: '四月', 午: '五月', 未: '六月', 申: '七月', 酉: '八月', 戌: '九月', 亥: '十月', 子: '冬月', 丑: '腊月' })[m.gz[1]]);
+      const d = parseInt((m.span.match(/月(\d+)日/) || [])[1], 10);
+      ok(d >= 3 && d <= 9, '节气月起始日应在每月上旬:' + m.span);
+    }
+  }
+});
+t('流月断语改口径:不许还写「流年」「这一年」', () => {
+  for (const c of charts) {
+    for (const m of Dashi.monthsOf(c, 2027, null)) {
+      const txt = (m.cats || []).flatMap(x => x.reasons.concat((x.tips || []).map(t => t.tip))).join(' ') + ' ' + m.flags.join(' ');
+      ok(!txt.includes('流年'), m.name + ' 的依据里还写着「流年」:' + txt.slice(0, 40));
+      ok(!txt.includes('这一年'), m.name + ' 的依据里还写着「这一年」');
+    }
+  }
+});
+t('应期落月:节点与近十年都算得出热月,且热月确属该事型', () => {
+  let got = 0;
+  for (const c of charts) {
+    const tl = Dashi.timeline(c, { nowYear: 2026 });
+    for (const r of tl.nextTen) {
+      ok(Array.isArray(r.months) && r.months.length === 12, r.year + ' 缺流月');
+      for (const h of r.hot || []) {
+        got++;
+        const m = r.months.find(x => x.idx === h.idx);
+        ok(m && m.cats.some(cc => cc.key === r.top.key && cc.score >= 2), `${r.year}年${h.idx}月被列为热月却无该事型证据`);
+      }
+    }
+  }
+  ok(got > 0, '十年里应当有热月');
+});
+
+console.log('【五】材料交付 AI 时,结论已由程序算死');
 t('材料含起运、大运分段、转折带、节点依据,且注明不许另立结论', () => {
   const c = charts[0];
   const tl = Dashi.timeline(c, { nowYear: 2026 });
