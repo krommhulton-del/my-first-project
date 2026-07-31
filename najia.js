@@ -120,6 +120,8 @@
   const chongOfZ = z => ZHI[(ZHI.indexOf(z) + 6) % 12];
   // 旺相休囚死给一个可比的力量分,断语才有「几成」可依
   const WANG_SCORE = { 旺: 2, 相: 1, 休: -0.5, 囚: -1, 死: -1.5 };
+  // 五行之墓库(见 yaoPower 里的出处说明)
+  const MU_OF = { 火: '戌', 水: '辰', 木: '未', 金: '丑', 土: '戌' };
 
   function yaoPower(zhi, wx, moving, cal) {
     if (!cal) return null;
@@ -142,6 +144,18 @@
       out.chongRi = true;
       if (moving) { out.chongSan = true; out.score -= 1; out.notes.push(`日辰${dz}冲此动爻:动而逢冲则散,事到跟前易变卦`); }
       else { out.anDong = true; out.score += 0.8; out.notes.push(`日辰${dz}冲此静爻:暗动——表面没动静,暗里已经在走`); }
+    }
+    // ——— 入墓:古有日墓、动墓、化墓之三墓 ———
+    // 出处:《增删卜易》随鬼入墓章「古有日墓、动墓、化墓之三墓」(data/classics/增删卜易.txt,繁体)。
+    // 墓库五行对应:**火墓戌、水墓辰这两味原文里直接核得到**
+    //   (「但嫌巳火墓于戌月而又化墓」「明年辰戌是子水入墓之年」);
+    //   木墓未、金墓丑、土墓戌三味那份转录里搜不到,故不挂它的名,改按本程序已有的十二长生表推
+    //   (一个口径一处算,不另立一张表)。**土的墓位六爻另有「辰为水土之墓」一说,此转录断不了,
+    //   本处从十二长生表作戌,属通行口径、出处待核。**
+    // 入墓者力被收去,应期要等冲开墓库那一日——「如逢合住须冲破以成功」「明岁辰年冲开墓库」。
+    if (MU_OF[wx] === dz) {
+      out.ruMu = '日墓'; out.muZhi = dz; out.score -= 1;
+      out.notes.push(`此爻入日辰${dz}之墓:力被收着使不出来,要等冲开${dz}的那一日才动得了`);
     }
     return out;
   }
@@ -216,6 +230,18 @@
       });
     }
 
+    // —— 动墓(三墓之一):卦中有动爻,其支正是某爻五行的墓库,该爻即随之入墓 ——
+    // 出处同上:《增删卜易》随鬼入墓章「古有日墓、动墓、化墓之三墓」。
+    for (const L of lines) {
+      if (!L.power || L.power.ruMu) continue;               // 已判日墓的不重复记
+      const mz = MU_OF[L.wx];
+      const mover = lines.find(x => x.moving && x.zhi === mz && x !== L);
+      if (mover) {
+        L.power.ruMu = '动墓'; L.power.muZhi = mz; L.power.score -= 0.8;
+        L.power.notes.push(`卦中${mz}爻发动,此爻随之入墓:被那一头收住了,要等冲开${mz}才脱得开`);
+      }
+    }
+
     // —— 变爻:化出的六亲(仍按本宫五行论)、回头生克、进退神、化空化破 ——
     let bian = null;
     if (opts.bianId && opts.bianId !== id) {
@@ -233,6 +259,12 @@
         if (cal && chongOfZ(to.zhi) === cal.monthZhi) { item.huaPo = true; item.notes.push('化月破:变出来的即被月建冲破,这一变没结果'); }
         if (from.zhi === to.zhi) { item.fuYin = true; item.notes.push('化伏吟:动而不动,原地打转,旧事重演'); }
         if (chongOfZ(from.zhi) === to.zhi) { item.fanYin = true; item.notes.push('化爻反吟:变出的正冲自己,反复颠倒、先成后败'); }
+        // 化墓(三墓之一):自己变出来的那个支,正是本爻五行的墓库
+        if (MU_OF[from.wx] === to.zhi) {
+          item.huaMu = true; item.muZhi = to.zhi;
+          item.notes.push(`化墓:一动就把自己关进${to.zhi}库里,越动越出不来,要等冲开${to.zhi}的日子`);
+          if (from.power) { from.power.ruMu = from.power.ruMu ? from.power.ruMu + '·化墓' : '化墓'; from.power.muZhi = to.zhi; from.power.score -= 0.8; }
+        }
         bian.lines.push(item);
       }
       // 卦级伏吟/反吟:整个内卦或外卦原样不动为伏吟、变成相冲之卦(震↔巽)为反吟。

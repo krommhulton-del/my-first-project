@@ -725,6 +725,18 @@ await t('视图路由:专项板块切走后不残留', async () => {
   }
 });
 
+await t('应期:断卦区直接给出日子与书上原话,无 Key 也看得到', async () => {
+  await page.evaluate(() => window.dxShowView('ask'));
+  await page.fill('#question', '这事什么时候能成?');
+  await page.click('#btn-auto');
+  await page.waitForSelector('#sec-read:not(.hidden)', { timeout: 8000 });
+  const f = await page.locator('#focus').innerText();
+  ok(/这事应在什么时候/.test(f), '断卦区应有应期块:' + f.slice(-200));
+  ok(/\d{4}年\d{1,2}月\d{1,2}日|没有这个日子/.test(f), '应给出具体日子');
+  ok(/书上原话/.test(f), '应附书上原话');
+  ok(/我自己担着/.test(f), '应写明取法先后是本程序排的');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

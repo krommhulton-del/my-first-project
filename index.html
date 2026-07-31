@@ -444,7 +444,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.65</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.66</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -1011,7 +1011,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.65 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.66 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -1290,6 +1290,7 @@
         l.shi ? '世' : '', l.ying ? '应' : '', l.kong ? '旬空' : '',
         l.moving ? (cast.lines[i].yang ? '○动' : '×动') : '',
         p.yuePo ? '月破' : '', p.anDong ? '暗动' : '', p.chongSan ? '冲散' : '', p.heRi ? '日合' : '',
+        p.ruMu ? p.ruMu + (p.muZhi ? '(' + p.muZhi + '库)' : '') : '',
       ].filter(Boolean).join(' ');
       return `${GuaCore.POS_NAMES[i]} ${l.liuShen} ${l.liuQin}${l.ganZhi}${l.wx}` +
         `${marks ? ' [' + marks + ']' : ''} 月建定${p.wang || '-'}、日辰计后力量分${p.score === undefined ? '-' : p.score.toFixed(1)}`;
@@ -1367,8 +1368,19 @@
     $('v-lv').textContent = r.level;
     $('v-dx').textContent = r.dx;
     $('v-src').textContent = r.dxFrom + ' · ' + r.mode;
+    // 应期这一块由程序按《增删卜易》八法算死,**无 API Key 也看得到**(第五节哲学:程序算死,AI 只解释)
+    let yqBlock = '';
+    try {
+      const yq = Yingqi.yingqiOf(cast, new Date());
+      if (yq) yqBlock = `<div class="fblock"><div class="k">这事应在什么时候</div><div class="t">` +
+        `<b style="color:var(--cinnabar)">${esc(yq.date || '四十日内没有这个日子,得往后翻')}</b>——${esc(yq.say)}。` +
+        `<span style="color:var(--dim)">书上原话:「${esc(yq.quote)}」</span>` +
+        (yq.extra ? `<br><span style="color:var(--dim)">${esc(yq.extra.say)}(原话「${esc(yq.extra.quote)}」)</span>` : '') +
+        `<br><span style="color:var(--dim);font-size:.9em">取法的先后是本程序排的,原文没有明列一张优先级表——这一层我自己担着。</span>` +
+        `</div></div>`;
+    } catch (e) {}
     $('focus').innerHTML = r.focus.map(f =>
-      `<div class="fblock"><div class="k">${f.kind}</div><div class="t">${f.text}</div></div>`).join('');
+      `<div class="fblock"><div class="k">${f.kind}</div><div class="t">${f.text}</div></div>`).join('') + yqBlock;
     $('moving-note').innerHTML = r.movingDetail.length
       ? '<b>动爻爻位:</b>' + r.movingDetail.map(m => `${m.pos}(${m.meaning})`).join(';')
       : '<b>六爻安静:</b>局面暂无变数,以本卦卦辞直断。';
