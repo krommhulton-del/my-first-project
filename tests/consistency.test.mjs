@@ -6,6 +6,7 @@
 import Bazi from '../bazi.js';
 import Jiri from '../jiri.js';
 import Yunshi from '../yunshi.js';
+import { readFileSync } from 'node:fs';
 
 let pass = 0, fail = 0;
 const t = (name, fn) => { try { fn(); pass++; console.log('  ✓', name); } catch (e) { fail++; console.log('  ✗', name, '\n     ', e.message); } };
@@ -118,6 +119,22 @@ t('传了喜忌与不传,挑出的日子不该完全一样(说明喜忌真进了
   const noY = Jiri.pickDays('kaiye', new Date(2026, 6, 1), 60, birth, 5, null).map(x => x.info.iso).join();
   ok(withY.length > 0, '应挑得出日子');
   ok(withY !== noY, `按喜忌挑与不按喜忌挑结果相同,说明喜忌没进排序:${withY}`);
+});
+
+console.log('【五】全应用只许有一个命盘出处(防再冒出第二把尺)');
+t('index.html 里 Bazi.chart 只在 dxBirthChart 内部调用一次,各板块一律走它', () => {
+  const src = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const calls = src.match(/Bazi\.chart\(/g) || [];
+  eq(calls.length, 1, 'index.html 里出现了第二处排盘入口,喜忌会再次分家');
+  const boards = ['xy', 'jr', 'q'];
+  for (const b of boards) ok(src.includes(`dxBirthChart('${b}')`), `板块 ${b} 没走统一入口`);
+});
+t('凡用到喜忌的模块,都从 chart.yong 取,不各自另算', () => {
+  for (const f of ['jiri.js', 'yunshi.js', 'dili.js', 'dashi.js']) {
+    const src = readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+    ok(!/function\s+pickYongShen/.test(src), f + ' 里自己又实现了一套取用神');
+    ok(!/judgeStrength\s*=\s*function|function\s+judgeStrength/.test(src), f + ' 里自己又实现了一套旺衰');
+  }
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

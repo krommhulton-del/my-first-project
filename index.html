@@ -336,6 +336,12 @@
   #jr-detail .jt { font-size: 1.02rem; margin-bottom: 4px; }
   #jr-detail .jrow b { color: var(--gold); font-weight: normal; }
   #jr-detail .jsum { margin-top: 6px; color: var(--cinnabar); }
+  .jact { display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; margin-top: 5px; font-size: .92em; }
+  .jact b { font-weight: normal; min-width: 3.4em; }
+  .jact.ok b { color: var(--wx-mu, #3f7d4e); } .jact.no b { color: var(--cinnabar); }
+  .jact span { background: var(--seg); border-radius: 6px; padding: 1px 8px; line-height: 1.75; }
+  .jnode { margin-top: 7px; padding-top: 6px; border-top: 1px dashed var(--line); line-height: 1.75; }
+  .jnode .jwhy { display: block; color: var(--dim); font-size: .88em; margin-top: 3px; }
   #jr-detail .jtwo { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
   #jr-detail .jtwo .jlay { display: inline-block; border: 1px solid var(--line); border-radius: 6px; padding: 1px 9px; margin: 2px 6px 2px 0; font-size: .88em; }
   #jr-detail .jtwo .jhint { color: var(--dim); font-size: .92em; line-height: 1.75; }
@@ -382,7 +388,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.55</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.56</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -854,7 +860,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.55 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.56 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -878,6 +884,7 @@
 <script src="jiri.js"></script>
 <script src="yingqi.js"></script>
 <script src="dili.js"></script>
+<script src="dashi.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -2858,10 +2865,29 @@
       `${c.ziNote ? ' · ' + esc(c.ziNote) : ''}${c.dayun && c.dayun.startText ? ' · ' + esc(c.dayun.startText) : ''}` +
       `${(() => { try { return localStorage.getItem(PLKEY) || ''; } catch (e) { return ''; } })() ? ' · 已按出生地校真太阳时' : ''}</div>`;
     const steps = arr => arr && arr.length ? '<br>' + arr.map(l => '· ' + esc(l)).join('<br>') : '';
+    // 具体事宜:照着做的事与照着躲的事(与运势页同一份清单)
+    const act = cd => {
+      if ((!cd.yi || !cd.yi.length) && (!cd.ji || !cd.ji.length)) return '';
+      const row = (tag, xs, cls) => xs && xs.length
+        ? `<div class="jact ${cls}"><b>${tag}${esc(cd.when)}</b>${xs.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '';
+      return row('宜', cd.yi, 'ok') + row('忌', cd.ji, 'no');
+    };
     $('jr-yun').innerHTML = baseLine +
-      `<div class="fblock"><span class="k">日运 · ${info.m}月${info.d}日(${info.gz.day}日)${lvb(y.day.level)}</span><div class="t">${esc(y.day.text)}${steps(y.day.lines)}${mk(dayMarks)}${tz(info.gz.day[1])}${shiLine}</div></div>` +
-      `<div class="fblock"><span class="k">月运 · ${esc(y.month.span)}(${y.month.gz}月)${lvb(y.month.level)}</span><div class="t">${esc(y.month.text)}${steps(y.month.lines)}${mk(monMarks)}${tz(y.month.gz[1])}</div></div>` +
-      `<div class="fblock"><span class="k">年运 · ${esc(y.year.span)}(${y.year.gz}年)${lvb(y.year.level)}</span><div class="t">${esc(y.year.text)}${y.year.dayun ? ' 正走大运:' + esc(y.year.dayun) + '。' : ''}${steps(y.year.lines)}${mk(yrMarks)}${tz(y.year.gz[1])}</div></div>`;
+      `<div class="fblock"><span class="k">日运 · ${info.m}月${info.d}日(${info.gz.day}日)${lvb(y.day.level)}</span><div class="t">${esc(y.day.text)}${steps(y.day.lines)}${mk(dayMarks)}${tz(info.gz.day[1])}${shiLine}${act(y.day)}</div></div>` +
+      `<div class="fblock"><span class="k">月运 · ${esc(y.month.span)}(${y.month.gz}月)${lvb(y.month.level)}</span><div class="t">${esc(y.month.text)}${steps(y.month.lines)}${mk(monMarks)}${tz(y.month.gz[1])}${act(y.month)}</div></div>` +
+      `<div class="fblock"><span class="k">年运 · ${esc(y.year.span)}(${y.year.gz}年)${lvb(y.year.level)}</span><div class="t">${esc(y.year.text)}${y.year.dayun ? ' 正走大运:' + esc(y.year.dayun) + '。' : ''}${steps(y.year.lines)}${mk(yrMarks)}${tz(y.year.gz[1])}${act(y.year)}${dsYearLine(y.year.span)}</div></div>`;
+  }
+  // 年运卡下面挂上「今年在你一生里是什么节点」——年表与年运同一副盘
+  function dsYearLine(span) {
+    try {
+      const c = dxBirthChart('jr');
+      if (!c || typeof Dashi === 'undefined') return '';
+      const yr = parseInt(span, 10);
+      const tl = Dashi.timeline(c, { nowYear: yr });
+      const n = (tl.allNodes || tl.nodes).find(x => x.year === yr);
+      if (!n) return '<div class="jnode">一生年表里,这一年没有凸出节点——按部就班之年。</div>';
+      return `<div class="jnode"><b>人生节点(${n.age}岁):${esc(n.top.label)}</b>——${esc(n.text)}<span class="jwhy">依据:${n.top.reasons.map(esc).join(';')}</span></div>`;
+    } catch (e) { return ''; }
   }
   function jrShowDetail(info) {
     jrYunRender(info);
