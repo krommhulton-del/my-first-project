@@ -141,6 +141,19 @@
   .paipan-box { margin-top: 10px; font-size: .84rem; }
   .pprow { display: flex; gap: 10px; padding: 5px 2px; border-bottom: 1px dashed var(--line); }
   .pprow:last-child { border-bottom: 0; }
+  /* 格局 */
+  #gj-head { text-align: center; margin: 14px 0 4px; font-size: 1.05rem; line-height: 1.8; }
+  #gj-head b { color: var(--cinnabar); font-weight: normal; }
+  .gj-take { text-align: center; color: var(--dim); font-size: .86rem; margin-bottom: 12px; }
+  .gj-grp { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-top: 9px; }
+  .gj-grp h4 { font-weight: normal; letter-spacing: .1em; margin-bottom: 6px; font-size: .92rem; }
+  .gj-grp.ok h4 { color: var(--wx-mu, #3f7d4e); }
+  .gj-grp.no h4 { color: var(--cinnabar); }
+  .gj-grp.save h4, .gj-grp.warn h4 { color: var(--gold); }
+  .gj-li { padding: 5px 0; border-bottom: 1px dashed var(--line); line-height: 1.75; font-size: .92rem; }
+  .gj-li:last-child { border-bottom: 0; }
+  .gj-li q { display: block; color: var(--dim); font-size: .84rem; font-style: normal; margin-top: 2px; }
+  .gj-li q::before { content: '书上原话:'; }
   .pprow .ppk { flex: 0 0 5.2em; color: var(--gold); white-space: nowrap; }
   .pprow .ppv { flex: 1; line-height: 1.7; }
   @media (max-width: 520px) { .pcol .cg { font-size: .66rem; } .pprow .ppk { flex-basis: 4.4em; } }
@@ -203,7 +216,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.62</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.63</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -238,6 +251,17 @@
     <div class="body-sub" id="body-sub"></div>
     <div class="power-box" id="power-box"></div>
     <div class="paipan-box" id="paipan-box"></div>
+  </section>
+
+  <section id="sec-geju" class="hidden">
+    <h2>格 局 · 这命的主线立不立得住</h2>
+    <div class="note">这一层照《子平真诠》的老法子断:先看你生在哪个月,定出这命的<b>主线</b>;
+      再看四柱把这条主线成全了、还是坏了;坏了有没有解药。<b>每一条都把书上的原话摆出来</b>,对不上你当场驳我。
+      这一层只讲本命的底子,<b>不改上面那套喜忌</b>——两套断法各说各的,都摊给你看。</div>
+    <div id="gj-head"></div>
+    <div class="gj-take" id="gj-take"></div>
+    <div id="gj-body"></div>
+    <div class="note" id="gj-foot"></div>
   </section>
 
   <section id="sec-sanmei" class="hidden">
@@ -309,10 +333,35 @@
 <script src="yunshi.js"></script>
 <script src="sanmei.js"></script>
 <script src="dashi.js"></script>
+<script src="geju.js"></script>
 <script src="dili.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
+
+  // 格局:程序按《子平真诠》算死,每条附原话。此处只呈现,不参与喜忌。
+  function renderGeju(c) {
+    if (typeof Geju === 'undefined') { $('sec-geju').classList.add('hidden'); return; }
+    const r = Geju.judge(c);
+    $('gj-head').innerHTML = `<b>${esc(Geju.plain(r))}</b>`;
+    $('gj-take').innerHTML = (r.ge.plain ? `<b style="color:var(--ink)">${esc(r.ge.plain)}</b><br>` : '') +
+      `(按你生在${esc(c.monthZhi)}月定的,书上叫${esc(r.ge.name)};${esc(r.ge.from)})`;
+    const box = (cls, title, list, empty) =>
+      `<div class="gj-grp ${cls}"><h4>${title}</h4>` +
+      (list.length
+        ? list.map(x => `<div class="gj-li">${esc(x.why)}<q>${esc(x.quote)}</q></div>`).join('')
+        : `<div class="gj-li" style="color:var(--dim)">${empty}</div>`) + `</div>`;
+    let html = '';
+    if (r.cheng.length) html += box('ok', '成 在 哪 里', r.cheng, '');
+    if (r.bai.length) html += box('no', '坏 在 哪 里', r.bai, '');
+    if (r.jiu.length) html += box('save', '有 没 有 解 药', r.jiu, '');
+    if (r.ji.length) html += box('warn', '夹 着 的 那 处 妨 碍', r.ji, '');
+    if (!html) html = box('', '成 败', [], '你这盘没照到这一格成败的条件——书上定的条件本就具体,照不到就是照不到,不硬凑。');
+    $('gj-body').innerHTML = html;
+    $('gj-foot').innerHTML = '口径:这一层照《子平真诠》直译,书上没写的一概不添。' +
+      Geju.notDone.map(x => '本模块<b>没做</b>:' + esc(x)).join(';') +
+      '。它与上面那套喜忌是两条路子——两边都摊给你看,不替你合成一个答案。';
+  }
   const WX_CLS = { 木: 'mu', 火: 'huo', 土: 'tu', 金: 'jin', 水: 'shui' };
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let curChart = null, aiBusy = false, aiContext = null, curSanmei = null;
@@ -351,7 +400,7 @@
     renderDashi(curChart);
     syncQPickers();
     $('qdate').value = todayStr();
-    ['sec-ming', 'sec-sanmei', 'sec-yun', 'sec-dayun', 'sec-dashi', 'sec-ai'].forEach(s => $(s).classList.remove('hidden'));
+    ['sec-ming', 'sec-geju', 'sec-sanmei', 'sec-yun', 'sec-dayun', 'sec-dashi', 'sec-ai'].forEach(s => $(s).classList.remove('hidden'));
     $('ai-out').classList.add('hidden'); $('ai-out').textContent = ''; $('ai-status').textContent = '';
     $('sec-ming').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -414,6 +463,9 @@
     ];
     if (s.bonus.length) rows.push(['成局加权', s.bonus.join('、')]);
     $('paipan-box').innerHTML = rows.map(r => `<div class="pprow"><span class="ppk">${r[0]}</span><span class="ppv">${esc(String(r[1])).replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>')}</span></div>`).join('');
+
+    // —— 格局(子平真诠一脉):与上面的扶抑法各说各的,都摊开给人看 ——
+    renderGeju(c);
 
     const pro = [];
     if (c.ziNote) pro.push(esc(c.ziNote));

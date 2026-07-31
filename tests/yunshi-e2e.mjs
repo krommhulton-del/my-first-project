@@ -145,6 +145,26 @@ await t('逐年细账:每年列多事型、可展开十二流月(应期落到月
   ok((await page.locator('.yrow').first().locator('.ymon').count()) === 12, '展开后应有十二个流月');
 });
 
+await t('格局:取格、成败、原话俱在,且不带术语不改喜忌', async () => {
+  ok(await page.locator('#sec-geju').isVisible(), '格局版块应显示');
+  const head = await page.locator('#gj-head').innerText();
+  ok(head.length > 8, '第一句白话结论要在:' + head);
+  const BAN = /正官|七杀|偏印|食神|伤官|比劫|用神|喜忌|旺衰|格局|[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/;
+  ok(!BAN.test(head), '白话结论里不许带术语:' + head);
+  const take = await page.locator('#gj-take').innerText();
+  ok(/主线/.test(take), '取格那一行要说清是按什么定的:' + take);
+  const body = await page.locator('#gj-body').innerText();
+  ok(body.length > 10, '成败区不能是空的');
+  // 有成败条目时必须逐条附原话
+  const li = await page.locator('#gj-body .gj-li').count();
+  if (li && !/没照到/.test(body)) {
+    ok((await page.locator('#gj-body .gj-li q').count()) >= 1, '每条断语都要附书上原话');
+  }
+  const foot = await page.locator('#gj-foot').innerText();
+  ok(/没做/.test(foot) && /不替你合成一个答案/.test(foot), '末尾要写明没做什么、且不与喜忌合流:' + foot);
+  ok(!/仅供参考|因人而异/.test(body + head + foot), '不许出现空话');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

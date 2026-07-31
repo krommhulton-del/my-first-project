@@ -123,6 +123,27 @@ t('白话结论里不出现十神、格局、干支这些字眼', () => {
     ok(!/仅供参考|因人而异|机遇与挑战/.test(p), '白话里有空话:' + p);
   }
 });
+t('每条断语的白话也不许带术语——原话里留术语,白话里不许有', () => {
+  // 缘起:第一版界面上出现「官杀混杂,需取清」这种话,客人看不懂。
+  // 规矩:quote 是引文,术语照留;w 是给客人看的白话,一个术语都不许有。
+  const BAN = /正官|七杀|偏财|正财|偏印|正印|食神|伤官|比肩|劫财|比劫|印星|官杀|用神|月令|旺衰|喜忌|[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/;
+  const bad = [];
+  for (const rule of Object.values(Geju.RULES)) {
+    if (!rule) continue;
+    for (const kind of ['成', '败', '救', '忌'])
+      for (const r of rule[kind] || []) if (BAN.test(r.w)) bad.push(r.w);
+  }
+  ok(!bad.length, '这些白话里带着术语:\n      ' + [...new Set(bad)].join('\n      '));
+});
+t('每个格都配了一句白话主线', () => {
+  const seen = new Set();
+  for (let y = 1950; y < 2005; y += 3) for (let m = 0; m < 12; m++) for (const h of [3, 15]) {
+    const g = Geju.takeGe(Bazi.chart(new Date(y, m, 17, h, 30), '男', 116.4));
+    ok(g.plain && g.plain.length > 8, g.name + ' 没配白话主线');
+    seen.add(g.name);
+  }
+  ok(seen.size >= 10, '只见到 ' + seen.size + ' 个格');
+});
 t('交给 AI 的材料:算死了结论、禁了术语与空话、并写明本模块没做什么', () => {
   const c = Bazi.chart(new Date(1990, 4, 20, 9, 30), '男', 116.4);
   const m = Geju.material(c, Geju.judge(c));
