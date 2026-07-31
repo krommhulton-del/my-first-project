@@ -391,7 +391,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.57</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.58</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -864,7 +864,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.57 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.58 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -1005,7 +1005,7 @@
     // 保留铜钱明细
     cast.lines.forEach((l, i) => { l.coins = throws[i].coins; });
     currentCast = cast;
-    currentZhuang = Najia.zhuangGua(cast.benId, new Date());
+    currentZhuang = Najia.zhuangGua(cast.benId, new Date(), { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
     const q = $('question').value.trim();
     renderGua(cast);
     renderReading(cast);
@@ -1016,7 +1016,7 @@
       const plan = GuaCore.interpretationPlan(cast);
       duoPlan.done.push({
         k: sub.k, q, cast, z: currentZhuang, r,
-        report: GuaCore.buildReport(cast, q) + '\n' + panText(cast, currentZhuang),
+        report: GuaCore.buildReport(cast, q) + '\n' + panText(cast, currentZhuang, q),
         jing: plan.focus.map(f => `${f.kind}:${f.text}`).join('\n'),
       });
       duoPlan.idx++;
@@ -1025,7 +1025,7 @@
       finishDuo(); return;
     }
     const method = dayan ? '六爻·蓍草' : '六爻';
-    const report = GuaCore.buildReport(cast, q) + genderReportLine('q') + '\n' + panText(cast, currentZhuang) +
+    const report = GuaCore.buildReport(cast, q) + genderReportLine('q') + '\n' + panText(cast, currentZhuang, q) +
       (dayan ? '\n(起卦法:蓍草大衍筮法)' : '');
     const material = buildMaterial(cast, currentZhuang, q) + genderMaterialLine('q') + (dayan ? '\n(本卦以蓍草大衍法揲得)' : '');
     const recId = saveRec({ method, question: q, headline: r.headline, level: r.level, dx: r.dx, report, cast });
@@ -1134,16 +1134,43 @@
     }
     $('pan-body').innerHTML = rows;
   }
-  function panText(cast, z) {
-    const chongZhi = zz => Najia.ZHI[(Najia.ZHI.indexOf(zz) + 6) % 12];
+  function panText(cast, z, question) {
     const lines = z.lines.map((l, i) => {
-      const cl = cast.lines[i];
-      const yuePo = z.cal && chongZhi(l.zhi) === z.cal.monthZhi;
-      const anDong = z.cal && !cl.moving && chongZhi(l.zhi) === z.cal.dayZhi;
+      const p = l.power || {};
+      const marks = [
+        l.shi ? '世' : '', l.ying ? '应' : '', l.kong ? '旬空' : '',
+        l.moving ? (cast.lines[i].yang ? '○动' : '×动') : '',
+        p.yuePo ? '月破' : '', p.anDong ? '暗动' : '', p.chongSan ? '冲散' : '', p.heRi ? '日合' : '',
+      ].filter(Boolean).join(' ');
       return `${GuaCore.POS_NAMES[i]} ${l.liuShen} ${l.liuQin}${l.ganZhi}${l.wx}` +
-        `${l.shi ? ' 世' : ''}${l.ying ? ' 应' : ''}${l.kong ? ' (旬空)' : ''}${cl.moving ? (cl.yang ? ' ○动' : ' ×动') : ''}` +
-        `${yuePo ? ' 月破' : ''}${anDong ? ' 暗动' : ''}`;
+        `${marks ? ' [' + marks + ']' : ''} 月建定${p.wang || '-'}、日辰计后力量分${p.score === undefined ? '-' : p.score.toFixed(1)}`;
     });
+    const fu = (z.fuShen || []).map(f =>
+      `${f.liuQin}${f.ganZhi}${f.wx} 伏于${GuaCore.POS_NAMES[f.pos - 1]}(飞神${f.fei.liuQin}${f.fei.ganZhi})——${f.rel};${f.relNote};伏神本身${f.power ? f.power.wang : '-'}${f.kong ? '、且落旬空' : ''}`);
+    const bian = (z.bian && z.bian.lines || []).map(b =>
+      `${GuaCore.POS_NAMES[b.pos - 1]} ${b.from}动化${b.to}(${b.toLiuQin})${b.notes.length ? '——' + b.notes.join(';') : ''}`);
+    // 用神:按所问之事取六亲,再在卦中定位(不上卦则报伏神)
+    let yongLine = '';
+    if (question) {
+      const ys = Najia.yongShenOf(question, gender('q'));
+      if (ys.liuQin) {
+        const loc = Najia.locateYong(z, ys.liuQin);
+        if (loc && loc.line) {
+          const p = loc.line.power || {};
+          yongLine = `【用神】${ys.note};用神${ys.liuQin}${loc.line.ganZhi}现于${GuaCore.POS_NAMES[loc.line.pos - 1]},` +
+            `月建定${p.wang}、力量分${p.score === undefined ? '-' : p.score.toFixed(1)}` +
+            `${loc.line.moving ? '、且发动' : ''}${loc.line.kong ? '、落旬空' : ''}${p.yuePo ? '、逢月破' : ''}${p.anDong ? '、被日辰冲而暗动' : ''}` +
+            `${loc.line.shi ? '、正持世(事在自己手上)' : ''}${loc.line.ying ? '、临应爻(事在对方手上)' : ''}`;
+        } else if (loc && loc.fu) {
+          yongLine = `【用神】${ys.note};用神${ys.liuQin}不上卦,伏于${GuaCore.POS_NAMES[loc.fu.pos - 1]}${loc.fu.fei.liuQin}之下(${loc.fu.ganZhi}),` +
+            `${loc.fu.rel}——${loc.fu.relNote};伏神${loc.fu.power ? loc.fu.power.wang : '-'}${loc.fu.kong ? '、又落旬空' : ''}。` +
+            `断此事须依飞伏之理:用神不现即事不明朗,能否成看伏神出不出得来。`;
+        }
+      } else {
+        yongLine = `【用神】${ys.note}`;
+      }
+      if (ys.multi) yongLine += `。此问兼涉:${ys.also.map(x => x.note).join(';')}——两头对看,主用为准、兼看为辅`;
+    }
     return [
       '【纳甲排盘】',
       `起卦时间:${fmtCastTime(z.cal)}`,
@@ -1151,8 +1178,11 @@
       `卦宫:${z.palace}宫 ${z.gen},世${GuaCore.POS_NAMES[z.shi - 1]} 应${GuaCore.POS_NAMES[z.ying - 1]}`,
       '六爻(自下而上):',
       ...lines,
-      '(月破=爻支被月建冲,事临破败须待出月;暗动=静爻被日辰冲,暗中已动、吉凶暗应)',
-    ].join('\n');
+      fu.length ? '伏神(卦中不见之六亲,依古法取自本宫首卦):\n' + fu.map(x => '  ' + x).join('\n') : '伏神:五类六亲皆现于卦中,无需取伏',
+      bian.length ? '变爻:\n' + bian.map(x => '  ' + x).join('\n') : '',
+      yongLine,
+      '(力量分为程序按月建旺相与日辰生克冲合算死之值,正为有力、负为无力;断语的把握几成须与此分挂钩,不许比卦面乐观或悲观。)',
+    ].filter(Boolean).join('\n');
   }
 
   // —— 渲染 ——
@@ -1262,7 +1292,7 @@
 【玄学判读工具箱——依卦取用,有则直断,无则一字不提】游魂卦主魂不守舍、心神飘忽,重者如失魂;归魂卦主事有归宿、宜收不宜散。官鬼配六神断无形之扰:螣蛇鬼动主怪梦虚惊、夜不安枕;玄武鬼动主阴邪暗昧、多因出入阴气重之地沾了不洁之气;白虎鬼动主伤病血光之凶;勾陈鬼动主宅土不安、动土冲犯;朱雀鬼动主口舌是非咒诅缠身;青龙鬼动主酒色宴乐掏空精气。鬼爻持世主扰已近身;五爻鬼动或二爻(宅)受克主家宅香火之事;日月齐冲世爻主流时冲犯、诸事纷乱。凡此类象卦中确凿出现,要敢直断其事并给解法(避其地、清居处、静养正气、择吉再动),落笔翻成大白话、不报名目;卦中没有此象,绝不无中生有。
 
 【解卦优先级】无变爻:以本卦卦辞断|一个变爻:以该变爻爻辞为核心,结合本卦变卦|二到三变爻:本卦变卦并重,综合变爻位置|四到五变爻:以变卦为主|六爻全变:以变卦卦辞断(乾用用九、坤用用六)。
-【纳甲断法】取用神依所问之事定六亲;察用神旺衰(月建日辰生克)、动静、旬空、世应关系;动爻生克用神定吉凶,应期参地支与旺衰。
+【纳甲断法】用神、旺衰、伏神、进退神、月破暗动这些都已由程序按古法算死写在排盘里(每爻附「月建定X、力量分Y」,用神一行单列,不上卦的另列伏神与飞伏生克),你只许照着解释、不许另立一套。断法:①先认用神那一行,力量分为正才许说成、为负必须照实说难;②用神不上卦而取伏神的,先说清「这事眼下不明朗」,再看飞伏生克断出不出得来、几时出得来;③动爻生用神为吉、克用神为凶,回头克与化退神一律往坏里断,回头生与化进神往好里断;④月破待出月或填实、旬空待出旬或冲空,应期就从这些日子里取;⑤世为自己、应为对方,世强应弱则事在我手,反之则受制于人。
 【八卦类象】乾:天/父/领导/西北/金融管理|坤:地/母/群众/西南/地产农业|震:雷/长男/正东/科技新兴|巽:风/长女/东南/传媒商贸|坎:水/中男/正北/水利交通酒|离:火/中女/正南/文化科技美|艮:山/少男/东北/教育地产蓄积|兑:泽/少女/正西/金融娱乐餐饮。
 【六爻位置】初爻起始根基|二爻内卦之主得中|三爻内外交界多变|四爻近君之位|五爻九五尊位全卦之主|上爻盛极将变。
 【推算依据】时间:地支应期(子坎丑艮寅卯震辰巳巽午离未坤申酉兑戌亥乾),结合月令旺衰,静卦取卦数动卦取变爻数。经济数量:先后天数为基数,结合卦象量级,阳爻主增阴爻主守变爻主转折。
@@ -1328,7 +1358,7 @@
     const jing = plan.focus.map(f => `${f.kind}:${f.text}`).join('\n');
     let anchor = '';
     try { anchor = '\n' + Yingqi.material(cast, new Date(), WANT_AMOUNT.test(question || '')); } catch (e) {}
-    return GuaCore.buildReport(cast, question) + '\n' + panText(cast, z) +
+    return GuaCore.buildReport(cast, question) + '\n' + panText(cast, z, question) +
       '\n【经文取材(已按解卦优先级选定)】\n' + jing + anchor +
       '\n\n请依上述卦象、排盘与所问之事细断。';
   }
@@ -1398,10 +1428,10 @@
     const t = $('fu-input').value.trim();
     if (!t) { setStatus('先打上你要追问的话,再另起一卦。', true); return; }
     const cast = GuaCore.castHexagram();
-    const z = Najia.zhuangGua(cast.benId, new Date());
+    const z = Najia.zhuangGua(cast.benId, new Date(), { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
     const plan = GuaCore.interpretationPlan(cast);
     const jing = plan.focus.map(f => `${f.kind}:${f.text}`).join('\n');
-    const rep = GuaCore.buildReport(cast, t) + '\n' + panText(cast, z);
+    const rep = GuaCore.buildReport(cast, t) + '\n' + panText(cast, z, t);
     return runAI(`【以卦追问】${t}\n(为此追问,三钱另掷一卦如下。规矩:此问以新卦为断,前卦只作对照印证;两卦相左处以新卦为准并明说修正;一卦一断,仍是大白话、不冒术语。)\n${rep}\n【经文取材】\n${jing}`);
   }
 
@@ -1583,13 +1613,13 @@
       c.summary = `${qc.dun}·${v.name}宫${v.gate}·${v.lv}`;
     } else {
       const cast = GuaCore.castHexagram();
-      const z = Najia.zhuangGua(cast.benId, now);
+      const z = Najia.zhuangGua(cast.benId, now, { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
       const plan = GuaCore.interpretationPlan(cast);
       const jing = plan.focus.map(f => `${f.kind}:${f.text}`).join('\n');
       const r = GuaCore.interpret(cast);
       let anchor = '';
       try { anchor = '\n' + Yingqi.material(cast, now, WANT_AMOUNT.test(c.q || '')); } catch (e) {}
-      c.report = GuaCore.buildReport(cast, c.q) + '\n' + panText(cast, z) + '\n【经文取材】\n' + jing + anchor;
+      c.report = GuaCore.buildReport(cast, c.q) + '\n' + panText(cast, z, c.q) + '\n【经文取材】\n' + jing + anchor;
       c.summary = `${cast.ben.name}${cast.bian ? '之' + cast.bian.name : ''}·${r.level}`;
     }
     c.done = true;

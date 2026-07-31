@@ -104,30 +104,203 @@
     return Array.from({ length: 6 }, (_, i) => LIU_SHEN[(start + i) % 6]);
   }
 
+  // ——— 爻的旺衰:月建定四时之气、日辰定眼下之力 ———
+  // 月建看五行旺相休囚死(与月支五行论生克,六爻通行简法);爻支被月建冲为「月破」。
+  // 日辰生扶克冲合各有断:冲静爻为「暗动」(暗中已动),冲动爻为「冲散」,合动爻为「合住」。
+  const WANG = (yaoWx, ordWx) => {
+    if (yaoWx === ordWx) return '旺';
+    if (SHENG[ordWx] === yaoWx) return '相';
+    if (SHENG[yaoWx] === ordWx) return '休';
+    if (KE[yaoWx] === ordWx) return '囚';
+    return '死';
+  };
+  const LIUHE_Z = { 子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午' };
+  const chongOfZ = z => ZHI[(ZHI.indexOf(z) + 6) % 12];
+  // 旺相休囚死给一个可比的力量分,断语才有「几成」可依
+  const WANG_SCORE = { 旺: 2, 相: 1, 休: -0.5, 囚: -1, 死: -1.5 };
+
+  function yaoPower(zhi, wx, moving, cal) {
+    if (!cal) return null;
+    const mz = cal.monthZhi, dz = cal.dayZhi;
+    const mWx = ZHI_WX[mz], dWx = ZHI_WX[dz];
+    const out = { wang: WANG(wx, mWx), notes: [], score: 0 };
+    out.score += WANG_SCORE[out.wang];
+    out.yuePo = chongOfZ(zhi) === mz;
+    if (out.yuePo) { out.score -= 2; out.notes.push(`月破(被月建${mz}冲):这段力弱事败,须待出了这个月或填实之日才提得起来`); }
+    // 日辰之力
+    if (wx === dWx) { out.score += 1; out.notes.push(`日辰${dz}与之同气:眼下有帮手`); }
+    else if (SHENG[dWx] === wx) { out.score += 1.5; out.notes.push(`日辰${dz}生之:眼下有人添力`); }
+    else if (KE[dWx] === wx) { out.score -= 1.5; out.notes.push(`日辰${dz}克之:眼下被压着`); }
+    if (LIUHE_Z[zhi] === dz) {
+      out.heRi = true;
+      out.notes.push(moving ? `日辰${dz}合住此动爻:动而被绊,事拖着推不动,待冲开之日方行` : `日辰${dz}与之相合:有人贴上来说和`);
+      if (moving) out.score -= 0.5;
+    }
+    if (chongOfZ(zhi) === dz) {
+      out.chongRi = true;
+      if (moving) { out.chongSan = true; out.score -= 1; out.notes.push(`日辰${dz}冲此动爻:动而逢冲则散,事到跟前易变卦`); }
+      else { out.anDong = true; out.score += 0.8; out.notes.push(`日辰${dz}冲此静爻:暗动——表面没动静,暗里已经在走`); }
+    }
+    return out;
+  }
+
+  // ——— 进神退神:动爻化出同五行,支序前进为进神、后退为退神 ———
+  function jinTui(fromZhi, toZhi) {
+    if (ZHI_WX[fromZhi] !== ZHI_WX[toZhi] || fromZhi === toZhi) return null;
+    const a = ZHI.indexOf(fromZhi), b = ZHI.indexOf(toZhi);
+    const fwd = (b - a + 12) % 12;
+    if (fwd <= 3) return { type: '进神', note: `${fromZhi}化${toZhi}为进神:事往前走,越走越有,原本要成的成得更透` };
+    return { type: '退神', note: `${fromZhi}化${toZhi}为退神:事往回缩,原本要成的也会打折,原本要坏的反倒消一点` };
+  }
+
   // ——— 装卦:对某卦 id(六位 bits,自下而上)排纳甲 ———
-  function zhuangGua(id, date) {
-    const info = PALACE_MAP[id];
-    if (!info) throw new Error('未知卦 id:' + id);
+  // 排一卦六爻的纳甲干支与六亲(不含日月之力,供本卦与首卦共用)
+  function bareLines(id, palaceWx) {
     const lower = TRIGRAM_NAME[id.slice(0, 3)], upper = TRIGRAM_NAME[id.slice(3, 6)];
-    const cal = date ? ganZhi(date) : null;
-    const shen = cal ? liuShen(cal.dayGan) : null;
-    const lines = [];
+    const out = [];
     for (let i = 0; i < 6; i++) {
       const tri = i < 3 ? lower : upper;
       const t = NAJIA_TABLE[tri];
       const gan = i < 3 ? t.gan[0] : t.gan[1];
       const zhi = i < 3 ? t.inner[i] : t.outer[i - 3];
       const wx = ZHI_WX[zhi];
-      lines.push({
-        pos: i + 1, ganZhi: gan + zhi, zhi, wx,
-        liuQin: liuQin(info.palaceWx, wx),
-        shi: info.shi === i + 1, ying: info.ying === i + 1,
-        liuShen: shen ? shen[i] : null,
-        kong: cal ? cal.xunKong.includes(zhi) : false,
-      });
+      out.push({ pos: i + 1, ganZhi: gan + zhi, zhi, wx, liuQin: liuQin(palaceWx, wx) });
     }
-    return { palace: info.palace, palaceWx: info.palaceWx, gen: info.gen, shi: info.shi, ying: info.ying, lines, cal };
+    return out;
   }
 
-  return { ganZhi, zhuangGua, liuShen, dayIndex, sunLongitude, PALACE_MAP, GAN, ZHI, ZHI_WX };
+  // opts: { moving: [布尔六位,自下而上], bianId: 变卦 id }
+  function zhuangGua(id, date, opts) {
+    const info = PALACE_MAP[id];
+    if (!info) throw new Error('未知卦 id:' + id);
+    opts = opts || {};
+    const moving = opts.moving || [];
+    const cal = date ? ganZhi(date) : null;
+    const shen = cal ? liuShen(cal.dayGan) : null;
+    const lines = bareLines(id, info.palaceWx).map((l, i) => {
+      const mv = !!moving[i];
+      return Object.assign(l, {
+        shi: info.shi === i + 1, ying: info.ying === i + 1,
+        liuShen: shen ? shen[i] : null,
+        kong: cal ? cal.xunKong.includes(l.zhi) : false,
+        moving: mv,
+        power: yaoPower(l.zhi, l.wx, mv, cal),
+      });
+    });
+
+    // —— 伏神:某一六亲不上卦时,依古法从本宫首卦(八纯卦)同位取伏,本卦同位之爻为飞神 ——
+    // 六十四卦里约七成有六亲不上卦,问财问子尤甚(各占四分之一);
+    // 没有这一项,遇上用神不现的卦就只能瞎猜,故必补。
+    const palBits = Object.keys(TRIGRAM_NAME).find(k => TRIGRAM_NAME[k] === info.palace);
+    const shouLines = bareLines(palBits + palBits, info.palaceWx);
+    const onBoard = new Set(lines.map(l => l.liuQin));
+    const fuShen = [];
+    for (const sl of shouLines) {
+      if (onBoard.has(sl.liuQin)) continue;
+      if (fuShen.some(f => f.liuQin === sl.liuQin)) continue;   // 同一六亲取首见者
+      const fei = lines[sl.pos - 1];
+      const p = yaoPower(sl.zhi, sl.wx, false, cal);
+      let rel, relNote;
+      if (KE[fei.wx] === sl.wx) { rel = '飞来克伏'; relNote = '飞神克伏神:被压在底下出不来,此事受人所制,须待冲开飞神或伏神得日月生扶之时'; }
+      else if (KE[sl.wx] === fei.wx) { rel = '伏克飞'; relNote = '伏神克飞神:出得来,虽伏犹用,时候一到自会冒头'; }
+      else if (SHENG[fei.wx] === sl.wx) { rel = '飞生伏'; relNote = '飞神生伏神:底下有人托着,虽不显却有力,出伏之日即见'; }
+      else if (SHENG[sl.wx] === fei.wx) { rel = '伏生飞'; relNote = '伏神生飞神:自己的劲都贴给了别人,费力不落好'; }
+      else { rel = '飞伏比和'; relNote = '飞伏同气:不相碍,平平常常，待值日冲空之期'; }
+      fuShen.push({
+        liuQin: sl.liuQin, pos: sl.pos, ganZhi: sl.ganZhi, zhi: sl.zhi, wx: sl.wx,
+        fei: { ganZhi: fei.ganZhi, zhi: fei.zhi, wx: fei.wx, liuQin: fei.liuQin },
+        rel, relNote, power: p,
+        kong: cal ? cal.xunKong.includes(sl.zhi) : false,
+      });
+    }
+
+    // —— 变爻:化出的六亲(仍按本宫五行论)、回头生克、进退神、化空化破 ——
+    let bian = null;
+    if (opts.bianId && opts.bianId !== id) {
+      const bLines = bareLines(opts.bianId, info.palaceWx);
+      bian = { id: opts.bianId, palace: (PALACE_MAP[opts.bianId] || {}).palace || '', lines: [] };
+      for (let i = 0; i < 6; i++) {
+        if (!moving[i]) continue;
+        const from = lines[i], to = bLines[i];
+        const item = { pos: i + 1, from: from.ganZhi, to: to.ganZhi, toZhi: to.zhi, toWx: to.wx, toLiuQin: to.liuQin, notes: [] };
+        const jt = jinTui(from.zhi, to.zhi);
+        if (jt) { item.jinTui = jt.type; item.notes.push(jt.note); }
+        if (SHENG[to.wx] === from.wx) { item.huiTou = '回头生'; item.notes.push(`${from.zhi}动化${to.zhi}回头相生:自己变出来的东西反过来养自己,越动越有力`); }
+        else if (KE[to.wx] === from.wx) { item.huiTou = '回头克'; item.notes.push(`${from.zhi}动化${to.zhi}回头相克:一动就伤己,这一步走出去反受其害`); }
+        if (cal && cal.xunKong.includes(to.zhi)) { item.huaKong = true; item.notes.push('化空:变出来的是个空,眼下落不到实处,待出旬填实再论'); }
+        if (cal && chongOfZ(to.zhi) === cal.monthZhi) { item.huaPo = true; item.notes.push('化月破:变出来的即被月建冲破,这一变没结果'); }
+        if (from.zhi === to.zhi) { item.fuYin = true; item.notes.push('化伏吟:动而不动,原地打转,旧事重演'); }
+        if (chongOfZ(from.zhi) === to.zhi) { item.fanYin = true; item.notes.push('化爻反吟:变出的正冲自己,反复颠倒、先成后败'); }
+        bian.lines.push(item);
+      }
+      // 卦级伏吟/反吟:整个内卦或外卦原样不动为伏吟、变成相冲之卦(震↔巽)为反吟。
+      // 爻级反吟受纳甲表所限、单爻变时结构上出不来,真正常见的是这一层。
+      const triOf = b3 => TRIGRAM_NAME[b3];
+      const FAN = { 震: '巽', 巽: '震' };
+      const io = [['内卦', id.slice(0, 3), opts.bianId.slice(0, 3)], ['外卦', id.slice(3, 6), opts.bianId.slice(3, 6)]];
+      bian.guaNotes = [];
+      for (const [name, a3, b3] of io) {
+        const A = triOf(a3), B = triOf(b3);
+        if (a3 === b3) continue;
+        if (FAN[A] === B) bian.guaNotes.push(`${name}反吟(${A}变${B}):此事反复颠倒、先成后败,成了也留不住`);
+      }
+      if (opts.bianId === id) bian.guaNotes.push('卦伏吟:变卦与本卦相同,动而不动,旧局重演');
+    }
+
+    return {
+      palace: info.palace, palaceWx: info.palaceWx, gen: info.gen, shi: info.shi, ying: info.ying,
+      lines, cal, fuShen, bian,
+    };
+  }
+
+  // ——— 用神取法:问什么事,取哪一门六亲(《卜筮正宗》通行口径)———
+  const YONG_SHEN = [
+    // 次序要紧:先认死指向(老公/男友→官鬼、老婆/女友→妻财),再认事类,最后才按性别定婚恋。
+    { re: /(老公|丈夫|男朋友|男友|男方|未婚夫|夫君)/, liuQin: '官鬼', note: '问夫婿以官鬼为用神' },
+    { re: /(老婆|妻子|女朋友|女友|女方|未婚妻)/, liuQin: '妻财', note: '问妻室以妻财为用神' },
+    { re: /(病|疾|症|痛|健康|手术|住院|化验|癌|灾)/, liuQin: '官鬼', note: '问病以官鬼为病症、子孙为医药,两头对看' },
+    { re: /(工作|职位|事业|升职|晋升|考公|考编|上班|老板|领导|官司|诉讼|名声|竞选|比赛|录取|面试)/, liuQin: '官鬼', note: '问功名事业官非以官鬼为用神' },
+    { re: /(财|钱|收入|工资|薪|生意|买卖|投资|理财|讨债|价格|赚|利润|报酬)/, liuQin: '妻财', note: '问钱财买卖以妻财为用神' },
+    { re: /(房|屋|宅|车|文书|合同|证件|学业|考试|论文|证书|长辈|父母|爸|妈|保险|执照)/, liuQin: '父母', note: '问房车文书学业长辈以父母为用神' },
+    { re: /(子女|孩子|儿子|女儿|怀孕|备孕|生育|宠物|下属|平安|出行安否|保平安)/, liuQin: '子孙', note: '问子女平安以子孙为用神' },
+    { re: /(兄弟|姐妹|朋友|同事|合伙|同行|竞争对手)/, liuQin: '兄弟', note: '问平辈合伙以兄弟为用神' },
+  ];
+  // 泛指婚恋(没点明男女方)时,按问卦人性别定:男以妻财为妻、女以官鬼为夫
+  const MARRIAGE_RE = /(婚|恋爱|对象|感情|姻缘|正缘|相亲|复合|表白|脱单|在一起|谈朋友)/;
+  // 一问兼涉数事是常有的(「跟朋友合伙做生意」既涉合伙之人、又涉财利),
+  // 故主用神之外把兼看的一并报出来,由断者两头对看,不硬吞掉另一半。
+  function yongShenOf(question, gender) {
+    const q = String(question || '');
+    const hits = YONG_SHEN.filter(r => r.re.test(q));
+    if (hits.length) {
+      const main = hits[0];
+      const also = hits.slice(1).filter(h => h.liuQin !== main.liuQin);
+      return {
+        liuQin: main.liuQin, note: main.note,
+        also: also.map(h => ({ liuQin: h.liuQin, note: h.note })),
+        multi: also.length > 0,
+      };
+    }
+    if (MARRIAGE_RE.test(q)) {
+      if (gender === '女') return { liuQin: '官鬼', note: '女问婚恋以官鬼为夫星、为用神' };
+      if (gender === '男') return { liuQin: '妻财', note: '男问婚恋以妻财为妻星、为用神' };
+      return { liuQin: null, note: '问婚恋而未言男女:男以妻财为用、女以官鬼为用,此处性别未填,故以世爻为自身、应爻为对方论' };
+    }
+    return { liuQin: null, note: '所问不属五类六亲之一,以世爻为自身、应爻为对方论' };
+  }
+  // 在一卦里定位用神(先看卦面,不上卦则取伏神)
+  function locateYong(gua, liuQinName) {
+    if (!liuQinName) return null;
+    const on = gua.lines.filter(l => l.liuQin === liuQinName);
+    if (on.length) {
+      const pick = on.find(l => l.moving) || on.find(l => l.shi) || on[0];
+      return { where: '现于卦中', line: pick, all: on, fu: null };
+    }
+    const fu = (gua.fuShen || []).find(f => f.liuQin === liuQinName);
+    if (fu) return { where: '不上卦,取伏神', line: null, all: [], fu };
+    return { where: '既不上卦、首卦亦无', line: null, all: [], fu: null };
+  }
+
+  return { ganZhi, zhuangGua, liuShen, dayIndex, sunLongitude, PALACE_MAP, GAN, ZHI, ZHI_WX,
+    yaoPower, jinTui, yongShenOf, locateYong, bareLines, YONG_SHEN };
 }));
