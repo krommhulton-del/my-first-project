@@ -338,6 +338,28 @@
   .jrprof { display: inline-flex; gap: 6px; align-items: center; }
   .jrprof select { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-family: inherit; max-width: 46vw; }
   .jrprof .mini { min-height: 32px; padding: 4px 10px; font-size: .86rem; letter-spacing: 0; }
+  .wjin { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: inherit; }
+  #sec-wenji .qwrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  #sec-wenji #wq-q { flex: 1 1 340px; background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-family: inherit; font-size: 1rem; }
+  #sec-wenji #wq-span { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: inherit; }
+  .wjhead { background: var(--accent-soft); border-radius: 12px; padding: 13px 15px; margin: 12px 0; line-height: 1.85; }
+  .wjhead b { color: var(--cinnabar); }
+  .wjyear { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 11px; background: var(--panel); }
+  .wjyear > .yh { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin-bottom: 5px; }
+  .wjyear .yy { font-size: 1.14rem; color: var(--cinnabar); }
+  .wjyear .ya { color: var(--dim); font-size: .84rem; }
+  .wjyear .why { color: var(--dim); font-size: .86rem; line-height: 1.7; }
+  .wjmon { background: var(--seg); border-radius: 10px; padding: 10px 12px; margin-top: 9px; }
+  .wjmon .mh { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+  .wjmon .mn { font-size: 1.02rem; }
+  .wjmon .msp { color: var(--dim); font-size: .84rem; }
+  .wjdays { display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0; }
+  .wjday { border: 1px solid var(--gold); border-radius: 8px; padding: 3px 10px; font-size: .9rem; background: var(--panel); }
+  .wjday.gui { border-color: var(--cinnabar); color: var(--cinnabar); }
+  .wjday i { font-style: normal; color: var(--dim); font-size: .84em; margin-left: 4px; }
+  .wjport { border-left: 3px solid var(--gold); padding-left: 10px; margin-top: 7px; font-size: .9rem; line-height: 1.8; }
+  .wjcard { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 11px; }
+  .wjcard h4 { color: var(--gold); font-weight: normal; letter-spacing: .1em; margin-bottom: 5px; }
   #jr-detail .jsum { margin-top: 6px; color: var(--cinnabar); }
   .jact { display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; margin-top: 5px; font-size: .92em; }
   .jact b { font-weight: normal; min-width: 3.4em; }
@@ -391,7 +413,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.58</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.59</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -620,6 +642,7 @@
   <section id="board-menu" class="voff">
     <h2>专 项 · 各有各的阵法</h2>
     <div class="bmenu">
+      <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dawen"><span class="bg">问</span><span><span class="bt">大问拆阵</span><span class="bd">一句大问,拆成一套卦阵逐个起,汇总深断</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-zhuanyun"><span class="bg">运</span><span><span class="bt">转 运</span><span class="bd">近来不顺?先诊断根源,再给能落地的做法</span></span><span class="bx">›</span></button>
@@ -770,6 +793,37 @@
   </div>
   </section>
 
+  <section id="sec-wenji" class="voff">
+    <h2>问 机 · 什么时候轮到你</h2>
+    <div class="note">拿你的生辰,把<b>大运流年</b>定到年、<b>流月</b>定到月、<b>择日</b>定到日,三层串起来回答一句「什么时候」。
+      年份月份日子都算得出依据;那阵子遇到的人或机会是什么路数、贵人从哪个方向来,也一并给。<b>先在下面填生辰</b>(填过一次全应用通用)。</div>
+    <div class="qwrow">
+      <input type="date" id="wq-birth" class="wjin" title="出生日期">
+      <select id="wq-hour" class="wjin"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
+      <input type="text" id="wq-place" class="wjin" placeholder="出生地(市/省)">
+      <select id="wq-gender" class="wjin"><option value="">性别</option><option value="男">男</option><option value="女">女</option></select>
+    </div>
+    <div class="qwrow">
+      <input type="text" id="wq-q" placeholder="就问一句,比如:我什么时候能谈恋爱 / 什么时候能进一笔钱 / 什么时候能换工作" maxlength="60">
+      <select id="wq-span"><option value="6">往后看 6 年</option><option value="3">往后看 3 年</option><option value="10">往后看 10 年</option></select>
+    </div>
+    <div class="chips" id="wq-chips">
+      <button type="button" class="chip" data-q="我什么时候能谈恋爱">什么时候能谈恋爱</button>
+      <button type="button" class="chip" data-q="我什么时候能进一笔钱">什么时候能进一笔钱</button>
+      <button type="button" class="chip" data-q="我什么时候能换个好工作">什么时候能换好工作</button>
+      <button type="button" class="chip" data-q="我什么时候能遇到贵人">什么时候遇到贵人</button>
+      <button type="button" class="chip" data-q="我什么时候适合搬家换城市">什么时候适合搬家</button>
+      <button type="button" class="chip" data-q="我什么时候能考上/拿到证">什么时候能考上</button>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="primary" id="btn-wq-go">看应期</button>
+      <button type="button" id="btn-wq-cast" class="hidden">拿这个时间起一卦复核</button>
+      <button type="button" id="btn-wq-ai" class="gold hidden">请东玄把这段讲透</button>
+    </div>
+    <div class="err" id="wq-err"></div>
+    <div id="wq-out"></div>
+    <div class="stream" id="wq-ai"></div>
+  </section>
   <section id="sec-yinyuan" class="fold">
     <h2 class="foldh">姻 缘 · 恋爱专用(问正缘 / 断某人)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
@@ -864,7 +918,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.58 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.59 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -889,6 +943,7 @@
 <script src="yingqi.js"></script>
 <script src="dili.js"></script>
 <script src="dashi.js"></script>
+<script src="wenji.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -2852,6 +2907,125 @@
     const dt = new Date(y, m - 1, d, 12);
     return isNaN(dt) ? null : dt;
   }
+  // ——————————————— 问机:一句话 → 年/月/日三层应期 ———————————————
+  let wqRes = null;
+  function wqSyncBirth() {
+    // 与全应用共用同一份生辰(填一次通用),这里填了也回写
+    try {
+      const b = localStorage.getItem(BKEY); if (b && !$('wq-birth').value) $('wq-birth').value = b;
+      const h = localStorage.getItem(HRKEY); if (h !== null && h !== '' && !$('wq-hour').value) $('wq-hour').value = h;
+      const pl = localStorage.getItem(PLKEY); if (pl && !$('wq-place').value) $('wq-place').value = pl;
+      const g = localStorage.getItem(GKEY); if (g && !$('wq-gender').value) $('wq-gender').value = g;
+    } catch (e) {}
+  }
+  function wqSaveBirth() {
+    try {
+      if ($('wq-birth').value) localStorage.setItem(BKEY, $('wq-birth').value);
+      localStorage.setItem(HRKEY, $('wq-hour').value);
+      localStorage.setItem(PLKEY, $('wq-place').value);
+      if ($('wq-gender').value) localStorage.setItem(GKEY, $('wq-gender').value);
+      const jb = $('jr-birth'); if (jb && $('wq-birth').value) jb.value = $('wq-birth').value;
+    } catch (e) {}
+  }
+  function wqErr(t) { $('wq-err').textContent = t || ''; }
+  function wqGo() {
+    wqErr('');
+    const q = ($('wq-q').value || '').trim();
+    if (!$('wq-birth').value) { wqErr('先填出生日期——应期是从你的八字里推的,没有生辰算不了。'); return; }
+    if (!q) { wqErr('说一句你想问的,比如「我什么时候能谈恋爱」。'); return; }
+    wqSaveBirth();
+    const c = dxBirthChart('q');
+    if (!c) { wqErr('生辰解析不了,检查一下日期。'); return; }
+    const span = parseInt($('wq-span').value, 10) || 6;
+    let r;
+    try { r = Wenji.ask(c, q, { nowYear: new Date().getFullYear(), span, today: new Date() }); }
+    catch (e) { wqErr('推算出错:' + e.message); return; }
+    wqRes = { r, chart: c, q };
+    $('btn-wq-cast').classList.remove('hidden');
+    $('btn-wq-ai').classList.remove('hidden');
+    wqRender(r, c);
+  }
+  function wqRender(r, c) {
+    if (r.empty) {
+      $('wq-out').innerHTML = `<div class="wjhead">往后${r.span}年里,<b>没扫到这件事的明显当口</b>——不是坏消息,是这几年它不是你的主线。` +
+        `换个问法或把年限拉长再看;真要现在动,就起一卦单问这一件事。</div>`;
+      return;
+    }
+    const w0 = r.windows[0];
+    const m0 = w0.months[0];
+    const firstDays = (m0 && m0.days.length) ? m0.days.map(d => `${d.m}月${d.d}日`).join('、') : '这个月里没有双层都过关的日子';
+    const head = `<div class="wjhead">你问的是<b>${esc(r.topic.label)}</b>——${esc(r.topic.ask)}。<br>` +
+      `最近的窗口是 <b>${w0.year}年</b>(${w0.age}岁)` +
+      (m0 ? `,尤其<b>${esc(m0.name)}(${esc(m0.span)})</b>` : '') +
+      (firstDays ? `;这几天最合你:<b>${esc(firstDays)}</b>` : '') + `。` +
+      (r.windows.length > 1 ? `<br>再往后还有:${r.windows.slice(1).map(x => x.year + '年').join('、')}。` : '') +
+      `</div>`;
+    const years = r.windows.map(y => {
+      const mons = y.months.map(m => {
+        const days = m.days.length
+          ? `<div class="wjdays">${m.days.map(d => `<span class="wjday${d.gui ? ' gui' : ''}">${d.m}月${d.d}日<i>${esc(d.gz)}·${esc(d.riLevel)}${d.gui ? '·贵人日' : ''}</i></span>`).join('')}</div>` +
+            `<div class="why">挑这几天的理由:${esc(m.days.map(d => d.why[0]).filter(Boolean).join(';') || '双层都过关')}。这几天宜:${esc((m.days[0].yi || []).slice(0, 2).join('、'))}</div>`
+          : '<div class="why">这个月里没有「黄历不忌、日运为吉、建除合此事」三样都过关的日子——要动就往前后月挪。</div>';
+        return `<div class="wjmon"><div class="mh"><span class="mn">${esc(m.name)}</span><span class="msp">${esc(m.gz)} · ${esc(m.span)}</span></div>` +
+          `<div class="why">${esc(m.reasons.join(';'))}</div>${days}` +
+          (m.portrait.lines.length ? `<div class="wjport">${m.portrait.fromDay ? '<b>按' + esc(m.portrait.fromDay) + '那天的字看:</b><br>' : ''}${m.portrait.lines.map(esc).join('<br>')}</div>` : '') + `</div>`;
+      }).join('');
+      return `<div class="wjyear"><div class="yh"><span class="yy">${y.year}年</span>` +
+        `<span class="ya">${y.age}岁 · ${esc(y.gz)}${y.dayunGz ? ' · 走' + esc(y.dayunGz) + '运' : ''}</span></div>` +
+        `<div class="why">为什么是这一年:${esc(y.reasons.join(';'))}</div>` +
+        (y.tips.length ? `<div class="why">该怎么做:${esc(y.tips.join(';'))}</div>` : '') +
+        (y.flags.length ? `<div class="why">另:${esc(y.flags.join(';'))}</div>` : '') + mons + `</div>`;
+    }).join('');
+    const g = r.guiren;
+    const gui = `<div class="wjcard"><h4>贵 人 从 哪 来</h4><div>${esc(g.note)}</div>` +
+      (g.years.length ? `<div class="why">未来逢贵人之年:${g.years.map(x => x.year + '年').join('、')}</div>` : '') +
+      (g.months.length ? `<div class="why">近两年的贵人月:${g.months.slice(0, 6).map(x => x.year + '年' + x.idx + '月').join('、')}</div>` : '') +
+      (g.days.length ? `<div class="why">最近的贵人日:${g.days.slice(0, 5).map(x => x.iso.slice(5)).join('、')}——这些天开口求人、见要紧人物最容易成</div>` : '') +
+      `</div>`;
+    const also = r.also.length
+      ? `<div class="wjcard"><h4>同 期 还 会 有 的 事</h4>` +
+        r.also.map(a => `<div class="why"><b style="color:var(--ink)">${esc(a.label)}</b>:${a.items.map(i => i.year + '年(' + esc(i.why) + ')').join(';')}</div>`).join('') +
+        `</div>`
+      : '';
+    const foot = `<div class="note">口径:年份月份日子都是按你的八字推的窗口,不是保票——同样的窗口,主动去办才有事,躲着不动就只是过去了。` +
+      `每一条都列了依据,对不上的当场驳回我。日子已经过了三道门槛:黄历不忌、你的日运为吉、建除合这件事。` +
+      `想再稳一手,点下面「起一卦复核」——命理定时机、卦象定成败,两头对上才叫准。</div>`;
+    $('wq-out').innerHTML = head + years + gui + also + foot;
+  }
+  function wqToCast() {
+    if (!wqRes) return;
+    const w0 = wqRes.r.windows[0];
+    const m0 = w0 && w0.months[0];
+    const d0 = m0 && m0.days[0];
+    const when = d0 ? `${w0.year}年${d0.m}月${d0.d}日前后` : (m0 ? `${w0.year}年${m0.name}` : `${w0 ? w0.year : ''}年`);
+    showView('ask');
+    const box = $('question');
+    if (box) { box.value = `${wqRes.q}——命理推在${when},此卦复核:这个时间对不对、成不成?`; box.focus(); }
+  }
+  async function wqAI() {
+    if (!wqRes) return;
+    const key = getKey();
+    if (!key) { wqErr('要东玄把这段讲透,先在下面「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
+    wqErr('');
+    const mat = Wenji.material(wqRes.chart, wqRes.r);
+    $('wq-ai').textContent = '';
+    try {
+      await llmStream(DONGXUAN_SYSTEM + '\n' + ANTI_JARGON, mat, t => { $('wq-ai').textContent += t; });
+    } catch (e) { wqErr('深断失败:' + e.message); }
+  }
+  if ($('btn-wq-go')) {
+    wqSyncBirth();
+    $('btn-wq-go').addEventListener('click', wqGo);
+    $('btn-wq-cast').addEventListener('click', wqToCast);
+    $('btn-wq-ai').addEventListener('click', wqAI);
+    $('wq-chips').addEventListener('click', e => {
+      const b = e.target.closest('.chip'); if (!b) return;
+      $('wq-q').value = b.dataset.q;
+      wqGo();
+    });
+    $('wq-q').addEventListener('keydown', e => { if (e.key === 'Enter') wqGo(); });
+  }
+
   // ——— 生辰档案簿(与运势页共用同一份本机存档)———
   const PROFKEY = 'dongxuan_profiles_v1', PROFCUR = 'dongxuan_profile_cur';
   const jrProfiles = () => { try { return JSON.parse(localStorage.getItem(PROFKEY) || '[]'); } catch (e) { return []; } };
@@ -3096,7 +3270,7 @@
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-wenji', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {

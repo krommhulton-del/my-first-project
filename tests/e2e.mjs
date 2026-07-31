@@ -663,6 +663,26 @@ await t('地利板块:挑旺地与验地实算方位、转起卦复核', async (
   ok((await page.textContent('#dl-status')).includes('不认识'), '胡写地名应拦');
 });
 
+await t('问机板块:一句话给出年/月/日三层应期,并带画像与贵人', async () => {
+  await page.evaluate(() => window.dxOpenBoard('sec-wenji'));
+  await page.fill('#wq-birth', '1996-08-12');
+  await page.selectOption('#wq-hour', '10');
+  await page.selectOption('#wq-gender', '女');
+  await page.click('.chip[data-q="我什么时候能谈恋爱"]');
+  await page.waitForTimeout(2500);
+  const txt = await page.locator('#wq-out').innerText();
+  ok(/最近的窗口是\s*\d{4}年/.test(txt), '开口第一句要把年份说死:' + txt.slice(0, 80));
+  ok((await page.locator('#wq-out .wjyear').count()) >= 1, '应列出窗口年份');
+  ok((await page.locator('#wq-out .wjmon').count()) >= 1, '应列出应期月份');
+  ok((await page.locator('#wq-out .wjday').count()) >= 1, '应列出具体日子');
+  ok(txt.includes('贵 人 从 哪 来'), '应有贵人卡');
+  ok(!/机遇与挑战并存|顺其自然/.test(txt), '不许出现空话');
+  ok(await page.locator('#btn-wq-cast').isVisible(), '起卦复核按钮应出现');
+  await page.click('#btn-wq-cast');
+  await page.waitForTimeout(400);
+  ok((await page.inputValue('#question')).includes('复核'), '应把时间带进问句去复核');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
