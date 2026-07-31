@@ -89,6 +89,30 @@ t('三个 SOP skill 都在,且各自写明了关键铁律', () => {
 });
 
 console.log('【三】铁律仍在代码里生效');
+t('铁律十:仓库里不许出现任何形似 API Key 的串', () => {
+  // 缘起:2026-08 用户在聊天里贴了自己的 DeepSeek Key。程序本来就不需要它
+  // (Key 只存用户本机 localStorage,由他的浏览器直发接口),但这条测试把「仓库零密钥」钉死,
+  // 免得将来谁手滑把调试用的 Key 写进代码或测试。
+  const SCAN = ['index.html', 'yunshi.html', 'package.json', 'sw.js', 'build-single.mjs'];
+  const KEYLIKE = /(sk-[A-Za-z0-9]{20,}|api[_-]?key\s*[:=]\s*['"][A-Za-z0-9]{16,})/i;
+  for (const f of SCAN.concat(readdirSync(ROOT).filter(x => x.endsWith('.js')))) {
+    let txt = '';
+    try { txt = readFileSync(join(ROOT, f), 'utf8'); } catch (e) { continue; }
+    const m = txt.match(KEYLIKE);
+    ok(!m, `${f} 里出现了形似密钥的串(前 8 字符 ${m ? m[0].slice(0, 8) : ''}…)——密钥一律只存用户本机`);
+  }
+  // 测试目录也扫一遍(调试用的假 Key 也不许长得像真的)
+  for (const f of readdirSync(join(ROOT, 'tests'))) {
+    const txt = readFileSync(join(ROOT, 'tests', f), 'utf8');
+    ok(!/sk-[A-Za-z0-9]{20,}/.test(txt), `tests/${f} 里有形似真密钥的串`);
+  }
+});
+t('Key 只进 localStorage,不写进任何请求日志或回报文本', () => {
+  const html = readFileSync(join(ROOT, 'index.html'), 'utf8') + readFileSync(join(ROOT, 'yunshi.html'), 'utf8');
+  // getKey() 的结果只许出现在 headers 里,不许被塞进 material/report/console
+  ok(!/console\.log\([^)]*getKey\(\)/.test(html), 'Key 不许打进控制台');
+  ok(!/(material|report|回报)[^\n]{0,80}getKey\(\)/.test(html), 'Key 不许进材料或回报文本');
+});
 t('提示词里仍钉着零说教、禁空话、不推荐花钱消灾', () => {
   const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
   for (const k of ['零说教', '机遇与挑战并存', '花钱消灾']) ok(html.includes(k), 'index.html 缺铁律:' + k);
