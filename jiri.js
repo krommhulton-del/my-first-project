@@ -67,14 +67,35 @@
   const GAN_WX = ['木', '木', '火', '火', '土', '土', '金', '金', '水', '水'];
   const SHENG = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
   const KE = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' };
-  // 流日天干对本命日干:同我/生我/我克 顺,克我 逆,我生 耗
-  function wxRelation(dayGan, selfGan) {
+  const ZHI_WX = { 子: '水', 丑: '土', 寅: '木', 卯: '木', 辰: '土', 巳: '火', 午: '火', 未: '土', 申: '金', 酉: '金', 戌: '土', 亥: '水' };
+  // 流日干支对本人:有喜忌就按喜忌断(与运势页同一把尺),没有喜忌才退回粗判。
+  // 旧法之弊:不问身旺身弱,一律「我生=泄=操心出力」。
+  //   身旺之人泄秀正是好事,身弱之人才叫耗——一条死规矩把两种相反的命断成同一句,
+  //   于是同一天同一个人,日历说「操心出力」、运势页说「大吉」,软件自己打自己。
+  function wxRelation(dayGan, dayZhi, selfGan, yong) {
     const d = GAN_WX[GAN.indexOf(dayGan)], s = GAN_WX[GAN.indexOf(selfGan)];
-    if (d === s) return { rel: '同我', score: 1, note: `流日${d}与你日主同气,做事顺手` };
-    if (SHENG[d] === s) return { rel: '生我', score: 1, note: `流日${d}生你日主${s},有滋养、有人帮衬` };
-    if (SHENG[s] === d) return { rel: '我生', score: 0, note: `你日主${s}生流日${d},操心出力的日子` };
-    if (KE[s] === d) return { rel: '我克', score: 1, note: `你日主${s}克流日${d},主动可为、拿得住` };
-    return { rel: '克我', score: -1, note: `流日${d}克你日主${s},压力大、费力气` };
+    const z = ZHI_WX[dayZhi];
+    if (yong && yong.xiWx && yong.xiWx.length) {
+      const xi = yong.xiWx, ji = yong.jiWx || [];
+      const tag = w => xi.includes(w) ? '喜' : (ji.includes(w) ? '忌' : '闲');
+      const gT = tag(d), zT = tag(z);
+      let score = 0;
+      if (gT === '喜') score += 1; else if (gT === '忌') score -= 1;
+      if (zT === '喜') score += 1.2; else if (zT === '忌') score -= 1.2;
+      let note;
+      if (gT === '喜' && zT === '喜') note = `流日天干${dayGan}(${d})、地支${dayZhi}(${z})都是你要的那口气,劲往一处使`;
+      else if (gT === '忌' && zT === '忌') note = `流日天干${dayGan}(${d})、地支${dayZhi}(${z})都压着你,这天别硬撑`;
+      else if (gT === '喜' && zT === '忌') note = `流日天干${dayGan}(${d})帮你、地支${dayZhi}(${z})拆台——面上顺、底下漏`;
+      else if (gT === '忌' && zT === '喜') note = `流日天干${dayGan}(${d})压你、地支${dayZhi}(${z})托底——面上紧、底下稳`;
+      else note = `流日天干${dayGan}(${d},${gT})、地支${dayZhi}(${z},${zT}),于你不痛不痒`;
+      return { rel: `${gT}/${zT}`, score: +score.toFixed(1), note, byYong: true, ganTag: gT, zhiTag: zT };
+    }
+    // 无八字喜忌时的粗判(只看生克,不知旺衰,所以标明「粗判」)
+    if (d === s) return { rel: '同我', score: 1, note: `流日${d}与你日主同气,做事顺手(粗判:未定旺衰)`, byYong: false };
+    if (SHENG[d] === s) return { rel: '生我', score: 1, note: `流日${d}生你日主${s},有滋养、有人帮衬(粗判:未定旺衰)`, byYong: false };
+    if (SHENG[s] === d) return { rel: '我生', score: 0, note: `你日主${s}生流日${d},出力的日子——你若身旺反是泄秀之吉,身弱才叫耗(粗判:未定旺衰)`, byYong: false };
+    if (KE[s] === d) return { rel: '我克', score: 1, note: `你日主${s}克流日${d},主动可为、拿得住(粗判:未定旺衰)`, byYong: false };
+    return { rel: '克我', score: -1, note: `流日${d}克你日主${s},压力大、费力气(粗判:未定旺衰)`, byYong: false };
   }
 
   const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -129,7 +150,7 @@
   const xiaoxiOf = monthZhi => { const x = XIAOXI[monthZhi]; return { gua: x[0], note: x[1] }; };
 
   // ——— 单日详情。birth 可选:{date: Date}(按出生日算年支生肖与日主天干)———
-  function dayInfo(date, birth) {
+  function dayInfo(date, birth, yong) {
     const gz = Najia.ganZhi(date);
     const jc = jianchuOf(gz.monthZhi, gz.dayZhi);
     const zs = zhishenOf(gz.monthZhi, gz.dayZhi);
@@ -152,15 +173,23 @@
       if (sanheMates(dz).includes(byZhi)) { ps += 2; marks.push(`日支${gz.dayZhi}与你年支${ZHI[byZhi]}三合,得势顺遂`); }
       if (LIUHAI[dz] === byZhi) { ps -= 1; marks.push(`日支${gz.dayZhi}害你年支${ZHI[byZhi]},小人小阻,留个心`); }
       if (isXing(dz, byZhi)) { ps -= 1; marks.push(`日支${gz.dayZhi}刑你年支${ZHI[byZhi]},易生摩擦,忍口舌`); }
-      const wx = wxRelation(gz.dayGan, bgz.dayGan);
+      const wx = wxRelation(gz.dayGan, gz.dayZhi, bgz.dayGan, yong);
       ps += wx.score;
       personal = {
         animal: ANIMALS[byZhi], yearZhi: ZHI[byZhi], selfGan: bgz.dayGan,
-        chong: chongOf(dz) === byZhi, marks, wx, score: ps,
+        chong: chongOf(dz) === byZhi, marks, wx, score: +ps.toFixed(1), byYong: !!wx.byYong,
       };
       score += ps;
     }
-    let level = score >= 5 ? '上吉' : score >= 3 ? '吉' : score >= -1 ? '平' : score >= -4 ? '慎' : '忌';
+    const lv = sc => sc >= 5 ? '上吉' : sc >= 3 ? '吉' : sc >= -1 ? '平' : sc >= -4 ? '慎' : '忌';
+    // 两层分账:黄历层(通用宜忌,对谁都一样)与命理层(你的日运,因人而异)。
+    // 两层各报各的,合参再出总评——冲突时不许糊成一个数字骗人。
+    const almanacScore = score - (personal ? personal.score : 0);
+    const layers = {
+      almanac: { score: almanacScore, level: lv(almanacScore) },
+      personal: personal ? { score: personal.score, level: personal.score >= 2 ? '旺你' : personal.score <= -2 ? '背你' : '平平' } : null,
+    };
+    let level = lv(score);
     if (jc.name === '破' && (level === '上吉' || level === '吉' || level === '平')) level = '慎'; // 破日封顶
     if (personal && personal.chong) level = '冲';
     return {
@@ -171,15 +200,15 @@
       jianchu: jc, zhishen: zs, xiu, pengzu: pengzuOf(gz.day), flags,
       xiaoxi: xiaoxiOf(gz.monthZhi),
       chongAnimal: ANIMALS[chongZhi], chongZhi: ZHI[chongZhi], shaDir: SHA_DIR[dz],
-      personal, score, level,
+      personal, score: +score.toFixed(1), level, layers,
     };
   }
 
   // ——— 整月网格(month 1–12)———
-  function monthGrid(year, month, birth) {
+  function monthGrid(year, month, birth, yong) {
     const nDays = new Date(year, month, 0).getDate();
     const days = [];
-    for (let d = 1; d <= nDays; d++) days.push(dayInfo(atNoon(year, month, d), birth));
+    for (let d = 1; d <= nDays; d++) days.push(dayInfo(atNoon(year, month, d), birth, yong));
     return { year, month, firstWeek: days[0].week, days };
   }
 
@@ -231,14 +260,14 @@
     return { sanhe: sanheMates(yearZhiIdx).map(z => ANIMALS[z]), liuhe: ANIMALS[he] };
   }
 
-  function pickDays(eventKey, fromDate, nDays, birth, topN) {
+  function pickDays(eventKey, fromDate, nDays, birth, topN, yong) {
     const ev = EVENTS[eventKey];
     if (!ev) return [];
     const out = [];
     const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate(), 12);
     for (let i = 0; i < (nDays || 30); i++) {
       const d = new Date(start.getTime() + i * 86400000);
-      const info = dayInfo(d, birth);
+      const info = dayInfo(d, birth, yong);
       if (ev.ji.includes(info.jianchu.name)) continue;       // 建星犯忌,直接排除
       if (info.personal && info.personal.chong) continue;     // 冲本人,排除
       if (info.flags.yanggong) continue;                      // 杨公忌日,大事一律不荐
@@ -253,7 +282,7 @@
       if (info.xiu.luck === '吉') why.push(`${info.xiu.name}吉宿`);
       if (info.personal) {
         info.personal.marks.forEach(m => why.push(m.split('——')[0]));
-        why.push(info.personal.wx.rel === '克我' ? '流日克你日主,稍费力' : info.personal.wx.note.split(',')[1] || info.personal.wx.rel);
+        if (info.personal.wx.score) why.push(info.personal.wx.score > 0 ? '流日干支合你喜用' : '流日干支犯你忌神');
       }
       out.push({ info, score: s, why });
     }

@@ -99,14 +99,26 @@ t('三合:属马者逢寅日、戌日记三合', () => {
     }
   }
 });
-t('五行生克:同我/生我/我克为顺,克我为逆,五种关系皆有断语', () => {
-  eq(Jiri.wxRelation('甲', '甲').rel, '同我');
-  eq(Jiri.wxRelation('壬', '甲').rel, '生我');   // 水生木
-  eq(Jiri.wxRelation('庚', '甲').rel, '克我');   // 金克木
-  eq(Jiri.wxRelation('戊', '甲').rel, '我克');   // 木克土
-  eq(Jiri.wxRelation('丙', '甲').rel, '我生');   // 木生火
-  ['甲乙丙丁戊己庚辛壬癸'.split(''), ['甲']].flat();
-  for (const g of '甲乙丙丁戊己庚辛壬癸') ok(Jiri.wxRelation(g, '庚').note.length > 4, '断语非空');
+t('无喜忌时的粗判:同我/生我/我克为顺,克我为逆,五种关系皆有断语且自报「粗判」', () => {
+  // 新签名 wxRelation(流日干, 流日支, 本命日干, 喜忌);不传喜忌走粗判
+  eq(Jiri.wxRelation('甲', '子', '甲').rel, '同我');
+  eq(Jiri.wxRelation('壬', '子', '甲').rel, '生我');   // 水生木
+  eq(Jiri.wxRelation('庚', '申', '甲').rel, '克我');   // 金克木
+  eq(Jiri.wxRelation('戊', '辰', '甲').rel, '我克');   // 木克土
+  eq(Jiri.wxRelation('丙', '午', '甲').rel, '我生');   // 木生火
+  for (const g of '甲乙丙丁戊己庚辛壬癸') {
+    const r = Jiri.wxRelation(g, '子', '庚');
+    ok(r.note.length > 4, '断语非空');
+    ok(r.note.includes('粗判') && r.byYong === false, '粗判须自报家门:' + r.note);
+  }
+});
+t('给了喜忌就按喜忌断,与运势页同尺(天干1、地支1.2)', () => {
+  const yong = { xiWx: ['火', '土'], jiWx: ['水', '木'] };
+  eq(Jiri.wxRelation('丙', '午', '乙', yong).score, 2.2);   // 干火喜+1、支火喜+1.2
+  eq(Jiri.wxRelation('壬', '子', '乙', yong).score, -2.2);  // 干水忌-1、支水忌-1.2
+  eq(Jiri.wxRelation('丙', '子', '乙', yong).score, -0.2);  // 干喜+1、支忌-1.2
+  ok(Jiri.wxRelation('丙', '子', '乙', yong).note.includes('面上顺、底下漏'));
+  ok(Jiri.wxRelation('丙', '午', '乙', yong).byYong === true);
 });
 t('不填生日:无 personal,等级只按黄历', () => {
   const info = Jiri.dayInfo(new Date(2026, 6, 10, 12));

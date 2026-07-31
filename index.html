@@ -336,6 +336,9 @@
   #jr-detail .jt { font-size: 1.02rem; margin-bottom: 4px; }
   #jr-detail .jrow b { color: var(--gold); font-weight: normal; }
   #jr-detail .jsum { margin-top: 6px; color: var(--cinnabar); }
+  #jr-detail .jtwo { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+  #jr-detail .jtwo .jlay { display: inline-block; border: 1px solid var(--line); border-radius: 6px; padding: 1px 9px; margin: 2px 6px 2px 0; font-size: .88em; }
+  #jr-detail .jtwo .jhint { color: var(--dim); font-size: .92em; line-height: 1.75; }
   .jr-pickrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 12px; color: var(--dim); font-size: .92rem; }
   .jr-pickrow select { padding: 6px 8px; font-size: .9rem; }
   .jr-pickrow button { padding: 7px 18px; font-size: .92rem; }
@@ -379,7 +382,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.54</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.55</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -851,7 +854,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.54 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.55 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -1895,7 +1898,7 @@
     const b = xyBirthDate();
     if (!wish) { xyDaysTxt = ''; $('xy-days').innerHTML = ''; return; }
     const ev = Jiri.wishEvent(wish);
-    const picks = Jiri.pickDays(ev.key, new Date(), 60, b, 5);
+    const picks = Jiri.pickDays(ev.key, new Date(), 60, b, 5, (() => { try { const c = dxBirthChart('xy'); return c ? c.yong : null; } catch (e) { return null; } })());
     if (!picks.length) {
       xyDaysTxt = `【吉日窗】按「${ev.label}」扫了未来60天,没有既合事又不犯忌${b ? '不冲本人' : ''}的日子。`;
       $('xy-days').innerHTML = `<div class="note">未来60天里按「${ev.label}」的老规矩挑不出干净日子——起卦后听卦象定夺。</div>`;
@@ -2779,12 +2782,23 @@
   // —— 吉日历:黄历(建除/值神/冲煞)× 本人生辰,按事挑日,可转起卦复核 ——
   const JR_WD = ['一', '二', '三', '四', '五', '六', '日'];
   const JR_LVCLS = { 上吉: 'l-sj', 吉: 'l-ji', 平: 'l-ping', 慎: 'l-shen', 忌: 'l-jji', 冲: 'l-chong' };
+  // 黄历层与命理层本就是两把尺:前者断「这天适合办什么事」,人人一样;
+  // 后者断「这天你自己顺不顺」,因人而异。两者相左是常态,不该糊成一个数字。
+  function jrLayerHint(L) {
+    const a = L.almanac.level, p = L.personal.level;
+    const badAlm = a === '忌' || a === '慎', goodAlm = a === '上吉' || a === '吉';
+    if (badAlm && p === '旺你') return '你自己这天状态在线,但黄历上是个坏日子——私下推进、谈事、赶功课都行,开业签约嫁娶动土这类「要挑日子」的大事换一天。';
+    if (goodAlm && p === '背你') return '黄历是个好日子,可它不帮你——别人办事顺,你未必顺;非要在这天办,把最吃力的环节交给别人,自己少扛。';
+    if (badAlm && p === '背你') return '两头都不帮,这天别硬碰,能推就推。';
+    if (goodAlm && p === '旺你') return '两把尺都点头,这天可用,大事也放心。';
+    return '一头明确、一头不痛不痒:按明确的那头走就行。';
+  }
   const JR_SUM = {
     上吉: '黄历与你的生辰两头都顺,大事可用。',
     吉: '是个好日子,正事可办。',
     平: '平常日子,小事无妨,大事另挑一天。',
-    慎: '这天有亏欠,能缓则缓;非办不可,起一卦把细节看清。',
-    忌: '黄历大凶当头,别硬碰,换一天。',
+    慎: '两层合参有亏欠,能缓则缓;非办不可,起一卦把细节看清。',
+    忌: '两层合参这天走低,择日办事换一天(你自己的日运另看下面那行)。',
     冲: '这天正冲你,大事勿用,直接换一天。',
   };
   let jrY = new Date().getFullYear(), jrM = new Date().getMonth() + 1;
@@ -2797,8 +2811,12 @@
     const dt = new Date(y, m - 1, d, 12);
     return isNaN(dt) ? null : dt;
   }
+  // 本人喜忌:与「运势」页同一副命盘、同一把尺,避免同一天两处结论打架
+  function jrYong() {
+    try { const c = dxBirthChart('jr'); return c ? c.yong : null; } catch (e) { return null; }
+  }
   function renderJiri() {
-    const g = Jiri.monthGrid(jrY, jrM, jrBirth());
+    const g = Jiri.monthGrid(jrY, jrM, jrBirth(), jrYong());
     jrGrid = g;
     $('jr-title').textContent = `${jrY}年${jrM}月`;
     const tIso = jrIsoToday();
@@ -2859,8 +2877,16 @@
     const per = info.personal
       ? `<div class="jrow"><b>对你(属${esc(info.personal.animal)}、日主${info.personal.selfGan}):</b>` +
         (info.personal.marks.length ? info.personal.marks.map(esc).join(';') + ';' : '') +
-        esc(info.personal.wx.note) + '。</div>'
+        esc(info.personal.wx.note) + '。' +
+        (info.personal.byYong ? '' : '(未取到你的完整生辰时辰,此处只作粗判)') + '</div>'
       : '<div class="jrow"><b>对你:</b>上面填了生日,才算得出这天冲不冲你、帮不帮你。</div>';
+    // 两层分账:黄历管「这天宜不宜办事」,日运管「这天你自己顺不顺」——两回事,冲突是常态
+    const L = info.layers, twoLayer = L && L.personal
+      ? `<div class="jrow jtwo"><b>两层分开看:</b>` +
+        `<span class="jlay">黄历(通用宜忌)「${L.almanac.level}」</span>` +
+        `<span class="jlay">你的日运(按你八字)「${L.personal.level}」</span>` +
+        `<br><span class="jhint">${jrLayerHint(L)}</span></div>`
+      : '';
     $('jr-detail').innerHTML =
       `<div class="jt">${info.m}月${info.d}日 周${JR_WD[info.week]} · ${info.gz.year}年${info.gz.month}月<b>${info.gz.day}日</b>${info.lunar ? ' · 农历' + esc(info.lunar.monthName + info.lunar.dayName) : ''}</div>` +
       `<div class="jrow"><b>建除:</b>${info.jianchu.name}日 —— ${esc(info.jianchu.gist)}。宜${esc(info.jianchu.yi)};忌${esc(info.jianchu.ji)}。</div>` +
@@ -2871,7 +2897,7 @@
       `<div class="jrow"><b>月气:</b>本节气月消息卦「${info.xiaoxi.gua}」—— ${esc(info.xiaoxi.note)}。</div>` +
       (info.flags.yanggong ? `<div class="jrow"><b>杨公忌日:</b>旧法此日百事不宜,大事换一天。</div>` : '') +
       (info.flags.yueji ? `<div class="jrow"><b>月忌日:</b>农历逢初五、十四、廿三,旧俗大事少动。</div>` : '') +
-      per + shaLine +
+      per + twoLayer + shaLine +
       `<div class="jsum">综合:「${info.level}」—— ${JR_SUM[info.level]}</div>` +
       (canCast ? `<div class="btnrow"><button type="button" class="primary" id="jr-cast" data-iso="${info.iso}">拿这天起一卦细看</button></div>` : '');
     $('jr-detail').classList.remove('hidden');
@@ -2935,7 +2961,7 @@
     });
     $('jr-pickbtn').addEventListener('click', () => {
       const key = $('jr-event').value, span = parseInt($('jr-span').value, 10) || 60;
-      const picks = Jiri.pickDays(key, new Date(), span, jrBirth(), 5);
+      const picks = Jiri.pickDays(key, new Date(), span, jrBirth(), 5, jrYong());
       if (!picks.length) {
         $('jr-picked').innerHTML = `<div class="note">这${span}天里没有既合这桩事、又不犯忌不冲你的日子——不凑合推荐。把时段放宽再挑,或挑个「平」日起一卦细看。</div>`;
         return;
