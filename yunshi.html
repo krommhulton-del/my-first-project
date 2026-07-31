@@ -182,6 +182,8 @@
   .yscard .yl b { color: var(--wx-mu); font-weight: normal; min-width: 3.4em; }
   .yscard .yl.bad b { color: var(--cinnabar); }
   .yscard .yl span { background: rgba(128,128,128,.13); border-radius: 6px; padding: 1px 8px; line-height: 1.7; }
+  .yscard .yspan { color: var(--gold); font-size: .82rem; line-height: 1.6; margin-top: 6px;
+    border-left: 2px solid var(--gold); padding-left: 8px; }
   .yscard .ymeta { color: var(--dim); font-size: .78rem; margin-top: 6px; border-top: 1px dashed var(--line); padding-top: 6px; }
   .datepick { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
   .dayun-wrap { overflow-x: auto; }
@@ -216,7 +218,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.64</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.65</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -272,6 +274,11 @@
   </section>
 
   <section id="sec-yun" class="hidden">
+    <div class="note" id="yun-howto"><b>先说清三件事,免得看拧了:</b>
+      ①下面每段话里的<b>「明面上那股力」</b>指这段时间摆在台面上、别人也看得见的那股劲(找上门的机会、压过来的事);
+      <b>「底下那股力」</b>指同一段时间暗里起作用的那股(自己的心气、没挑明的关系、拖着的旧账)。两股常常不一致,所以要分开说。
+      ②<b>月和年都不是按日历算的</b>——「月」按节气分界(比公历月晚半个月上下),「年」从立春算到立春。每张卡上都写了真实起止日期。
+      ③等级共五档:<b>大吉 / 吉 / 平顺 / 小凶 / 凶</b>,卡片角落标了这段是第几档。</div>
     <h2>运 势 · 大白话</h2>
     <div id="yun-cards"></div>
     <div class="datepick">
@@ -563,15 +570,16 @@
     const lvcls = good ? 'g' : '';
     return `<div class="yscard ${cls}">
       <div class="yh"><span class="ylabel">${esc(cd.label)}</span>
-        <span class="ylv ${lvcls}">${esc(cd.level)}</span>
+        <span class="ylv ${lvcls}" title="五档:大吉 / 吉 / 平顺 / 小凶 / 凶">${esc(cd.level)}</span>
         <span class="yarea">${esc(cd.area)}</span></div>
       <div class="ytext">${esc(cd.text)}</div>
+      ${cd.realSpan ? `<div class="yspan">${esc(cd.realSpan)}</div>` : ''}
       ${cd.lines && cd.lines.length ? `<div class="ytext" style="opacity:.88;font-size:.92em">${cd.lines.map(l => '· ' + esc(l)).join('<br>')}</div>` : ''}
       ${(cd.yi && cd.yi.length) || (cd.ji && cd.ji.length) ? `<div class="yact">` +
         (cd.yi && cd.yi.length ? `<div class="yl"><b>宜${esc(cd.when)}</b>${cd.yi.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '') +
         (cd.ji && cd.ji.length ? `<div class="yl bad"><b>忌${esc(cd.when)}</b>${cd.ji.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '') +
         `</div>` : ''}
-      <div class="ymeta">${esc(cd.span)}${cd.gz ? '(' + esc(cd.gz) + ')' : ''} · 主${esc(cd.area || '综合')}${cd.dayun ? ' · 正走 ' + esc(cd.dayun) : ''}</div>
+      <div class="ymeta">${esc(cd.span)}${cd.gz ? ' · ' + esc(cd.gz) : ''}${cd.dayun ? ' · 正走 ' + esc(cd.dayun) : ''} · 五档里的第${['大吉', '吉', '平顺', '小凶', '凶'].indexOf(cd.level) + 1}档</div>
     </div>`;
   }
   // 三档时间各自可选:日运看哪一天、月运看哪个月、年运看哪一年

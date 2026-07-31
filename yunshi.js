@@ -62,6 +62,15 @@
     { min: -99, lv: '凶', tone: '难熬' },
   ];
   const levelOf = s => LEVELS.find(l => s >= l.min);
+  // 同一句话落在一天、一个月、一年上,分量完全不同,得各说各的
+  const SCALE = {
+    日: { good: '就今天这一天而言——该开口的开口、该出手的出手,过了今晚就换一茬。',
+          bad: '就今天这一天而言——别较劲,拖到明后天再办也不迟。' },
+    月: { good: '这一个月是这么个基调:该推进的事挑这段推,一个月的窗口够办成一件事。',
+          bad: '这一个月是这么个基调:别在这段开新局,把手上的事收干净就算赢。' },
+    年: { good: '整整一年都是这个底子:定方向、下大注、做长线安排,都往这一年靠。',
+          bad: '整整一年都是这个底子:今年守成,大动作往后挪一年,别硬闯。' },
+  };
 
   // 对某个流干支相对命局打分 + 归类
   function scoreGZ(chart, gan, zhi) {
@@ -164,33 +173,62 @@
       shen, cls, area: dom.area, lines,
       // 原先写「乙未月的天地是「乙未」(木土)」——同义反复,等于没说,用户反馈看不懂。
       // 改成:直接说这一段整体如何、主哪一摊事。干支留在卡片角落作凭据。
-      text: `${{ 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段'}整体${L.tone}。${domainText}`,
+      // 另:日/月/年三种尺度得说不同的话——今年流日与流年撞同一组字时,
+      // 原先两张卡一字不差,读者会觉得程序在敷衍。所以每种尺度各配一句「这话该怎么落到这个跨度上」。
+      text: `${{ 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段'}整体${L.tone}。${domainText}` +
+        (SCALE[one] ? SCALE[one][score >= 0 ? 'good' : 'bad'] : ''),
       domainText, area2: dom.area,
       yi: yiList, ji: jiList, when: P4,   // 具体事宜:照着做的事,与照着躲的事
     };
   }
 
   // 流年:target 为 Date(通常为当年任意一天,取其年柱)
+  // 命理的「年」以立春分界、「月」以节气分界,都不是公历的年月。
+  // 用户反馈看不懂,这是其中最要命的一条:光写「乙未月」,人会当成公历七月,日子整个算错。
+  // 所以这两张卡一律把**真实的起止日期**写出来。
+  const two = n => String(n).padStart(2, '0');
+  const md = d => `${d.getMonth() + 1}月${d.getDate()}日`;
+  // 从某日往前/往后找到当前干支年(或月)的边界:逐日比对干支是否改变
+  function spanOf(targetDate, kind) {
+    const key = d => kind === 'year' ? Najia.ganZhi(d).year : Najia.ganZhi(d).month;
+    const cur = key(targetDate);
+    const step = kind === 'year' ? 20 : 3;      // 年用粗步长再细找,月用小步长
+    const back = new Date(targetDate), fwd = new Date(targetDate);
+    let guard = 0;
+    while (guard++ < 400) { const p = new Date(back); p.setDate(p.getDate() - step); if (key(p) !== cur) break; back.setTime(p.getTime()); }
+    while (guard++ < 800) { const p = new Date(back); p.setDate(p.getDate() - 1); if (key(p) !== cur) break; back.setTime(p.getTime()); }
+    guard = 0;
+    while (guard++ < 400) { const p = new Date(fwd); p.setDate(p.getDate() + step); if (key(p) !== cur) break; fwd.setTime(p.getTime()); }
+    while (guard++ < 800) { const p = new Date(fwd); p.setDate(p.getDate() + 1); if (key(p) !== cur) break; fwd.setTime(p.getTime()); }
+    const cross = back.getFullYear() !== fwd.getFullYear();
+    return { from: back, to: fwd, text: `${md(back)}—${cross ? fwd.getFullYear() + '年' : ''}${md(fwd)}` };
+  }
+
   function nianYun(chart, targetDate) {
     const cal = Najia.ganZhi(targetDate);
     const [g, z] = [cal.year[0], cal.year[1]];
     const age = targetDate.getFullYear() - chart.birth.getFullYear();
     const du = chart.dayun.list.find(d => age >= d.fromAge && age < d.fromAge + 10);
-    const c = judgeCard(chart, g, z, '年运', `${cal.year}年`, { dayunGz: du ? du.gz : null });
+    const sp = spanOf(targetDate, 'year');
+    const c = judgeCard(chart, g, z, '年运',
+      `${sp.from.getFullYear()}年${sp.text}`, { dayunGz: du ? du.gz : null, gz: cal.year });
+    c.realSpan = `这一「年」按老规矩从立春算到立春:${sp.from.getFullYear()}年${sp.text},不是公历的一整年——年头年尾那半个月要留神`;
     c.dayun = du ? `${du.gz}大运(${du.fromAge}岁起)` : null;
     return c;
   }
   // 流月:节气月建
   function yueYun(chart, targetDate) {
     const cal = Najia.ganZhi(targetDate);
-    return judgeCard(chart, cal.month[0], cal.month[1], '月运', `${cal.month}月`);
+    const sp = spanOf(targetDate, 'month');
+    const c = judgeCard(chart, cal.month[0], cal.month[1], '月运', sp.text, { gz: cal.month });
+    c.realSpan = `这一「月」按节气分界:${sp.text},不是公历那个月——差半个月,别按日历算`;
+    return c;
   }
   // 流日
   function riYun(chart, targetDate) {
     const cal = Najia.ganZhi(targetDate);
-    const two = n => String(n).padStart(2, '0');
-    const span = `${targetDate.getFullYear()}-${two(targetDate.getMonth() + 1)}-${two(targetDate.getDate())}(${cal.day}日)`;
-    return judgeCard(chart, cal.day[0], cal.day[1], '日运', span);
+    const span = `${targetDate.getFullYear()}-${two(targetDate.getMonth() + 1)}-${two(targetDate.getDate())}`;
+    return judgeCard(chart, cal.day[0], cal.day[1], '日运', span, { gz: cal.day });
   }
 
   function all(chart, targetDate) {

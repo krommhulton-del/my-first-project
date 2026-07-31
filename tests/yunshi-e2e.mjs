@@ -177,6 +177,27 @@ await t('往年细账:能翻到出生起运以来每一年,并明说是给用户
   ok((await page.locator('#ds-past .ymons').count()) >= 10, '往年也要能展开十二流月');
 });
 
+await t('三件说清楚:明面底下是什么、月年不按日历、等级五档', async () => {
+  const how = await page.locator('#yun-howto').innerText();
+  ok(/明面上那股力/.test(how) && /底下那股力/.test(how), '要解释明面与底下各指什么:' + how.slice(0, 60));
+  ok(/节气/.test(how) && /立春/.test(how), '要说清月按节气、年按立春');
+  ok(/大吉|平顺/.test(how), '要给出五档尺度');
+  const cards = await page.locator('#yun-cards').innerText();
+  ok(/\d+月\d+日—/.test(cards), '月运年运卡上要写真实起止日期:' + cards.slice(0, 120));
+  ok(/不是公历/.test(cards), '要点明不是公历的月/年');
+  ok(/五档里的第\d档/.test(cards), '角标要标明第几档');
+});
+
+await t('日月年三种尺度说的不是同一句话', async () => {
+  const txts = await page.locator('#yun-cards .yscard .ytext').allInnerTexts();
+  const firsts = [txts[0], txts[Math.floor(txts.length / 2)]].filter(Boolean);
+  ok(firsts.length >= 2, '取不到卡片正文');
+  const all = await page.locator('#yun-cards').innerText();
+  ok(/就今天这一天而言/.test(all), '日运要落到「今天这一天」');
+  ok(/这一个月是这么个基调/.test(all), '月运要落到「这一个月」');
+  ok(/整整一年都是这个底子/.test(all), '年运要落到「整整一年」');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
