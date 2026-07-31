@@ -64,10 +64,31 @@
     return new Date(t);
   }
 
-  // 调候(寒暖之要):冬生先取火暖局,夏生先取水润局——喜用之外此行亦作药
-  function tiaoHou(monthZhi) {
-    if ('亥子丑'.includes(monthZhi)) return { need: '火', note: '生于冬月,局寒——调候先取火(丙丁)暖局,穿用红紫、向南、午时发力皆是药' };
-    if ('巳午未'.includes(monthZhi)) return { need: '水', note: '生于夏月,局燥——调候先取水(壬癸)润局,黑蓝之色、向北、亥子时静养皆是药' };
+  // 调候(寒暖之要):喜用之外此行亦作药。
+  // 2026-08 之前这里只有一条粗糙规则(冬取火、夏取水),既不看日主、春秋六个月还完全没有。
+  // 现按《穷通宝鉴》原文(data/classics/穷通宝鉴.txt)补日主×月份的逐格取用。
+  // **收录口径**:只收「从原文断言句(专用X/先用X/喜X为用/X为尊/先X后Y/非X不…)里抽出的用神」
+  // 与「通行整理版」两者一致的格子,双重印证,共 79/120 格;其余 41 格原文与整理版不合或抽不出,
+  // 一概不收,退回下面那条粗糙规则并写明出处待核。宁可少收,不许把没核实的挂上书名。
+  const TIAOHOU = {
+    甲: { 卯: '庚', 辰: '庚', 巳: '癸', 午: '癸', 未: '癸', 亥: '庚', 子: '丁' },
+    乙: { 寅: '丙', 卯: '丙', 辰: '癸', 巳: '癸', 午: '癸', 戌: '癸', 亥: '丙', 丑: '丙' },
+    丙: { 寅: '壬', 卯: '壬', 辰: '壬', 巳: '壬', 申: '壬', 酉: '壬', 戌: '甲', 丑: '壬' },
+    丁: { 卯: '庚', 辰: '甲', 未: '甲', 申: '甲' },
+    戊: { 寅: '丙', 卯: '丙', 巳: '甲', 申: '丙', 酉: '丙', 亥: '甲' },
+    己: { 寅: '丙', 卯: '甲', 辰: '丙', 巳: '癸', 午: '癸', 未: '癸', 亥: '丙', 子: '丙', 丑: '丙' },
+    庚: { 卯: '丁', 辰: '甲', 午: '壬', 未: '丁', 申: '丁', 戌: '甲', 子: '丁', 丑: '丙' },
+    辛: { 寅: '己', 辰: '壬', 未: '壬', 酉: '壬', 戌: '壬', 亥: '壬', 丑: '丙' },
+    壬: { 寅: '庚', 卯: '戊', 辰: '甲', 巳: '壬', 午: '癸', 未: '辛', 申: '戊', 酉: '甲', 戌: '甲', 亥: '戊', 子: '戊', 丑: '丙' },
+    癸: { 寅: '辛', 辰: '丙', 巳: '辛', 未: '庚', 申: '丁', 酉: '辛', 戌: '辛', 亥: '庚', 子: '丙', 丑: '丙' },
+  };
+  function tiaoHou(monthZhi, dayGan) {
+    const u = dayGan && TIAOHOU[dayGan] && TIAOHOU[dayGan][monthZhi];
+    if (u) return { need: GAN_WX[u], gan: u, src: '穷通宝鉴',
+      note: `此月此日主,古法调候取${u}(${GAN_WX[u]})——依《穷通宝鉴》该月本条;` +
+            `${GAN_WX[u]}这一行的颜色、方位、时辰都算你的药` };
+    if ('亥子丑'.includes(monthZhi)) return { need: '火', src: '通行口径,出处待核', note: '生于冬月,局寒——调候先取火(丙丁)暖局,穿用红紫、向南、午时发力皆是药' };
+    if ('巳午未'.includes(monthZhi)) return { need: '水', src: '通行口径,出处待核', note: '生于夏月,局燥——调候先取水(壬癸)润局,黑蓝之色、向北、亥子时静养皆是药' };
     return null;
   }
 
@@ -111,7 +132,7 @@
     const siLing = siLingOf(monthGZ[1], days);
     const strength = judgeStrength(pillars, dayGan, days);
     const cong = judgeCong(strength, pillars, dayGan);
-    let yong = pickYongShen(dayGan, strength, tiaoHou(cal.monthZhi));
+    let yong = pickYongShen(dayGan, strength, tiaoHou(cal.monthZhi, dayGan));
     let geju = cong ? cong.name : null;
     if (cong && cong.type === '从强') {
       const me = GAN_WX[dayGan], yin = invSheng(me);
@@ -132,7 +153,7 @@
       birth, gender: gender || '男',
       pillars, dayGan, dayWx: GAN_WX[dayGan],
       ziNote: lateZi ? '晚子时(23点后)出生,依主流子时换日法,日柱按次日排' : null,
-      strength, yong, geju, cong, tiaohou: tiaoHou(cal.monthZhi), neiChong,
+      strength, yong, geju, cong, tiaohou: tiaoHou(cal.monthZhi, dayGan), neiChong,
       kong, taiYuan: taiYuan(monthGZ), daysIntoJie: days, siLing,
       rel: strength.rel, wuxing: strength.pow, wuxingCount: countWuxing(pillars),
       lunarText: Lunar.format(lunar), calYear: cal.year, calMonth: cal.month, monthZhi: cal.monthZhi,
