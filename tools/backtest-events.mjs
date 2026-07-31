@@ -25,7 +25,27 @@ const Bazi = require(join(ROOT, 'bazi.js'));
 const Dingshi = require(join(ROOT, 'dingshi.js'));
 
 const DATA = JSON.parse(readFileSync(join(ROOT, 'data', 'backtest-cases.json'), 'utf8'));
-const CASES = DATA.cases;
+// 同一个人、同一年、同一事型,程序只出一个判断——语料里若有两件(如特朗普 2024 两桩官司),
+// 算两次等于把同一个预测重复计数,会虚增样本量、也会放大显著性。这里合并成一件:
+// 好坏一致就合并,不一致则整条丢弃(方向自相矛盾,考不了)。
+const CASES = DATA.cases.map(c => {
+  const bucket = new Map();
+  for (const e of c.events) {
+    const k = e.year + '|' + e.type;
+    if (!bucket.has(k)) bucket.set(k, { ...e });
+    else {
+      const p = bucket.get(k);
+      if (p.good !== e.good) p.__drop = true;
+      else p.what += ';' + e.what;
+    }
+  }
+  return { ...c, events: [...bucket.values()].filter(e => !e.__drop) };
+});
+{
+  const raw = DATA.cases.reduce((a, c) => a + c.events.length, 0);
+  const merged = CASES.reduce((a, c) => a + c.events.length, 0);
+  if (raw !== merged) console.log(`(同人同年同事型合并:${raw} 件 → ${merged} 件)`);
+}
 
 // —— 出生钟点 → 与本程序口径一致的输入 ——
 // bazi.chart 把传入的钟点当北京时钟看待,再按经度折真太阳时。

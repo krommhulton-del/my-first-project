@@ -4,9 +4,10 @@
   "来源": "由用户的 DeepSeek 依本项目 docs/需要的资料清单.md 检索整理,每条带 source",
   "时辰铁律": "仅出生证/教区登记簿/出生当日同期书信等档案记载者 hourKnown=true;命理占星倒推与家人事后回忆一律不采信",
   "经度与时差": "lon/tzMin/tzNote 三项为本项目自补(原语料没有),按出生地与当年计时制度推定,可被推翻",
-  "人数": 28,
+  "人数": 33,
   "有档案级时辰": 8,
-  "事件数": 147
+  "事件数": 176,
+  "补样": "2026-08 补入 5 位财运事件可精确到年的人(此前财运类表态为 0)"
  },
  "cases": [
   {
@@ -1589,6 +1590,329 @@
     }
    ],
    "conflicts": []
+  },
+  {
+   "id": "case-029",
+   "name": "唐纳德·特朗普 (Donald Trump)",
+   "gender": "男",
+   "birth": "1946-06-14",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "候选10:54 AM，Astro-Databank评Rodden AA，但源为特朗普本人公布文件、须谨慎，且此前曾为9:51 AM(A级)版本冲突；非独立出生证，按铁律标不详。见conflicts。",
+   "place": "美国纽约州皇后区(牙买加医院)",
+   "lon": -73.79,
+   "tzMin": -240,
+   "tzNote": "纽约 1946 年夏令时 4/28-9/29 生效,EDT=UTC-4",
+   "source": "Astro-Databank；多方传记一致",
+   "events": [
+    {
+     "year": 1990,
+     "type": "caiyun",
+     "what": "斥资约10亿美元的大西洋城泰姬玛哈赌场开业(高息垃圾债融资)",
+     "good": true,
+     "source": "Forbes；ABI"
+    },
+    {
+     "year": 1991,
+     "type": "caiyun",
+     "what": "泰姬玛哈赌场无力偿息申请Chapter 11破产重组，让出一半个人股权、变卖游艇私人飞机",
+     "good": false,
+     "source": "Forbes；ABI"
+    },
+    {
+     "year": 2004,
+     "type": "caiyun",
+     "what": "Trump Hotels & Casino Resorts 申请Chapter 11破产重组(第二次)",
+     "good": false,
+     "source": "ABI；NBC News"
+    },
+    {
+     "year": 2009,
+     "type": "caiyun",
+     "what": "Trump Entertainment Resorts 2月申请Chapter 11破产，辞去董事长",
+     "good": false,
+     "source": "NBC News；ABI"
+    },
+    {
+     "year": 2024,
+     "type": "guanfei",
+     "what": "纽约民事欺诈案一审被判约3.55亿美元罚金(含息约4.54亿)并禁营三年(2025年被上诉法院推翻)",
+     "good": false,
+     "source": "The Hill；PBS；Al Jazeera"
+    },
+    {
+     "year": 2024,
+     "type": "guanfei",
+     "what": "E. Jean Carroll诽谤案1月被判赔8330万美元",
+     "good": false,
+     "source": "CBS News；NBC News"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "Astro-Databank现列10:54 AM(AA)但源为本人公布文件；历史上曾采9:51 AM(A)。版本冲突且非独立出生证，标不详。",
+     "source": "Astro-Databank；Kepler College"
+    }
+   ]
+  },
+  {
+   "id": "case-030",
+   "name": "约翰·D·洛克菲勒 (John D. Rockefeller Sr.)",
+   "gender": "男",
+   "birth": "1839-07-08",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "无出生证。多源冲突：一说『临近午夜』，Keene记3:47 PM，Discepolo记4:00 PM。按铁律标不详。",
+   "place": "美国纽约州里奇福德",
+   "lon": -76.19,
+   "tzMin": -305,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "Rockefeller Archive Center；Wikipedia；Astro-Databank",
+   "events": [
+    {
+     "year": 1864,
+     "type": "yinyuan",
+     "what": "9月8日在克利夫兰与劳拉·斯佩尔曼结婚",
+     "good": true,
+     "source": "Rockefeller Archive Center；Wikipedia"
+    },
+    {
+     "year": 1870,
+     "type": "shiye",
+     "what": "1月10日创立标准石油公司(Standard Oil)",
+     "good": true,
+     "source": "Library of Congress；Britannica Money"
+    },
+    {
+     "year": 1911,
+     "type": "guanfei",
+     "what": "最高法院裁定标准石油非法垄断，5月15日勒令拆分为34家公司(拆分后持股增值反使其财富近翻三倍)",
+     "good": false,
+     "source": "Standard Oil Co. v. United States, 221 U.S. 1 (1911)；ABA Journal"
+    },
+    {
+     "year": 1916,
+     "type": "caiyun",
+     "what": "身家突破10亿美元，被公认为世界首位亿万富翁",
+     "good": true,
+     "source": "lovemoney.com；TheCollector"
+    },
+    {
+     "year": 1937,
+     "type": "jiankang",
+     "what": "5月23日于佛罗里达逝世，享年97岁",
+     "good": false,
+     "source": "Rockefeller Archive Center；Find a Grave"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "多源冲突：『临近午夜』vs 3:47 PM(Keene) vs 4:00 PM(Discepolo)；无官方档案。",
+     "source": "Astro-Databank"
+    },
+    {
+     "field": "出生年",
+     "detail": "早期部分资料记1838年，主流权威确认1839年。",
+     "source": "Rockefeller Archive Center"
+    }
+   ]
+  },
+  {
+   "id": "case-031",
+   "name": "亨利·福特 (Henry Ford)",
+   "gender": "男",
+   "birth": "1863-07-30",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "Astro-Databank整体评Rodden B(传记)，非出生证。候选冲突：约1:45 PM(Lyndoe)/刚过2:00 PM/7:00 AM(Olson)。按铁律标不详。",
+   "place": "美国密歇根州斯普林韦尔斯镇(今Dearborn附近)",
+   "lon": -83.18,
+   "tzMin": -333,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "Wikipedia；Britannica Money；Astro-Databank",
+   "events": [
+    {
+     "year": 1888,
+     "type": "yinyuan",
+     "what": "4月11日与克拉拉·布莱恩特结婚",
+     "good": true,
+     "source": "Wikipedia；Detroit Historical Society"
+    },
+    {
+     "year": 1901,
+     "type": "caiyun",
+     "what": "首家汽车企业底特律汽车公司经营失败、1月解散",
+     "good": false,
+     "source": "Wikipedia；Yahoo Autos"
+    },
+    {
+     "year": 1903,
+     "type": "shiye",
+     "what": "创立福特汽车公司",
+     "good": true,
+     "source": "PBS American Experience；Ford Authority"
+    },
+    {
+     "year": 1908,
+     "type": "shiye",
+     "what": "10月推出T型车，奠定巨额财富基础",
+     "good": true,
+     "source": "PBS American Experience"
+    },
+    {
+     "year": 1919,
+     "type": "guanfei",
+     "what": "道奇兄弟诉福特案判决须派发约1900万美元股息(股东权益里程碑判例)",
+     "good": false,
+     "source": "Dodge v. Ford Motor Co., 170 N.W. 668 (1919)"
+    },
+    {
+     "year": 1947,
+     "type": "jiankang",
+     "what": "4月7日于密歇根Dearborn逝世，享年83岁",
+     "good": false,
+     "source": "Wikipedia；Britannica Money"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "三方冲突：约1:45 PM/刚过2:00 PM/7:00 AM；Astro-Databank整体仅Rodden B。",
+     "source": "Astro-Databank"
+    }
+   ]
+  },
+  {
+   "id": "case-032",
+   "name": "沃伦·巴菲特 (Warren Buffett)",
+   "gender": "男",
+   "birth": "1930-08-30",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "候选15:00(3:00 PM)，Rodden A但源为『友人提供』，非出生证/登记簿。按铁律标不详。",
+   "place": "美国内布拉斯加州奥马哈",
+   "lon": -95.94,
+   "tzMin": -360,
+   "tzNote": "内布拉斯加中部标准时 UTC-6;1930 年当地不行夏令时",
+   "source": "Wikipedia；Britannica Money；Astro-Databank",
+   "events": [
+    {
+     "year": 1952,
+     "type": "yinyuan",
+     "what": "与苏珊·汤普森在奥马哈结婚",
+     "good": true,
+     "source": "Wikipedia；CNN"
+    },
+    {
+     "year": 1965,
+     "type": "caiyun",
+     "what": "取得伯克希尔·哈撒韦控制权",
+     "good": true,
+     "source": "Britannica Money；finmasters.com"
+    },
+    {
+     "year": 1986,
+     "type": "caiyun",
+     "what": "身家约14亿美元、成为亿万富翁(时年56)",
+     "good": true,
+     "source": "finmasters.com；globalmastersfund.com"
+    },
+    {
+     "year": 1991,
+     "type": "caiyun",
+     "what": "所罗门兄弟国债竞标丑闻，出任临时董事长、赴国会作证稳住公司",
+     "good": false,
+     "source": "The Pop History Dig；thevalueinvestor.org"
+    },
+    {
+     "year": 1993,
+     "type": "caiyun",
+     "what": "登顶《福布斯》美国富豪榜首富(一生唯一一次)",
+     "good": true,
+     "source": "Yahoo Finance；finmasters.com"
+    },
+    {
+     "year": 2004,
+     "type": "yinyuan",
+     "what": "妻子苏珊·巴菲特逝世",
+     "good": false,
+     "source": "Encyclopedia.com；Wikipedia"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "唯一候选3:00 PM由友人提供(Rodden A，非出生证)，不足采信。",
+     "source": "Astro-Databank"
+    }
+   ]
+  },
+  {
+   "id": "case-033",
+   "name": "比尔·盖茨 (Bill Gates)",
+   "gender": "男",
+   "birth": "1955-10-28",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "华盛顿州1949–1967年出生证不记录时间(King County证实)。候选10:00 PM(盖茨本人回忆)/刚过9:00 PM(传记《Hard Drive》1992)。均非官方档案，按铁律标不详。",
+   "place": "美国华盛顿州西雅图",
+   "lon": -122.33,
+   "tzMin": -480,
+   "tzNote": "西雅图太平洋标准时;1955 年夏令时已于 9 月底结束",
+   "source": "Wikipedia；Britannica Money；Astro-Databank",
+   "events": [
+    {
+     "year": 1975,
+     "type": "shiye",
+     "what": "从哈佛辍学，与保罗·艾伦共同创立微软",
+     "good": true,
+     "source": "Britannica Money；Wikipedia"
+    },
+    {
+     "year": 1986,
+     "type": "caiyun",
+     "what": "微软3月13日IPO上市，所持约45%股份市值约3.5亿美元",
+     "good": true,
+     "source": "CNBC；Fortune"
+    },
+    {
+     "year": 1987,
+     "type": "caiyun",
+     "what": "成为亿万富翁(时年31)，当时史上最年轻",
+     "good": true,
+     "source": "CNBC"
+    },
+    {
+     "year": 1994,
+     "type": "yinyuan",
+     "what": "1月1日与梅琳达·弗伦奇结婚",
+     "good": true,
+     "source": "Wikipedia；Britannica Money"
+    },
+    {
+     "year": 1995,
+     "type": "caiyun",
+     "what": "身家约129亿美元登顶世界首富，1995–2007及2009年长期居首",
+     "good": true,
+     "source": "Forbes；CNBC"
+    },
+    {
+     "year": 1998,
+     "type": "guanfei",
+     "what": "美国司法部联合20州起诉微软反垄断，2001年和解",
+     "good": false,
+     "source": "CNN；Forbes"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "10:00 PM(本人回忆)vs 刚过9:00 PM(传记《Hard Drive》)；华州该期出生证不载时间。",
+     "source": "Astro-Databank"
+    }
+   ]
   }
  ]
 }
