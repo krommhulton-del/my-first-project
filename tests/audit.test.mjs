@@ -338,10 +338,12 @@ const Yunshi = require('../yunshi.js');
 t('动宫:巳日冲亥日主之支,日运必报婚姻宫动;十神两层行必在', () => {
   const c = Bazi.chart(new Date(1990, 5, 15, 12), '男'); // 日柱辛亥
   const d = Yunshi.riYun(c, new Date(2026, 6, 30, 12)); // 乙巳日
-  ok(d.lines.some(l => l.includes('婚姻宫')), '巳冲亥应动婚姻宫:' + d.lines.join('|'));
-  ok(d.lines.some(l => l.includes('十神两层')), '十神两层');
-  ok(d.lines.some(l => l.includes('干支拆解')), '干支拆解');
+  ok(d.lines.some(l => l.includes('你自己与伴侣那一块')), '巳冲亥应动婚姻宫(文案已改人话):' + d.lines.join('|'));
+  ok(d.lines.some(l => /明面上主要是|管的是同一摊事/.test(l)), '两层事象那一行必在:' + d.lines.join('|'));
+  ok(d.lines.some(l => /明面(上那股力|和底下)|不偏不倚/.test(l)), '两股力那一行必在:' + d.lines.join('|'));
 });
+// 2026-08:用户反馈运势卡看不懂,文案全部改成人话(去掉干支/十神/动宫/伏吟这些名目)。
+// 下面几条测试本意是验「这条规则触发了」,不是验字面措辞,故改认新说法。
 t('天克地冲:丁巳日对辛亥日主(丁克辛+巳冲亥)必报大动之象', () => {
   const c = Bazi.chart(new Date(1990, 5, 15, 12), '男');
   let found = false;
@@ -350,7 +352,7 @@ t('天克地冲:丁巳日对辛亥日主(丁克辛+巳冲亥)必报大动之象'
     const gz = Najia.ganZhi(dt).day;
     if (gz === '丁巳') {
       const d = Yunshi.riYun(c, dt);
-      ok(d.lines.some(l => l.includes('天克地冲')), d.lines.join('|'));
+      ok(d.lines.some(l => l.includes('上下两头一齐冲你自己')), d.lines.join('|'));
       found = true;
     }
   }
@@ -362,7 +364,7 @@ t('伏吟:辛亥日对辛亥日主必报伏吟', () => {
   for (let i = 0; i < 60 && !found; i++) {
     const dt = new Date(2026, 6, 30 + i, 12);
     if (Najia.ganZhi(dt).day === '辛亥') {
-      ok(Yunshi.riYun(c, dt).lines.some(l => l.includes('伏吟')), '伏吟');
+      ok(Yunshi.riYun(c, dt).lines.some(l => l.includes('与你自己那一柱一模一样')), '伏吟那一行(已改人话)');
       found = true;
     }
   }
@@ -377,7 +379,7 @@ t('干支分评:干喜支忌之日必报「面上顺、底下漏」', () => {
     const gz = Najia.ganZhi(dt).day;
     if (xi.includes(Bazi.GAN_WX[gz[0]]) && ji.includes(Bazi.ZHI_WX[gz[1]])) {
       const d = Yunshi.riYun(c, dt);
-      ok(d.lines.some(l => l.includes('面上顺、底下漏')), gz + ':' + d.lines[0]);
+      ok(d.lines.some(l => l.includes('开头顺、后头漏')), gz + ':' + d.lines[0]);
       found = true;
     }
   }
@@ -391,7 +393,7 @@ t('调候入流运:冬月生人逢火日必报调候得药', () => {
     const dt = new Date(2026, 6, 30 + i, 12);
     const gz = Najia.ganZhi(dt).day;
     if ('丙丁'.includes(gz[0])) {
-      ok(Yunshi.riYun(c, dt).lines.some(l => l.includes('调候得药')), gz);
+      ok(Yunshi.riYun(c, dt).lines.some(l => l.includes('补上你命里缺的那一味')), gz);
       found = true;
     }
   }

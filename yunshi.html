@@ -216,7 +216,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.63.1</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.64</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -300,6 +300,7 @@
     <div id="ds-nodes"></div>
     <h3 class="dsh">近十年 · 逐年细账</h3>
     <div class="dayun-wrap"><table class="dayun" id="ds-ten"></table></div>
+    <div id="ds-past"></div>
     <div class="note">口径:节点报的是「窗口」不是「定数」——同样的信号,主动去办就成事,躲着不动就只剩折腾。每条都列了依据,对不上的你可以当场驳回。年柱以立春为界。</div>
   </section>
 
@@ -514,7 +515,7 @@
         : '<div class="note">今后在设定门槛内没有凸出节点,按大运分段与近十年细账看即可。</div>');
     // 逐年细账:每年列全部事型(不只主事)+ 应期落到月份 + 可展开十二流月
     $('ds-ten').outerHTML = '<div id="ds-ten"></div>';
-    $('ds-ten').innerHTML = tl.nextTen.map(r => {
+    const yearRow = r => {
       const cats = (r.cats || []).slice(0, 4).map(c => {
         const d = c.dirSum, cl = Math.abs(d) < 0.6 ? '' : (d > 0 ? 'good' : 'bad');
         return `<span class="ycat ${cl}">${esc(c.label)}<i>${c.score.toFixed(1)}</i></span>`;
@@ -534,7 +535,21 @@
         ${why}${hot}
         ${mons ? `<details class="ymons"><summary>展开这一年的十二个流月(应期精确到月)</summary>${mons}</details>` : ''}
       </div>`;
-    }).join('');
+    };
+    $('ds-ten').innerHTML = tl.nextTen.map(yearRow).join('');
+    // —— 往年逐年细账(用户点名要的)——
+    // 摆在这里不只是「多给点内容」:已经发生过的年份,你自己知道对不对。
+    // 这是本程序唯一现成的反馈回路,所以措辞上明说「对不上就驳回我」。
+    const pastBox = $('ds-past');
+    if (pastBox) {
+      const py = (tl.pastYears || []).slice().reverse();   // 由近及远,最近的排前面
+      pastBox.innerHTML = py.length
+        ? `<details class="dspast"><summary>翻看往年:${py[py.length - 1].year}—${py[0].year} 共 ${py.length} 年,每年都能展开到十二个月</summary>` +
+          `<div class="note" style="margin:8px 0 10px">这一段是给你<b>对账</b>用的:这些年已经过去了,哪年顺哪年背你自己最清楚。` +
+          `对得上,后面的话才值得信;对不上,当场驳回我——我这套断法本来就还没验准,你的反馈比什么都值钱。</div>` +
+          py.map(yearRow).join('') + `</details>`
+        : '<div class="note">你还没起运,没有往年可翻。</div>';
+    }
   }
 
   function renderYun(c, target) {
@@ -556,7 +571,7 @@
         (cd.yi && cd.yi.length ? `<div class="yl"><b>宜${esc(cd.when)}</b>${cd.yi.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '') +
         (cd.ji && cd.ji.length ? `<div class="yl bad"><b>忌${esc(cd.when)}</b>${cd.ji.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '') +
         `</div>` : ''}
-      <div class="ymeta">${esc(cd.span)} · 天干${esc(cd.shen)}(${esc(cd.cls)})${cd.dayun ? ' · 正走 ' + esc(cd.dayun) : ''}</div>
+      <div class="ymeta">${esc(cd.span)}${cd.gz ? '(' + esc(cd.gz) + ')' : ''} · 主${esc(cd.area || '综合')}${cd.dayun ? ' · 正走 ' + esc(cd.dayun) : ''}</div>
     </div>`;
   }
   // 三档时间各自可选:日运看哪一天、月运看哪个月、年运看哪一年

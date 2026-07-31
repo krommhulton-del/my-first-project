@@ -90,19 +90,26 @@
     const gJ = tag(gw), zJ = tag(zw);
     if (gJ === '喜') s += 1; else if (gJ === '忌') s -= 1;
     if (zJ === '喜') s += 1.2; else if (zJ === '忌') s -= 1.2;
-    if (gJ === '喜' && zJ === '忌') lines.push(`干支拆解:天干${gan}(${gw})帮你、地支${zhi}(${zw})拆台——面上顺、底下漏,开头的甜头别全当真`);
-    else if (gJ === '忌' && zJ === '喜') lines.push(`干支拆解:天干${gan}(${gw})压你、地支${zhi}(${zw})托底——面上紧、底下稳,熬过开头有后劲`);
-    else lines.push(`干支拆解:天干${gan}(${gw},${gJ})、地支${zhi}(${zw},${zJ}),劲往一处使`);
+    // 这一段原先写成「干支拆解:天干乙(木)帮你、地支未(土)拆台」——用户反馈看不懂。
+    // 铁律八:术语不上稿。干支、天干、地支、十神这些只在推演时用,写给人看的一律翻成「明面/底下」。
+    const P2 = { 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段';
+    if (gJ === '喜' && zJ === '忌') lines.push(`${P2}明面上那股力是帮你的,底下那股是拆台的——开头顺、后头漏,开场的甜头别全当真`);
+    else if (gJ === '忌' && zJ === '喜') lines.push(`${P2}明面上那股力压着你,底下那股反倒托着——开头紧、后头稳,熬过开场有后劲`);
+    else if (gJ === '喜' && zJ === '喜') lines.push(`${P2}明面和底下两股力都向着你,劲往一处使——该办的事趁这阵子办`);
+    else if (gJ === '忌' && zJ === '忌') lines.push(`${P2}明面和底下两股力都压着你,劲往一处使——这阵子别硬顶,缩着过`);
+    else lines.push(`${P2}这两股力不偏不倚,既不帮你也不拦你——事在人为,推一把才动`);
     if (chart.tiaohou && (chart.tiaohou.need === gw || chart.tiaohou.need === zw)) {
       s += 0.6;
-      lines.push(`调候得药:此${one}带${chart.tiaohou.need},恰是你命里调候所需,寒燥得解、诸事松快三分`);
+      lines.push(`${P2}正好补上你命里缺的那一味——该暖的暖了、该润的润了,诸事松快三分`);
     }
     const shen = Bazi.shiShen(chart.dayGan, gan);
     const zhu = Bazi.CANGGAN[zhi][0];
     const zShen = Bazi.shiShen(chart.dayGan, zhu);
     const aOf = sh => (DOMAIN[SHISHEN_CLASS[sh]] || { area: '综合' }).area;
-    lines.push(`十神两层:天干${shen}(${aOf(shen)})主面上之事,支藏${zhu}为${zShen}(${aOf(zShen)})主底下之事`);
-    const GONG = { year: '根基宫(长辈老家)', month: '门户宫(事业居所)', day: '婚姻宫(自身伴侣)', hour: '子女宫(计划晚辈)' };
+    lines.push(aOf(shen) === aOf(zShen)
+      ? `${P2}明面和底下管的是同一摊事:${aOf(shen)}——这一摊会格外突出`
+      : `${P2}明面上主要是${aOf(shen)}这一摊,底下暗着走的是${aOf(zShen)}那一摊`);
+    const GONG = { year: '老家与长辈那一块', month: '事业与住处那一块', day: '你自己与伴侣那一块', hour: '孩子与长远打算那一块' };
     const ZN = { year: '年', month: '月', day: '日', hour: '时' };
     let keDay = KE[gw] === chart.dayWx;
     let tkdc = false;
@@ -110,15 +117,15 @@
       const pz = chart.pillars[k].zhi;
       if ((ZHIS.indexOf(zhi) + 6) % 12 === ZHIS.indexOf(pz)) {
         s -= (k === 'month' || k === 'day') ? 1 : 0.8;
-        lines.push(`动宫:流${one}支${zhi}冲你${ZN[k]}柱之${pz}——${GONG[k]}这段多动荡,该宫之事大动作避其锋`);
+        lines.push(`${P2}正冲着${GONG[k]}——这块多动荡,要办大事避开这阵风头`);
         if (k === 'day' && keDay) tkdc = true;
       } else if (k === 'day' && LIUHE_Y[zhi] === pz) {
         s += 0.5;
-        lines.push(`合日支:流${one}与你日支相合——人事贴近,谈合作谈感情自带黏性`);
+        lines.push(`${P2}与你自己那一块贴得紧——谈合作、谈感情自带黏性,开口容易被接住`);
       }
     }
-    if (tkdc) { s -= 0.7; lines.push('天克地冲:流干克你日主、流支又冲你日支——大动之象,此段忌大决定、忌远行动土,凡事留后手'); }
-    if (gan + zhi === chart.pillars.day.gz) lines.push('伏吟:与你日柱干支相同——旧事重提、心绪反复之期,宜了结旧账,不宜另起炉灶');
+    if (tkdc) { s -= 0.7; lines.push(`${P2}上下两头一齐冲你自己——大动之象,这阵子别下大决定、别远行动土,凡事留一手`); }
+    if (gan + zhi === chart.pillars.day.gz) lines.push(`${P2}的字与你自己那一柱一模一样——旧事重提、心绪反复,适合了结旧账,不适合另起炉灶`);
     // —— 具体事宜:十神(天干为主、支藏为辅)× 喜忌,叠神煞与动宫 ——
     const YI = [], JI = [];
     const push = (arr, xs) => { for (const x of xs || []) if (!arr.includes(x)) arr.push(x); };
@@ -142,9 +149,9 @@
       const dz = opts.dayunGz[1];
       if ((ZHIS.indexOf(zhi) + 6) % 12 === ZHIS.indexOf(dz)) {
         s -= 0.5;
-        lines.push(`岁运相冲:流年支${zhi}冲大运支${dz}——运程换挡之年,动静都大,稳字当头`);
+        lines.push('这一年与你正走的那步大运顶上了——运程换挡,动静都大,稳字当头');
       } else if (LIUHE_Y[zhi] === dz) {
-        lines.push('岁运相合:流年与大运相合,大势顺水推舟,借力使力');
+        lines.push('这一年与你正走的那步大运合得上——大势顺水推舟,借力使力');
       }
     }
     const score = +s.toFixed(1);
@@ -155,7 +162,9 @@
     return {
       label, span, gz: gan + zhi, score, level: L.lv, tone: L.tone,
       shen, cls, area: dom.area, lines,
-      text: `${span}的天地是「${gan}${zhi}」(${gw}${zw})。整体${L.tone}。${domainText}`,
+      // 原先写「乙未月的天地是「乙未」(木土)」——同义反复,等于没说,用户反馈看不懂。
+      // 改成:直接说这一段整体如何、主哪一摊事。干支留在卡片角落作凭据。
+      text: `${{ 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段'}整体${L.tone}。${domainText}`,
       domainText, area2: dom.area,
       yi: yiList, ji: jiList, when: P4,   // 具体事宜:照着做的事,与照着躲的事
     };

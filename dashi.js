@@ -378,8 +378,13 @@
     trimmed.sort((a, b) => a.year - b.year);
 
     const nextTen = yearly.filter(r => r.year >= nowYear && r.year < nowYear + 10);
-    // 只给要细看的年份算流月(节点年 + 近十年),不必给八十年全算
-    const needMonths = new Set(nextTen.map(r => r.year).concat(trimmed.map(n => n.year)));
+    // 往年逐年细账:从起运那年一直排到去年。
+    // 用户点名要的——「可以做一些 2026 以前的本人的运势」。
+    // 这一段格外要紧:**已经发生过的年份,人自己知道对不对**,是这个程序唯一现成的反馈回路。
+    const pastYears = yearly.filter(r => r.year < nowYear);
+    // 只给要细看的年份算流月(节点年 + 近十年 + 往年);往年也算,人才对得上具体月份
+    const needMonths = new Set(nextTen.map(r => r.year)
+      .concat(trimmed.map(n => n.year)).concat(pastYears.map(r => r.year)));
     for (const r of yearly) {
       if (!needMonths.has(r.year)) continue;
       const st = dayunAt(r.year);
@@ -392,7 +397,7 @@
     }
     return {
       birthYear, startYear, startText: dayun.startText, forward: dayun.forward,
-      steps, turns, nodes: trimmed, allNodes: nodes, yearly, nextTen,
+      steps, turns, nodes: trimmed, allNodes: nodes, yearly, nextTen, pastYears,
       childhood: `起运之前(${birthYear}-${startYear - 1}年,${0}-${Math.floor(dayun.startAge)}岁)为童限,按月柱管事:${chart.pillars.month.gz}——这段的底色随父母家境走,不单独排流年大事。`,
     };
   }

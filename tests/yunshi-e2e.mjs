@@ -165,6 +165,18 @@ await t('格局:取格、成败、原话俱在,且不带术语不改喜忌', asy
   ok(!/仅供参考|因人而异/.test(body + head + foot), '不许出现空话');
 });
 
+await t('往年细账:能翻到出生起运以来每一年,并明说是给用户对账用的', async () => {
+  ok(await page.locator('#ds-past').count() === 1, '往年区块应存在');
+  const txt = await page.locator('#ds-past').innerText();
+  ok(/翻看往年:\d{4}—\d{4} 共 \d+ 年/.test(txt), '应给出往年年份范围:' + txt.slice(0, 60));
+  await page.evaluate(() => { const d = document.querySelector('#ds-past details'); if (d) d.open = true; });
+  await page.waitForTimeout(300);
+  const opened = await page.locator('#ds-past').innerText();
+  ok(/对账/.test(opened) && /驳回我/.test(opened), '要明说是给用户对账、对不上就驳回:' + opened.slice(0, 200));
+  ok((await page.locator('#ds-past .yrow').count()) >= 10, '往年应逐年列出');
+  ok((await page.locator('#ds-past .ymons').count()) >= 10, '往年也要能展开十二流月');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

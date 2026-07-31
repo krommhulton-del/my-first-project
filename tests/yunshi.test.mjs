@@ -120,5 +120,33 @@ t('年运带大运背景、流日随日期变化', () => {
   ok(d1 !== d2, '相邻两日流日干支应不同');
 });
 
+
+console.log('【禁术语】运势卡写给人看的部分,不许出现干支十神这些名目');
+{
+  // 缘起:2026-08 用户反馈「月运还有运那里做的有点让人看不懂」。
+  // 查出正文写着「乙未月的天地是『乙未』(木土)」(同义反复)、
+  // 依据写着「干支拆解:天干乙(木)帮你、地支未(土)拆台」「十神两层:天干比肩…」——全是术语,违反铁律八。
+  // 这条钉住:text 与 lines 里一个术语都不许有(干支两字可以出现在角标,那是凭据,不在这两处)。
+  const BAN = /天干|地支|干支|十神|比肩|劫财|食神|伤官|正财|偏财|正官|七杀|正印|偏印|喜忌|旺衰|调候|动宫|伏吟|天克地冲|岁运|支藏|日主|日柱|月令/;
+  let bad = [];
+  for (const [d, g] of [[new Date(1990, 4, 20, 9, 30), '男'], [new Date(1985, 10, 3, 17, 30), '女'], [new Date(1975, 0, 8, 3, 30), '男']]) {
+    const c = Bazi.chart(d, g, 116.4);
+    for (const day of [new Date(2026, 0, 15), new Date(2026, 6, 31), new Date(2027, 4, 2)]) {
+      const y = Yunshi.all(c, day);
+      for (const k of ['day', 'month', 'year']) {
+        const cd = y[k];
+        if (BAN.test(cd.text)) bad.push(`${k}.text: ${cd.text}`);
+        for (const l of cd.lines || []) if (BAN.test(l)) bad.push(`${k}.lines: ${l}`);
+      }
+    }
+  }
+  t('三卡的正文与依据里没有术语', () => ok(!bad.length, '这些话带着术语:\n      ' + [...new Set(bad)].slice(0, 8).join('\n      ')));
+  t('正文不再是「××的天地是××」这种同义反复', () => {
+    const c = Bazi.chart(new Date(1990, 4, 20, 9, 30), '男', 116.4);
+    const y = Yunshi.all(c, new Date(2026, 6, 31));
+    for (const k of ['day', 'month', 'year']) ok(!/的天地是/.test(y[k].text), k + ' 仍是同义反复:' + y[k].text);
+  });
+}
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);
