@@ -683,6 +683,48 @@ await t('问机板块:一句话给出年/月/日三层应期,并带画像与贵�
   ok((await page.inputValue('#question')).includes('复核'), '应把时间带进问句去复核');
 });
 
+await t('定时辰板块:分组、回推、能不能定、写回档案', async () => {
+  await page.evaluate(() => window.dxOpenBoard('sec-dingshi'));
+  ok((await page.locator('#ds-hours .dshr').count()) === 12, '十二时辰都要列出来');
+  await page.fill('#ds-birth', '1985-11-03');
+  await page.selectOption('#ds-gender', '女');
+  await page.selectOption('#ds-range', '3,4,5,6,7,8,9');
+  ok((await page.locator('#ds-hours .dshr.on').count()) === 7, '选「白天」应只留七个时辰');
+  await page.click('#btn-ds-demo');
+  ok((await page.locator('#ds-rows .dsrow').count()) === 4, '示例应填四件事');
+  await page.click('#btn-ds-go');
+  await page.waitForTimeout(1500);
+  const txt = await page.locator('#ds-out').innerText();
+  ok((await page.locator('#ds-out .dsgrp').count()) >= 1, '应给出「断得一样的时辰」分组');
+  ok(/可以定|定不了/.test(txt), '必须表态能不能定:' + txt.slice(0, 60));
+  ok(txt.includes('差 异 面 板'), '应有差异面板');
+  ok(!/仅供参考|因人而异|机遇与挑战并存|顺其自然/.test(txt), '不许出现空话');
+  ok(!/用神|旺相休囚|十神/.test(txt), '术语不许上稿');
+  // 事件够三件时要给出排名;写回档案后全应用共用同一时辰
+  ok((await page.locator('#ds-out .dsrk').count()) >= 2, '四件事应排得出名次');
+  await page.selectOption('#ds-pick', '6');
+  await page.click('#btn-ds-save');
+  const hv = await page.evaluate(() => localStorage.getItem('dongxuan_birth_hour'));
+  ok(hv === '6', '写回档案应存进全局时辰键,实得:' + hv);
+  ok((await page.inputValue('#wq-hour')) === '6', '问机板块的时辰应同步');
+  // 出生地偏西的,钟表时辰与太阳时辰整排差一格——必须当面解释,不解释就像算错了
+  await page.fill('#ds-place', '成都');
+  await page.click('#btn-ds-go');
+  await page.waitForTimeout(1200);
+  const t2 = await page.locator('#ds-out').innerText();
+  ok(/差 \d+ 分钟/.test(t2), '应说清钟表与太阳差几分钟:' + t2.slice(-160));
+  ok(t2.includes('不是算错'), '应挑明这是老规矩而非程序出错');
+});
+
+// 只见一摊:开过专项板块后切回问卦页,板块必须收起来(sec-wenji 曾漏登记在视图表里)
+await t('视图路由:专项板块切走后不残留', async () => {
+  await page.evaluate(() => window.dxOpenBoard('sec-wenji'));
+  await page.evaluate(() => window.dxShowView('ask'));
+  for (const id of ['sec-wenji', 'sec-dingshi']) {
+    ok(!(await page.locator('#' + id).isVisible()), id + ' 切到问卦页后仍可见');
+  }
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

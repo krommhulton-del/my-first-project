@@ -360,6 +360,37 @@
   .wjport { border-left: 3px solid var(--gold); padding-left: 10px; margin-top: 7px; font-size: .9rem; line-height: 1.8; }
   .wjcard { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 11px; }
   .wjcard h4 { color: var(--gold); font-weight: normal; letter-spacing: .1em; margin-bottom: 5px; }
+  /* 定时辰 */
+  #sec-dingshi .qwrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .dshrs { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+  .dshr { border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; font-size: .86rem;
+    cursor: pointer; background: var(--panel2); color: var(--dim); user-select: none; line-height: 1.7; }
+  .dshr.on { border-color: var(--cinnabar); color: var(--cinnabar); background: var(--accent-soft); }
+  .dsev { border: 1px dashed var(--line); border-radius: 12px; padding: 11px 13px; margin: 13px 0; }
+  .dsev > .evh { line-height: 1.7; margin-bottom: 8px; }
+  .dsev > .evh b { color: var(--cinnabar); }
+  .dsrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 7px; }
+  .dsrow input, .dsrow select { background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 9px; font-family: inherit; font-size: .92rem; }
+  .dsrow .dsy { width: 88px; }
+  .dsrow .dsw { flex: 1 1 150px; min-width: 110px; }
+  .dsrow button.dsx { min-height: 0; padding: 4px 9px; font-size: .9rem; border-color: var(--hair); color: var(--dim); background: transparent; }
+  .dsgrp { border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; margin-bottom: 9px; background: var(--panel); }
+  .dsgrp.top { border-color: var(--cinnabar); }
+  .dsgrp .gh { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+  .dsgrp .ghn { font-size: 1.06rem; color: var(--cinnabar); }
+  .dsgrp .ghm { color: var(--dim); font-size: .84rem; }
+  .dsgrp .why { color: var(--dim); font-size: .86rem; line-height: 1.7; margin-top: 4px; }
+  .dsrk { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 2px; border-bottom: 1px dashed var(--line); }
+  .dsrk .rkn { min-width: 7.5em; }
+  .dsrk .rkv { color: var(--cinnabar); min-width: 3.6em; text-align: right; }
+  .dsbar { height: 6px; border-radius: 3px; background: var(--seg); flex: 1 1 80px; min-width: 60px; overflow: hidden; }
+  .dsbar i { display: block; height: 100%; background: var(--gold); }
+  .dshit { color: var(--dim); font-size: .84rem; line-height: 1.7; flex: 1 1 100%; }
+  .dshit .no { color: var(--cinnabar); }
+  .dsfolk { border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; margin-top: 11px; }
+  .dsfolk summary { cursor: pointer; color: var(--dim); }
+  .dsfolk li { margin: 5px 0 0 18px; font-size: .9rem; line-height: 1.7; }
   #jr-detail .jsum { margin-top: 6px; color: var(--cinnabar); }
   .jact { display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; margin-top: 5px; font-size: .92em; }
   .jact b { font-weight: normal; min-width: 3.4em; }
@@ -413,7 +444,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.60</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.61</span></p>
     <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
     <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
   </header>
@@ -643,6 +674,7 @@
     <h2>专 项 · 各有各的阵法</h2>
     <div class="bmenu">
       <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">定 时 辰 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dawen"><span class="bg">问</span><span><span class="bt">大问拆阵</span><span class="bd">一句大问,拆成一套卦阵逐个起,汇总深断</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-zhuanyun"><span class="bg">运</span><span><span class="bt">转 运</span><span class="bd">近来不顺?先诊断根源,再给能落地的做法</span></span><span class="bx">›</span></button>
@@ -824,6 +856,67 @@
     <div id="wq-out"></div>
     <div class="stream" id="wq-ai"></div>
   </section>
+
+  <section id="sec-dingshi" class="voff">
+    <h2>定 时 辰 · 不知道自己几点生的</h2>
+    <div class="note">时辰只动一根柱,却压着全盘约两成的分量:实测同一副盘扫十二时辰,有的扫出五种断法,也有的连着七个时辰一模一样。
+      这里办两件事——<b>一、拿你确凿发生过的事回推</b>是哪个时辰;<b>二、告诉你哪几个时辰其实断得一样</b>,落在同一档的怎么填都不影响。定完写回档案,全应用通用。</div>
+    <div class="qwrow">
+      <input type="date" id="ds-birth" class="wjin" title="出生日期">
+      <select id="ds-gender" class="wjin"><option value="">性别</option><option value="男">男</option><option value="女">女</option></select>
+      <input type="text" id="ds-place" class="wjin" placeholder="出生地(市/省)">
+      <select id="ds-range" class="wjin">
+        <option value="all">大致时段:完全不知道</option>
+        <option value="0,1,2">后半夜(23:00-05:00)</option>
+        <option value="2,3,4">天亮前后(03:00-09:00)</option>
+        <option value="3,4,5">上午(05:00-11:00)</option>
+        <option value="5,6,7">中午前后(09:00-15:00)</option>
+        <option value="7,8,9">下午(13:00-19:00)</option>
+        <option value="8,9,10">傍晚(15:00-21:00)</option>
+        <option value="9,10,11">晚上(17:00-23:00)</option>
+        <option value="3,4,5,6,7,8,9">白天(05:00-19:00)</option>
+      </select>
+    </div>
+    <div class="note">下面这排可以自己点开点掉——记得是「天亮以后、午饭以前」这种,就把那几个时辰留着,别的关掉,范围越窄越容易分出来。</div>
+    <div class="dshrs" id="ds-hours"></div>
+    <details class="dsfolk">
+      <summary>子时跨半夜:0 点到 1 点之间生的,先多做一步</summary>
+      <div class="note">23点到0点生的,老规矩算第二天;0点到1点生的,算当天——两者日柱差一整天,断出来是两副盘。
+        这套程序眼下把子时一律按「23点以后」折,所以<b style="color:var(--cinnabar)">你要是 0 点到 1 点之间生的,把上面的出生日期往前挪一天再算</b>。
+        出生地在东部的已逐日核过,这么折与真盘四柱完全一致;偏西的地方还牵动真太阳时,下面算完会告诉你具体差几分钟。
+        这处折法是全应用共用的,我记在待办上,下一版从根上改成直接填钟点。</div>
+    </details>
+
+    <div class="dsev">
+      <div class="evh">已经确凿发生过的事,<b>至少三件</b>,每件都要标是好事还是坏事——回推比的就是吉凶方向,标不出好坏的那件不算数。
+        年份写公历;记不准年份的宁可不填,填错一件比少填一件更坏。</div>
+      <div id="ds-rows"></div>
+      <div class="btnrow">
+        <button type="button" class="ghost" id="btn-ds-add">再加一件</button>
+        <button type="button" class="ghost" id="btn-ds-demo">填个示例看看怎么用</button>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <button type="button" class="primary" id="btn-ds-go">回推时辰</button>
+      <button type="button" class="gold hidden" id="btn-ds-ai">请东玄把这段讲透</button>
+    </div>
+    <div class="err" id="ds-err"></div>
+    <div id="ds-out"></div>
+    <div class="btnrow hidden" id="ds-saverow">
+      <select id="ds-pick" class="wjin"></select>
+      <button type="button" id="btn-ds-save">写回档案(全应用通用)</button>
+      <span class="note" id="ds-saved" style="margin-top:0;align-self:center"></span>
+    </div>
+    <div class="stream" id="ds-ai"></div>
+
+    <details class="dsfolk" id="ds-folk">
+      <summary>民间那些「看长相定时辰」的说法(点开看,但别拿它定论)</summary>
+      <ul id="ds-folk-list"></ul>
+      <div class="note" id="ds-folk-note"></div>
+    </details>
+  </section>
+
   <section id="sec-yinyuan" class="fold">
     <h2 class="foldh">姻 缘 · 恋爱专用(问正缘 / 断某人)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
@@ -918,7 +1011,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.60 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.61 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -944,6 +1037,7 @@
 <script src="dili.js"></script>
 <script src="dashi.js"></script>
 <script src="wenji.js"></script>
+<script src="dingshi.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -3010,7 +3104,7 @@
     const mat = Wenji.material(wqRes.chart, wqRes.r);
     $('wq-ai').textContent = '';
     try {
-      await llmStream(DONGXUAN_SYSTEM + '\n' + ANTI_JARGON, mat, t => { $('wq-ai').textContent += t; });
+      await llmStream([{ role: 'user', content: mat }], t => { $('wq-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
     } catch (e) { wqErr('深断失败:' + e.message); }
   }
   if ($('btn-wq-go')) {
@@ -3024,6 +3118,213 @@
       wqGo();
     });
     $('wq-q').addEventListener('keydown', e => { if (e.key === 'Enter') wqGo(); });
+  }
+
+  // ——————————————— 定时辰:拿已经发生过的事把时辰回推出来 ———————————————
+  // 断法全在 dingshi.js 里算死(方向回推 + 同结论分组),这里只管收输入、摊结果。
+  const DSH_CATS = [
+    ['yinyuan', '姻缘·恋爱结婚'], ['shiye', '事业·工作'], ['caiyun', '财运·钱'],
+    ['wenshu', '学业·文书证照'], ['biandong', '搬迁·变动'], ['zinv', '子女·家人'],
+    ['jiankang', '健康·身体'], ['guanfei', '是非·官非'],
+  ];
+  const DSH_CATNAME = k => (DSH_CATS.find(c => c[0] === k) || ['', k])[1];
+  let dshRes = null;
+  function dshErr(t) { $('ds-err').textContent = t || ''; }
+  function dshRenderHours() {
+    $('ds-hours').innerHTML = Dingshi.HOURS.map(h =>
+      `<span class="dshr on" data-i="${h.idx}">${h.name}<b style="font-weight:normal;opacity:.55"> ${h.span}</b></span>`).join('');
+  }
+  function dshSelected() {
+    return [...$('ds-hours').querySelectorAll('.dshr.on')].map(e => +e.dataset.i).sort((a, b) => a - b);
+  }
+  function dshSetRange(v) {
+    const idx = v === 'all' ? Dingshi.HOURS.map(h => h.idx) : v.split(',').map(Number);
+    $('ds-hours').querySelectorAll('.dshr').forEach(e => e.classList.toggle('on', idx.includes(+e.dataset.i)));
+  }
+  function dshAddRow(v) {
+    const d = document.createElement('div');
+    d.className = 'dsrow';
+    d.innerHTML = `<input type="number" class="dsy" placeholder="年份" min="1900" max="2100">` +
+      `<select class="dst">${DSH_CATS.map(c => `<option value="${c[0]}">${c[1]}</option>`).join('')}</select>` +
+      `<select class="dsg"><option value="">好事还是坏事</option><option value="1">好事</option><option value="0">坏事</option></select>` +
+      `<input type="text" class="dsw" placeholder="什么事(可不填)" maxlength="24">` +
+      `<button type="button" class="dsx">删</button>`;
+    $('ds-rows').appendChild(d);
+    if (v) {
+      d.querySelector('.dsy').value = v.y; d.querySelector('.dst').value = v.t;
+      d.querySelector('.dsg').value = v.g; d.querySelector('.dsw').value = v.w || '';
+    }
+  }
+  function dshEvents() {
+    return [...$('ds-rows').querySelectorAll('.dsrow')].map(r => {
+      const y = parseInt(r.querySelector('.dsy').value, 10);
+      if (!y || y < 1900 || y > 2100) return null;
+      const type = r.querySelector('.dst').value;
+      const g = r.querySelector('.dsg').value;
+      const e = { year: y, type, what: (r.querySelector('.dsw').value || '').trim() || DSH_CATNAME(type) };
+      if (g !== '') e.good = g === '1';
+      return e;
+    }).filter(Boolean);
+  }
+  function dshSyncBirth() {
+    try {
+      const b = localStorage.getItem(BKEY); if (b && !$('ds-birth').value) $('ds-birth').value = b;
+      const pl = localStorage.getItem(PLKEY); if (pl && !$('ds-place').value) $('ds-place').value = pl;
+      const g = localStorage.getItem(GKEY); if (g && !$('ds-gender').value) $('ds-gender').value = g;
+    } catch (e) {}
+  }
+  function dshSaveBirth() {
+    try {
+      if ($('ds-birth').value) localStorage.setItem(BKEY, $('ds-birth').value);
+      if ($('ds-place').value) localStorage.setItem(PLKEY, $('ds-place').value);
+      if ($('ds-gender').value) localStorage.setItem(GKEY, $('ds-gender').value);
+      const jb = $('jr-birth'); if (jb && $('ds-birth').value) jb.value = $('ds-birth').value;
+    } catch (e) {}
+  }
+  function dshDemo() {
+    if (!$('ds-birth').value) $('ds-birth').value = '1990-05-20';
+    if (!$('ds-gender').value) $('ds-gender').value = '男';
+    $('ds-rows').innerHTML = '';
+    for (const v of [
+      { y: 2013, t: 'wenshu', g: '1', w: '考上了' },
+      { y: 2016, t: 'shiye', g: '1', w: '升职' },
+      { y: 2019, t: 'yinyuan', g: '0', w: '分手' },
+      { y: 2021, t: 'caiyun', g: '1', w: '进了一笔钱' },
+    ]) dshAddRow(v);
+    dshErr('这是示例,照着改成你自己的事——年份要确凿,好坏要标准,记不清的宁可删掉。');
+  }
+  function dshGo() {
+    dshErr('');
+    const bv = $('ds-birth').value;
+    if (!bv) { dshErr('先填出生日期——时辰是在这一天的盘上比的,日期都没有就无从谈起。'); return; }
+    const gd = $('ds-gender').value;
+    if (!gd) { dshErr('选一下性别——大运顺排逆排看这个,不填推不了。'); return; }
+    const range = dshSelected();
+    if (range.length < 2) { dshErr('候选时辰至少留两个——只剩一个就没什么可推的了。'); return; }
+    const [y, m, d] = bv.split('-').map(Number);
+    const birth = new Date(y, m - 1, d, 12);
+    if (isNaN(birth)) { dshErr('生日解析不了,检查一下日期。'); return; }
+    dshSaveBirth();
+    let lon, lonNote = '';
+    const pl = ($('ds-place').value || '').trim();
+    if (pl) {
+      let p = null;
+      try { p = Dili.find(pl); } catch (e) {}
+      if (p) lon = p[2];
+      else lonNote = `出生地「${pl}」我库里没有,这次按东八区中央经线(东经120度)折的真太阳时——换个市名能更准一点。`;
+    }
+    let r;
+    try {
+      r = Dingshi.solve({
+        birth, gender: gd, lon, range,
+        rangeLabel: range.length === 12 ? '完全不知道(十二时辰全排)' : range.map(i => Dingshi.HOURS[i].name).join('、'),
+        events: dshEvents(),
+      });
+    } catch (e) { dshErr('回推出错:' + e.message); return; }
+    dshRes = { res: r, birthText: `${bv} ${gd}${pl ? ' ' + pl : ''}` };
+    $('btn-ds-ai').classList.remove('hidden');
+    dshRender(r, lonNote);
+  }
+  function dshRender(r, lonNote) {
+    const topFp = (r.canDecide && r.ranked.length) ? r.ranked[0].fp : null;
+    const head = `<div class="wjhead">${esc(r.advice)}</div>`;
+    const groups = `<div class="wjcard"><h4>断 得 一 样 的 时 辰</h4>` +
+      r.groups.map(g =>
+        `<div class="dsgrp${g.fp === topFp ? ' top' : ''}"><div class="gh">` +
+        `<span class="ghn">${esc(g.hours.join('、'))}</span><span class="ghm">${esc(g.gzs.join('、'))}</span></div>` +
+        `<div class="why">${esc(g.note)}</div>` +
+        `<div class="why">这一档:${esc(g.band)};合你的是${esc(g.xi)},不合的是${esc(g.ji)}${g.geju ? ';' + esc(g.geju) : ''}</div></div>`
+      ).join('') + `</div>`;
+    const rank = r.ranked.length
+      ? `<div class="wjcard"><h4>按 你 给 的 事 回 推</h4>` +
+        r.ranked.slice(0, 8).map((c, i) => {
+          const pct = Math.round(c.agree * 100);
+          const hits = (i === 0 && c.hits && c.hits.length)
+            ? `<div class="dshit">逐件对:${c.hits.map(h =>
+                `${h.year}年${esc(h.what || DSH_CATNAME(h.type))}(${h.good ? '好事' : '坏事'})→ 这个时辰判${h.dir > 0 ? '吉' : (h.dir < 0 ? '凶' : '平')},` +
+                `<span class="${h.verdict === '吻合' ? '' : 'no'}">${esc(h.verdict)}</span>`).join(';')}</div>`
+            : '';
+          return `<div class="dsrk"><span class="rkn">${i + 1}. ${esc(c.name)} ${esc(c.gz)}</span>` +
+            `<span class="dsbar"><i style="width:${pct}%"></i></span><span class="rkv">${pct}%</span>${hits}</div>`;
+        }).join('') +
+        `<div class="why" style="margin-top:8px">百分比是「吉凶方向吻合度」:你说这件事是好是坏,看这个时辰的盘判得对不对。` +
+        `同一档里的时辰分数相同,不必在档内再挑。</div></div>`
+      : '';
+    const verdict = `<div class="wjcard"><h4>能 不 能 定</h4>` +
+      `<div><b style="color:var(--cinnabar)">${r.canDecide ? '可以定' : '定不了'}</b>——${esc(r.reason)}</div></div>`;
+    const same = r.diffs.band.length === 1 && r.diffs.xi.length === 1 && r.diffs.geju.length === 1;
+    const dif = `<div class="wjcard"><h4>差 异 面 板 · 分 歧 在 哪</h4>` +
+      `<div class="why">强弱档:${esc(r.diffs.band.join(' / '))}</div>` +
+      `<div class="why">合你的五行:${esc(r.diffs.xi.join(' / '))}</div>` +
+      `<div class="why">格局:${esc(r.diffs.geju.join(' / '))}</div>` +
+      `<div class="why">${same ? '三项全同——这个范围里时辰填哪个都不影响任何一处断语。'
+        : '分歧就在上面这几项。落在同一档的时辰,后面所有板块给你的话完全一样;跨档就不一样了。'}</div></div>`;
+    // 钟表时辰 ≠ 太阳时辰:出生地偏西的,整排时辰都会往前挪一格。不说清楚会被当成算错。
+    const ZHI12 = '子丑寅卯辰巳午未申酉戌亥';
+    const off = r.cands.filter(c => c.gz[1] !== ZHI12[c.idx]);
+    let driftNote = '';
+    if (off.length) {
+      const c0 = r.cands[0], H0 = Dingshi.HOURS[c0.idx], bb = c0.chart.birth;
+      let mins = (bb.getHours() * 60 + bb.getMinutes()) - (H0.h * 60 + H0.m);
+      if (mins > 720) mins -= 1440; if (mins < -720) mins += 1440;
+      driftNote = `你报的是钟表上的时辰,排盘按太阳走——你出生地这天两者差 ${Math.abs(Math.round(mins))} 分钟,` +
+        `所以${off.map(c => esc(c.name)).join('、')}排出来落在${[...new Set(off.map(c => c.gz[1]))].join('、')}上,` +
+        `以名字后面那两个字为准。这是老规矩,不是算错。<br>`;
+    }
+    const foot = `<div class="note">${driftNote}${lonNote ? esc(lonNote) + '<br>' : ''}` +
+      `口径说死:名次只说明「哪个时辰更能解释你给的这几件事」,不是铁口。这套回推做过严格模拟自测——真时辰所在那一档排第一约七成、进前三约九成;` +
+      `程序自称「可以定」的那些次里,自测没有错过。但模拟只证明求解器能反解出这套断法本身,不证明这套断法合乎现实:事件层至今没有外部回测数据,` +
+      `谁也别拿它当准信。事记错一件,结论就可能整个变;定不了的时候我就说定不了。</div>`;
+    $('ds-out').innerHTML = head + groups + rank + verdict + dif + foot;
+    const pick = $('ds-pick');
+    pick.innerHTML = r.cands.slice().sort((a, b) => a.idx - b.idx)
+      .map(c => `<option value="${c.idx}">${esc(c.name)}(${esc(c.span)},${esc(c.gz)})</option>`).join('');
+    // 定得了就默认头名;定不了就别替人乱选——保持他档案里原有的时辰
+    let keep = '';
+    try { keep = localStorage.getItem(HRKEY) || ''; } catch (e) {}
+    pick.value = String((r.canDecide && r.ranked.length) ? r.ranked[0].idx
+      : (keep !== '' && r.cands.some(c => c.idx === +keep) ? +keep : r.cands[0].idx));
+    $('ds-saverow').classList.remove('hidden');
+    $('ds-saved').textContent = '';
+  }
+  function dshSaveHour() {
+    const v = $('ds-pick').value;
+    if (v === '') return;
+    try { localStorage.setItem(HRKEY, v); } catch (e) {}
+    for (const id of ['wq-hour', 'xy-hour', 'jr-hour']) { const el = $(id); if (el) el.value = v; }
+    $('ds-saved').textContent = `已按${Dingshi.HOURS[+v].name}存档,吉日、问机、运势各处都改用这个时辰了。`;
+  }
+  async function dshAI() {
+    if (!dshRes) return;
+    const key = getKey();
+    if (!key) { dshErr('要东玄把这段讲透,先在「问卦」那页的「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
+    dshErr('');
+    const mat = Dingshi.material(dshRes.res, dshRes.birthText);
+    $('ds-ai').textContent = '';
+    try {
+      await llmStream([{ role: 'user', content: mat }], t => { $('ds-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+    } catch (e) { dshErr('深断失败:' + aiErrHint(e, $('ai-provider').value)); }
+  }
+  if ($('btn-ds-go')) {
+    dshRenderHours();
+    dshSyncBirth();
+    for (let i = 0; i < 3; i++) dshAddRow();
+    $('ds-folk-list').innerHTML = Dingshi.FOLK.map(f => `<li><b style="font-weight:normal;color:var(--ink)">${esc(f.name)}</b>:${esc(f.say)}</li>`).join('');
+    $('ds-folk-note').textContent = Dingshi.FOLK_NOTE;
+    $('ds-hours').addEventListener('click', e => {
+      const c = e.target.closest('.dshr'); if (!c) return;
+      c.classList.toggle('on');
+    });
+    $('ds-range').addEventListener('change', () => dshSetRange($('ds-range').value));
+    $('ds-rows').addEventListener('click', e => {
+      const b = e.target.closest('.dsx'); if (!b) return;
+      if ($('ds-rows').querySelectorAll('.dsrow').length > 1) b.closest('.dsrow').remove();
+    });
+    $('btn-ds-add').addEventListener('click', () => dshAddRow());
+    $('btn-ds-demo').addEventListener('click', dshDemo);
+    $('btn-ds-go').addEventListener('click', dshGo);
+    $('btn-ds-save').addEventListener('click', dshSaveHour);
+    $('btn-ds-ai').addEventListener('click', dshAI);
   }
 
   // ——— 生辰档案簿(与运势页共用同一份本机存档)———
@@ -3266,11 +3567,11 @@
   // —— 视图路由:问卦 / 专项(卡片菜单→单板块)/ 吉日 / 卦档,一次只见一摊 ——
   const VIEWS = {
     ask: ['sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
+    boards: ['board-menu', 'sec-wenji', 'sec-dingshi', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-wenji', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-wenji', 'sec-dingshi', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {

@@ -79,6 +79,18 @@ const frDark = await page.frameLocator('#dx-yunshi-frame').locator('body').evalu
 ok('浮层内运势页同为夜间', frDark.theme === 'dark', JSON.stringify(frDark));
 ok('运势页底色是影院黑不是白纸', /20, 20, 20/.test(frDark.bg), frDark.bg);
 
+// 4.5) 新板块的引擎也得真进单文件里(漏登记 build-single 清单是老毛病)
+await page.click('#dx-yunshi-back');
+await page.evaluate(() => window.dxOpenBoard('sec-dingshi'));
+await page.fill('#ds-birth', '1985-11-03');
+await page.selectOption('#ds-gender', '女');
+await page.click('#btn-ds-demo');
+await page.click('#btn-ds-go');
+await page.waitForTimeout(1200);
+const dsTxt = await page.locator('#ds-out').innerText();
+ok('定时辰板块在单文件里能算', /可以定|定不了/.test(dsTxt), dsTxt.slice(0, 60));
+ok('定时辰给出同结论分组', await page.locator('#ds-out .dsgrp').count() >= 1);
+
 // 5) 洁净度
 ok('无页面报错', errs.length === 0, errs.join(' | '));
 ok('无外部资源请求(单文件自足)', outbound.length === 0, outbound.join(' | '));

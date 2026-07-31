@@ -161,5 +161,49 @@ t('材料交给 AI 时,已把结论算死并禁掉空话与硬定', () => {
   ok(m.includes('定不了就照实说定不了'), '须要求照实说定不了');
 });
 
+console.log('【六】子时跨半夜:早子晚子不是同一副盘');
+// 缘起:做定时辰界面时扫十二时辰,发现 子时(庚子)与 丑时(己丑)天干不连,查出来是日界所致。
+// 通行口径日界在子初(23:00),所以 23:00-24:00 生的算第二天,00:00-01:00 生的算当天,两者日柱差一整天。
+// 全应用把「子时」一律折成当天 23:30(见 index.html 的 dxBirthChart),因此真在 0-1 点出生的人这样填,日柱时柱全错。
+// 这一节钉三件事:①bazi 本身的日界判得对;②现行折法对早子确实是错的(错了就照实测出来);③界面里给的补救办法真的等价。
+t('日界在子初:23:30 算第二天的日子,00:30 算当天的日子', () => {
+  const late = Bazi.chart(new Date(1985, 10, 3, 23, 30), '女', 116.4);
+  const early = Bazi.chart(new Date(1985, 10, 3, 0, 30), '女', 116.4);
+  const nextEarly = Bazi.chart(new Date(1985, 10, 4, 0, 30), '女', 116.4);
+  eq(early.pillars.day.gz, '丙午', '1985-11-03 凌晨的日柱');
+  eq(late.pillars.day.gz, '丁未', '同日 23:30 应进到第二天的日柱');
+  eq(late.pillars.day.gz, nextEarly.pillars.day.gz, '晚子与次日凌晨应同属一个干支日');
+  eq(early.pillars.hour.gz, '戊子'); eq(late.pillars.hour.gz, '庚子');
+});
+// 注:取样年份必须避开 1986-1991 的夏令时,否则量到的是夏令时而不是日界(第一版就踩了这个坑)。
+t('现行折法对「0-1点生」是错的:东部经度日柱整整推后一天', () => {
+  let bad = 0, n = 0;
+  for (let d = 2; d <= 27; d++) {
+    const truth = Bazi.chart(new Date(1995, 5, d, 0, 30), '男', 116.4);   // 真·零点半生
+    const asApp = Bazi.chart(new Date(1995, 5, d, 23, 30), '男', 116.4);  // 应用把子时一律折成当天 23:30
+    n++;
+    if (truth.pillars.day.gz !== asApp.pillars.day.gz) bad++;
+  }
+  eq(bad, n, '这一格必须全错——哪天它不全错了,说明输入折法已经改了,界面上那段补救话术要跟着改');
+});
+t('界面给的补救办法(生日前挪一天)在东部经度与真盘逐日等价', () => {
+  let same = 0, n = 0;
+  for (let d = 2; d <= 27; d++) {
+    const truth = Bazi.chart(new Date(1995, 5, d, 0, 30), '男', 116.4);
+    const fix = Bazi.chart(new Date(1995, 5, d - 1, 23, 30), '男', 116.4); // 日期前挪一天 + 子时
+    n++;
+    if (truth.pillars.day.gz === fix.pillars.day.gz && truth.pillars.hour.gz === fix.pillars.hour.gz) same++;
+  }
+  eq(same, n, '四柱必须逐日全等,否则界面上那句补救话是错的');
+});
+t('钟表时辰 ≠ 太阳时辰:出生地偏西的整排时辰会挪一格,界面必须解释而不是硬顶', () => {
+  const ZHI = '子丑寅卯辰巳午未申酉戌亥';
+  const offOf = lon => Dingshi.solve({ birth: new Date(1995, 5, 10), gender: '男', lon, range: '不知道', events: [] })
+    .cands.filter(c => c.gz[1] !== ZHI[c.idx]).length;
+  eq(offOf(116.4), 0, '北京一带钟表与太阳只差十几分钟,不该错位');
+  eq(offOf(104.1), 12, '成都一带差约一小时,十二个时辰应整排前移一格');
+  eq(offOf(87.6), 12, '乌鲁木齐差两小时以上,同样整排前移');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

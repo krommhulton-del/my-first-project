@@ -53,6 +53,7 @@ html = html
   .replace('<script src="dili.js"></script>', '<script>\n' + read('dili.js') + '\n</script>')
   .replace('<script src="dashi.js"></script>', '<script>\n' + read('dashi.js') + '\n</script>')
   .replace('<script src="wenji.js"></script>', '<script>\n' + read('wenji.js') + '\n</script>')
+  .replace('<script src="dingshi.js"></script>', '<script>\n' + read('dingshi.js') + '\n</script>')
   // 桌面单文件版无 Service Worker 与 manifest(file:// 下不适用)
   .replace(/\n  \/\/ —— PWA[\s\S]*?\.catch\(\(\) => \{\}\);\n  \}\n/, '\n')
   .replace('<link rel="manifest" href="manifest.webmanifest">\n', '')
