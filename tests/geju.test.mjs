@@ -33,7 +33,19 @@ t('成败救应各条的引文,逐条在《子平真诠》里核得到', () => {
         // 引文里的「…」表示节略,拆成片段分别核;圆括号内是我自己的按语,不算引文
         const body = r.q.replace(/\([^)]*\)/g, '');
         const parts = body.split(/…|\.\.\./).map(x => strip(x)).filter(x => x.length >= 4);
-        for (const p of parts) if (!RAW.includes(p)) bad.push(`${ge}·${kind}:「${p}」`);
+        // 光查「片段在不在」不够——复核时发现「伤官用财…只要身强而有根」两段在原文里
+        // **相隔 10018 字**(前一段是在别的章匹配上的),测试却照样绿。
+        // 所以还要查:各片段位置递增、且相邻间隔不超过 60 字(即节略只许发生在同一句之内)。
+        let last = -1, okAll = true;
+        for (const p of parts) {
+          const i = RAW.indexOf(p, last + 1);
+          if (i < 0) { bad.push(`${ge}·${kind}:「${p}」原文里搜不到`); okAll = false; break; }
+          if (last >= 0 && i - last > 60) {
+            bad.push(`${ge}·${kind}:「${r.q}」的片段相隔 ${i - last} 字,不是同一句`); okAll = false; break;
+          }
+          last = i;
+        }
+        void okAll;
       }
     }
   }
@@ -47,6 +59,31 @@ t('取格三句总纲的引文也核得到', () => {
     const parts = g.quote.split(/…/).map(x => strip(x)).filter(x => x.length >= 4);
     for (const p of parts) ok(RAW.includes(p), `取格引文搜不到:「${p}」`);
   }
+});
+
+t('每条救应都要真能触发——不许有永远进不了输出的死条', () => {
+  // 缘起:复核时穷举 16384 种条件组合发现,七杀与阳刃两格的救应**一次都不可能输出**——
+  // 因为我给「败」私加了条件,与救应的前提互斥(七杀败写了 !c.印,而救应恰要 c.印)。
+  // 救应只在有败时才报,所以互斥就等于这条规则白写。
+  const KEYS = ['官', '杀', '财', '印', '枭', '食', '伤', '食伤', '比劫', '官杀混', '月受伤', '有会合', 'strong', 'weak'];
+  const combos = [];
+  for (let m = 0; m < (1 << KEYS.length); m++) {
+    const c = {}; KEYS.forEach((k, i) => c[k] = !!(m >> i & 1));
+    c.rooted = () => c.印; c.wxOf = () => null; combos.push(c);
+  }
+  const dead = [];
+  for (const [ge, R] of Object.entries(Geju.RULES)) {
+    if (!R) continue;
+    (R.救 || []).forEach((r, i) => {
+      const live = combos.some(c => {
+        let a = false; try { a = r.f(c, { dayWx: '木' }); } catch (e) { return false; }
+        if (!a) return false;
+        return (R.败 || []).some(x => { try { return x.f(c, { dayWx: '木' }); } catch (e) { return false; } });
+      });
+      if (!live) dead.push(`${ge}·救${i}「${r.q.slice(0, 20)}」`);
+    });
+  }
+  ok(!dead.length, '这些救应永远进不了输出:\n      ' + dead.join('\n      '));
 });
 
 console.log('【二】自测揪出来的三处错,各钉一条');
