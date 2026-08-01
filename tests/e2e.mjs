@@ -804,6 +804,32 @@ await t('卦签图:把一次断语画成一张能存的图,高度跟着内容走
   ok(r.url.startsWith('data:image/png'), '导不出 PNG:' + r.url);
 });
 
+await t('填钟点比选时辰准:0:30 出生的日柱不再差一天', async () => {
+  // 缘起:队列第 1 条,已量化的真错(1995-06 逐日实测 26/26 全错)。
+  // 从根上修:各处时辰旁边加一个钟点框,填了它就以钟点为准。
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1995-06-10'); localStorage.removeItem('dongxuan_birth_hour'); });
+  await page.reload(); await page.waitForTimeout(400);
+  await page.evaluate(() => dxOpenBoard('sec-dili'));
+  ok(await page.isVisible('#dl-clock'), '地利板块缺钟点输入');
+  // 选「子时」→ 按夜里那一段算
+  await page.selectOption('#dl-hour', '0'); await page.waitForTimeout(200);
+  const a = await page.evaluate(() => { const c = dxBirthChart('q'); return c && c.pillars.day.gz; });
+  // 填 0:30 → 按早子算,日柱应当不同
+  await page.fill('#dl-clock', '00:30'); await page.dispatchEvent('#dl-clock', 'change'); await page.waitForTimeout(200);
+  const b = await page.evaluate(() => { const c = dxBirthChart('q'); return c && c.pillars.day.gz; });
+  ok(a && b, '排不出盘:' + a + ' / ' + b);
+  ok(a !== b, `选「子时」与填 0:30 排出同一个日柱(${a})——那个差一天的错还在`);
+  // 钟点写回了存储,且格式是钟点
+  const hv = await page.evaluate(() => localStorage.getItem('dongxuan_birth_hour'));
+  ok(/^\d{1,2}:\d{2}$/.test(hv), '存的不是钟点格式:' + hv);
+  // 换到别的板块也跟着(全应用一处折法)
+  await page.evaluate(() => dxOpenBoard('sec-xinyuan'));
+  ok((await page.inputValue('#xy-clock')) === '00:30', '别的板块没同步到钟点');
+  // 当面把这个坑说清了
+  await page.evaluate(() => dxOpenBoard('sec-dili'));
+  ok(/0 点到 1 点/.test(await page.textContent('#dl-hrnote')), '没把 0–1 点这个坑当面说清');
+});
+
 // ══════════ v0.70 大改版:四个新功能 ══════════
 // 缘起:用户 2026-08-01「各个部分都不够看…我需要的是一次大变革…更多好用的功能」。
 // 四个功能都做成「无 API Key 也有结论」,断语一律由程序算(Chuduan / Dili / Jiri),
@@ -816,10 +842,22 @@ await t('速答:一句话直接出结论、把握度与时间窗(无 Key 也有)
   ok(/成|悬|不成/.test(out), '缺结论:' + out.slice(0, 80));
   ok(/把握/.test(out), '缺把握度');
   ok(/见分晓/.test(out), '缺时间窗');
-  // 铁律八:成稿里不许出现术语
+  // 铁律八:**断语**里不许出现术语。
+  // 判据这次收窄了一次,写清缘由:v0.74 起「凭什么这么说」里挂了《增删卜易》的原话
+  // (如「若用神不現﹐卽以日月爲用神…」),「经文」里是《周易》原文——
+  // 那两块是**引文**,照录原文正是诚实的做法,不能也不该改写成白话。
+  // 所以禁词只查断语区(结论/理由/做法),引文区另有各自的规矩(见下面两条断言)。
+  const say = await page.evaluate(() => {
+    const box = document.querySelector('#qk-out').cloneNode(true);
+    box.querySelectorAll('.qk-src, .cdjing').forEach(el => el.remove());   // 摘掉引文区
+    return box.textContent;
+  });
   for (const w of ['用神', '世应', '旬空', '月破', '官鬼', '妻财', '子孙']) {
-    ok(!out.includes(w), '速答稿里出现术语「' + w + '」:' + out.slice(0, 120));
+    ok(!say.includes(w), '速答的断语里出现术语「' + w + '」:' + say.slice(0, 120));
   }
+  // 引文区必须自陈是原文,不许拿原文冒充自己的话
+  const quo = await page.textContent('.qk-src').catch(() => '');
+  if (/用神/.test(quo)) ok(/增删卜易|逐字核过/.test(quo), '引了带术语的原话却没标出处');
   // 分数是自拟的,必须自陈
   ok(/本项目定的/.test(out), '缺「分数是我自己排的」这句交代');
   // 空着问要拦

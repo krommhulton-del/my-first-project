@@ -690,7 +690,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.74</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.75</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1037,7 +1037,7 @@
     </div>
     <div class="qwho">生日:
       <input type="date" id="xy-birth" class="fld">
-      <select id="xy-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
+      <select id="xy-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select><input type="time" id="xy-clock" class="fld fld-sm" title="知道确切钟点就填这里,比选时辰准" placeholder="几点几分">
       <span class="qwhint">替别人求就填那人的生日。只存这台设备。</span>
     </div>
     <div id="xy-bazi"></div>
@@ -1104,7 +1104,7 @@
       年份月份日子都算得出依据;那阵子遇到的人或机会是什么路数、贵人从哪个方向来,也一并给。<b>先在下面填生辰</b>(填过一次全应用通用)。</div>
     <div class="qwrow">
       <input type="date" id="wq-birth" class="wjin" title="出生日期">
-      <select id="wq-hour" class="wjin"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
+      <select id="wq-hour" class="wjin"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select><input type="time" id="wq-clock" class="fld fld-sm" title="知道确切钟点就填这里,比选时辰准" placeholder="几点几分">
       <input type="text" id="wq-place" class="wjin" placeholder="出生地(市/省)">
       <select id="wq-gender" class="wjin"><option value="">性别</option><option value="男">男</option><option value="女">女</option></select>
     </div>
@@ -1155,7 +1155,7 @@
     <details class="dsfolk">
       <summary>子时跨半夜:0 点到 1 点之间生的,先多做一步</summary>
       <div class="note">23点到0点生的,老规矩算第二天;0点到1点生的,算当天——两者日柱差一整天,断出来是两副盘。
-        这套程序眼下把子时一律按「23点以后」折,所以<b class="v-warn">你要是 0 点到 1 点之间生的,把上面的出生日期往前挪一天再算</b>。
+        <b class="v-warn">这个坑已经从根上修好了(v0.75):直接填钟点即可</b>——各处时辰选项旁边都多了一个时间框,填了它就以钟点为准,0:30 就当 0:30 算,日柱不会再差一天。(老办法「把生日往前挪一天」不必再用了。)
         出生地在东部的已逐日核过,这么折与真盘四柱完全一致;偏西的地方还牵动真太阳时,下面算完会告诉你具体差几分钟。
         这处折法是全应用共用的,我记在待办上,下一版从根上改成直接填钟点。</div>
     </details>
@@ -1255,10 +1255,10 @@
     <div class="note">以<b>现居地为原点</b>实算目标地的方位角,再分七层看:<b>向</b>(方位五行合不合你的喜用)、<b>气</b>(那地方自己是个什么地方——海港、钢城、林区、瓷都各不相同)、<b>候</b>(南北寒暖对不对你的调候)、<b>煞</b>(驿马贵人桃花,只作旁注)、<b>时</b>(哪几年适合动)、<b>业</b>(去了做哪一路的活)、<b>程</b>(这个距离该怎么去)。全国 449 处省市,方位角是球面实算的。</div>
     <div class="qwho">生日:
       <input type="date" id="dl-birth" class="fld">
-      <select id="dl-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
+      <select id="dl-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select><input type="time" id="dl-clock" class="fld fld-sm" title="知道确切钟点就填这里,比选时辰准" placeholder="几点几分">
       现居:<input type="text" id="dl-from" placeholder="省或大城市,如:武汉" class="fld fld-md">
     </div>
-    <div class="note" id="dl-hrnote">时辰这一项要紧:喜忌是从八字来的,而时辰一变喜忌可能整个翻过来(实测同一天十二个时辰里有七个会翻)。不填就按中午估,结论只能当个大概;真不知道的,去「定时辰」板块先把它定下来。</div>
+    <div class="note" id="dl-hrnote">时辰这一项要紧:喜忌是从八字来的,时辰一变喜忌可能整个翻过来(实测同一天十二个时辰里有七个会翻)。<b>知道确切钟点的,直接填右边那个时间框</b>——比选时辰准,尤其是<b>半夜 0 点到 1 点出生的</b>:选「子时」会按夜里那一段算,日柱要差一天(逐日实测 26/26 全错),填钟点才不会错。真不知道的,去「定时辰」板块先把它定下来。</div>
     <div class="btnrow">
       <button id="btn-dl-rec" class="primary">给我挑旺地</button>
       <input type="text" id="dl-to" placeholder="或写个目标地验一验" class="fld fld-lg">
@@ -1275,7 +1275,7 @@
     <div class="note">老规矩看日子分三层:<b>①这天本身</b>(建除十二神、黄道黑道值神)、<b>②冲不冲你</b>(日支冲你生肖=冲日,大事勿用;三合六合=顺)、<b>③帮不帮你</b>(流日五行对你日主是生是克)。填了生日才有②③;拿不准的日子,点「起一卦细看」用卦复核——历法初筛、卦象定夺,两头对得上才叫稳。</div>
     <div class="qwho">你的生辰:
       <input type="date" id="jr-birth" class="fld">
-      <select id="jr-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
+      <select id="jr-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select><input type="time" id="jr-clock" class="fld fld-sm" title="知道确切钟点就填这里,比选时辰准" placeholder="几点几分">
       <input type="text" id="jr-place" placeholder="出生地(市/省)" class="fld fld-md">
       <span class="jrprof"><select id="jr-prof"><option value="">档案:未存档</option></select><button type="button" id="jr-prof-save" class="mini">存档</button></span>
       <span class="qwhint">生辰按公历;86-91年生人一律自动回拨夏令时(不填出生地也拨),填了出生地再补经度差,时柱才排得最准。填一次,全应用通用。</span>
@@ -1310,7 +1310,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.74 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.75 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -2612,14 +2612,61 @@
   const BKEY = 'dongxuan_birth'; // 生日全应用共用
   const HRKEY = 'dongxuan_birth_hour', PLKEY = 'dongxuan_birth_place';
   // 共享排盘:生日+时辰+出生地(真太阳时校正)→ 八字
+  // ——— 钟点与时辰的同步:全应用一处 ———
+  // 规矩:**填了钟点就以钟点为准**(它更准),没填才用时辰选项。
+  // 任何一处改动都写回 HRKEY 并刷新其余各处,免得各页各记一套。
+  const DX_HOUR_IDS = ['xy', 'jr', 'dl', 'wq'];
+  function dxWriteHour(v) {
+    try { localStorage.setItem(HRKEY, v); } catch (e) {}
+    const hm = dxParseHour(v);
+    for (const p of DX_HOUR_IDS) {
+      const sel = $(p + '-hour'), clk = $(p + '-clock');
+      if (sel) sel.value = hm.known && !hm.exact ? String(v) : (hm.exact ? '' : '');
+      if (clk) clk.value = hm.exact ? `${String(hm.h).padStart(2, '0')}:${String(hm.mi).padStart(2, '0')}` : '';
+    }
+    if (typeof dxRefreshAmbient === 'function') dxRefreshAmbient();
+  }
+  function dxBindHourInputs() {
+    for (const p of DX_HOUR_IDS) {
+      const sel = $(p + '-hour'), clk = $(p + '-clock');
+      if (sel) sel.addEventListener('change', () => { if (sel.value !== '') dxWriteHour(sel.value); else dxWriteHour(''); });
+      if (clk) clk.addEventListener('change', () => { if (clk.value) dxWriteHour(clk.value); });
+    }
+    // 开页时把存着的值铺回各处
+    let v = ''; try { v = localStorage.getItem(HRKEY) || ''; } catch (e) {}
+    if (v) dxWriteHour(v);
+  }
+  // ——— 出生钟点的解析:这是全应用唯一一处,别处不许再折一遍 ———
+  // 缘起(CLAUDE.md 待办第 1 条,已量化的真错):原先把十二时辰折成钟点中点,
+  // 子时一律折成当天 23:30。可日界在子初——**0:00–1:00 出生的人这样填,日柱整整推后一天**
+  // (1995-06 逐日实测 26/26 全错)。原先只能靠「把生日往前挪一天」的话术补救,那是话术不是修法。
+  //
+  // 现在存两种格式,都认:
+  //   · 新格式 "H:MM" —— 用户直接填的钟点,几点就是几点,0:30 就是 0:30(早子,不换日)
+  //   · 老格式 "0".."11" —— 十二时辰序号,照旧折中点;**子时(0)按晚子折 23:30**,
+  //     因为选「子时」的人多半指的是夜里那一段;真在 0–1 点生的,填钟点才准。
+  // 存了钟点就不必再猜,这才是从根上修。
+  function dxParseHour(hv) {
+    if (hv === '' || hv == null) return { h: 12, mi: 0, known: false, exact: false };
+    const m = String(hv).match(/^(\d{1,2}):(\d{2})$/);
+    if (m) {
+      const h = Math.min(23, Math.max(0, +m[1])), mi = Math.min(59, Math.max(0, +m[2]));
+      return { h, mi, known: true, exact: true };
+    }
+    const n = Number(hv);
+    if (!isFinite(n) || n < 0 || n > 11) return { h: 12, mi: 0, known: false, exact: false };
+    return { h: n === 0 ? 23 : n * 2 - 1, mi: 30, known: true, exact: false };
+  }
+  window.dxParseHour = dxParseHour;
+  window.dxBirthChart = dxBirthChart;   // 供端到端测试直接取盘核对
   function dxBirthChart(ctx) {
     const bd = ($('jr-birth') && $('jr-birth').value) || localStorage.getItem(BKEY) || '';
     if (!bd) return null;
     const [y, m, d] = bd.split('-').map(Number);
     let hv = '';
     try { hv = localStorage.getItem(HRKEY) || ''; } catch (e) {}
-    const hour = hv === '' ? 12 : (Number(hv) === 0 ? 23 : Number(hv) * 2 - 1);
-    const dt = new Date(y, m - 1, d, hour, 30);
+    const hm = dxParseHour(hv);
+    const dt = new Date(y, m - 1, d, hm.h, hm.mi);
     let lon;
     try {
       const pl = localStorage.getItem(PLKEY) || '';
@@ -2649,9 +2696,11 @@
     const v = $('xy-birth').value;
     if (!v) return null;
     const [y, m, d] = v.split('-').map(Number);
-    const hv = $('xy-hour').value;
-    const hour = hv === '' ? 12 : (Number(hv) === 0 ? 23 : Number(hv) * 2 - 1); // 时辰中点;子时取23点
-    const dt = new Date(y, m - 1, d, hour, 30);
+    // 折法只此一处(dxParseHour):这里原先自己又折了一遍,于是 0–1 点那个错在心愿板块照旧存在。
+    // 钟点优先于时辰选项。
+    const hv = ($('xy-clock') && $('xy-clock').value) || $('xy-hour').value;
+    const hm = dxParseHour(hv);
+    const dt = new Date(y, m - 1, d, hm.h, hm.mi);
     return isNaN(dt) ? null : dt;
   }
   // 旺你牌:八字喜用→颜色方位数字时段;生肖→贵人与冲日(填了生日立刻能看,不用等起卦)
@@ -4025,7 +4074,8 @@
       if (!name) return;
       const list = jrProfiles();
       const hv = (() => { try { return localStorage.getItem(HRKEY) || ''; } catch (e) { return ''; } })();
-      const time = hv === '' ? '12:00' : String(Number(hv) === 0 ? 23 : Number(hv) * 2 - 1).padStart(2, '0') + ':30';
+      const hm2 = dxParseHour(hv);
+      const time = `${String(hm2.h).padStart(2, '0')}:${String(hm2.mi).padStart(2, '0')}`;
       const rec = { id: 'p' + date.replace(/-/g, '') + '_' + list.length + '_' + name.length, name, date, time,
         gender: (() => { try { return localStorage.getItem(GKEY) || '男'; } catch (e) { return '男'; } })(),
         place: (() => { try { return localStorage.getItem(PLKEY) || ''; } catch (e) { return ''; } })() };
@@ -4560,6 +4610,7 @@
   });
   $('btn-board-back').addEventListener('click', () => { curBoard = null; showView('boards'); });
   showView('ask');
+  dxBindHourInputs();
   dxRefreshAmbient();
   // 任何一处生日/时辰/出生地一改,常驻侧栏与今日一览立刻跟上(它们都读同一个 dxBirthChart)
   ['dl-birth', 'dl-hour', 'jr-birth', 'jr-hour', 'jr-place', 'xy-birth', 'xy-hour'].forEach(id => {

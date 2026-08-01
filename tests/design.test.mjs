@@ -329,5 +329,48 @@ t('今日一卦:同一人同一天必须是同一支', () => {
   ok(/crypto\.getRandomValues/.test(readFileSync(join(ROOT, 'gua-core.js'), 'utf8')), '起卦的真随机源不许动');
 });
 
+t('出生钟点:0–1 点生的不再差一天(队列第 1 条的真错)', () => {
+  // 缘起:CLAUDE.md 待办第 1 条,已量化的真错——原先把十二时辰折成钟点中点,
+  // 子时一律折 23:30。可日界在子初,**0:00–1:00 出生者这样填日柱整整推后一天**
+  // (1995-06 逐日实测 26/26 全错)。原先只能靠「把生日往前挪一天」的话术补救,那是话术不是修法。
+  // 现在从根上修:存钟点,几点就是几点。
+  const i = HTML.indexOf('  function dxParseHour(');
+  ok(i > 0, '缺 dxParseHour');
+  let depth = 0, started = false, j = i;
+  while (j < HTML.length) {
+    const ch = HTML[j];
+    if (ch === '{') { depth++; started = true; }
+    else if (ch === '}') { depth--; if (started && depth === 0) { j++; break; } }
+    j++;
+  }
+  const P = eval('(' + HTML.slice(i, j).replace(/^\s*function dxParseHour/, 'function') + ')');
+  // 新格式:填几点就是几点
+  eq(P('0:30').h, 0, '0:30 应解析成 0 点,不许折成 23 点');
+  eq(P('0:30').mi, 30);
+  ok(P('0:30').exact, '填了钟点就算 exact');
+  eq(P('14:05').h, 14); eq(P('14:05').mi, 5);
+  // 老格式仍认(存量用户不能坏)
+  eq(P('5').h, 9, '巳时应折 9:30');
+  eq(P('0').h, 23, '选「子时」照旧按夜里那一段折(选项本来就指那一段)');
+  ok(!P('5').exact, '时辰选项不是精确钟点');
+  // 空值退回中午,并标明不确切
+  eq(P('').h, 12); ok(!P('').known, '没填就该标成未知');
+  // 真正的验证:0:30 与 23:30 的日柱必须不同(这正是原先错掉的那一天)
+  const Bazi = require('../bazi.js');
+  let diff = 0;
+  for (let d = 1; d <= 26; d++) {
+    const a = Bazi.chart(new Date(1995, 5, d, 0, 30), '男', 116.4);
+    const b = Bazi.chart(new Date(1995, 5, d, 23, 30), '男', 116.4);
+    if (a.pillars.day.gz !== b.pillars.day.gz) diff++;
+  }
+  eq(diff, 26, '0:30 与 23:30 的日柱应天天不同——这正是原先被折没了的那一天');
+  // 界面上得有钟点输入,且当面说清这个坑
+  ok((HTML.match(/type="time"/g) || []).length >= 4, '各处时辰旁边都该有钟点输入');
+  ok(/0 点到 1 点出生的/.test(HTML) || /0 点到 1 点之间生的/.test(HTML), '没把这个坑当面说清');
+  // 折法只许有一处
+  ok((HTML.match(/function dxParseHour\(/g) || []).length === 1, 'dxParseHour 不止一份');
+  ok(!/Number\(hv\) === 0 \? 23 : Number\(hv\) \* 2 - 1/.test(HTML), '还有别处在自己折时辰');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);
