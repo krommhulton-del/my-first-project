@@ -33,48 +33,62 @@
      ③ **楷体只上标题**,正文黑体、数字等宽——数字对齐是本程序的门面(四柱、分数、公里数)。
      ══════════════════════════════════════════════════════════════════ */
   :root {
-    /* —— 底与纸 —— */
-    --paper: #f4f1ea; --paper2: #efeade; --panel: #fffdf8; --panel2: #f7f3e9;
-    --grad-top: #ece7da; --hover: #f0ebdd; --seg: #e9e3d2;
-    /* —— 墨(三级文字)—— */
-    --ink: #241f19; --ink2: #5c5348; --ink3: #8d8271; --dim: #8d8271;
-    /* —— 线 —— */
-    --line: #e6dfcd; --hair: rgba(90, 70, 30, .13); --gold-hair: rgba(138, 109, 51, .26);
-    /* —— 身份色:朱砂与古铜(只给品牌与主行动)—— */
-    --cinnabar: #b23a2a; --cinnabar-ink: #fff; --accent-soft: #f7e9e3;
-    --gold: #8a6d33; --gold-fill: #c9a45c;
-    /* —— 语义色:专断吉凶,与身份色分开 —— */
-    --jade: #2f6b58;  --jade-soft: #e4ede8;   /* 吉 */
-    --slate: #3b5a6b; --slate-soft: #e4ebef;  /* 凶 */
-    --ochre: #92661d; --ochre-soft: #f6eeda;  /* 警 */
-    --mute: #6d675e;  --mute-soft: #edeae2;   /* 平 */
-    --blue: #3b5a6b;                          /* 旧名,等同 --slate,留着不破坏既有样式 */
-    /* —— 阴影:极轻,只用于浮层 —— */
-    --shadow: 0 1px 2px rgba(60, 45, 20, .04);
-    --shadow-pop: 0 2px 8px rgba(60, 45, 20, .08), 0 12px 32px rgba(60, 45, 20, .10);
-    /* —— 字 —— */
+    /* ——— 底与纸:苹果那套中性灰阶 ———
+       换配色的缘由:上一版 paper/panel/panel2 三层全是同一个米黄,彼此只差几个百分点,
+       于是什么都不分层、整片发闷——这才是「没有新鲜感」的真正来源,不是色相选错了。
+       现在改成:画布用近乎中性的浅灰,卡片用纯白,靠**明度差**分层(苹果的办法),
+       暖意只留在强调色上。这样内容浮得起来,留白也才有意义。 */
+    --paper: #f5f5f7; --paper2: #ebebef; --panel: #ffffff; --panel2: #f5f5f7;
+    --grad-top: #eeeef1; --hover: #ebebef; --seg: #ebebef;
+    /* ——— 墨:三级文字,对比度按 APCA 拉开 ——— */
+    --ink: #1d1d1f; --ink2: #4a4a4f; --ink3: #86868b; --dim: #86868b;
+    /* ——— 线:分隔线要看得见但不抢戏 ——— */
+    --line: #d2d2d7; --hair: rgba(0, 0, 0, .08); --rule: rgba(78, 124, 116, .28);
+    --gold-hair: rgba(78, 124, 116, .28);   /* 旧名,等同 --rule */
+    /* ——— 身份色:朱砂只给品牌与一屏唯一的主行动 ——— */
+    --cinnabar: #c8402c; --cinnabar-ink: #fff; --accent-soft: #fdecea;
+    /* ——— 结构色改用汝窑青:细线、小标题、装饰点缀 ———
+       这是这一版换新的关键。古铜金用久了发旧发沉;汝窑青同样是本土颜色(青瓷一脉),
+       但明度高、彩度低,配中性灰底特别透气,和朱砂也不打架。 */
+    --celadon: #4e7c74; --celadon-soft: #e8f0ee; --celadon-lite: #7aa79f;
+    --gold: #4e7c74; --gold-fill: #7aa79f;  /* 旧名,已改指汝窑青 */
+    /* ——— 语义色:专断吉凶,与身份色分开 ——— */
+    --jade: #1d7a4d;  --jade-soft: #e6f4ec;   /* 吉 */
+    --slate: #35618f; --slate-soft: #e8eff7;  /* 凶 */
+    --ochre: #a86a12; --ochre-soft: #fdf1dd;  /* 警 */
+    --mute: #6e6e73;  --mute-soft: #eeeef1;   /* 平 */
+    --blue: #35618f;
+    /* ——— 层次:苹果靠极轻的阴影 + 清晰的分隔线,不靠重投影 ——— */
+    --shadow: 0 1px 2px rgba(0, 0, 0, .04);
+    --shadow-pop: 0 4px 16px rgba(0, 0, 0, .08), 0 16px 48px rgba(0, 0, 0, .10);
+    --blurbg: rgba(255, 255, 255, .72);
+    /* ——— 字 ——— */
     --disp: "Kaiti SC", "STKaiti", KaiTi, "Noto Serif SC", "Songti SC", serif;
     --num: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-    /* —— 尺度 —— */
+    /* ——— 尺度:8pt 栅格 ——— */
     --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
-    --r-card: 16px; --r-tile: 12px; --r-fld: 9px;
+    --r-card: 18px; --r-tile: 14px; --r-fld: 10px;
+    --ease: cubic-bezier(.32, .72, 0, 1);   /* 苹果那条:起步快、收尾稳 */
     color-scheme: light;
   }
   html[data-theme="dark"] {
-    /* 夜间:墨黑分层,暖朱砂,金线更亮一档 */
-    --paper: #12110f; --paper2: #171614; --panel: #1c1b18; --panel2: #262420;
-    --grad-top: #0b0b0a; --hover: #2f2c27; --seg: #262420;
-    --ink: #ece7dc; --ink2: #b5ad9e; --ink3: #8e8779; --dim: #8e8779;
-    --line: #38352f; --hair: rgba(255, 255, 255, .085); --gold-hair: rgba(201, 164, 92, .30);
-    --cinnabar: #e0563f; --cinnabar-ink: #14120f; --accent-soft: rgba(224, 86, 63, .15);
-    --gold: #c9a45c; --gold-fill: #c9a45c;
-    --jade: #74bb9e;  --jade-soft: rgba(116, 187, 158, .14);
-    --slate: #8fb2c4; --slate-soft: rgba(143, 178, 196, .14);
-    --ochre: #d9a94f; --ochre-soft: rgba(217, 169, 79, .14);
-    --mute: #9a9388;  --mute-soft: rgba(154, 147, 136, .13);
-    --blue: #8fb2c4;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .35);
-    --shadow-pop: 0 2px 10px rgba(0, 0, 0, .45), 0 16px 40px rgba(0, 0, 0, .40);
+    /* 夜间:苹果的深色分层——纯黑画布 + 逐级抬升的灰,不用棕黑 */
+    --paper: #000000; --paper2: #0a0a0b; --panel: #1c1c1e; --panel2: #2c2c2e;
+    --grad-top: #000000; --hover: #3a3a3c; --seg: #2c2c2e;
+    --ink: #f5f5f7; --ink2: #c7c7cc; --ink3: #98989d; --dim: #98989d;
+    --line: #38383a; --hair: rgba(255, 255, 255, .1); --rule: rgba(138, 190, 180, .3);
+    --gold-hair: rgba(138, 190, 180, .3);
+    --cinnabar: #ff5f45; --cinnabar-ink: #1a0d0a; --accent-soft: rgba(255, 95, 69, .16);
+    --celadon: #8abeb4; --celadon-soft: rgba(138, 190, 180, .14); --celadon-lite: #6fa79d;
+    --gold: #8abeb4; --gold-fill: #6fa79d;
+    --jade: #32d17a;  --jade-soft: rgba(50, 209, 122, .15);
+    --slate: #6fa8e8; --slate-soft: rgba(111, 168, 232, .15);
+    --ochre: #ffb340; --ochre-soft: rgba(255, 179, 64, .15);
+    --mute: #98989d;  --mute-soft: rgba(152, 152, 157, .14);
+    --blue: #6fa8e8;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5);
+    --shadow-pop: 0 4px 20px rgba(0, 0, 0, .6), 0 20px 56px rgba(0, 0, 0, .5);
+    --blurbg: rgba(28, 28, 30, .74);
     color-scheme: dark;
   }
   /* 语义色的通用挂件:凡断吉凶处一律用这四个类,不许直接写颜色 */
@@ -105,9 +119,11 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: linear-gradient(var(--grad-top), var(--paper) 280px) fixed; color: var(--ink); min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro SC", "PingFang SC", "Helvetica Neue",
-      "Noto Sans SC", "Microsoft YaHei", sans-serif;
-    line-height: 1.75;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro SC", "PingFang SC",
+      "Helvetica Neue", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -.003em;
     transition: color .25s;
     padding: calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
              calc(96px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
@@ -130,8 +146,8 @@
   /* —— 页头:一行标题 + 一行细金线,不再堆五排 —— */
   header { text-align: center; margin-bottom: var(--s5); padding-bottom: var(--s4);
     border-bottom: 1px solid var(--gold-hair); }
-  header h1 { font-size: 2.15rem; letter-spacing: .32em; color: var(--gold); font-weight: 600;
-    font-family: var(--disp); text-indent: .32em; }
+  header h1 { font-size: 2.4rem; letter-spacing: .28em; color: var(--ink); font-weight: 600;
+    font-family: var(--disp); text-indent: .28em; line-height: 1.15; }
   header p { color: var(--ink3); font-size: .88rem; margin-top: var(--s1); letter-spacing: .04em; }
   header .nav { margin-top: var(--s2); font-size: .85rem; display: flex; gap: var(--s4);
     justify-content: center; flex-wrap: wrap; }
@@ -143,11 +159,12 @@
     vertical-align: middle; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
   /* —— 卡片:细线分层,无重阴影 —— */
   section { background: var(--panel); border: 1px solid var(--hair); border-radius: var(--r-card);
-    padding: var(--s5); margin-bottom: var(--s4); box-shadow: var(--shadow); }
+    padding: var(--s5); margin-bottom: var(--s4); box-shadow: var(--shadow);
+    transition: box-shadow .3s var(--ease); }
   /* 标题:楷体 + 一枚朱砂小印,下压一条细金线。原来的红竖条改成印章点,红退回品牌位。 */
-  section h2 { font-size: 1.12rem; color: var(--ink); letter-spacing: .16em; font-family: var(--disp);
-    margin-bottom: var(--s4); padding-bottom: var(--s2); line-height: 1.4;
-    border-bottom: 1px solid var(--gold-hair); display: flex; align-items: baseline; gap: var(--s2); }
+  section h2 { font-size: 1.2rem; color: var(--ink); letter-spacing: .1em; font-family: var(--disp);
+    font-weight: 600; margin-bottom: var(--s4); padding-bottom: var(--s3); line-height: 1.4;
+    border-bottom: 1px solid var(--rule); display: flex; align-items: baseline; gap: var(--s2); }
   section h2::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 1px;
     background: var(--cinnabar); transform: translateY(-2px); }
   label { color: var(--ink3); font-size: .88rem; display: block; margin-bottom: var(--s1); }
@@ -169,17 +186,22 @@
      旧类名 .gold 实为黛蓝,是个说谎的名字;保留它做别名,新代码写 .btn-2。 */
   .btnrow { display: flex; gap: var(--s2); margin-top: var(--s3); flex-wrap: wrap; align-items: center; }
   button {
-    background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
-    padding: 9px 20px; font-size: .96rem; font-family: inherit; cursor: pointer; letter-spacing: .08em;
-    transition: background .15s, border-color .15s, transform .08s ease, filter .15s, box-shadow .15s;
+    background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 980px;
+    padding: 9px 20px; font-size: .95rem; font-family: inherit; cursor: pointer; letter-spacing: 0;
+    font-weight: 500;
+    transition: background .25s var(--ease), border-color .25s var(--ease),
+                transform .2s var(--ease), box-shadow .25s var(--ease);
   }
-  button:active { transform: scale(.975); }
+  button:active { transform: scale(.96); }
   button:hover { background: var(--hover); }
   button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); border-color: var(--gold); }
   button:disabled { opacity: .38; cursor: not-allowed; }
-  button.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: var(--cinnabar-ink);
-    font-weight: 600; letter-spacing: .12em; padding: 10px 26px; }
-  button.primary:hover { background: var(--cinnabar); filter: brightness(1.06); }
+  button.primary { background: var(--cinnabar); border-color: transparent; color: var(--cinnabar-ink);
+    font-weight: 600; letter-spacing: .02em; padding: 11px 24px;
+    box-shadow: 0 1px 2px rgba(200, 64, 44, .28); }
+  button.primary:hover { background: var(--cinnabar); filter: brightness(1.08);
+    box-shadow: 0 2px 8px rgba(200, 64, 44, .3); transform: translateY(-1px); }
+  button.primary:active { transform: scale(.96) translateY(0); }
   button.btn-2, button.gold { background: transparent; border-color: var(--slate); color: var(--slate); }
   button.btn-2:hover, button.gold:hover { background: var(--slate-soft); }
   button.ghost { border-color: transparent; color: var(--ink3); background: transparent; }
@@ -245,6 +267,18 @@
   .td-cell .k { color: var(--ink3); font-size: .8rem; letter-spacing: .06em; display: block; margin-bottom: 3px; }
   .td-cell .v { font-size: 1.02rem; line-height: 1.5; }
   .td-do { margin-top: var(--s3); display: flex; gap: var(--s2); flex-wrap: wrap; }
+  /* 今日一卦:一张签。用汝窑青作底,和上面的灰卡分开层次 */
+  .qian { margin-top: var(--s3); padding: var(--s4) var(--s5); border-radius: var(--r-tile);
+    background: linear-gradient(160deg, var(--celadon-soft), var(--panel2));
+    border: 1px solid var(--rule); }
+  .qian-h { display: flex; align-items: baseline; gap: var(--s2); margin-bottom: var(--s2);
+    padding-bottom: var(--s2); border-bottom: 1px solid var(--rule); }
+  .qian-sym { font-size: 1.5rem; color: var(--celadon); line-height: 1; }
+  .qian-n { font-family: var(--disp); font-size: 1.15rem; font-weight: 600; letter-spacing: .08em; }
+  .qian-t { margin-left: auto; color: var(--ink3); font-size: .78rem; letter-spacing: .06em; }
+  .qian-c { font-family: var(--disp); font-size: 1.02rem; line-height: 1.9; color: var(--ink); }
+  .qian-y { font-family: var(--disp); font-size: .98rem; line-height: 1.9; color: var(--ink2); margin-top: 4px; }
+  .qian-f { margin-top: var(--s3); color: var(--ink3); font-size: .78rem; line-height: 1.6; }
 
   /* ——— 程序初断:五个卦阵板块共用的那一块 ———
      缘起:这五个板块原先摆完卦只有一句卦名摘要,断语全靠 AI,没 Key 的用户只看得到卦象。
@@ -255,6 +289,20 @@
   .cdhead { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 5px; }
   .cdtag { margin-left: auto; color: var(--ink3); font-size: .74rem; letter-spacing: .1em; }
   .cdwhy { color: var(--ink2); font-size: .87rem; line-height: 1.7; }
+  /* 做法:一行一条,左边是什么时候/什么姿态,右边是具体动作 */
+  .cddo { margin-top: var(--s2); padding-top: var(--s2); border-top: 1px dashed var(--hair);
+    display: flex; flex-direction: column; gap: 3px; }
+  .cddo-r { display: flex; gap: var(--s2); align-items: baseline; font-size: .88rem; line-height: 1.65; }
+  .cddo-r .k { flex: none; min-width: 2.6em; color: var(--celadon); font-weight: 600; font-size: .8rem; }
+  .cddo-r .v { color: var(--ink); }
+  .qk-src { margin-top: var(--s3); }
+  .qk-src summary { cursor: pointer; color: var(--ink3); font-size: .82rem; list-style: none;
+    display: inline-flex; align-items: center; gap: 4px; }
+  .qk-src summary::before { content: '›'; transition: transform .2s var(--ease); display: inline-block; }
+  .qk-src[open] summary::before { transform: rotate(90deg); }
+  .qk-src summary::-webkit-details-marker { display: none; }
+  .qk-src > div { color: var(--ink3); font-size: .8rem; line-height: 1.7; margin-top: var(--s2);
+    padding-left: var(--s3); border-left: 2px solid var(--hair); }
   @media (max-width: 620px) { .cdtag { margin-left: 0; } }
   .zone { display: flex; align-items: center; gap: 12px; color: var(--gold); letter-spacing: .35em;
     font-size: .92rem; margin: 26px 0 14px; font-family: var(--disp); }
@@ -345,11 +393,13 @@
   #fu-input { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
     border-radius: 6px; padding: 10px 12px; font-family: inherit; font-size: .95rem; min-height: 64px; resize: vertical; }
   #fu-input:focus { outline: none; border-color: var(--gold); }
-  .tabs { display: flex; gap: var(--s1); margin: 0 auto var(--s4); padding: 3px; width: max-content; max-width: 100%;
-    background: transparent; border: 1px solid var(--gold-hair); border-radius: 999px; justify-content: center; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 2px; margin: 0 auto var(--s5); padding: 3px; width: max-content; max-width: 100%;
+    background: var(--panel2); border: 1px solid var(--hair); border-radius: 980px;
+    justify-content: center; flex-wrap: wrap; }
   .tabs button { border-radius: 999px; padding: 8px 20px; border: none; background: transparent; box-shadow: none; }
   .tabs button:hover { background: var(--hover); }
-  .tabs button.on { background: var(--accent-soft); color: var(--cinnabar); border: none; font-weight: 600; }
+  .tabs button.on { background: var(--panel); color: var(--cinnabar); border: none; font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .1); }
   html[data-theme="dark"] .tabs button.on { background: #3a3733; }
   .moderow { display: flex; gap: 14px; margin-bottom: 10px; color: var(--dim); flex-wrap: wrap; font-size: .95rem; }
   .moderow label { display: inline-flex; align-items: center; gap: 5px; margin: 0; }
@@ -455,8 +505,9 @@
   /* —— 视图路由与底部导航 —— */
   .voff { display: none !important; }
   .zone { display: none; }
+  /* 底栏用真正的毛玻璃(苹果那套 material):内容从底下滑过时透出来,而不是被一块实底切断 */
   .bottomnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex;
-    background: color-mix(in srgb, var(--panel) 86%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    background: var(--blurbg); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-top: 1px solid var(--hair); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
   .bottomnav button, .bottomnav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
     text-decoration: none;
@@ -469,14 +520,24 @@
   .bottomnav a .ic { color: var(--gold); }
   .bottomnav button.on .lb { color: var(--cinnabar); }
   .bmenu { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
-  .bcard { display: flex; align-items: center; gap: 12px; text-align: left; background: var(--panel2);
-    border: 1px solid var(--hair); border-radius: 14px; padding: 14px; cursor: pointer; letter-spacing: 0; }
-  .bcard:hover { background: var(--hover); }
-  .bcard .bg { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 12px; background: var(--accent-soft);
-    color: var(--cinnabar); font-family: var(--disp); font-size: 1.35rem; display: flex; align-items: center; justify-content: center; }
-  .bcard .bt { display: block; font-size: 1.02rem; letter-spacing: .08em; }
-  .bcard .bd { display: block; color: var(--dim); font-size: .78rem; margin-top: 2px; line-height: 1.5; }
-  .bcard .bx { margin-left: auto; color: var(--dim); }
+  /* 板块卡:苹果那种可点卡片——纯白底、清晰描边,悬停轻抬、按下回落。
+     字徽改用汝窑青,不再是一片朱砂点(朱砂只留给主行动)。 */
+  .bcard { display: flex; align-items: center; gap: 14px; text-align: left; background: var(--panel);
+    border: 1px solid var(--hair); border-radius: var(--r-tile); padding: 16px; cursor: pointer;
+    letter-spacing: 0; box-shadow: var(--shadow);
+    transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease); }
+  .bcard:hover { background: var(--panel); transform: translateY(-2px);
+    box-shadow: var(--shadow-pop); border-color: var(--rule); }
+  .bcard:active { transform: translateY(0) scale(.99); }
+  .bcard .bg { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 13px; background: var(--celadon-soft);
+    color: var(--celadon); font-family: var(--disp); font-size: 1.4rem; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; }
+  .bcard .bt { display: block; font-size: 1.03rem; letter-spacing: .02em; font-weight: 600;
+    /* 标题不许折行折得七零八落:窄了就省略,别把「问 机 · 什么时候轮到 / 你」拆成两行 */
+    line-height: 1.4; }
+  .bcard .bd { display: block; color: var(--ink3); font-size: .8rem; margin-top: 3px; line-height: 1.5; }
+  .bcard .bx { margin-left: auto; color: var(--ink3); flex: none; transition: transform .25s var(--ease); }
+  .bcard:hover .bx { transform: translateX(3px); }
   #board-back { margin: 0 0 10px; }
   #board-back button { padding: 6px 14px; font-size: .88rem; }
   .jr-nav { display: flex; align-items: center; gap: 10px; margin: 14px 0 10px; flex-wrap: wrap; }
@@ -613,7 +674,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.71</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.72</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -641,6 +702,7 @@
     <h2>今日<span class="qk-sub" id="td-date"></span></h2>
     <div class="td-strip" id="td-strip"></div>
     <div class="td-do" id="td-do"></div>
+    <div id="td-qian"></div>
   </section>
 
   <nav class="tabs">
@@ -1232,7 +1294,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.71 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.72 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -2145,6 +2207,12 @@
     : /^吉|小吉|^顺/.test(c) ? 'ji'
     : /大凶|凶/.test(c) ? 'xiong'
     : /不利|慎|滞/.test(c) ? 'warn' : 'ping';
+  // 「该怎么办」——断而不给做法就是半吊子。做法由程序按卦面状态推出,不是套话。
+  function cdDo(cd) {
+    if (!cd || !cd.advice || !cd.advice.length) return '';
+    return `<div class="cddo">` + cd.advice.map(a =>
+      `<div class="cddo-r"><span class="k">${esc(a.k)}</span><span class="v">${esc(a.v)}</span></div>`).join('') + `</div>`;
+  }
   // 程序初断 → 界面上的一块。五个板块、四个法门共用,别处不许再写一份。
   function cdBlock(c) {
     if (!c.done || !c.cd) return '';
@@ -2174,6 +2242,7 @@
     return `<div class="cdrow">` +
       `<div class="cdhead">${head}<span class="cdtag">程序初断</span></div>` +
       `<div class="cdwhy">${cd.why.map(w => '· ' + esc(w)).join('<br>')}</div>` +
+      cdDo(cd) +
     `</div>`;
   }
   async function dwMakePlan() {
@@ -4167,12 +4236,14 @@
          ${r.dir ? `<span class="chip ping">往${esc(r.dir.dir)}走顺</span>` : ''}
        </div>` +
       `<div class="qk-why">${r.why.map(w => '· ' + esc(w)).join('<br>')}</div>` +
+      cdDo(r) +
       yearLine +
       `<div class="qk-more btnrow">
          <button type="button" id="qk-tofull" class="btn-2 sm">拿这个问题往下细断</button>
          <button type="button" id="qk-again" class="ghost sm">再起一卦</button>
        </div>` +
-      `<div class="qk-hint">${esc(r.src)}${yq.note ? ' ' + esc(yq.note) : ''}</div>`;
+      // 出处与算法交代照旧要有(诚实),但不该占五行版面压住答案——收进可展开
+      `<details class="qk-src"><summary>凭什么这么说</summary><div>${esc(r.src)}${yq.note ? ' ' + esc(yq.note) : ''}</div></details>`;
     $('qk-tofull').addEventListener('click', () => {
       $('question').value = q;
       curTab = 'liuyao'; cancelDuo(); refreshTab();
@@ -4214,6 +4285,39 @@
       ? `<div class="fblock"><span class="k">今天值得做</span><div class="t">${yi.map(esc).join(';')}</div></div>` +
         `<div class="fblock"><span class="k">今天别做</span><div class="t">${ji.map(esc).join(';')}</div></div>`
       : `<div class="note">填上生日(下面任一处填过都算),这里就会多出「今天对你如何、该做什么、别做什么」。</div>`;
+    renderQian(now, info);
+  }
+
+  // ——— 今日一卦(卦签)———
+  // 一天一支,**同一个人同一天永远是同一支**——刷新、关掉再开都不变。
+  // 这一条要紧:签要是每次刷新都换,它就成了老虎机,谁都不会当真;定住了才有分量。
+  // 做法:拿「日期 + 这个人的生辰」做种子算出卦序,不走 crypto 随机——
+  // 铁律九管的是**起卦**不许做手脚,这是签不是卦,规则一开始就当面写明白。
+  function qianSeed(dateISO, salt) {
+    let h = 2166136261;
+    for (const ch of (dateISO + '|' + (salt || ''))) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+    return (h >>> 0);
+  }
+  function renderQian(now, info) {
+    const box = $('td-qian'); if (!box) return;
+    const iso = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+    let salt = ''; try { salt = (localStorage.getItem(BKEY) || '') + (localStorage.getItem(HRKEY) || ''); } catch (e) {}
+    const seed = qianSeed(iso, salt);
+    const ids = Object.keys(GuaData.BY_ID);
+    const g = GuaData.BY_ID[ids[seed % ids.length]];
+    const yao = seed % 6;                       // 第几爻的爻辞
+    if (!g) { box.innerHTML = ''; return; }
+    const line = (g.yaoCi && g.yaoCi[yao]) || '';
+    box.innerHTML =
+      `<div class="qian">` +
+      `<div class="qian-h"><span class="qian-sym">${esc(g.sym || '')}</span>` +
+      `<span class="qian-n">${esc(g.name)}</span>` +
+      `<span class="qian-t">今日一卦 · 第${['初', '二', '三', '四', '五', '上'][yao]}爻</span></div>` +
+      (g.guaCi ? `<div class="qian-c">${esc(g.guaCi)}</div>` : '') +
+      (line ? `<div class="qian-y">${esc(line)}</div>` : '') +
+      `<div class="qian-f">一天一支,同一个人同一天永远是这一支——刷新也不换。` +
+      `这支签按日期与你的生辰定出,不是起卦(起卦要三钱亲掷、走真随机);当个今日的题眼看。</div>` +
+      `</div>`;
   }
 
   // ═══════════════════ 命盘常驻侧栏 ═══════════════════

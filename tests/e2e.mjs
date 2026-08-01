@@ -29,6 +29,7 @@ async function t(name, fn) {
   try { await fn(); pass++; console.log('  ✓', name); }
   catch (e) { fail++; console.error('  ✗', name, '——', e.message); }
 }
+const eqs = (a, b, m) => { if (a !== b) throw new Error((m || "") + " 两次不一致"); };
 const ok = (v, m) => { if (!v) throw new Error(m || '断言失败'); };
 // 分科组默认折叠;点分科片前先全部展开
 const expandGroups = () => page.evaluate(() => {
@@ -722,6 +723,48 @@ await t('五个卦阵板块都接上程序初断,无 Key 也有结论', async ()
   // 清空之后初断跟着没
   await page.click('#btn-wj-clear');
   ok((await page.locator('#wj-plan .cdrow').count()) === 0, '清空后初断应一并清掉');
+});
+
+
+// 缘起:用户 2026-08 原话——「他很多解读我觉得就是没有那么专业…不要再拿出那种半吊子的感觉了」。
+// 病根量出来是:只给「为什么」,不给「那我该干什么」。断而不给做法,就是半吊子。
+// 这条盯着做法层真的出现在界面上,且说的是动作与时间,不是道理。
+await t('程序初断给的是做法不是道理:眼下怎么办、什么时候、走哪条门路', async () => {
+  await page.evaluate(() => dxShowView('ask'));
+  await page.fill('#qk-q', '这笔钱能不能收回来?');
+  await page.click('#btn-qk');
+  const out = await page.textContent('#qk-out');
+  ok(/眼下/.test(out), '缺「眼下该怎么办」:' + out.slice(0, 120));
+  ok(/时候/.test(out) && /门路/.test(out), '缺时候与门路:' + out.slice(0, 160));
+  // 铁律一:只留事、断、做法,不许讲道理灌鸡汤
+  for (const w of ['你要明白', '学会', '与其', '其实人生', '要相信']) ok(!out.includes(w), '做法里在讲道理:' + w);
+  // 铁律三:禁空话
+  for (const w of ['机遇与挑战', '顺其自然', '平常心', '静观其变', '仅供参考', '因人而异']) {
+    ok(!out.includes(w), '做法里有空话:' + w);
+  }
+  // 长脚注收进可展开,不许占满版面压住答案
+  ok(/凭什么这么说/.test(out), '出处交代应收成可展开的一行');
+});
+await t('今日一卦:一天一支,同一人同一天刷新不换', async () => {
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1990-06-15'); });
+  await page.reload(); await page.waitForTimeout(400);
+  const a = await page.textContent('#td-qian');
+  ok(a && a.replace(/\s/g, '').length > 20, '今日一卦没渲染:' + a);
+  ok(/今日一卦/.test(a), '缺标识');
+  // 刷新三次必须一模一样——签要是每次都换就成了老虎机,谁都不会当真
+  for (let i = 0; i < 3; i++) {
+    await page.reload(); await page.waitForTimeout(300);
+    eqs(await page.textContent('#td-qian'), a, '第' + i + '次刷新签变了');
+  }
+  // 换个生辰,签应该跟着换(否则它跟人没关系)
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1985-11-03'); });
+  await page.reload(); await page.waitForTimeout(400);
+  ok((await page.textContent('#td-qian')) !== a, '换生辰签没变,说明它跟人无关');
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1990-06-15'); });
+  await page.reload(); await page.waitForTimeout(300);
+  // 这是签不是卦,必须当面写明白(铁律九:起卦的随机源不许动手脚,签另说)
+  const t2 = await page.textContent('#td-qian');
+  ok(/不是起卦/.test(t2), '必须写明这是签不是卦:' + t2.slice(-120));
 });
 
 // ══════════ v0.70 大改版:四个新功能 ══════════

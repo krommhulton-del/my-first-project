@@ -142,11 +142,11 @@
 
     // ——— 四、动爻:有没有人搅局或帮衬 ———
     const movers = z.lines.filter(l => l.moving);
+    let help = 0, block = 0;
     if (!movers.length) {
       why.push('满卦不动——局面是静的,没人推它,也没人拦它;这种卦多半是「照旧」');
     } else {
-      let help = 0, block = 0;
-      for (const m of movers) {
+            for (const m of movers) {
         if (!yongWx) break;
         if (SHENG[m.wx] === yongWx) { score += .8; help++; tech.push(`动爻${m.liuQin}${m.zhi}${m.wx}生用神`); }
         else if (KE[m.wx] === yongWx) { score -= .8; block++; tech.push(`动爻${m.liuQin}${m.zhi}${m.wx}克用神`); }
@@ -162,10 +162,33 @@
     const yq = Yingqi ? Yingqi.yingqiOf(cast, now) : null;
     const dir = Yingqi ? Yingqi.direction(cast) : null;
 
+    // ——— 五、该怎么办 ———
+    // 缘起:用户 2026-08 原话——「他很多解读我觉得就是没有那么专业…不要再拿出那种半吊子的感觉了」。
+    // 病根在这儿:原先只给「为什么」,不给「那我该干什么」。断而不给做法,就是半吊子。
+    // 做法一律由卦面状态推出,不是套话:催还是等看用神实虚,进还是守看它对你的态度,
+    // 门路与时辰取既有的取向与应期。**只说动作与时间,不讲道理**(铁律一)。
+    const advice = [];
+    const kong = yongLine && yongLine.kong, po = yongLine && yongLine.power && yongLine.power.yuePo;
+    const mu = yongLine && yongLine.power && yongLine.power.ruMu;
+    if (kong) advice.push({ k: '眼下', v: '别催。这段是空的,现在推、现在问、现在下本钱都白费——等它落实了再动手' });
+    else if (po) advice.push({ k: '眼下', v: '本月别动。过了这个月它才使得上劲,这几周只做准备,不做决定' });
+    else if (mu) advice.push({ k: '眼下', v: '光等没用,得有人来撬。找个能拍板的人插一脚,自己干耗着不会动' });
+    else if (score >= 1.2) advice.push({ k: '眼下', v: '可以推。这是该出手的时候,慢一步就凉一分' });
+    else if (score <= -2.7) advice.push({ k: '眼下', v: '收着点。这一路眼下推不动,先把损失掐住,别追加' });
+    else advice.push({ k: '眼下', v: '先探一次再定。小成本试一步,看它接不接得住,别一次押满' });
+
+    if (rel.s >= 1) advice.push({ k: '姿态', v: '主动去要。它本来就朝你来,开口比等着强' });
+    else if (rel.s <= -1) advice.push({ k: '姿态', v: '别硬顶。让一步、换个说法、绕开正面,才拿得到' });
+    else if (rel.s > 0) advice.push({ k: '姿态', v: '你压得住它,但要费手脚——把功夫花在细节上，别指望一次谈成' });
+
+    if (yq && yq.date) advice.push({ k: '时候', v: `${yq.date}前后见分晓${yq.say ? '——' + yq.say : ''}` });
+    if (dir && dir.dir) advice.push({ k: '门路', v: `往${dir.dir}这一路找人找事最顺${dir.dist ? '(' + dir.dist + ')' : ''}` });
+    if (movers.length && block) advice.push({ k: '提防', v: `有 ${block} 处在往回拽——动手前先把这几处堵上,不然做一半会翻` });
+
     return {
       score: +score.toFixed(1),
       cheng: band.cheng, pct: band.pct, say: band.say,
-      yongName: ys.liuQin, yongNote: ys.note, byShiYing, tech,
+      yongName: ys.liuQin, yongNote: ys.note, byShiYing, tech, advice,
       where: byShiYing ? '所问不属六亲之一,按世应法论' : (loc ? loc.where : ''),
       why,
       yingqi: yq, dir,

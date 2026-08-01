@@ -261,5 +261,73 @@ t('四个法门的初断文字穷举一遍,一个术语都不许有(铁律八)',
     '小六壬的诗诀不该进初断');
 });
 
+t('v0.72 换新配色:靠明度分层,不再是一片米黄糊在一起', () => {
+  // 缘起:用户 2026-08 原话——「这个色调可以再换一下,已经没有新鲜感了…苹果的审美就特别特别好」。
+  // 量出来的病根不是色相选错,是**三层底色全是同一个米黄、彼此只差几个百分点**,于是什么都不分层。
+  // 新做法(苹果那套):画布近中性浅灰、卡片纯白,靠明度差分层;暖意只留在强调色上。
+  const hex = v => { const m = CSS.match(new RegExp('--' + v + ':\\s*(#[0-9a-fA-F]{6})')); return m && m[1]; };
+  const lum = h => { const n = parseInt(h.slice(1), 16);
+    return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255; };
+  const paper = hex('paper'), panel = hex('panel'), panel2 = hex('panel2');
+  ok(paper && panel && panel2, '取不到三层底色');
+  // 卡片必须明显亮于画布(这是「浮起来」的物理来源)
+  ok(lum(panel) - lum(paper) > 0.02, `卡片与画布明度差只有 ${(lum(panel) - lum(paper)).toFixed(3)},分不出层`);
+  // 三层不许再是同一个暖色相:画布的饱和度要低(近中性)
+  const sat = h => { const n = parseInt(h.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx ? (mx - mn) / mx : 0; };
+  ok(sat(paper) < 0.06, `画布还是偏色的(饱和度 ${sat(paper).toFixed(3)}),该用近中性灰`);
+  // 结构色换成汝窑青,不再是古铜金
+  ok(CSS.includes('--celadon'), '缺汝窑青');
+  const cel = hex('celadon');
+  ok(cel, '取不到汝窑青');
+  const n = parseInt(cel.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  ok(g > r, `汝窑青应偏青绿,实得 #${cel.slice(1)}(R${r} G${g} B${b})`);
+  // 苹果那条缓动曲线与毛玻璃
+  ok(/--ease:\s*cubic-bezier/.test(CSS), '缺统一的缓动曲线');
+  ok(/backdrop-filter:\s*saturate\([^)]*\)\s*blur/.test(CSS), '底栏该用毛玻璃(saturate+blur)');
+});
+t('程序初断给做法,不是只给理由', () => {
+  // 缘起:用户说解读「半吊子」。断而不给做法就是半吊子。
+  const cd = readFileSync(join(ROOT, 'chuduan.js'), 'utf8');
+  ok(/const advice = \[\]/.test(cd), 'chuduan 缺做法层');
+  ok(/advice,/.test(cd), '做法没进返回值');
+  ok(/function cdDo\(/.test(HTML), '界面缺做法块');
+  ok((HTML.match(/function cdDo\(/g) || []).length === 1, 'cdDo 不止一份');
+  // 做法必须说动作与时间,不许讲道理
+  const Chuduan = require('../chuduan.js');
+  const GuaCore = require('../gua-core.js');
+  const Najia = require('../najia.js');
+  const FROM = new Date(2026, 7, 2, 10, 0);
+  const seen = new Set();
+  let n = 0;
+  for (let i = 0; i < 400; i++) {
+    const cast = GuaCore.castHexagram();
+    const z = Najia.zhuangGua(cast.benId, FROM, { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
+    const r = Chuduan.judge(cast, z, ['这笔钱能不能收回来?', '我这次升职有没有戏?'][i % 2], FROM);
+    ok(r.advice && r.advice.length >= 2, '做法条数太少:' + JSON.stringify(r.advice));
+    for (const a of r.advice) { seen.add(a.k); n++;
+      ok(!/你要明白|学会|与其|要相信|人生/.test(a.v), '做法里在讲道理:' + a.v);
+      ok(!/机遇与挑战|顺其自然|平常心|静观其变|仅供参考|因人而异/.test(a.v), '做法里有空话:' + a.v);
+      ok(!/用神|世应|旬空|月破|官鬼|妻财|子孙|兄弟/.test(a.v), '做法里有术语:' + a.v);
+      ok(a.v.length >= 10, '做法太短等于没说:' + a.v);
+    }
+  }
+  ok(seen.has('眼下') && seen.has('时候') && seen.has('门路'), '做法该覆盖眼下/时候/门路,实得:' + [...seen].join('、'));
+  console.log(`      (四百卦共 ${n} 条做法,类别:${[...seen].join('、')})`);
+});
+t('今日一卦:同一人同一天必须是同一支', () => {
+  // 签要是每次刷新都换,它就成了老虎机,谁都不会当真;定住了才有分量。
+  const i = HTML.indexOf('  function qianSeed(');
+  ok(i > 0, '缺 qianSeed');
+  const seedFn = eval('(' + HTML.slice(i, HTML.indexOf('\n  function renderQian')).replace(/^\s*function qianSeed/, 'function') + ')');
+  const a = seedFn('2026-8-1', '1990-06-155');
+  eq(seedFn('2026-8-1', '1990-06-155'), a, '同日同人两次算出不同的种子');
+  ok(seedFn('2026-8-2', '1990-06-155') !== a, '换一天签没变');
+  ok(seedFn('2026-8-1', '1985-11-03') !== a, '换个人签没变');
+  // 必须当面写明这是签不是卦(铁律九管的是起卦)
+  ok(/不是起卦/.test(HTML), '没写明这是签不是卦');
+  ok(/crypto\.getRandomValues/.test(readFileSync(join(ROOT, 'gua-core.js'), 'utf8')), '起卦的真随机源不许动');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);
