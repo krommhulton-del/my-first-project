@@ -295,6 +295,16 @@
   .cddo-r { display: flex; gap: var(--s2); align-items: baseline; font-size: .88rem; line-height: 1.65; }
   .cddo-r .k { flex: none; min-width: 2.6em; color: var(--celadon); font-weight: 600; font-size: .8rem; }
   .cddo-r .v { color: var(--ink); }
+  /* 经文:楷体、行距放开——这是原文,要有原文的样子 */
+  .cdjing { margin-top: var(--s2); padding-top: var(--s2); border-top: 1px dashed var(--hair); }
+  .cdjing summary { cursor: pointer; color: var(--celadon); font-size: .8rem; list-style: none;
+    display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+  .cdjing summary::before { content: '›'; transition: transform .2s var(--ease); display: inline-block; }
+  .cdjing[open] summary::before { transform: rotate(90deg); }
+  .cdjing summary::-webkit-details-marker { display: none; }
+  .cdjing-r { margin-top: var(--s2); }
+  .cdjing-r .k { display: block; color: var(--ink3); font-size: .74rem; letter-spacing: .06em; margin-bottom: 2px; }
+  .cdjing-r .t { display: block; font-family: var(--disp); font-size: .98rem; line-height: 1.95; color: var(--ink); }
   .qk-src { margin-top: var(--s3); }
   .qk-src summary { cursor: pointer; color: var(--ink3); font-size: .82rem; list-style: none;
     display: inline-flex; align-items: center; gap: 4px; }
@@ -674,7 +684,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.72</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.73</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1294,7 +1304,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.72 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.73 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -2095,6 +2105,10 @@
       try {
         c.cd = Chuduan.judge(cast, z, c.q, now, (typeof gender === 'function' ? gender(ctx || 'q') : '') || '');
       } catch (e) { c.cd = null; }
+      // 经文也摆给客人看:取材规程在 gua-core 的 interpretationPlan 里(变占法),这里只取用,不另写一份。
+      // 缘起:六十四卦的卦辞、爻辞、大象、小象一直都在库里,可只喂给了大模型——
+      // 没有 API Key 的用户一个字都看不到。学了的东西没用上,这也是「半吊子」的一种。
+      c.jing = plan.focus.slice(0, 3).map(f => ({ k: f.kind, t: f.text }));
       c.report = GuaCore.buildReport(cast, c.q) + '\n' + panText(cast, z, c.q) + '\n【经文取材】\n' + jing + anchor +
         (c.cd ? cdMaterial(c.cd, c.cdMode) : '');
       // 摘要尾巴:成算模式挂成算,基调模式挂基调——不许两处说两样话。
@@ -2213,6 +2227,107 @@
     return `<div class="cddo">` + cd.advice.map(a =>
       `<div class="cddo-r"><span class="k">${esc(a.k)}</span><span class="v">${esc(a.v)}</span></div>`).join('') + `</div>`;
   }
+  // ——— 卦签图:把一次断语画成一张能存能发的图 ———
+  // 纯 canvas 画,不引任何外部资源(单文件版也要能用)。
+  // 画的内容全部来自程序初断,不新增任何结论——它是那次断语的另一种呈现,不是另一次占卜。
+  // 高度跟着内容走。头一版写死 1350、二版拿公式估——都空掉一大块,
+  // 因为折行与做法条数事先算不准。改成**两遍**:先空画一遍量出真实收尾高度,再按那个高度正式画。
+  // 一张要发出去的图,底下不该拖着两百多像素的空白。
+  function drawCard(o) { return paintCard(o, paintCard(o, 0)); }
+  function paintCard(o, H) {
+    const W = 1080, S = 2;                      // S:超采样,导出图才不糊
+    const measure = !H;                          // H 传 0 就是量高度那一遍
+    const cv = document.createElement('canvas');
+    cv.width = W * S; cv.height = (H || 4000) * S;
+    const x = cv.getContext('2d'); x.scale(S, S);
+    const dark = document.documentElement.dataset.theme === 'dark';
+    const C = dark
+      ? { bg: '#0e0e10', card: '#1c1c1e', ink: '#f5f5f7', ink2: '#c7c7cc', ink3: '#8e8e93', cel: '#8abeb4', red: '#ff5f45', line: '#38383a' }
+      : { bg: '#f5f5f7', card: '#ffffff', ink: '#1d1d1f', ink2: '#4a4a4f', ink3: '#86868b', cel: '#4e7c74', red: '#c8402c', line: '#e3e3e8' };
+    const KAI = '"Kaiti SC","STKaiti",KaiTi,"Songti SC",serif';
+    const SANS = '-apple-system,"PingFang SC","Noto Sans SC",sans-serif';
+    const M = 56;
+    if (!measure) {
+      x.fillStyle = C.bg; x.fillRect(0, 0, W, H);
+      x.fillStyle = C.card;
+      if (x.roundRect) { x.beginPath(); x.roundRect(M, M, W - M * 2, H - M * 2, 28); x.fill(); }
+      else x.fillRect(M, M, W - M * 2, H - M * 2);
+    }
+    let y = M + 88;
+    // 抬头
+    x.fillStyle = C.cel; x.font = `600 30px ${KAI}`; x.textAlign = 'center';
+    x.fillText('东 玄 卜 卦', W / 2, y); y += 26;
+    x.strokeStyle = C.cel; x.globalAlpha = .3; x.beginPath();
+    x.moveTo(W / 2 - 90, y); x.lineTo(W / 2 + 90, y); x.stroke(); x.globalAlpha = 1; y += 62;
+    // 所问
+    x.fillStyle = C.ink2; x.font = `24px ${SANS}`;
+    for (const ln of wrapTxt(x, o.q || '', W - M * 2 - 110, 2)) { x.fillText(ln, W / 2, y); y += 36; }
+    y += 26;
+    // 六爻(自下而上画,合古法)
+    if (o.lines && o.lines.length === 6) {
+      const bw = 210, bh = 15, gap = 20, x0 = W / 2 - bw / 2;
+      for (let i = 5; i >= 0; i--) {
+        const L = o.lines[i];
+        x.fillStyle = L.moving ? C.red : C.ink;
+        if (L.yang) x.fillRect(x0, y, bw, bh);
+        else { x.fillRect(x0, y, bw * .42, bh); x.fillRect(x0 + bw * .58, y, bw * .42, bh); }
+        if (L.moving) { x.fillStyle = C.red; x.font = `20px ${SANS}`; x.textAlign = 'left';
+          x.fillText('变', x0 + bw + 16, y + bh); x.textAlign = 'center'; }
+        y += bh + gap;
+      }
+    }
+    y += 18;
+    // 卦名
+    x.fillStyle = C.ink; x.font = `600 40px ${KAI}`;
+    x.fillText(o.guaName || '', W / 2, y); y += 76;
+    // 结论
+    x.fillStyle = o.chengCls === 'ji' ? (dark ? '#32d17a' : '#1d7a4d')
+      : o.chengCls === 'xiong' ? (dark ? '#6fa8e8' : '#35618f') : C.ink3;
+    x.font = `600 46px ${SANS}`;
+    x.fillText(o.say || '', W / 2, y); y += 52;
+    x.fillStyle = C.ink3; x.font = `26px ${SANS}`;
+    x.fillText([o.cheng, o.pct ? '把握' + o.pct : '', o.when ? o.when + '见分晓' : ''].filter(Boolean).join('   ·   '), W / 2, y);
+    y += 56;
+    // 做法(最多三条)
+    x.textAlign = 'left';
+    const lx = M + 62;
+    for (const a of (o.advice || []).slice(0, 3)) {
+      x.fillStyle = C.cel; x.font = `600 22px ${SANS}`; x.fillText(a.k, lx, y);
+      x.fillStyle = C.ink2; x.font = `23px ${SANS}`;
+      const lns = wrapTxt(x, a.v, W - M * 2 - 190, 2);
+      lns.forEach((ln, i) => x.fillText(ln, lx + 66, y + i * 33));
+      y += Math.max(38, lns.length * 33 + 10);
+    }
+    // 页脚:跟在内容后面,不吊在卡底
+    y += 26;
+    if (measure) return Math.round(y + 96 + M);   // 量到这儿就够了,加上页脚与下边距
+    x.textAlign = 'center';
+    x.strokeStyle = C.line; x.beginPath();
+    x.moveTo(M + 62, y); x.lineTo(W - M - 62, y); x.stroke(); y += 38;
+    x.fillStyle = C.ink3; x.font = `20px ${SANS}`;
+    x.fillText(o.date || '', W / 2, y); y += 30;
+    x.fillText('结论由程序按卦面算出,同一卦每次一样', W / 2, y);
+    return cv;
+  }
+  // canvas 没有自动折行,自己按宽度切;中文按字切即可
+  function wrapTxt(ctx, txt, maxW, maxLines) {
+    const out = []; let cur = '';
+    for (const ch of String(txt || '')) {
+      if (ctx.measureText(cur + ch).width > maxW) { out.push(cur); cur = ch; if (out.length >= (maxLines || 99)) break; }
+      else cur += ch;
+    }
+    if (cur && out.length < (maxLines || 99)) out.push(cur);
+    if (out.length === (maxLines || 99) && cur) out[out.length - 1] = out[out.length - 1].slice(0, -1) + '…';
+    return out;
+  }
+  // 经文块:《周易》原文,程序按变占法选中的那几条。原文照录,不改一字、不加白话演绎——
+  // 要讲透是大模型的事(它拿到的是同一批材料),这里只把话摆出来。
+  function cdJing(jing) {
+    if (!jing || !jing.length) return '';
+    return `<details class="cdjing"><summary>经文(《周易》原文 · 按变占法取)</summary>` +
+      jing.map(f => `<div class="cdjing-r"><span class="k">${esc(f.k)}</span><span class="t">${esc(f.t)}</span></div>`).join('') +
+      `</details>`;
+  }
   // 程序初断 → 界面上的一块。五个板块、四个法门共用,别处不许再写一份。
   function cdBlock(c) {
     if (!c.done || !c.cd) return '';
@@ -2242,7 +2357,7 @@
     return `<div class="cdrow">` +
       `<div class="cdhead">${head}<span class="cdtag">程序初断</span></div>` +
       `<div class="cdwhy">${cd.why.map(w => '· ' + esc(w)).join('<br>')}</div>` +
-      cdDo(cd) +
+      cdDo(cd) + cdJing(c.jing) +
     `</div>`;
   }
   async function dwMakePlan() {
@@ -4216,6 +4331,8 @@
     if (!r) { $('qk-hint').innerHTML = '<span class="v-warn">这一卦没起成,再点一次。</span>'; return; }
     const cls = r.cheng === '成' ? 'ji' : r.cheng === '不成' ? 'xiong' : 'ping';
     const yq = r.yingqi || {};
+    let qkJing = [];
+    try { qkJing = GuaCore.interpretationPlan(cast).focus.slice(0, 3).map(f => ({ k: f.kind, t: f.text })); } catch (e) {}
     // 填了生日就顺带给一层「哪一年」——年层走 wenji,与问机板块同一个口径
     let yearLine = '';
     try {
@@ -4236,10 +4353,11 @@
          ${r.dir ? `<span class="chip ping">往${esc(r.dir.dir)}走顺</span>` : ''}
        </div>` +
       `<div class="qk-why">${r.why.map(w => '· ' + esc(w)).join('<br>')}</div>` +
-      cdDo(r) +
+      cdDo(r) + cdJing(qkJing) +
       yearLine +
       `<div class="qk-more btnrow">
          <button type="button" id="qk-tofull" class="btn-2 sm">拿这个问题往下细断</button>
+         <button type="button" id="qk-card" class="ghost sm">存成图</button>
          <button type="button" id="qk-again" class="ghost sm">再起一卦</button>
        </div>` +
       // 出处与算法交代照旧要有(诚实),但不该占五行版面压住答案——收进可展开
@@ -4250,6 +4368,20 @@
       $('sec-q').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     $('qk-again').addEventListener('click', qkRun);
+    $('qk-card').addEventListener('click', () => {
+      const cv = drawCard({
+        q, guaName: `${cast.ben.name}${cast.bian ? '之' + cast.bian.name : ''}`,
+        lines: cast.lines.map(l => ({ yang: l.yang, moving: l.moving })),
+        say: r.say, cheng: r.cheng, pct: r.pct, chengCls: cls,
+        when: yq.date || '', advice: r.advice || [],
+        date: `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`,
+      });
+      cv.toBlob(b => {
+        const u = URL.createObjectURL(b), a = document.createElement('a');
+        a.href = u; a.download = `东玄卦签-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}.png`;
+        a.click(); setTimeout(() => URL.revokeObjectURL(u), 1000);
+      }, 'image/png');
+    });
   }
   $('btn-qk').addEventListener('click', qkRun);
   $('qk-q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); qkRun(); } });
@@ -4399,7 +4531,7 @@
     unfoldSec(id);
     showView('boards');
   }
-  window.dxShowView = showView; window.dxOpenBoard = openBoard;
+  window.dxShowView = showView; window.dxOpenBoard = openBoard; window.dxDrawCard = drawCard;
   $('bottomnav').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b) return;

@@ -767,6 +767,43 @@ await t('今日一卦:一天一支,同一人同一天刷新不换', async () => 
   ok(/不是起卦/.test(t2), '必须写明这是签不是卦:' + t2.slice(-120));
 });
 
+await t('经文入断:六十四卦原文摆给客人看,不再只喂给模型', async () => {
+  // 缘起:卦辞、爻辞、大象、小象一直都在库里,可只进了 c.report(喂大模型)——
+  // 没有 API Key 的用户一个字都看不到。学了的东西没用上,也是「半吊子」的一种。
+  await page.evaluate(() => dxShowView('ask'));
+  await page.fill('#qk-q', '这事能不能成?');
+  await page.click('#btn-qk');
+  ok(await page.isVisible('.cdjing'), '缺经文块');
+  const j = await page.textContent('.cdjing');
+  ok(/《周易》原文/.test(j), '经文块须标明是原文');
+  ok(/变占法/.test(j), '须写明按什么规程取的');
+  ok(j.replace(/\s/g, '').length > 40, '经文太少:' + j);
+  // 取材规程只许有一处(在 gua-core 里),界面不许自己再选一遍
+  const own = await page.evaluate(() => typeof GuaCore.interpretationPlan === 'function');
+  ok(own, '取材规程应在 gua-core');
+});
+await t('卦签图:把一次断语画成一张能存的图,高度跟着内容走', async () => {
+  const r = await page.evaluate(() => {
+    const cv = window.dxDrawCard({
+      q: '我今年能不能换成工作?', guaName: '山泽损之山雷颐',
+      lines: [{ yang: true, moving: false }, { yang: false, moving: true }, { yang: true, moving: false },
+              { yang: false, moving: false }, { yang: false, moving: true }, { yang: true, moving: false }],
+      say: '能成,但得你自己推一把', cheng: '成', pct: '七成上下', chengCls: 'ji',
+      when: '2026年8月9日',
+      advice: [{ k: '眼下', v: '可以推。这是该出手的时候' }, { k: '门路', v: '往东南这一路最顺' }],
+      date: '2026年8月1日',
+    });
+    const cv2 = window.dxDrawCard({ q: '短问', guaName: '乾', lines: null, say: '成', cheng: '成', pct: '八九成',
+      chengCls: 'ji', when: '', advice: [{ k: '眼下', v: '可以推,别犹豫' }], date: '2026年8月1日' });
+    return { w: cv.width, h: cv.height, h2: cv2.height, url: cv.toDataURL('image/png').slice(0, 22) };
+  });
+  ok(r.w === 2160, '卡片宽度应为 1080@2x,实得 ' + r.w);
+  ok(r.h > 1200 && r.h < 3000, '卡片高度不合理:' + r.h);
+  // 内容少的那张必须更矮——这才叫「高度跟着内容走」
+  ok(r.h2 < r.h, `内容少的卡片没变矮(${r.h2} vs ${r.h}),高度是写死的`);
+  ok(r.url.startsWith('data:image/png'), '导不出 PNG:' + r.url);
+});
+
 // ══════════ v0.70 大改版:四个新功能 ══════════
 // 缘起:用户 2026-08-01「各个部分都不够看…我需要的是一次大变革…更多好用的功能」。
 // 四个功能都做成「无 API Key 也有结论」,断语一律由程序算(Chuduan / Dili / Jiri),
