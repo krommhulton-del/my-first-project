@@ -647,10 +647,11 @@ await t('姻缘板块:正缘八卦阵、断人六卦阵、无Key深断给提示'
 await t('地利板块:挑旺地与验地实算方位、转起卦复核', async () => {
   await page.evaluate(() => dxOpenBoard('sec-dili'));
   await page.fill('#dl-birth', '1990-06-15');
+  await page.selectOption('#dl-hour', '5');
   await page.fill('#dl-from', '北京');
   await page.click('#btn-dl-rec');
   const out = await page.textContent('#dl-out');
-  ok(out.includes('旺你') && out.includes('公里') && out.includes('方向'), '挑旺地应有喜忌与去处:' + out.slice(0, 60));
+  ok(out.includes('旺你') && out.includes('地气') && out.includes('方向'), '挑旺地应有喜忌与去处:' + out.slice(0, 60));
   await page.fill('#dl-to', '广州');
   await page.click('#btn-dl-judge');
   const out2 = await page.textContent('#dl-out');
@@ -661,6 +662,49 @@ await t('地利板块:挑旺地与验地实算方位、转起卦复核', async (
   await page.fill('#dl-to', '亚特兰蒂斯');
   await page.click('#btn-dl-judge');
   ok((await page.textContent('#dl-status')).includes('不认识'), '胡写地名应拦');
+});
+
+// 缘起:用户 2026-08-01 说地利「不够专业不够深刻…后面那些大城市做太少了…这个类目就是太浅了」。
+// 实测查出三处硬伤(docs/地利体检-01),这条 e2e 把修好的样子钉在界面上——
+// 光引擎对了不算数,得用户在页面上真看得见。
+await t('地利 v0.68:七层俱在界面上、大城市榜真有大城市、时辰入了口', async () => {
+  await page.evaluate(() => dxOpenBoard('sec-dili'));
+  await page.fill('#dl-birth', '1990-06-15');
+  await page.selectOption('#dl-hour', '5');
+  await page.fill('#dl-from', '武汉');
+  await page.click('#btn-dl-rec');
+  const rec = await page.textContent('#dl-out');
+  // 硬伤二:榜单标题写「大城市」就得真是大城市,不能又是黄石咸宁
+  ok(rec.includes('这里头的大城市'), '缺大城市榜:' + rec.slice(0, 80));
+  ok(/上海|北京|天津|广州|杭州|苏州|深圳|重庆/.test(rec), '大城市榜里一个大城市都没有');
+  ok(rec.includes('按省看'), '缺省域视图');
+  ok(rec.includes('哪几年适合动'), '缺「时」这一层');
+  ok(rec.includes('去了做哪一路的活'), '缺「业」这一层');
+  // 神煞降为旁注这件事必须当面说,且要点两本书的名
+  ok(rec.includes('增删卜易') && rec.includes('滴天髓'), '神煞的分歧没摆出来');
+  // 验地:七层逐条露面
+  await page.fill('#dl-to', '哈尔滨');
+  await page.click('#btn-dl-judge');
+  const j = await page.textContent('#dl-out');
+  for (const k of ['一、向', '二、气', '三、候', '五、时', '六、业', '七、程']) ok(j.includes(k), '验地缺' + k + ':' + j.slice(0, 120));
+  ok(/合分/.test(j), '缺合分');
+  // 时辰真的进了排盘:换个时辰,结论该跟着变(不变就说明这个输入是摆设)。
+  // 用 1990-01-01 这一天——实测它十二个时辰能扫出四种喜忌(子时喜火木、寅时喜金、午时喜土金水),
+  // 换个日子可能十二个时辰喜忌全同,那时结论不变是对的,拿它当反例会冤枉代码。
+  await page.fill('#dl-birth', '1990-01-01');
+  const grab = async () => (await page.textContent('#dl-out')).slice(0, 400);
+  await page.selectOption('#dl-hour', '0');
+  await page.click('#btn-dl-rec');
+  const h0 = await grab();
+  await page.selectOption('#dl-hour', '6');
+  await page.click('#btn-dl-rec');
+  const h6 = await grab();
+  ok(h0 !== h6, '换时辰结论一字未变——时辰这个输入没接进排盘');
+  ok(/旺你[^;]*火/.test(h0) && /旺你[^;]*土/.test(h6), `喜忌该随时辰翻过来:子时[${h0.slice(0, 70)}] 午时[${h6.slice(0, 70)}]`);
+  // 不填时辰要当面说清是估的
+  await page.selectOption('#dl-hour', '');
+  await page.click('#btn-dl-rec');
+  ok((await page.textContent('#dl-out')).includes('时辰没填'), '时辰空着必须明说是按中午估的');
 });
 
 await t('问机板块:一句话给出年/月/日三层应期,并带画像与贵人', async () => {
