@@ -50,6 +50,7 @@ html = html
   .replace('<script src="yunshi.js"></script>', '<script>\n' + read('yunshi.js') + '\n</script>')
   .replace('<script src="jiri.js"></script>', '<script>\n' + read('jiri.js') + '\n</script>')
   .replace('<script src="yingqi.js"></script>', '<script>\n' + read('yingqi.js') + '\n</script>')
+  .replace('<script src="chuduan.js"></script>', '<script>\n' + read('chuduan.js') + '\n</script>')
   .replace('<script src="dili.js"></script>', '<script>\n' + read('dili.js') + '\n</script>')
   .replace('<script src="dashi.js"></script>', '<script>\n' + read('dashi.js') + '\n</script>')
   .replace('<script src="wenji.js"></script>', '<script>\n' + read('wenji.js') + '\n</script>')

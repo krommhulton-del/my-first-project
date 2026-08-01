@@ -22,27 +22,86 @@
 <meta name="twitter:description" content="六爻·梅花·小六壬·奇门遁甲四大法门,按事分科选法,起卦排盘 AI 深断一体。">
 <meta name="twitter:image" content="icon-512.png">
 <style>
+  /* ══════════════════════════════════════════════════════════════════
+     设计系统 v0.70 —— 中式古典,做到高级
+     三条规矩,改样式前先读:
+     ① **朱砂只给两样东西**:品牌标识,与「一屏唯一的主行动按钮」。
+        断吉凶一律不用朱砂——吉用青碧、凶用黛蓝、警用赭石、平用墨灰。
+        缘起:v0.68 之前一个朱砂干了所有的活(标题竖条/主按钮/版本印/字徽/报错/判语),
+        于是「出错了」和「大吉」是同一个红,用户分不出轻重。
+     ② **分层靠细金线与留白,不靠重阴影**。线装书没有投影。
+     ③ **楷体只上标题**,正文黑体、数字等宽——数字对齐是本程序的门面(四柱、分数、公里数)。
+     ══════════════════════════════════════════════════════════════════ */
   :root {
-    /* 日间:暖纸底 + 白瓷卡片 + 朱砂 / 黛蓝 / 古铜 */
-    --paper: #f4f1ea; --panel: #fffdf8; --panel2: #f2eee3; --ink: #29241d;
-    --dim: #8d8271; --line: #e6dfcd; --cinnabar: #b23a2a; --gold: #8a6d33;
-    --gold-fill: #c9a45c; --blue: #3b5a6b;
-    --grad-top: #ece7da; --hover: #ebe5d4; --seg: #e9e3d2; --accent-soft: #f6e9e0;
-    --hair: rgba(90, 70, 30, .14);
-    --shadow: 0 1px 2px rgba(60, 45, 20, .05), 0 6px 20px rgba(60, 45, 20, .06);
+    /* —— 底与纸 —— */
+    --paper: #f4f1ea; --paper2: #efeade; --panel: #fffdf8; --panel2: #f7f3e9;
+    --grad-top: #ece7da; --hover: #f0ebdd; --seg: #e9e3d2;
+    /* —— 墨(三级文字)—— */
+    --ink: #241f19; --ink2: #5c5348; --ink3: #8d8271; --dim: #8d8271;
+    /* —— 线 —— */
+    --line: #e6dfcd; --hair: rgba(90, 70, 30, .13); --gold-hair: rgba(138, 109, 51, .26);
+    /* —— 身份色:朱砂与古铜(只给品牌与主行动)—— */
+    --cinnabar: #b23a2a; --cinnabar-ink: #fff; --accent-soft: #f7e9e3;
+    --gold: #8a6d33; --gold-fill: #c9a45c;
+    /* —— 语义色:专断吉凶,与身份色分开 —— */
+    --jade: #2f6b58;  --jade-soft: #e4ede8;   /* 吉 */
+    --slate: #3b5a6b; --slate-soft: #e4ebef;  /* 凶 */
+    --ochre: #92661d; --ochre-soft: #f6eeda;  /* 警 */
+    --mute: #6d675e;  --mute-soft: #edeae2;   /* 平 */
+    --blue: #3b5a6b;                          /* 旧名,等同 --slate,留着不破坏既有样式 */
+    /* —— 阴影:极轻,只用于浮层 —— */
+    --shadow: 0 1px 2px rgba(60, 45, 20, .04);
+    --shadow-pop: 0 2px 8px rgba(60, 45, 20, .08), 0 12px 32px rgba(60, 45, 20, .10);
+    /* —— 字 —— */
     --disp: "Kaiti SC", "STKaiti", KaiTi, "Noto Serif SC", "Songti SC", serif;
+    --num: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    /* —— 尺度 —— */
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+    --r-card: 16px; --r-tile: 12px; --r-fld: 9px;
     color-scheme: light;
   }
   html[data-theme="dark"] {
-    /* 夜间:影院黑 + 暖朱砂,近黑分层,参考流媒体夜色调 */
-    --paper: #141414; --panel: #1e1d1b; --panel2: #292724; --ink: #e8e4db;
-    --dim: #989185; --line: #383530; --cinnabar: #e0563f; --gold: #c9a45c;
-    --gold-fill: #c9a45c; --blue: #8fb2c4;
-    --grad-top: #0c0c0c; --hover: #33302b; --seg: #292724; --accent-soft: rgba(224, 86, 63, .14);
-    --hair: rgba(255, 255, 255, .09);
-    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+    /* 夜间:墨黑分层,暖朱砂,金线更亮一档 */
+    --paper: #12110f; --paper2: #171614; --panel: #1c1b18; --panel2: #262420;
+    --grad-top: #0b0b0a; --hover: #2f2c27; --seg: #262420;
+    --ink: #ece7dc; --ink2: #b5ad9e; --ink3: #8e8779; --dim: #8e8779;
+    --line: #38352f; --hair: rgba(255, 255, 255, .085); --gold-hair: rgba(201, 164, 92, .30);
+    --cinnabar: #e0563f; --cinnabar-ink: #14120f; --accent-soft: rgba(224, 86, 63, .15);
+    --gold: #c9a45c; --gold-fill: #c9a45c;
+    --jade: #74bb9e;  --jade-soft: rgba(116, 187, 158, .14);
+    --slate: #8fb2c4; --slate-soft: rgba(143, 178, 196, .14);
+    --ochre: #d9a94f; --ochre-soft: rgba(217, 169, 79, .14);
+    --mute: #9a9388;  --mute-soft: rgba(154, 147, 136, .13);
+    --blue: #8fb2c4;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .35);
+    --shadow-pop: 0 2px 10px rgba(0, 0, 0, .45), 0 16px 40px rgba(0, 0, 0, .40);
     color-scheme: dark;
   }
+  /* 语义色的通用挂件:凡断吉凶处一律用这四个类,不许直接写颜色 */
+  .v-ji   { color: var(--jade); }
+  .v-xiong{ color: var(--slate); }
+  .v-warn { color: var(--ochre); }
+  .v-ping { color: var(--mute); }
+  .chip { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: .82rem;
+    letter-spacing: .06em; border: 1px solid transparent; white-space: nowrap; }
+  .chip.ji    { color: var(--jade);  background: var(--jade-soft);  border-color: var(--jade); }
+  .chip.xiong { color: var(--slate); background: var(--slate-soft); border-color: var(--slate); }
+  .chip.warn  { color: var(--ochre); background: var(--ochre-soft); border-color: var(--ochre); }
+  .chip.ping  { color: var(--mute);  background: var(--mute-soft);  border-color: var(--mute); }
+  /* 数字一律等宽,四柱、分数、公里数才对得齐 */
+  .num, .fblock .t b, table.pan td { font-variant-numeric: tabular-nums; }
+  /* 「答案」强调:那句话本身就是结论(日子、等级、几成)。用古铜,不用朱砂——
+     朱砂一旦满页都是,主行动按钮就不显眼了,那才是它该待的地方。 */
+  .key { color: var(--gold); font-weight: 600; }
+  textarea.tall { min-height: 54px; resize: vertical; }
+  /* 小工具类:收掉页面里零散重复的内联样式(改版前光这几样就抄了十几处) */
+  .dim { color: var(--ink3); }
+  .xs { font-size: .82rem; }
+  .gold-ink { color: var(--gold); }
+  .mt2 { margin-top: var(--s2); }
+  .mt3 { margin-top: var(--s3); }
+  .mt4 { margin-top: var(--s4); }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: linear-gradient(var(--grad-top), var(--paper) 280px) fixed; color: var(--ink); min-height: 100vh;
@@ -54,40 +113,138 @@
              calc(96px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
     -webkit-tap-highlight-color: transparent;
   }
-  .wrap { max-width: 860px; margin: 0 auto; }
-  header { text-align: center; margin-bottom: 28px; }
-  header h1 { font-size: 2rem; letter-spacing: .35em; color: var(--gold); font-weight: 600; font-family: var(--disp); }
-  header p { color: var(--dim); font-size: .9rem; margin-top: 6px; }
-  header .nav { margin-top: 8px; font-size: .85rem; }
-  header .nav a { color: var(--gold); text-decoration: none; border-bottom: 1px dashed var(--gold); }
-  .seal { display: inline-block; border: 2px solid var(--cinnabar); color: var(--cinnabar);
-    padding: 0 8px; border-radius: 4px; font-size: .85rem; margin-left: 8px; vertical-align: middle; }
-  section { background: var(--panel); border: 1px solid var(--hair); border-radius: 18px;
-    padding: 22px; margin-bottom: 18px; box-shadow: var(--shadow); }
-  section h2 { font-size: 1.05rem; color: var(--ink); letter-spacing: .2em; margin-bottom: 16px;
-    border-left: 3px solid var(--cinnabar); padding-left: 10px; line-height: 1.3; font-family: var(--disp); }
-  label { color: var(--dim); font-size: .9rem; display: block; margin-bottom: 6px; }
-  input[type=text] {
-    width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
-    border-radius: 6px; padding: 10px 12px; font-size: 1rem; font-family: inherit;
+  /* 窄屏:一栏,侧栏用 order 提到主内容之前(它在 DOM 里排在后面,是为了宽屏的网格分区)。
+     不提的话侧栏会掉到页脚底下,等于没有。 */
+  .wrap { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; }
+  .wrap > header { order: 0; }
+  .wrap > #sidepan { order: 1; }
+  .wrap > .maincol { order: 2; }
+  /* 宽屏:主内容 + 常驻侧栏(命盘)。 */
+  @media (min-width: 1120px) {
+    .wrap { max-width: 1240px; display: grid; grid-template-columns: minmax(0, 1fr) 300px;
+      grid-template-areas: "head head" "main side"; column-gap: var(--s5); align-items: start; }
+    .wrap > header { grid-area: head; }
+    .wrap > .maincol { grid-area: main; min-width: 0; }
+    .wrap > #sidepan { grid-area: side; position: sticky; top: var(--s5); }
   }
-  input[type=text]:focus { outline: none; border-color: var(--blue); }
-  .btnrow { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  /* —— 页头:一行标题 + 一行细金线,不再堆五排 —— */
+  header { text-align: center; margin-bottom: var(--s5); padding-bottom: var(--s4);
+    border-bottom: 1px solid var(--gold-hair); }
+  header h1 { font-size: 2.15rem; letter-spacing: .32em; color: var(--gold); font-weight: 600;
+    font-family: var(--disp); text-indent: .32em; }
+  header p { color: var(--ink3); font-size: .88rem; margin-top: var(--s1); letter-spacing: .04em; }
+  header .nav { margin-top: var(--s2); font-size: .85rem; display: flex; gap: var(--s4);
+    justify-content: center; flex-wrap: wrap; }
+  header .nav a { color: var(--ink3); text-decoration: none; border-bottom: 1px solid transparent;
+    transition: color .15s, border-color .15s; }
+  header .nav a:hover { color: var(--gold); border-bottom-color: var(--gold-hair); }
+  .seal { display: inline-block; border: 1px solid var(--gold); color: var(--gold);
+    padding: 0 7px; border-radius: 3px; font-size: .76rem; margin-left: var(--s2);
+    vertical-align: middle; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+  /* —— 卡片:细线分层,无重阴影 —— */
+  section { background: var(--panel); border: 1px solid var(--hair); border-radius: var(--r-card);
+    padding: var(--s5); margin-bottom: var(--s4); box-shadow: var(--shadow); }
+  /* 标题:楷体 + 一枚朱砂小印,下压一条细金线。原来的红竖条改成印章点,红退回品牌位。 */
+  section h2 { font-size: 1.12rem; color: var(--ink); letter-spacing: .16em; font-family: var(--disp);
+    margin-bottom: var(--s4); padding-bottom: var(--s2); line-height: 1.4;
+    border-bottom: 1px solid var(--gold-hair); display: flex; align-items: baseline; gap: var(--s2); }
+  section h2::before { content: ''; flex: none; width: 6px; height: 6px; border-radius: 1px;
+    background: var(--cinnabar); transform: translateY(-2px); }
+  label { color: var(--ink3); font-size: .88rem; display: block; margin-bottom: var(--s1); }
+  /* —— 表单控件:统一一个 .fld,别再往元素上抄内联样式 ——
+     缘起:v0.68 时全页 42 处内联 style,其中光是这一串输入框样式就抄了 6 遍,
+     改个圆角要翻六处。控件一律用 .fld,宽度用 .fld-sm/.fld-md 或外层布局定。 */
+  input[type=text], input[type=date], input[type=number], select, textarea, .fld {
+    background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: var(--r-fld); padding: 9px 11px; font-size: .98rem; font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type=text], textarea { width: 100%; }
+  .fld-sm { width: 108px; } .fld-md { width: 140px; } .fld-lg { flex: 1 1 160px; }
+  input:focus, select:focus, textarea:focus, .fld:focus {
+    outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  /* —— 按钮 ——
+     一屏只许有一个 .primary(朱砂实心)。次要行动用 .btn-2(描边),再次用 .ghost(无框)。
+     旧类名 .gold 实为黛蓝,是个说谎的名字;保留它做别名,新代码写 .btn-2。 */
+  .btnrow { display: flex; gap: var(--s2); margin-top: var(--s3); flex-wrap: wrap; align-items: center; }
   button {
-    background: var(--panel2); color: var(--ink); border: 1px solid var(--hair); border-radius: 999px;
-    padding: 10px 22px; font-size: 1rem; font-family: inherit; cursor: pointer; letter-spacing: .1em;
-    transition: background .15s, box-shadow .15s, transform .08s ease, filter .15s;
+    background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
+    padding: 9px 20px; font-size: .96rem; font-family: inherit; cursor: pointer; letter-spacing: .08em;
+    transition: background .15s, border-color .15s, transform .08s ease, filter .15s, box-shadow .15s;
   }
-  button:active { transform: scale(.97); }
-  button.primary, button.gold { box-shadow: 0 1px 3px rgba(0, 0, 0, .18); }
+  button:active { transform: scale(.975); }
   button:hover { background: var(--hover); }
-  button:disabled { opacity: .35; cursor: not-allowed; }
-  button.primary { background: var(--cinnabar); border-color: transparent; color: #fff; }
-  button.primary:hover { background: var(--cinnabar); filter: brightness(.92); }
-  button.ghost { border-color: var(--hair); color: var(--dim); background: transparent; }
-  button.gold { background: var(--blue); border-color: transparent; color: #fff; }
-  button.gold:hover { background: var(--blue); filter: brightness(.92); }
-  html[data-theme="dark"] button.primary, html[data-theme="dark"] button.gold { color: #141414; font-weight: 600; }
+  button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); border-color: var(--gold); }
+  button:disabled { opacity: .38; cursor: not-allowed; }
+  button.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: var(--cinnabar-ink);
+    font-weight: 600; letter-spacing: .12em; padding: 10px 26px; }
+  button.primary:hover { background: var(--cinnabar); filter: brightness(1.06); }
+  button.btn-2, button.gold { background: transparent; border-color: var(--slate); color: var(--slate); }
+  button.btn-2:hover, button.gold:hover { background: var(--slate-soft); }
+  button.ghost { border-color: transparent; color: var(--ink3); background: transparent; }
+  button.ghost:hover { background: var(--hover); color: var(--ink); }
+  button.sm { padding: 5px 13px; font-size: .86rem; }
+
+  /* ——— 速答框:进门第一件东西,分量要压得住 ——— */
+  #sec-quick { background: linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
+    border-color: var(--gold-hair); }
+  #sec-quick h2 { justify-content: flex-start; }
+  .qk-sub { margin-left: auto; font-family: -apple-system, "PingFang SC", sans-serif;
+    font-size: .8rem; letter-spacing: 0; color: var(--ink3); font-weight: normal; }
+  .qk-row { display: flex; gap: var(--s2); align-items: stretch; flex-wrap: wrap; }
+  .qk-row #qk-q { flex: 1 1 280px; font-size: 1.02rem; padding: 12px 14px; }
+  .qk-row button { flex: none; }
+  .qk-hint { color: var(--ink3); font-size: .84rem; margin-top: var(--s2); line-height: 1.6; }
+  #qk-out:not(:empty) { margin-top: var(--s4); padding-top: var(--s4); border-top: 1px solid var(--gold-hair); }
+  .qk-ans { font-size: 1.16rem; line-height: 1.6; margin-bottom: var(--s2); }
+  .qk-meta { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; margin-bottom: var(--s3); }
+  .qk-why { color: var(--ink2); font-size: .92rem; line-height: 1.75; }
+  .qk-more { margin-top: var(--s3); }
+
+  /* ——— 常驻侧栏 ——— */
+  #sidepan .sp-card { background: var(--panel); border: 1px solid var(--hair);
+    border-radius: var(--r-card); padding: var(--s4); box-shadow: var(--shadow); }
+  .sp-h { font-family: var(--disp); letter-spacing: .14em; color: var(--ink); font-size: 1rem;
+    display: flex; align-items: center; gap: var(--s2); padding-bottom: var(--s2);
+    border-bottom: 1px solid var(--gold-hair); margin-bottom: var(--s3); }
+  .sp-h button { margin-left: auto; }
+  .sp-row { display: flex; gap: var(--s2); align-items: baseline; padding: 5px 0;
+    border-bottom: 1px dashed var(--hair); font-size: .9rem; }
+  .sp-row:last-child { border-bottom: 0; }
+  .sp-row .k { color: var(--ink3); flex: none; min-width: 4.2em; font-size: .84rem; }
+  .sp-row .v { color: var(--ink); }
+  .sp-empty { color: var(--ink3); font-size: .88rem; line-height: 1.7; }
+  @media (max-width: 1119px) {
+    #sidepan { margin-bottom: var(--s4); }
+    #sidepan.folded .sp-body { display: none; }
+  }
+
+  /* ——— 对照器:A 还是 B ——— */
+  .vs-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--s3); align-items: stretch; }
+  .vs-col { background: var(--panel2); border: 1px solid var(--hair); border-radius: var(--r-tile);
+    padding: var(--s3); min-width: 0; }
+  .vs-col.win { border-color: var(--jade); background: var(--jade-soft); }
+  .vs-mid { display: flex; align-items: center; color: var(--ink3); font-family: var(--disp); font-size: 1.1rem; }
+  .vs-name { font-family: var(--disp); font-size: 1.05rem; letter-spacing: .1em; margin-bottom: var(--s2);
+    padding-bottom: var(--s2); border-bottom: 1px solid var(--gold-hair); }
+  .vs-line { display: flex; gap: var(--s2); font-size: .88rem; padding: 3px 0; align-items: baseline; }
+  .vs-line .k { color: var(--ink3); flex: none; min-width: 3.4em; }
+  .vs-line .s { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink2); }
+  .vs-verdict { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--gold-hair);
+    font-size: 1.05rem; line-height: 1.65; }
+  @media (max-width: 620px) {
+    .vs-grid { grid-template-columns: 1fr; }
+    .vs-mid { justify-content: center; padding: 2px 0; }
+  }
+
+  /* ——— 今日一览 ——— */
+  .td-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: var(--s2); }
+  .td-cell { background: var(--panel2); border: 1px solid var(--hair); border-radius: var(--r-tile);
+    padding: var(--s3); }
+  .td-cell .k { color: var(--ink3); font-size: .8rem; letter-spacing: .06em; display: block; margin-bottom: 3px; }
+  .td-cell .v { font-size: 1.02rem; line-height: 1.5; }
+  .td-do { margin-top: var(--s3); display: flex; gap: var(--s2); flex-wrap: wrap; }
   .zone { display: flex; align-items: center; gap: 12px; color: var(--gold); letter-spacing: .35em;
     font-size: .92rem; margin: 26px 0 14px; font-family: var(--disp); }
   .zone::before, .zone::after { content: ''; flex: 1; border-top: 1px dashed var(--line); }
@@ -121,10 +278,10 @@
     border-radius: 6px; padding: 2px 14px; font-size: 1.05rem; letter-spacing: .2em; }
   .verdict .dx { margin-top: 10px; font-size: 1.02rem; }
   .verdict .src { color: var(--dim); font-size: .8rem; margin-top: 4px; }
-  .fblock { background: var(--panel2); border-left: 3px solid var(--gold); border-radius: 0 6px 6px 0;
-    padding: 10px 14px; margin-bottom: 10px; }
-  .fblock .k { color: var(--gold); font-size: .85rem; letter-spacing: .1em; }
-  .fblock .t { margin-top: 2px; }
+  .fblock { background: var(--panel2); border: 1px solid var(--hair); border-left: 2px solid var(--gold-hair);
+    border-radius: var(--r-tile); padding: 11px 15px; margin-bottom: var(--s2); }
+  .fblock .k { color: var(--gold); font-size: .82rem; letter-spacing: .1em; display: block; margin-bottom: 2px; }
+  .fblock .t { margin-top: 0; line-height: 1.75; }
   .subnote { color: var(--dim); font-size: .9rem; margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
   .subnote b { color: var(--ink); font-weight: normal; }
   textarea { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
@@ -177,11 +334,11 @@
   #fu-input { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
     border-radius: 6px; padding: 10px 12px; font-family: inherit; font-size: .95rem; min-height: 64px; resize: vertical; }
   #fu-input:focus { outline: none; border-color: var(--gold); }
-  .tabs { display: flex; gap: 4px; margin: 0 auto 18px; padding: 4px; width: max-content; max-width: 100%;
-    background: var(--seg); border: 1px solid var(--hair); border-radius: 999px; justify-content: center; flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s1); margin: 0 auto var(--s4); padding: 3px; width: max-content; max-width: 100%;
+    background: transparent; border: 1px solid var(--gold-hair); border-radius: 999px; justify-content: center; flex-wrap: wrap; }
   .tabs button { border-radius: 999px; padding: 8px 20px; border: none; background: transparent; box-shadow: none; }
   .tabs button:hover { background: var(--hover); }
-  .tabs button.on { background: var(--panel); color: var(--cinnabar); box-shadow: 0 1px 4px rgba(0, 0, 0, .14); }
+  .tabs button.on { background: var(--accent-soft); color: var(--cinnabar); border: none; font-weight: 600; }
   html[data-theme="dark"] .tabs button.on { background: #3a3733; }
   .moderow { display: flex; gap: 14px; margin-bottom: 10px; color: var(--dim); flex-wrap: wrap; font-size: .95rem; }
   .moderow label { display: inline-flex; align-items: center; gap: 5px; margin: 0; }
@@ -189,7 +346,7 @@
   input[type=number] { width: 110px; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
     border-radius: 6px; padding: 10px 12px; font-size: 1rem; font-family: inherit; }
   input[type=number]:focus { outline: none; border-color: var(--gold); }
-  .formerr { color: var(--cinnabar); font-size: .9rem; margin-top: 8px; }
+  .formerr { color: var(--ochre); font-size: .9rem; margin-top: 8px; }
   .xlr-gongs { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
   .gongbox { flex: 1 1 160px; max-width: 240px; background: var(--panel2); border-radius: 8px; padding: 12px;
     text-align: center; border-top: 3px solid var(--gold); }
@@ -256,10 +413,11 @@
     border-radius: 6px; padding: 6px 8px; font-size: .88rem; font-family: inherit; }
   .qwho input[type=number]:focus { outline: none; border-color: var(--gold); }
   .qwhint { font-size: .82rem; }
-  .qwhint.warn { color: var(--cinnabar); }
+  .qwhint.warn { color: var(--ochre); }
   header .guide { color: var(--dim); font-size: .8rem; margin: 10px auto 0; line-height: 1.7; max-width: 640px; text-align: center; }
   header .guide b { color: var(--gold); font-weight: normal; }
-  .fold .foldh { cursor: pointer; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .fold .foldh { cursor: pointer; }
+  .fold .foldh .foldtri { margin-left: auto; color: var(--ink3); font-size: .8rem; flex: none; }
   .foldtri { color: var(--dim); font-size: .8rem; flex: 0 0 auto; }
   .foldbody { margin-top: 4px; }
   #dw-q, #dw-fu, #zy-fu { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
@@ -444,10 +602,35 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.68</span></p>
-    <div class="nav"><a href="yunshi.html">看人运势(日月年运)→</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
-    <p class="guide">① 填问卦人 → ② 写所问或选分科 → ③ 起卦 · 深断 · 追问(<b>红</b>=起卦 <b>蓝</b>=深断)</p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.70</span></p>
+    <div class="nav">
+      <a href="yunshi.html">看人运势</a>
+      <a href="#" id="btn-share">分享</a>
+      <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a>
+    </div>
   </header>
+
+  <div class="maincol">
+
+  <!-- ——— 速答:一句话直接要答案,不必先选法门、不必填表 ———
+       缘起:自测走一遍「问一件事」要点四五步(选法门→填问卦人→写问题→起卦→深断)。
+       这里把那条路压成一步:写一句话,程序自己配法、自己起卦、自己给结论与应期。 -->
+  <section id="sec-quick">
+    <h2>一句话直问<span class="qk-sub">写完按回车,直接给答案</span></h2>
+    <div class="qk-row">
+      <input type="text" id="qk-q" class="fld" placeholder="例:我今年能不能换成工作?——想到什么写什么,不用讲究措辞">
+      <button id="btn-qk" class="primary">直接问</button>
+    </div>
+    <div class="qk-hint" id="qk-hint">程序会自己判断该用哪套法子、自己起卦,给你一句结论、一个把握度、一个时间窗。要细看再往下走。</div>
+    <div id="qk-out"></div>
+  </section>
+
+  <!-- ——— 今日一览:打开就看见,不用点任何按钮 ——— -->
+  <section id="sec-today">
+    <h2>今日<span class="qk-sub" id="td-date"></span></h2>
+    <div class="td-strip" id="td-strip"></div>
+    <div class="td-do" id="td-do"></div>
+  </section>
 
   <nav class="tabs">
     <button class="on" data-m="liuyao">六 爻</button>
@@ -510,7 +693,7 @@
     <div id="duo-offer" class="hidden">
       <div class="duo-title" id="duo-title"></div>
       <div class="btnrow">
-        <button id="btn-duo-start" class="primary"></button>
+        <button id="btn-duo-start" class="btn-2"></button>
         <button id="btn-duo-start2" class="hidden"></button>
         <button id="btn-duo-single" class="ghost">就用单卦总断</button>
       </div>
@@ -538,7 +721,7 @@
     <h2>梅花卦象</h2>
     <div class="paninfo" id="mh-info"></div>
     <div class="guarea" id="mh-guas"></div>
-    <div class="verdict" style="margin-top:14px">
+    <div class="verdict mt4">
       <span class="lv" id="mh-lv"></span>
       <div class="dx" id="mh-dx"></div>
     </div>
@@ -566,7 +749,7 @@
     <h2>课 象</h2>
     <div class="paninfo" id="xlr-info"></div>
     <div class="xlr-gongs" id="xlr-gongs"></div>
-    <div class="verdict" style="margin-top:14px">
+    <div class="verdict mt4">
       <span class="lv" id="xlr-lv"></span>
       <div class="dx" id="xlr-dx"></div>
     </div>
@@ -584,7 +767,7 @@
     <div class="paninfo" id="qm-info"></div>
     <div class="qm-grid" id="qm-grid"></div>
     <div class="qm-legend"><span class="sky">红=天盘干</span> / <span class="earth">金=地盘干</span> · 星=九星 · 门=八门 · 神=八神;红框为<b>事宫</b>(值符所临)。</div>
-    <div class="verdict" style="margin-top:14px">
+    <div class="verdict mt4">
       <span class="lv" id="qm-lv"></span>
       <div class="dx" id="qm-dx"></div>
     </div>
@@ -634,7 +817,7 @@
       <select id="ai-model"></select>
       <button id="btn-togglekey" class="ghost">设置 API Key</button>
     </div>
-    <div id="keybox" class="hidden" style="margin-top:12px">
+    <div id="keybox" class="hidden mt4">
       <label for="api-key" id="key-label"></label>
       <input type="password" id="api-key" placeholder="" autocomplete="off">
       <div class="btnrow">
@@ -680,6 +863,7 @@
       <button class="bcard" data-b="sec-zhuanyun"><span class="bg">运</span><span><span class="bt">转 运</span><span class="bd">近来不顺?先诊断根源,再给能落地的做法</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-xinyuan"><span class="bg">愿</span><span><span class="bt">心 愿</span><span class="bd">想办件事:成不成、什么时候、怎么做最旺</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-wj"><span class="bg">镜</span><span><span class="bt">未来镜</span><span class="bd">起三卦,把断出的未来写成一篇故事</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-vs"><span class="bg">较</span><span><span class="bt">A 还是 B · 两个选择直接比</span><span class="bd">两个地方、两个日子、两条路,逐层打分并排摆,最后告诉你选哪个、差多少</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dili"><span class="bg">地</span><span><span class="bt">地 利 · 去哪儿旺我</span><span class="bd">八字合方位,实算全国哪省哪市旺你、哪向背你</span></span><span class="bx">›</span></button>
       <button class="bcard" data-href="yunshi.html"><span class="bg">命</span><span><span class="bt">看人运势 · 八字命盘</span><span class="bd">四柱排盘、人体星図、日月年运、东玄细批(独立一页)</span></span><span class="bx">›</span></button>
     </div>
@@ -726,7 +910,7 @@
     </div>
     <div class="qwho">看哪个时段:
       <select id="zy-range"><option value="">当下(最近这阵子)</option><option value="近一个月">近一个月</option><option value="近一个季度">近一个季度</option><option value="近半年">近半年</option><option value="近一年">近一年</option><option value="近三年">近三年</option><option value="year">指定某一年</option></select>
-      <input type="number" id="zy-year" class="hidden" style="width:100px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <input type="number" id="zy-year" class="hidden fld fld-sm">
       <span class="qwhint">六卦全按此时段问与断</span>
     </div>
     <div class="btnrow">
@@ -752,7 +936,7 @@
     <div class="foldbody hidden">
     <div class="note">想办一件事(谈恋爱、换工作、开店、买房……),这里一站答四问:<b>成不成、什么时候最合适、怎么做最旺、什么最凶怎么避</b>,最后给转运做法。用三样东西合着断:你的生日(八字定什么旺你什么背你)、六卦卦阵(事情本身怎么走)、吉日历(把日子落到具体哪天)。填生日立刻能看「旺你牌」和吉日窗,不用等起卦。</div>
     <div class="qwho">我想:
-      <input type="text" id="xy-wish" placeholder="用一句话写你想办的事" style="flex:1 1 200px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.95rem">
+      <input type="text" id="xy-wish" placeholder="用一句话写你想办的事" class="fld fld-lg">
     </div>
     <div class="fuquick" id="xy-chips">
       <button class="fq" type="button">谈恋爱、脱个单</button>
@@ -763,7 +947,7 @@
       <button class="fq" type="button">表白</button>
     </div>
     <div class="qwho">生日:
-      <input type="date" id="xy-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <input type="date" id="xy-birth" class="fld">
       <select id="xy-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
       <span class="qwhint">替别人求就填那人的生日。只存这台设备。</span>
     </div>
@@ -792,7 +976,7 @@
     <div class="foldbody hidden">
     <div class="note">起三卦,东玄先解卦、后提笔,把断出来的未来<b>写成一篇你舍不得跳行的小说</b>——日子的肌理、身边的人、屋里的光,都在里面。走向由卦锁死:<b>吉卦不写惨,凶卦不硬圆</b>;文末「本篇从何而来」逐条交代情节出处。你只管说想看什么,别的不用你操心。</div>
     <div class="qwho">想看:
-      <input type="text" id="wj-q" placeholder="一句话,或直接点下面现成的" style="flex:1 1 240px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.95rem">
+      <input type="text" id="wj-q" placeholder="一句话,或直接点下面现成的" class="fld fld-lg">
     </div>
     <div class="fuquick" id="wj-chips">
       <button class="fq" type="button">一年后我的生活</button>
@@ -819,7 +1003,7 @@
       <textarea id="wj-fu" placeholder="例:把结尾那天放大写细;换成对方的视角重写;或空着直接点「再起一卦续写」看后来"></textarea>
       <div class="btnrow">
         <button id="btn-wj-fu" class="gold">接着写</button>
-        <button id="btn-wj-fugua" class="primary">再起一卦续写</button>
+        <button id="btn-wj-fugua" class="btn-2">再起一卦续写</button>
       </div>
     </div>
   </div>
@@ -882,7 +1066,7 @@
     <details class="dsfolk">
       <summary>子时跨半夜:0 点到 1 点之间生的,先多做一步</summary>
       <div class="note">23点到0点生的,老规矩算第二天;0点到1点生的,算当天——两者日柱差一整天,断出来是两副盘。
-        这套程序眼下把子时一律按「23点以后」折,所以<b style="color:var(--cinnabar)">你要是 0 点到 1 点之间生的,把上面的出生日期往前挪一天再算</b>。
+        这套程序眼下把子时一律按「23点以后」折,所以<b class="v-warn">你要是 0 点到 1 点之间生的,把上面的出生日期往前挪一天再算</b>。
         出生地在东部的已逐日核过,这么折与真盘四柱完全一致;偏西的地方还牵动真太阳时,下面算完会告诉你具体差几分钟。
         这处折法是全应用共用的,我记在待办上,下一版从根上改成直接填钟点。</div>
     </details>
@@ -931,8 +1115,8 @@
       <span class="qwhint">何时·画像·身高·财富·职业·相识·TA的心思·验证,一次摆齐</span>
     </div>
     <div class="qwho" style="align-items:flex-start">心里有个人,断TA:
-      <textarea id="yl-p" placeholder="一两句就够:如「同事,男,大我3岁,最近常找我聊天」" style="flex:1 1 220px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:.92rem;min-height:52px;resize:vertical"></textarea>
-      <button id="btn-yl-dr" class="primary">摆断人六卦阵</button>
+      <textarea id="yl-p" placeholder="一两句就够:如「同事,男,大我3岁,最近常找我聊天」" class="fld fld-lg tall"></textarea>
+      <button id="btn-yl-dr" class="btn-2">摆断人六卦阵</button>
     </div>
     <div id="yl-status"></div>
     <div id="yl-plan"></div>
@@ -946,9 +1130,33 @@
       <textarea id="yl-fu" placeholder="例:TA现在有对象吗?/ 我们哪一年结婚?"></textarea>
       <div class="btnrow">
         <button id="btn-yl-fu" class="gold">追 问</button>
-        <button id="btn-yl-fugua" class="primary">掷一卦再答</button>
+        <button id="btn-yl-fugua" class="btn-2">掷一卦再答</button>
       </div>
     </div>
+  </div>
+  </section>
+
+  <section id="sec-vs" class="fold">
+    <h2 class="foldh">A 还是 B · 两个选择直接比<span class="foldtri">▸</span></h2>
+    <div class="foldbody hidden">
+    <div class="note">这板块只干一件事:<b>两个候选并排摆,逐层打分,最后说选哪个、差多少</b>。
+      比地方走地利那七层(方位/地气/寒暖),比日子走黄历与你的命盘那三层,比两条路则各起一卦按成算比。
+      分数是程序算的,同样的输入每次结果一样。</div>
+    <div class="qwho">比什么:
+      <select id="vs-kind" class="fld">
+        <option value="place">两个地方(该去哪座城)</option>
+        <option value="day">两个日子(哪天办事更好)</option>
+        <option value="road">两条路(两个选择,各起一卦)</option>
+      </select>
+      <span id="vs-from-wrap">现居:<input type="text" id="vs-from" class="fld fld-md" placeholder="如:武汉"></span>
+    </div>
+    <div class="btnrow" id="vs-inputs">
+      <input type="text" id="vs-a" class="fld fld-lg" placeholder="A">
+      <input type="text" id="vs-b" class="fld fld-lg" placeholder="B">
+      <button id="btn-vs" class="primary">比一比</button>
+    </div>
+    <div id="vs-status"></div>
+    <div id="vs-out"></div>
   </div>
   </section>
 
@@ -957,15 +1165,15 @@
     <div class="foldbody hidden">
     <div class="note">以<b>现居地为原点</b>实算目标地的方位角,再分七层看:<b>向</b>(方位五行合不合你的喜用)、<b>气</b>(那地方自己是个什么地方——海港、钢城、林区、瓷都各不相同)、<b>候</b>(南北寒暖对不对你的调候)、<b>煞</b>(驿马贵人桃花,只作旁注)、<b>时</b>(哪几年适合动)、<b>业</b>(去了做哪一路的活)、<b>程</b>(这个距离该怎么去)。全国 449 处省市,方位角是球面实算的。</div>
     <div class="qwho">生日:
-      <input type="date" id="dl-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <input type="date" id="dl-birth" class="fld">
       <select id="dl-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
-      现居:<input type="text" id="dl-from" placeholder="省或大城市,如:武汉" style="width:130px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      现居:<input type="text" id="dl-from" placeholder="省或大城市,如:武汉" class="fld fld-md">
     </div>
     <div class="note" id="dl-hrnote">时辰这一项要紧:喜忌是从八字来的,而时辰一变喜忌可能整个翻过来(实测同一天十二个时辰里有七个会翻)。不填就按中午估,结论只能当个大概;真不知道的,去「定时辰」板块先把它定下来。</div>
     <div class="btnrow">
       <button id="btn-dl-rec" class="primary">给我挑旺地</button>
-      <input type="text" id="dl-to" placeholder="或写个目标地验一验" style="flex:1 1 150px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit">
-      <button id="btn-dl-judge" class="primary">验这个地方</button>
+      <input type="text" id="dl-to" placeholder="或写个目标地验一验" class="fld fld-lg">
+      <button id="btn-dl-judge" class="btn-2">验这个地方</button>
     </div>
     <div id="dl-status"></div>
     <div id="dl-out"></div>
@@ -977,9 +1185,9 @@
     <div class="foldbody hidden">
     <div class="note">老规矩看日子分三层:<b>①这天本身</b>(建除十二神、黄道黑道值神)、<b>②冲不冲你</b>(日支冲你生肖=冲日,大事勿用;三合六合=顺)、<b>③帮不帮你</b>(流日五行对你日主是生是克)。填了生日才有②③;拿不准的日子,点「起一卦细看」用卦复核——历法初筛、卦象定夺,两头对得上才叫稳。</div>
     <div class="qwho">你的生辰:
-      <input type="date" id="jr-birth" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <input type="date" id="jr-birth" class="fld">
       <select id="jr-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select>
-      <input type="text" id="jr-place" placeholder="出生地(市/省)" style="width:120px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:inherit">
+      <input type="text" id="jr-place" placeholder="出生地(市/省)" class="fld fld-md">
       <span class="jrprof"><select id="jr-prof"><option value="">档案:未存档</option></select><button type="button" id="jr-prof-save" class="mini">存档</button></span>
       <span class="qwhint">生辰按公历;86-91年生人一律自动回拨夏令时(不填出生地也拨),填了出生地再补经度差,时柱才排得最准。填一次,全应用通用。</span>
     </div>
@@ -1013,7 +1221,18 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.68 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.70 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  </div><!-- /maincol -->
+
+  <!-- ——— 命盘常驻侧栏 ———
+       缘起:喜忌、当前大运、今年流年这几样,几乎每个板块都要用,可用户得回运势页翻。
+       宽屏(≥1120px)常驻右侧;窄屏塌到主列顶上、默认收起。填过生辰才出现。 -->
+  <aside id="sidepan" class="voff">
+    <div class="sp-card">
+      <div class="sp-h">你的底盘<button type="button" id="sp-fold" class="ghost sm" title="收起/展开">▾</button></div>
+      <div class="sp-body" id="sp-body"></div>
+    </div>
+  </aside>
 </div>
 
 <nav class="bottomnav" id="bottomnav">
@@ -1036,6 +1255,7 @@
 <script src="yunshi.js"></script>
 <script src="jiri.js"></script>
 <script src="yingqi.js"></script>
+<script src="chuduan.js"></script>
 <script src="dili.js"></script>
 <script src="dashi.js"></script>
 <script src="wenji.js"></script>
@@ -1375,10 +1595,10 @@
     try {
       const yq = Yingqi.yingqiOf(cast, new Date());
       if (yq) yqBlock = `<div class="fblock"><div class="k">这事应在什么时候</div><div class="t">` +
-        `<b style="color:var(--cinnabar)">${esc(yq.date || '四十日内没有这个日子,得往后翻')}</b>——${esc(yq.say)}。` +
-        `<span style="color:var(--dim)">书上原话:「${esc(yq.quote)}」</span>` +
-        (yq.extra ? `<br><span style="color:var(--dim)">${esc(yq.extra.say)}(原话「${esc(yq.extra.quote)}」)</span>` : '') +
-        `<br><span style="color:var(--dim);font-size:.9em">取法的先后是本程序排的,原文没有明列一张优先级表——这一层我自己担着。</span>` +
+        `<b class="key">${esc(yq.date || '四十日内没有这个日子,得往后翻')}</b>——${esc(yq.say)}。` +
+        `<span class="dim">书上原话:「${esc(yq.quote)}」</span>` +
+        (yq.extra ? `<br><span class="dim">${esc(yq.extra.say)}(原话「${esc(yq.extra.quote)}」)</span>` : '') +
+        `<br><span class="dim">取法的先后是本程序排的,原文没有明列一张优先级表——这一层我自己担着。</span>` +
         `</div></div>`;
     } catch (e) {}
     $('focus').innerHTML = r.focus.map(f =>
@@ -1430,15 +1650,15 @@
         <div class="head"><span class="ts">${ts}</span><span class="badge">${esc(rec.method || '六爻')}</span><span class="q">${esc(rec.question)}</span><span class="hl2">${esc(rec.headline)}</span></div>
         <div class="body">
           <pre>${esc(rec.report)}</pre>
-          <div><b style="color:var(--cinnabar)">【${esc(rec.level)}】</b> ${esc(rec.dx)}</div>
-          ${rec.aiReading ? `<div class="aiout" style="margin-top:10px"><b style="color:var(--gold)">东玄深断(${esc(rec.aiReading.model)})</b>\n${esc(rec.aiReading.text)}</div>` : ''}
+          <div><b class="key">【${esc(rec.level)}】</b> ${esc(rec.dx)}</div>
+          ${rec.aiReading ? `<div class="aiout mt3"><b class="gold-ink">东玄深断(${esc(rec.aiReading.model)})</b>\n${esc(rec.aiReading.text)}</div>` : ''}
           <div class="btnrow">
             <button class="ghost btn-copyrec" data-i="${i}">复制回报</button>
             <button class="ghost btn-delrec" data-i="${i}">删除此卦</button>
           </div>
         </div>
       </div>`;
-    }).join('') : '<div style="color:var(--dim)">卦档尚空。起一卦,自动存档于此(仅存本机浏览器)。</div>';
+    }).join('') : '<div class="dim">卦档尚空。起一卦,自动存档于此(仅存本机浏览器)。</div>';
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
@@ -2847,15 +3067,15 @@
     if (curFenke.dateInput) {
       const t = new Date();
       const iso = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
-      dateRow = `<div class="rq">看哪一天:<input type="date" id="fk-date" value="${iso}" min="${iso}" style="font-family:inherit;padding:6px 8px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--ink)"> <span style="color:var(--dim);font-size:.82rem">默认今天,可挑将来任何一天</span></div>`;
+      dateRow = `<div class="rq">看哪一天:<input type="date" id="fk-date" value="${iso}" min="${iso}" class="fld"> <span class="dim xs">默认今天,可挑将来任何一天</span></div>`;
     }
     if (curFenke.rangeInput) {
       const y = new Date().getFullYear();
       dateRow = `<div class="rq">看哪个时段:<select id="fk-range" style="padding:6px 8px">
         <option value="">当下(最近这阵子)</option><option value="近一个月">近一个月</option><option value="近一个季度">近一个季度</option>
         <option value="近半年">近半年</option><option value="近一年">近一年</option><option value="近三年">近三年</option><option value="year">指定某一年</option></select>
-        <input type="number" id="fk-year" class="hidden" min="${y}" max="${y + 30}" value="${y + 1}" style="width:100px;font-family:inherit;padding:6px 8px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--ink)">
-        <span style="color:var(--dim);font-size:.82rem">选好时段再挑卦法,问题自动对上</span></div>`;
+        <input type="number" id="fk-year" class="hidden" min="${y}" max="${y + 30}" value="${y + 1}" class="fld fld-sm">
+        <span class="dim xs">选好时段再挑卦法,问题自动对上</span></div>`;
     }
     $('fk-recommend').innerHTML = `<div class="rq">拟问:<b>${esc(curFenke.q)}</b></div>${dateRow}${opts}${note}`;
     $('fk-recommend').classList.remove('hidden');
@@ -3313,11 +3533,11 @@
           return `<div class="dsrk"><span class="rkn">${i + 1}. ${esc(c.name)} ${esc(c.gz)}</span>` +
             `<span class="dsbar"><i style="width:${pct}%"></i></span><span class="rkv">${pct}%</span>${hits}</div>`;
         }).join('') +
-        `<div class="why" style="margin-top:8px">百分比是「吉凶方向吻合度」:你说这件事是好是坏,看这个时辰的盘判得对不对。` +
+        `<div class="why mt2">百分比是「吉凶方向吻合度」:你说这件事是好是坏,看这个时辰的盘判得对不对。` +
         `同一档里的时辰分数相同,不必在档内再挑。</div></div>`
       : '';
     const verdict = `<div class="wjcard"><h4>能 不 能 定</h4>` +
-      `<div><b style="color:var(--cinnabar)">${r.canDecide ? '可以定' : '定不了'}</b>——${esc(r.reason)}</div></div>`;
+      `<div><b class="${r.canDecide ? 'v-ji' : 'v-xiong'}">${r.canDecide ? '可以定' : '定不了'}</b>——${esc(r.reason)}</div></div>`;
     const same = r.diffs.band.length === 1 && r.diffs.xi.length === 1 && r.diffs.geju.length === 1;
     const dif = `<div class="wjcard"><h4>差 异 面 板 · 分 歧 在 哪</h4>` +
       `<div class="why">强弱档:${esc(r.diffs.band.join(' / '))}</div>` +
@@ -3631,13 +3851,240 @@
   document.querySelector('#sec-jiri .foldh').addEventListener('click', () => setTimeout(jrEnsure, 0));
 
   // —— 视图路由:问卦 / 专项(卡片菜单→单板块)/ 吉日 / 卦档,一次只见一摊 ——
+  // dayInfo 的签名是 (date, birthDate, yong)——birth 要的是 Date,不是对象。
+  // 初版两处新代码都传了 { yong, zhi } 这样的对象,于是 personal 恒为 null,
+  // 「冲不冲你」那一层实际上一直没算,只是照抄了黄历的「冲某属相」。自测时看出来的。
+  function dxBirthDate() {
+    try { const v = localStorage.getItem(BKEY) || ''; if (!v) return null;
+      const [y, m, d] = v.split('-').map(Number); const dt = new Date(y, m - 1, d, 12);
+      return isNaN(dt) ? null : dt; } catch (e) { return null; }
+  }
+  // ═══════════════════ A 还是 B:两个候选并排比 ═══════════════════
+  // 缘起:地利、吉日、姻缘都缺「A 和 B 哪个好」的直接比较——用户得自己算两遍再脑补对比。
+  // 这里做一个通用对照器:每个候选摊成几层分数,同层并排,最后给一句「选哪个、差多少」。
+  // **不自己另算任何断法**:比地方调 Dili.judge,比日子调 Jiri.dayInfo,比两条路调 Chuduan.judge。
+  function vsStatus(m, e) { $('vs-status').textContent = m || ''; $('vs-status').classList.toggle('err', !!e); }
+  function vsPlace(c, from, name) {
+    const r = Dili.judge(c, from, name, Najia.ganZhi(new Date()).year[1]);
+    if (r.err) return { err: r.err };
+    if (r.local) return { name, total: 0, lines: [['距离', r.note, 0]], note: r.note };
+    const lines = [
+      ['方位', `${r.dir}属${r.wx},${r.xiang.verdict}`, r.xiang.score],
+      ['地气', r.qi ? `${r.qi.wx}——${r.qi.verdict}` : '未详', r.qi ? r.qi.score : 0],
+      ['寒暖', r.hou ? r.hou.verdict : '这一层用不上', r.hou ? r.hou.score : 0],
+    ];
+    return { name: r.to, total: r.total, lines, extra: `${r.km}公里 · ${r.tierName}` };
+  }
+  function vsDay(c, text) {
+    const d = new Date(text);
+    if (isNaN(d)) return { err: `「${text}」不是个日子——写成 2026-09-12 这样` };
+    const info = Jiri.dayInfo(d, dxBirthDate(), c ? c.yong : null);
+    let ry = null; try { if (c) ry = Yunshi.riYun(c, d); } catch (e) {}
+    const lvScore = { 上吉: 2, 吉: 1, 平: 0, 慎: -1, 忌: -2, 冲你: -2 }[info.level] != null
+      ? { 上吉: 2, 吉: 1, 平: 0, 慎: -1, 忌: -2, 冲你: -2 }[info.level] : 0;
+    const p = info.personal;
+    const chongMe = !!(p && p.chong);
+    const lines = [
+      ['这天本身', `${info.level}(${(info.zhishen && info.zhishen.name) || ''}·${(info.jianchu && info.jianchu.name) || ''}日)`, lvScore],
+      ['冲不冲你', !p ? '没填生日,这一层算不了'
+        : chongMe ? `正冲你的属相——大事避开这天` : `不冲你(这天冲属${info.chongAnimal}的)`, chongMe ? -3 : 0],
+    ];
+    if (ry) lines.push(['对你如何', `${ry.level}·${ry.tone}`, +(ry.score * 2).toFixed(1)]);
+    else lines.push(['对你如何', '没填生日,这一层算不了', 0]);
+    return { name: `${info.m}月${info.d}日`, total: +lines.reduce((a, l) => a + l[2], 0).toFixed(1), lines,
+      extra: info.lunarText ? `农历${info.lunarText} · ${info.gz.day}日` : '' };
+  }
+  function vsRoad(text, g) {
+    const now = new Date();
+    const cast = GuaCore.castHexagram();
+    const z = Najia.zhuangGua(cast.benId, now, { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
+    const r = Chuduan.judge(cast, z, text, now, g);
+    return { name: text, total: r.score, chuduan: r,
+      lines: [['成算', `${r.cheng} · 把握${r.pct}`, r.score]],
+      extra: r.yingqi && r.yingqi.date ? '见分晓 ' + r.yingqi.date : '' };
+  }
+  function vsRun() {
+    const kind = $('vs-kind').value;
+    const a = $('vs-a').value.trim(), b = $('vs-b').value.trim();
+    if (!a || !b) { vsStatus('A 和 B 都要填——只有一个就没得比。', true); return; }
+    let c = null; try { c = dxBirthChart('q'); } catch (e) {}
+    let ra, rb, need = '';
+    if (kind === 'place') {
+      if (!c) { vsStatus('比地方要看你的喜忌,先填生日(下面任一处填过都算)。', true); return; }
+      const from = $('vs-from').value.trim();
+      if (!from) { vsStatus('先填现居地——方位是以它为原点算的。', true); return; }
+      ra = vsPlace(c, from, a); rb = vsPlace(c, from, b);
+      need = '比的是:方位合不合你、那地方本身什么路数、南北寒暖对不对你的症。';
+    } else if (kind === 'day') {
+      ra = vsDay(c, a); rb = vsDay(c, b);
+      need = '比的是:这天在黄历上是什么日子、冲不冲你的属相、这天的力道对你是帮是耗。';
+    } else {
+      const g = (typeof gender === 'function' ? gender('q') : '') || '';
+      ra = vsRoad(a, g); rb = vsRoad(b, g);
+      need = '两条路各起一卦,按同一套成算比。<b>一枝一卦</b>:两卦各断各的,不许拿一卦硬答两问。';
+    }
+    if (ra.err || rb.err) { vsStatus(ra.err || rb.err, true); return; }
+    vsStatus('');
+    const gap = +(ra.total - rb.total).toFixed(1);
+    const winA = gap > 0.5, winB = gap < -0.5;
+    const col = (r, win) => `<div class="vs-col${win ? ' win' : ''}">
+        <div class="vs-name">${esc(r.name)}${win ? ' <span class="chip ji">选它</span>' : ''}</div>
+        ${r.lines.map(l => `<div class="vs-line"><span class="k">${esc(l[0])}</span><span>${esc(l[1])}</span><span class="s">${l[2] > 0 ? '+' : ''}${l[2]}</span></div>`).join('')}
+        <div class="vs-line" style="border-top:1px solid var(--gold-hair);margin-top:6px;padding-top:6px"><span class="k">合计</span><span></span><span class="s"><b>${r.total}</b></span></div>
+        ${r.extra ? `<div class="vs-line"><span class="dim">${esc(r.extra)}</span></div>` : ''}
+      </div>`;
+    // 差得不多就照实说「差不多」——硬分高下是编的,犯铁律三
+    const verdict = Math.abs(gap) <= 0.5
+      ? `<b class="v-ping">两个差不多</b>(相差 ${Math.abs(gap)} 分)。这种情况下别指望卦象替你挑——按你自己更想去的那个来,或者把别的条件(钱、人、路程)拿出来当决胜手。`
+      : `<b class="v-ji">选「${esc(winA ? ra.name : rb.name)}」</b>,比另一个高 <b class="key">${Math.abs(gap)}</b> 分。${Math.abs(gap) >= 2 ? '这个差距不算小,不必犹豫。' : '差距不大,但方向是清楚的。'}`;
+    $('vs-out').innerHTML =
+      `<div class="vs-grid">${col(ra, winA)}<div class="vs-mid">还是</div>${col(rb, winB)}</div>` +
+      `<div class="vs-verdict">${verdict}</div>` +
+      `<div class="note">${need}分数是程序按各层权重算的,同样的输入每次一样;权重是本项目定的,古籍没有分数表。</div>`;
+  }
+  $('btn-vs').addEventListener('click', vsRun);
+  $('vs-kind').addEventListener('change', () => {
+    const k = $('vs-kind').value;
+    $('vs-from-wrap').style.display = k === 'place' ? '' : 'none';
+    $('vs-a').placeholder = k === 'place' ? 'A:比如 杭州' : k === 'day' ? 'A:比如 2026-09-12' : 'A:比如 留在现在的公司';
+    $('vs-b').placeholder = k === 'place' ? 'B:比如 成都' : k === 'day' ? 'B:比如 2026-09-18' : 'B:比如 跳去那家新的';
+    $('vs-out').innerHTML = ''; vsStatus('');
+  });
+  $('vs-kind').dispatchEvent(new Event('change'));
+
+  // ═══════════════════ 一句话直问(速答)═══════════════════
+  // 缘起:自测走一遍「问一件事」要点四五步。这里压成一步——写一句话,程序自己配法、
+  // 自己起卦、自己给结论。断语全部来自 Chuduan(程序算死),没有 API Key 也照样有答案。
+  function qkRun() {
+    const q = $('qk-q').value.trim();
+    if (!q) { $('qk-hint').innerHTML = '<span class="v-warn">先写一句话——问什么都行,但得写出来,卦无题则断无所指。</span>'; return; }
+    const now = new Date();
+    const cast = GuaCore.castHexagram();
+    const z = Najia.zhuangGua(cast.benId, now, { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
+    const g = (typeof gender === 'function' ? gender('q') : '') || '';
+    const r = Chuduan.judge(cast, z, q, now, g);
+    if (!r) { $('qk-hint').innerHTML = '<span class="v-warn">这一卦没起成,再点一次。</span>'; return; }
+    const cls = r.cheng === '成' ? 'ji' : r.cheng === '不成' ? 'xiong' : 'ping';
+    const yq = r.yingqi || {};
+    // 填了生日就顺带给一层「哪一年」——年层走 wenji,与问机板块同一个口径
+    let yearLine = '';
+    try {
+      const c = dxBirthChart('q');
+      if (c && typeof Wenji !== 'undefined') {
+        const w = Wenji.ask(c, q, { nowYear: now.getFullYear() });
+        if (w && w.years && w.years.length) {
+          yearLine = `<div class="qk-why">往大里看,这类事在你身上最容易落在 <b class="key">${w.years.slice(0, 2).map(y => y.year + '年').join('、')}</b>。</div>`;
+        }
+      }
+    } catch (e) {}
+    $('qk-out').innerHTML =
+      `<div class="qk-ans">${esc(q)}——<b class="v-${cls === 'ji' ? 'ji' : cls === 'xiong' ? 'xiong' : 'ping'}">${esc(r.say)}</b>。</div>` +
+      `<div class="qk-meta">
+         <span class="chip ${cls}">${esc(r.cheng)}</span>
+         <span class="chip ping">把握 ${esc(r.pct)}</span>
+         ${yq.date ? `<span class="chip warn">见分晓:${esc(yq.date)}</span>` : ''}
+         ${r.dir ? `<span class="chip ping">往${esc(r.dir.dir)}走顺</span>` : ''}
+       </div>` +
+      `<div class="qk-why">${r.why.map(w => '· ' + esc(w)).join('<br>')}</div>` +
+      yearLine +
+      `<div class="qk-more btnrow">
+         <button type="button" id="qk-tofull" class="btn-2 sm">拿这个问题往下细断</button>
+         <button type="button" id="qk-again" class="ghost sm">再起一卦</button>
+       </div>` +
+      `<div class="qk-hint">${esc(r.src)}${yq.note ? ' ' + esc(yq.note) : ''}</div>`;
+    $('qk-tofull').addEventListener('click', () => {
+      $('question').value = q;
+      curTab = 'liuyao'; cancelDuo(); refreshTab();
+      $('sec-q').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    $('qk-again').addEventListener('click', qkRun);
+  }
+  $('btn-qk').addEventListener('click', qkRun);
+  $('qk-q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); qkRun(); } });
+
+  // ═══════════════════ 今日一览 ═══════════════════
+  // 打开就看见,不用点。填了生日就多两格(今天对你如何、你今天的忌方)。
+  function renderToday() {
+    const now = new Date();
+    let info = null, c = null, ry = null;
+    try { c = dxBirthChart('q'); } catch (e) {}
+    try { info = Jiri.dayInfo(now, dxBirthDate(), c ? c.yong : null); } catch (e) {}
+    try { if (c) ry = Yunshi.riYun(c, now); } catch (e) {}
+    if (!info) { $('sec-today').classList.add('voff'); return; }
+    $('sec-today').classList.remove('voff');
+    $('td-date').textContent = `${info.m}月${info.d}日 · ${info.lunarText || ''} · ${info.gz.day}日`;
+    const lvCls = /上吉|吉/.test(info.level) ? 'ji' : /忌|冲/.test(info.level) ? 'xiong' : /慎/.test(info.level) ? 'warn' : 'ping';
+    const cells = [
+      { k: '这天本身', v: `<span class="chip ${lvCls}">${esc(info.level)}</span>`, },
+      // jianchu/zhishen 是对象不是字符串,取 .name 与那一句白话(初版直接拼进模板,页面上出现 [object Object])
+      { k: '这天什么日子', v: esc(`${(info.zhishen && info.zhishen.name) || ''}·${(info.jianchu && info.jianchu.name) || ''}日`) +
+        `<br><span class="dim xs">${esc((info.jianchu && info.jianchu.gist) || '')}</span>` },
+      { k: '冲什么属相', v: esc(info.chongAnimal ? `属${info.chongAnimal}的今天避大事` : '不冲谁') },
+    ];
+    if (ry) {
+      const tCls = ry.score > 0.3 ? 'ji' : ry.score < -0.3 ? 'xiong' : 'ping';
+      cells.unshift({ k: '今天对你', v: `<span class="chip ${tCls}">${esc(ry.level)}</span> <span class="dim">${esc(ry.tone)}</span>` });
+      cells.push({ k: '主要落在', v: esc(ry.area || '') });
+    }
+    $('td-strip').innerHTML = cells.map(x =>
+      `<div class="td-cell"><span class="k">${x.k}</span><span class="v">${x.v}</span></div>`).join('');
+    const yi = (ry && ry.yi || []).slice(0, 3), ji = (ry && ry.ji || []).slice(0, 2);
+    $('td-do').innerHTML = ry
+      ? `<div class="fblock"><span class="k">今天值得做</span><div class="t">${yi.map(esc).join(';')}</div></div>` +
+        `<div class="fblock"><span class="k">今天别做</span><div class="t">${ji.map(esc).join(';')}</div></div>`
+      : `<div class="note">填上生日(下面任一处填过都算),这里就会多出「今天对你如何、该做什么、别做什么」。</div>`;
+  }
+
+  // ═══════════════════ 命盘常驻侧栏 ═══════════════════
+  // 缘起:喜忌、当前大运、今年流年几乎每个板块都要用,可用户得回运势页翻。填过生辰就常驻。
+  function renderSide() {
+    const pan = $('sidepan');
+    let c = null;
+    try { c = dxBirthChart('q'); } catch (e) {}
+    if (!c) { pan.classList.add('voff'); return; }
+    pan.classList.remove('voff');
+    const now = new Date();
+    const age = (() => {
+      const bd = localStorage.getItem(BKEY) || ''; if (!bd) return null;
+      const [y, m, d] = bd.split('-').map(Number);
+      let a = now.getFullYear() - y;
+      if (now.getMonth() + 1 < m || (now.getMonth() + 1 === m && now.getDate() < d)) a--;
+      return a;
+    })();
+    let dy = null;
+    try { for (const x of c.dayun.list) if (age != null && age >= x.fromAge) dy = x; } catch (e) {}
+    const rows = [
+      ['四柱', `<span class="num">${['year', 'month', 'day', 'hour'].map(k => c.pillars[k].gz).join(' ')}</span>`],
+      ['底子', `${esc(c.strength.band)}`],
+      ['帮你的', esc(c.yong.xiWx.join('、'))],
+      ['耗你的', esc(c.yong.jiWx.join('、'))],
+    ];
+    if (dy) rows.push(['眼下十年', `<span class="num">${esc(dy.gz)}</span> <span class="dim">(${Math.floor(dy.fromAge)}岁起)</span>`]);
+    else if (c.dayun && c.dayun.startText) rows.push(['起运', esc(c.dayun.startText)]);
+    try {
+      const ny = Yunshi.nianYun(c, now);
+      if (ny) rows.push(['今年', `<span class="chip ${ny.score > 0.3 ? 'ji' : ny.score < -0.3 ? 'xiong' : 'ping'}">${esc(ny.level)}</span>`]);
+    } catch (e) {}
+    if (c.tiaohou && c.tiaohou.need) rows.push(['最缺', esc(c.tiaohou.need)]);
+    $('sp-body').innerHTML = rows.map(([k, v]) =>
+      `<div class="sp-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('') +
+      `<div class="sp-row"><span class="k"></span><span class="v"><a href="yunshi.html" class="gold-ink">看细账 →</a></span></div>`;
+  }
+  $('sp-fold').addEventListener('click', () => {
+    const p = $('sidepan'); p.classList.toggle('folded');
+    $('sp-fold').textContent = p.classList.contains('folded') ? '▸' : '▾';
+  });
+  // 生辰在任何一处改动,侧栏与今日都跟着刷新
+  function dxRefreshAmbient() { try { renderSide(); } catch (e) {} try { renderToday(); } catch (e) {} }
+  window.dxRefreshAmbient = dxRefreshAmbient;
+
   const VIEWS = {
-    ask: ['sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-wenji', 'sec-dingshi', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
+    ask: ['sec-quick', 'sec-today', 'sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
+    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-wenji', 'sec-dingshi', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {
@@ -3682,6 +4129,11 @@
   });
   $('btn-board-back').addEventListener('click', () => { curBoard = null; showView('boards'); });
   showView('ask');
+  dxRefreshAmbient();
+  // 任何一处生日/时辰/出生地一改,常驻侧栏与今日一览立刻跟上(它们都读同一个 dxBirthChart)
+  ['dl-birth', 'dl-hour', 'jr-birth', 'jr-hour', 'jr-place', 'xy-birth', 'xy-hour'].forEach(id => {
+    const el = $(id); if (el) el.addEventListener('change', () => setTimeout(dxRefreshAmbient, 0));
+  });
 
   // —— 日间/夜间主题(<head> 里的小脚本已提前上色,避免闪白)——
   const TKEY = 'dongxuan_theme';

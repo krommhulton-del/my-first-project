@@ -667,6 +667,118 @@ await t('地利板块:挑旺地与验地实算方位、转起卦复核', async (
 // 缘起:用户 2026-08-01 说地利「不够专业不够深刻…后面那些大城市做太少了…这个类目就是太浅了」。
 // 实测查出三处硬伤(docs/地利体检-01),这条 e2e 把修好的样子钉在界面上——
 // 光引擎对了不算数,得用户在页面上真看得见。
+// ══════════ v0.70 大改版:四个新功能 ══════════
+// 缘起:用户 2026-08-01「各个部分都不够看…我需要的是一次大变革…更多好用的功能」。
+// 四个功能都做成「无 API Key 也有结论」,断语一律由程序算(Chuduan / Dili / Jiri),
+// 这几条 e2e 就盯着这一点——AI 没接也得有答案。
+await t('速答:一句话直接出结论、把握度与时间窗(无 Key 也有)', async () => {
+  await page.evaluate(() => dxShowView('ask'));
+  await page.fill('#qk-q', '我今年能不能换成工作?');
+  await page.click('#btn-qk');
+  const out = await page.textContent('#qk-out');
+  ok(/成|悬|不成/.test(out), '缺结论:' + out.slice(0, 80));
+  ok(/把握/.test(out), '缺把握度');
+  ok(/见分晓/.test(out), '缺时间窗');
+  // 铁律八:成稿里不许出现术语
+  for (const w of ['用神', '世应', '旬空', '月破', '官鬼', '妻财', '子孙']) {
+    ok(!out.includes(w), '速答稿里出现术语「' + w + '」:' + out.slice(0, 120));
+  }
+  // 分数是自拟的,必须自陈
+  ok(/本项目定的/.test(out), '缺「分数是我自己排的」这句交代');
+  // 空着问要拦
+  await page.fill('#qk-q', '');
+  await page.click('#btn-qk');
+  ok(/先写一句话/.test(await page.textContent('#qk-hint')), '空问应拦');
+});
+await t('今日一览:进门就有,填了生日多两层', async () => {
+  await page.evaluate(() => { localStorage.removeItem('dongxuan_birth'); });
+  await page.reload(); await page.waitForTimeout(400);
+  const bare = await page.textContent('#sec-today');
+  ok(/今日/.test(bare) && /冲什么属相/.test(bare), '没填生日也该有黄历那层:' + bare.slice(0, 80));
+  ok(/\[object Object\]/.test(bare) === false, '出现了 [object Object]——对象当字符串拼了');
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1990-06-15'); localStorage.setItem('dongxuan_birth_hour', '5'); });
+  await page.reload(); await page.waitForTimeout(400);
+  const full = await page.textContent('#sec-today');
+  ok(/今天对你/.test(full), '填了生日应多出「今天对你」:' + full.slice(0, 100));
+  ok(/今天值得做/.test(full) && /今天别做/.test(full), '应给出宜忌');
+});
+await t('命盘常驻侧栏:填过生辰才出现,内容随生辰变', async () => {
+  await page.evaluate(() => { localStorage.removeItem('dongxuan_birth'); });
+  await page.reload(); await page.waitForTimeout(400);
+  ok(!(await page.isVisible('#sidepan')), '没填生辰不该显示侧栏');
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1990-06-15'); localStorage.setItem('dongxuan_birth_hour', '5'); });
+  await page.reload(); await page.waitForTimeout(400);
+  ok(await page.isVisible('#sidepan'), '填了生辰应显示侧栏');
+  const a = await page.textContent('#sp-body');
+  for (const k of ['四柱', '帮你的', '耗你的']) ok(a.includes(k), '侧栏缺「' + k + '」:' + a.slice(0, 100));
+  // 换个生辰,侧栏得跟着变(不变就说明它是死的)
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1985-11-03'); });
+  await page.reload(); await page.waitForTimeout(400);
+  ok((await page.textContent('#sp-body')) !== a, '换生辰侧栏一字未变——它没接上排盘');
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1990-06-15'); });
+  await page.reload(); await page.waitForTimeout(400);
+});
+await t('A 还是 B:三种比法都出结论,差得少时照实说「差不多」', async () => {
+  await page.evaluate(() => dxOpenBoard('sec-vs'));
+  await page.fill('#vs-from', '武汉'); await page.fill('#vs-a', '杭州'); await page.fill('#vs-b', '成都');
+  await page.click('#btn-vs');
+  let out = await page.textContent('#vs-out');
+  ok(/选「|两个差不多/.test(out), '比地方没给结论:' + out.slice(0, 100));
+  ok(/方位/.test(out) && /地气/.test(out), '比地方应摊出各层');
+  // 同一个地方比它自己,必然打平——这时不许硬分高下
+  await page.fill('#vs-a', '成都'); await page.fill('#vs-b', '成都');
+  await page.click('#btn-vs');
+  out = await page.textContent('#vs-out');
+  ok(/两个差不多/.test(out), '两个一样的候选应判「差不多」,不许硬选:' + out.slice(0, 120));
+  // 比日子
+  await page.selectOption('#vs-kind', 'day');
+  await page.fill('#vs-a', '2026-09-12'); await page.fill('#vs-b', '2026-09-18');
+  await page.click('#btn-vs');
+  out = await page.textContent('#vs-out');
+  ok(/这天本身/.test(out) && /冲不冲你/.test(out), '比日子应摊出各层:' + out.slice(0, 100));
+  ok(!/\[object Object\]/.test(out), '出现了 [object Object]');
+  // 比两条路
+  await page.selectOption('#vs-kind', 'road');
+  await page.fill('#vs-a', '留在现在的公司'); await page.fill('#vs-b', '跳去那家新的');
+  await page.click('#btn-vs');
+  out = await page.textContent('#vs-out');
+  ok(/成算/.test(out) && /一枝一卦/.test(out), '比两条路应各起一卦并声明一枝一卦:' + out.slice(0, 120));
+  // 只填一个要拦
+  await page.fill('#vs-b', '');
+  await page.click('#btn-vs');
+  ok(/都要填/.test(await page.textContent('#vs-status')), '缺一个候选应拦');
+});
+await t('改版:宽屏两栏、朱砂只给主行动、一屏一个主按钮', async () => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.evaluate(() => dxShowView('ask'));
+  await page.waitForTimeout(200);
+  // 宽屏下侧栏应在主内容右侧(而不是上下堆着)
+  const box = await page.evaluate(() => {
+    const s = document.getElementById('sidepan').getBoundingClientRect();
+    const m = document.querySelector('.maincol').getBoundingClientRect();
+    return { sx: s.x, mx: m.x, sw: s.width, mw: m.width };
+  });
+  ok(box.sx > box.mx + box.mw - 5, `宽屏侧栏没排到右边:主列 x=${box.mx} 宽=${box.mw},侧栏 x=${box.sx}`);
+  // 「一屏一个主行动」的准确说法是:**同一个视口里不许同时看见两个朱砂实心按钮**。
+  // 头一版写成「整页只许有一个」,可这是一条长滚动页,速答、起卦、择日各是一桩独立的事,
+  // 每桩留一个主按钮是对的;真正要防的是两个红按钮同时映入眼帘,让人不知道该点哪个。
+  // 所以改成按视口窗口滚动检查。
+  const worst = await page.evaluate(() => {
+    const btns = [...document.querySelectorAll('button.primary')].filter(b => b.offsetParent !== null);
+    const rects = btns.map(b => { const r = b.getBoundingClientRect();
+      return { top: r.top + window.scrollY, bot: r.bottom + window.scrollY, txt: b.textContent.trim() }; });
+    const H = window.innerHeight;
+    let max = 0, pair = [];
+    for (const a of rects) {
+      const inWin = rects.filter(x => x.top < a.top + H && x.bot > a.top);
+      if (inWin.length > max) { max = inWin.length; pair = inWin.map(x => x.txt); }
+    }
+    return { max, pair };
+  });
+  ok(worst.max <= 1, `同一屏里同时看得见 ${worst.max} 个朱砂主按钮:${worst.pair.join(' / ')}`);
+  await page.setViewportSize({ width: 900, height: 900 });
+});
+
 await t('地利 v0.68:七层俱在界面上、大城市榜真有大城市、时辰入了口', async () => {
   await page.evaluate(() => dxOpenBoard('sec-dili'));
   await page.fill('#dl-birth', '1990-06-15');

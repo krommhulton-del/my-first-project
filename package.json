@@ -4,7 +4,7 @@
   "private": true,
   "description": "东玄卜卦 · 三钱法起卦与解读一体的静态网页程序(内测)",
   "scripts": {
-    "test": "node tests/honesty.test.mjs && node tests/core.test.mjs && node tests/najia.test.mjs && node tests/liuyao.test.mjs && node tests/fangmen.test.mjs && node tests/qimen.test.mjs && node tests/yunshi.test.mjs && node tests/jiri.test.mjs && node tests/audit.test.mjs && node tests/wangshuai.test.mjs && node tests/sanmei.test.mjs && node tests/dashi.test.mjs && node tests/wenji.test.mjs && node tests/dingshi.test.mjs && node tests/geju.test.mjs && node tests/yingqi.test.mjs && node tests/consistency.test.mjs && node tests/blind.test.mjs && node tests/dili.test.mjs && node tests/backtest.test.mjs",
+    "test": "node tests/honesty.test.mjs && node tests/core.test.mjs && node tests/najia.test.mjs && node tests/liuyao.test.mjs && node tests/fangmen.test.mjs && node tests/qimen.test.mjs && node tests/yunshi.test.mjs && node tests/jiri.test.mjs && node tests/audit.test.mjs && node tests/wangshuai.test.mjs && node tests/sanmei.test.mjs && node tests/dashi.test.mjs && node tests/wenji.test.mjs && node tests/dingshi.test.mjs && node tests/geju.test.mjs && node tests/yingqi.test.mjs && node tests/consistency.test.mjs && node tests/blind.test.mjs && node tests/dili.test.mjs && node tests/chuduan.test.mjs && node tests/design.test.mjs && node tests/backtest.test.mjs",
     "e2e": "node tests/e2e.mjs && node tests/yunshi-e2e.mjs && node build-single.mjs && node tests/single-e2e.mjs"
   },
   "devDependencies": {
