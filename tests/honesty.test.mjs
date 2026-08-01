@@ -85,6 +85,32 @@ t('凡写了「出处:《某书》…原话」的地方,原话必须在那本书
   ok(!bad.length, '这些出处核不到:\n      ' + bad.join('\n      '));
   console.log(`      (共核了 ${n} 处挂出处的引文)`);
 });
+t('程序初断挂的出处,逐条在原文里核得到', () => {
+  // 缘起:v0.74 给初断的几条凭据挂了《增删卜易》的原话。规矩不变——搜得到才准挂。
+  const strip = x => x.replace(/<br\s*\/?>/gi, '').replace(/[\s，。、；：？！,.;:?!「」『』()（）《》〈〉·…﹐﹒﹕﹔﹑]/g, '');
+  const raw = strip(readFileSync(join(ROOT, 'data', 'classics', '增删卜易.txt'), 'utf8'));
+  const src = readFileSync(join(ROOT, 'chuduan.js'), 'utf8');
+  const hits = [...src.matchAll(/q:\s*'([^']{8,})',\s*src:\s*'([^']+)'/g)];
+  ok(hits.length >= 3, '挂的出处太少,只有 ' + hits.length);
+  for (const [, q, srcName] of hits) {
+    ok(srcName.startsWith('增删卜易'), '出处书名超出已入库范围:' + srcName);
+    ok(raw.includes(strip(q)), `《${srcName}》里搜不到这句:「${q}」`);
+  }
+  console.log(`      (核了 ${hits.length} 条初断出处)`);
+});
+t('神煞表没有凭记忆扩表——起例查不到原文就不许加', () => {
+  // 缘起:v0.74 本想扩神煞表,查下来渊海子平里**只有断语、没有起例**
+  // (将星/劫煞/亡神/孤辰寡宿的推法一条都搜不到)。按铁律,搜不到就不许挂,
+  // 凭训练记忆写表正是宪法明令禁止的。这条测试盯着别有人回头偷偷加。
+  const bazi = readFileSync(join(ROOT, 'bazi.js'), 'utf8');
+  const yh = readFileSync(join(ROOT, 'data', 'classics', '渊海子平.txt'), 'utf8');
+  for (const name of ['将星', '劫煞', '亡神', '孤辰', '寡宿', '金舆']) {
+    if (!new RegExp('const ' + name).test(bazi) && !bazi.includes(name + ':')) continue;
+    ok(yh.includes(name + '者') || yh.includes(name + '：'),
+      `bazi.js 里加了「${name}」的表,可渊海子平里搜不到它的起例——不许凭记忆写`);
+  }
+  ok(true);
+});
 t('凡自称依某体例的模块,都注明了「出处待核」', () => {
   for (const f of ['najia.js', 'meihua.js', 'qimen.js', 'yunshi.js', 'wenji.js']) {
     const txt = readFileSync(join(ROOT, f), 'utf8');

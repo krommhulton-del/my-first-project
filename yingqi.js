@@ -62,9 +62,17 @@
     { key: '旬空', hit: L => L.kong, zhiOf: L => L.zhi,
       say: '这一爻眼下是空的,落不到实处,要等它本支值日把这个空填实',
       q: '父化未土旬空出空之日到也' },
+    // 月破有**两条**解法,原文一句话里并列写着:「今日𨿽破﹐實破之日則不破﹐合之日則不破」——
+    // 填实(本支值日)与逢合(六合之支值日)都能解破。原先只做了填实那一条,
+    // 「破而逢合」是应期八法里最后一个没补的(CLAUDE.md 待办第 3 条留的尾巴)。
+    // 两条都算得出日子,取**先到的那一天**——既忠于原文「两者皆可」,又保住答案之锚只出一个答案。
     { key: '月破', hit: (L) => L.power && L.power.yuePo, zhiOf: L => L.zhi,
+      altZhiOf: L => LIUHE[L.zhi],
+      sayOf: which => which === '合'
+        ? '这一爻这个月被冲破,提不起劲;等到与它相合的那一天,破就被合住了,事情才提得起来'
+        : '这一爻这个月被冲破,提不起劲,要等它本支值日把破填实',
       say: '这一爻这个月被冲破,提不起劲,要等它本支值日把破填实',
-      q: '實破之日則不破' },
+      q: '今日𨿽破﹐實破之日則不破﹐合之日則不破' },
     { key: '入墓', hit: L => L.power && L.power.ruMu, zhiOf: L => chongOf(L.power.muZhi || MU_OF[L.wx]),
       say: '这一爻被关进库里,要等冲开那座库的日子才出得来',
       q: '明年辰戌是子水入墓之年' },
@@ -87,13 +95,20 @@
     const L = z.lines[pos];
     const hit = YQ_RULES.find(r => r.hit(L, z));
     if (!hit) return null;
-    const zhi = hit.zhiOf(L);
-    const d = nextDayOfZhi(from, zhi, 40);
+    let zhi = hit.zhiOf(L);
+    let d = nextDayOfZhi(from, zhi, 40);
+    let which = '实';
+    // 有备取解法的(眼下只有月破的「破而逢合」),两条都算,取先到的那一天
+    if (hit.altZhiOf) {
+      const az = hit.altZhiOf(L);
+      const ad = az ? nextDayOfZhi(from, az, 40) : null;
+      if (ad && (!d || ad < d)) { zhi = az; d = ad; which = '合'; }
+    }
     const weak = L.power && ['休', '囚', '死'].includes(L.power.wang);
     return {
-      pos: pos + 1, zhi: L.zhi, state: hit.key, targetZhi: zhi,
+      pos: pos + 1, zhi: L.zhi, state: hit.key, targetZhi: zhi, which,
       date: d ? iso(d) : null,
-      say: hit.say, quote: hit.q,
+      say: hit.sayOf ? hit.sayOf(which) : hit.say, quote: hit.q,
       extra: weak ? { say: YQ_SHENG.say, quote: YQ_SHENG.q } : null,
       note: '取法的先后是本项目定的:状态越具体越先(空、破、墓、合住在前,动静的通则在后)。' +
         '原文没有明列一张优先级表,只给了一条复合之例(又空又破取实空实破之日),这一层排法我自己担着。',

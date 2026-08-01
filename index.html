@@ -305,6 +305,12 @@
   .cdjing-r { margin-top: var(--s2); }
   .cdjing-r .k { display: block; color: var(--ink3); font-size: .74rem; letter-spacing: .06em; margin-bottom: 2px; }
   .cdjing-r .t { display: block; font-family: var(--disp); font-size: .98rem; line-height: 1.95; color: var(--ink); }
+  .cdref { margin-bottom: var(--s3); }
+  .cdref-r { margin-bottom: 6px; line-height: 1.75; }
+  .cdref-r .pt { display: block; color: var(--celadon); font-size: .78rem; font-weight: 600; }
+  .cdref-r .q { font-family: var(--disp); color: var(--ink2); font-size: .9rem; }
+  .cdref-r .s { color: var(--ink3); font-size: .76rem; }
+  .cdref-f { color: var(--ink3); font-size: .74rem; margin-top: 4px; }
   .qk-src { margin-top: var(--s3); }
   .qk-src summary { cursor: pointer; color: var(--ink3); font-size: .82rem; list-style: none;
     display: inline-flex; align-items: center; gap: 4px; }
@@ -684,7 +690,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.73</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.74</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1304,7 +1310,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.73 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.74 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -2319,6 +2325,14 @@
     if (cur && out.length < (maxLines || 99)) out.push(cur);
     if (out.length === (maxLines || 99) && cur) out[out.length - 1] = out[out.length - 1].slice(0, -1) + '…';
     return out;
+  }
+  // 古法出处:**只放逐字核得到的**。搜不到原话的一律不挂(铁律六与第八节的规矩)。
+  function cdRefs(refs) {
+    if (!refs || !refs.length) return '';
+    return `<div class="cdref">` + refs.map(r =>
+      `<div class="cdref-r"><span class="pt">${esc(r.pt)}</span>` +
+      `<span class="q">「${esc(r.q)}」</span><span class="s">——《${esc(r.src)}》</span></div>`).join('') +
+      `<div class="cdref-f">以上原话逐字核过 data/classics/ 里的原文;核不到的一概不挂书名。</div></div>`;
   }
   // 经文块:《周易》原文,程序按变占法选中的那几条。原文照录,不改一字、不加白话演绎——
   // 要讲透是大模型的事(它拿到的是同一批材料),这里只把话摆出来。
@@ -4361,7 +4375,7 @@
          <button type="button" id="qk-again" class="ghost sm">再起一卦</button>
        </div>` +
       // 出处与算法交代照旧要有(诚实),但不该占五行版面压住答案——收进可展开
-      `<details class="qk-src"><summary>凭什么这么说</summary><div>${esc(r.src)}${yq.note ? ' ' + esc(yq.note) : ''}</div></details>`;
+      `<details class="qk-src"><summary>凭什么这么说</summary><div>${cdRefs(r.refs)}${esc(r.src)}${yq.note ? ' ' + esc(yq.note) : ''}</div></details>`;
     $('qk-tofull').addEventListener('click', () => {
       $('question').value = q;
       curTab = 'liuyao'; cancelDuo(); refreshTab();

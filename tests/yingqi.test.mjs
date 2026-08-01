@@ -71,6 +71,46 @@ t('取法的先后守着「状态越具体越先」:又空又破时必取「空�
   ok(rules.indexOf('动而逢合') < rules.indexOf('静而逢冲') + 2, '动静两条通则应垫底');
 });
 
+t('破而逢合:月破的第二条解法补齐了,两条都真触发得到', () => {
+  // 缘起:CLAUDE.md 待办第 3 条留的最后一个尾巴。原文一句话里并列写着两条解法——
+  // 「今日𨿽破﹐實破之日則不破﹐合之日則不破」。原先只做了「实破」,「逢合」一直缺着。
+  // 现在两条都算,取先到的那一天(忠于原文「两者皆可」,又保住答案之锚只出一个答案)。
+  const rule = Yingqi.YQ_RULES.find(r => r.key === '月破');
+  ok(rule, '找不到月破那条');
+  ok(typeof rule.altZhiOf === 'function', '月破缺备取解法(破而逢合)');
+  ok(strip(rule.q).includes(strip('合之日則不破')), '出处那句要含逢合这一解:' + rule.q);
+  ok(RAW.includes(strip(rule.q)), '月破的出处在原文里搜不到:' + rule.q);
+  // 跨半年扫一遍:两条解法都得真触发得到,不许有一条是死的
+  let he = 0, shi = 0, n = 0;
+  for (let d = 0; d < 120; d++) {
+    const from = new Date(2026, 0, 1 + d * 3, 10, 0);
+    for (const id of IDS.slice(0, 16)) for (const mv of [[], [2], [1, 3, 5]]) {
+      const r = Yingqi.yingqiOf({ benId: id, moving: mv }, from);
+      if (r && r.state === '月破') { n++; r.which === '合' ? he++ : shi++; }
+    }
+  }
+  ok(n >= 100, '月破样本太少:' + n);
+  ok(he > 0, '「破而逢合」这一解一次都没触发——是条死分支');
+  ok(shi > 0, '「实破」这一解一次都没触发——补逢合时把原来那条挤死了');
+  // 取的必须真是先到的那一天
+  ok(Math.abs(he - shi) / n < 0.3, `两解比例失衡:合 ${he} / 实 ${shi}——取「先到」的话应大体各半`);
+  console.log(`      (跨 120 个日子共 ${n} 例月破:逢合 ${(he / n * 100).toFixed(0)}%、实破 ${(shi / n * 100).toFixed(0)}%)`);
+});
+t('逢合取的那个支,真是本支的六合之支', () => {
+  const LIUHE = { 子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午' };
+  let n = 0;
+  for (let d = 0; d < 60; d++) {
+    const from = new Date(2026, 0, 1 + d * 5, 10, 0);
+    for (const id of IDS.slice(0, 24)) {
+      const r = Yingqi.yingqiOf({ benId: id, moving: [2] }, from);
+      if (!r || r.state !== '月破' || r.which !== '合') continue;
+      eq(r.targetZhi, LIUHE[r.zhi], `${r.zhi}的六合应是${LIUHE[r.zhi]}`);
+      n++;
+    }
+  }
+  ok(n >= 10, '逢合样本太少:' + n);
+});
+
 console.log('【三】答案之锚:同一卦同一时刻,结论必须只有一个');
 t('反复算一百次,结果完全一致(不许有随机)', () => {
   const cast = { benId: IDS[7], moving: [1, 4] };

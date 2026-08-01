@@ -86,6 +86,7 @@
     const yingLine = z.lines[(z.ying || 4) - 1];
     const why = [];    // 给客人看的:一句术语都不许有
     const tech = [];   // 给推演与 AI 材料看的:术语在这里,不上稿
+    const refs = [];   // 挂得住的出处:**只放在 data/classics/ 里逐字搜得到的**,搜不到的一条不放
     let score = 0;
 
     // ——— 一、要看的那样东西在不在、旺不旺 ———
@@ -116,12 +117,17 @@
       tech.push(`用神${ys.liuQin || '(世应法·应爻)'}:${p.wang || ''}${(p.notes || []).length ? ';' + p.notes.join(';') : ''}`);
       why.push(`${what}在这一卦里现着,眼下${plainWang(p.wang)}`);
       if (p.yuePo) { score -= 1.5; why.push('它这个月正被冲着,本月内使不上劲,得过了这个月才算数'); }
-      if (yongLine.kong) { score -= 1.5; why.push('它眼下是空的——现在问等于问了个空,得等这段空过去才见真章'); }
+      if (yongLine.kong) { score -= 1.5; why.push('它眼下是空的——现在问等于问了个空,得等这段空过去才见真章');
+        refs.push({ pt: '空要等到填实那一天才算数',
+          q: '用神旺相而遇旬空﹐出空之日則出矣', src: '增删卜易·旬空章' }); }
       if (p.ruMu) { score -= 1; why.push(`它像锁在柜子里,得有外力来撬开才动得了`); }
     } else if (fu) {
       yongWx = fu.wx;
       score -= 1.5;
       why.push(`${what}没在明面上,藏在底下——这事眼下摆不到台面,得有人先把它掀开才动得了`);
+      refs.push({ pt: '要看的那样东西不上卦时,往底下找',
+        q: '若用神不現﹐卽以日月爲用神﹐倘日月非用神者﹐則本宮首卦尋之',
+        src: '增删卜易·飞伏神章' });
     } else {
       score -= 2.5;
       why.push(`${what}在这一卦里既没露面、也找不着影——这一问眼下没有抓手,多半是时候未到`);
@@ -152,6 +158,10 @@
         else if (KE[m.wx] === yongWx) { score -= .8; block++; tech.push(`动爻${m.liuQin}${m.zhi}${m.wx}克用神`); }
       }
       // 六亲名不上稿:说的是「有几股力在帮、几股在拦」,不是它们在术数里叫什么
+      if (block && yongLine && yongLine.power && ['旺', '相'].includes(yongLine.power.wang)) {
+        refs.push({ pt: '有来拦的,但它自己够硬,拦得住',
+          q: '用神旺相可以敵之﹐必然無妨﹐得禍亦輕', src: '增删卜易·用神章' });
+      }
       if (help && block) why.push(`局面在动:有 ${help} 股力在帮衬,也有 ${block} 股在拦——两边拉扯,谁快谁占先`);
       else if (help) why.push(`局面在动,而且有 ${help} 股力正推着它往成里走`);
       else if (block) why.push(`局面在动,可动的那几股力是来拦的——有 ${block} 处在往回拽`);
@@ -188,7 +198,7 @@
     return {
       score: +score.toFixed(1),
       cheng: band.cheng, pct: band.pct, say: band.say,
-      yongName: ys.liuQin, yongNote: ys.note, byShiYing, tech, advice,
+      yongName: ys.liuQin, yongNote: ys.note, byShiYing, tech, advice, refs,
       where: byShiYing ? '所问不属六亲之一,按世应法论' : (loc ? loc.where : ''),
       why,
       yingqi: yq, dir,
