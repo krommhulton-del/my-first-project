@@ -667,6 +667,63 @@ await t('地利板块:挑旺地与验地实算方位、转起卦复核', async (
 // 缘起:用户 2026-08-01 说地利「不够专业不够深刻…后面那些大城市做太少了…这个类目就是太浅了」。
 // 实测查出三处硬伤(docs/地利体检-01),这条 e2e 把修好的样子钉在界面上——
 // 光引擎对了不算数,得用户在页面上真看得见。
+// 缘起:CLAUDE.md 第五节把「程序算死,AI 只解释」定为核心哲学,可这五个卦阵板块
+// 摆完卦只有一句卦名摘要,断语全靠 AI——没 API Key 的用户只看得到卦象。v0.71 全部接上。
+// 这条盯着:五个板块每一卦都得有程序初断,且**无 Key 也看得见**。
+await t('五个卦阵板块都接上程序初断,无 Key 也有结论', async () => {
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1990-06-15'); localStorage.setItem('dongxuan_birth_hour', '5'); });
+  await page.reload(); await page.waitForTimeout(300);
+  const BAN = ['用神', '世应', '旬空', '月破', '官鬼', '妻财', '子孙', '兄弟', '体卦', '当令', '旺相休囚', '纳甲'];
+  const check = async (sel, name) => {
+    const n = await page.locator(`${sel} .cdrow`).count();
+    ok(n >= 1, `${name}:起了卦却没有程序初断`);
+    const txt = (await page.locator(`${sel} .cdrow`).allTextContents()).join(' ');
+    ok(/程序初断/.test(txt), `${name}:初断没标出处`);
+    for (const w of BAN) ok(!txt.includes(w), `${name} 的初断里出现术语「${w}」:${txt.slice(0, 140)}`);
+    ok(txt.replace(/\s/g, '').length > 25, `${name}:初断内容太薄`);
+    return txt;
+  };
+  // 转运(零输入摆阵)
+  await page.evaluate(() => dxOpenBoard('sec-zhuanyun'));
+  await page.click('#btn-zy-start');
+  await page.locator('#zy-plan .zy-cast').first().click();
+  await check('#zy-plan', '转运');
+  // 心愿
+  await page.evaluate(() => dxOpenBoard('sec-xinyuan'));
+  await page.locator('#xy-chips .fq').first().click();
+  await page.click('#btn-xy-start');
+  await page.locator('#xy-plan .xy-cast').first().click();
+  const xy = await check('#xy-plan', '心愿');
+  ok(/把握/.test(xy), '心愿(六爻)应给出把握度:' + xy.slice(0, 100));
+  // 姻缘
+  await page.evaluate(() => dxOpenBoard('sec-yinyuan'));
+  await page.click('#btn-yl-zl');
+  await page.locator('#yl-plan .yl-cast').first().click();
+  await check('#yl-plan', '姻缘');
+  // 大问(用现成阵,不需要 Key)
+  await page.evaluate(() => dxOpenBoard('sec-dawen'));
+  await page.click('#btn-dw-example');
+  await page.locator('#dw-plan .dw-cast').first().click();
+  await check('#dw-plan', '大问');
+  // 未来镜:三卦三法,每一卦都得有,且主线卦给的是「基调」不是「成算」
+  await page.evaluate(() => dxOpenBoard('sec-wj'));
+  await page.fill('#wj-q', '一年后我的日子是什么样');
+  await page.click('#btn-wj-start');
+  for (let i = 0; i < 3; i++) await page.locator('#wj-plan .wj-cast').first().click();
+  const rows = await page.locator('#wj-plan .cdrow').allTextContents();
+  ok(rows.length === 3, `未来镜三卦应各有初断,实得 ${rows.length} 条`);
+  for (const w of BAN) ok(!rows.join(' ').includes(w), '未来镜初断里有术语「' + w + '」');
+  // 「一年后我的日子是什么样」不是个成不成的问题,不许硬安一个「成/几成」
+  ok(/基调/.test(rows[0]), '未来镜主线卦应给基调而非成算:' + rows[0].slice(0, 90));
+  ok(!/把握\s*[一二三四五六七八九]/.test(rows[0]), '未来镜主线卦不该出现把握度:' + rows[0].slice(0, 90));
+  // 三法各有各的判语来源
+  ok(/梅花体用/.test(rows[1]), '第二卦应是梅花的体用断:' + rows[1].slice(0, 60));
+  ok(/小六壬/.test(rows[2]), '第三卦应是小六壬三宫:' + rows[2].slice(0, 60));
+  // 清空之后初断跟着没
+  await page.click('#btn-wj-clear');
+  ok((await page.locator('#wj-plan .cdrow').count()) === 0, '清空后初断应一并清掉');
+});
+
 // ══════════ v0.70 大改版:四个新功能 ══════════
 // 缘起:用户 2026-08-01「各个部分都不够看…我需要的是一次大变革…更多好用的功能」。
 // 四个功能都做成「无 API Key 也有结论」,断语一律由程序算(Chuduan / Dili / Jiri),

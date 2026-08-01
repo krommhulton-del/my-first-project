@@ -245,6 +245,17 @@
   .td-cell .k { color: var(--ink3); font-size: .8rem; letter-spacing: .06em; display: block; margin-bottom: 3px; }
   .td-cell .v { font-size: 1.02rem; line-height: 1.5; }
   .td-do { margin-top: var(--s3); display: flex; gap: var(--s2); flex-wrap: wrap; }
+
+  /* ——— 程序初断:五个卦阵板块共用的那一块 ———
+     缘起:这五个板块原先摆完卦只有一句卦名摘要,断语全靠 AI,没 Key 的用户只看得到卦象。
+     现在每一卦下面都挂一条程序算死的结论(成不成、几成、凭据、应期),无 Key 也能用。 */
+  .cdrow { margin: 2px 0 var(--s3) 0; padding: var(--s2) var(--s3);
+    background: var(--panel2); border: 1px solid var(--hair);
+    border-left: 2px solid var(--gold-hair); border-radius: var(--r-tile); }
+  .cdhead { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 5px; }
+  .cdtag { margin-left: auto; color: var(--ink3); font-size: .74rem; letter-spacing: .1em; }
+  .cdwhy { color: var(--ink2); font-size: .87rem; line-height: 1.7; }
+  @media (max-width: 620px) { .cdtag { margin-left: 0; } }
   .zone { display: flex; align-items: center; gap: 12px; color: var(--gold); letter-spacing: .35em;
     font-size: .92rem; margin: 26px 0 14px; font-family: var(--disp); }
   .zone::before, .zone::after { content: ''; flex: 1; border-top: 1px dashed var(--line); }
@@ -602,7 +613,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.70</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.71</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1221,7 +1232,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.70 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.71 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1974,26 +1985,39 @@
       dwPlan.groups.map((g, gi) => `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">${dwCollapsed ? '▸' : '▾'}</span><b>${esc(g.title)}</b><span class="why">${esc(g.why || '')}</span></button><div class="dwbody${dwCollapsed ? ' hidden' : ''}">` +
         g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method] || '六爻'}</span><span class="q">${esc(c.q)}</span>` +
           (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary dw-cast" data-g="${gi}" data-c="${ci}">起卦</button>`) +
-        `</div>`).join('') +
+        `</div>` + cdBlock(c)).join('') +
       `</div></div>`).join('');
     $('dw-actions').classList.toggle('hidden', dwDone() === 0);
   }
   // 各法门无界面起卦,产出回报文本与一句摘要
-  function dwCastOne(c) {
+  // ctx:哪个板块在起卦('dw'/'zy'/'yl'/'q'…)。
+  // 缘起:头一版这里写死 gender('q'),于是姻缘、大问、转运板块上那个「为谁问·性别」选了也白选——
+  // 而婚恋类的用神正是按性别取的(男以妻财为妻、女以官鬼为夫),取反了整卦结论就反了。
+  function dwCastOne(c, ctx) {
     const now = new Date();
     if (c.method === 'meihua') {
       const lunar = Lunar.fromDate(now); const cast = Meihua.castByTime(lunar);
       const a = Meihua.analyze(cast, Najia.ganZhi(now).monthZhi);
       c.report = `【梅花起卦】${cast.how}\n本卦:${cast.ben.full}(体${cast.tiTri.name}${a.ti},用${cast.yongTri.name}${a.yong}),${POS[cast.moving - 1]}动\n互卦:${cast.hu.full} 变卦:${cast.bian.full}\n体用断:${a.rel},${a.lv}。${a.wang}\n经文:本卦辞「${cast.ben.guaCi}」;动爻辞「${cast.ben.yaoCi[cast.moving - 1]}」;变卦辞「${cast.bian.guaCi}」\n所问:${c.q}`;
       c.summary = `${cast.ben.name}之${cast.bian.name}·${a.lv}`;
+      // 梅花本来就有体用断,把它摆到台面上,与六爻那条同一个样式
+      // a.wang 原文是「体卦土当令而旺,凶减吉增」——带体卦/当令/旺三个术语,铁律八不许上稿。
+      // 只取它那半句人话(旺衰对吉凶的加减),术语那半句留给 report 给模型看。
+      const mhWang = MH_WANG[String(a.wang || '').split(',').pop()] || '';
+      c.cd = { kind: '梅花体用', lv: a.lv, why: [MH_PLAIN[a.rel] || a.rel, mhWang].filter(Boolean) };
     } else if (c.method === 'xlr') {
       const k = Xiaoliuren.castByTime(Lunar.fromDate(now));
       c.report = `【小六壬起课】${k.how}\n三宫:${k.gongs[0].name}(因)→${k.gongs[1].name}(过程)→${k.gongs[2].name}(果)\n果宫诗诀:${k.gongs[2].verse}\n所问:${c.q}`;
       c.summary = `${k.gongs.map(g => g.name).join('·')}`;
+      const guo = k.gongs[2];
+      // 诗诀是文言(「六畜多作怪,病者出西方」),不往客人跟前摆;它已在 report 里供模型取用。
+      c.cd = { kind: '小六壬三宫', lv: (guo.ji || '').split('(')[0] || '平',
+        why: [`起因落在${k.gongs[0].name}、过程落在${k.gongs[1].name}、结果落在${guo.name}——${guo.ji}`] };
     } else if (c.method === 'qimen') {
       const qc = Qimen.cast(now); const v = Qimen.verdict(qc);
       c.report = Qimen.report(qc).trimEnd() + `\n程序初断:事落${v.name}宫得${v.gate},${v.lv}(${v.reasons.join(';')})\n所问:${c.q}`;
       c.summary = `${qc.dun}·${v.name}宫${v.gate}·${v.lv}`;
+      c.cd = { kind: '奇门时家', lv: v.lv, dirTxt: v.dir, why: qmWhy(v) };
     } else {
       const cast = GuaCore.castHexagram();
       const z = Najia.zhuangGua(cast.benId, now, { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
@@ -2002,10 +2026,155 @@
       const r = GuaCore.interpret(cast);
       let anchor = '';
       try { anchor = '\n' + Yingqi.material(cast, now, WANT_AMOUNT.test(c.q || '')); } catch (e) {}
-      c.report = GuaCore.buildReport(cast, c.q) + '\n' + panText(cast, z, c.q) + '\n【经文取材】\n' + jing + anchor;
-      c.summary = `${cast.ben.name}${cast.bian ? '之' + cast.bian.name : ''}·${r.level}`;
+      // ——— 程序初断:这一卦成不成、几成、为什么、什么时候见分晓 ———
+      // 缘起(CLAUDE.md 第五节与待办第 6 条):这五个卦阵板块原先摆完卦只有一句卦名摘要,
+      // 断语全靠 AI——没有 API Key 的用户只看得到卦象,这违反了「程序算死,AI 只解释」。
+      // 成算只此一份,走 Chuduan;此处不自己另算任何断卦元素。
+      try {
+        c.cd = Chuduan.judge(cast, z, c.q, now, (typeof gender === 'function' ? gender(ctx || 'q') : '') || '');
+      } catch (e) { c.cd = null; }
+      c.report = GuaCore.buildReport(cast, c.q) + '\n' + panText(cast, z, c.q) + '\n【经文取材】\n' + jing + anchor +
+        (c.cd ? cdMaterial(c.cd, c.cdMode) : '');
+      // 摘要尾巴:成算模式挂成算,基调模式挂基调——不许两处说两样话。
+      // 缘起:头一版不分模式一律挂成算,于是未来镜的摘要写着「·成(八九成)」,
+      // 而它界面上与锁定指令里给的却是「基调 逆」,同一卦两个说法。
+      c.summary = `${cast.ben.name}${cast.bian ? '之' + cast.bian.name : ''}·${r.level}` +
+        (c.cd ? (c.cdMode === 'tone' ? `·基调${toneOf(c.cd.score).t}` : `·${c.cd.cheng}(${c.cd.pct})`) : '');
     }
     c.done = true;
+  }
+  // 程序初断 → 喂给大模型的材料。**结论由程序定死,模型只许讲透、不许改判**(第五节)。
+  function cdMaterial(cd, mode) {
+    // 未来镜那一卦问的不是成不成,材料里也不许说「成算」——否则模型会被引着去写成败。
+    const headLine = mode === 'tone'
+      ? `基调分值:${cd.score}(越高越顺;这一卦定的是故事走向,不是成不成)\n`
+      : `成算:${cd.cheng}(把握${cd.pct},分值${cd.score})\n`;
+    return `\n【程序初断——这是程序按卦面算死的结论,不是模型的意见】\n` +
+      headLine +
+      `凭据:${cd.why.join(';')}\n` +
+      (cd.tech && cd.tech.length ? `推演细目(只供你推理,成稿里一个字都不许出现):${cd.tech.join(';')}\n` : '') +
+      (cd.yingqi && cd.yingqi.date ? `应期:${cd.yingqi.date}(${cd.yingqi.state})\n` : '') +
+      (mode === 'tone'
+        ? `**铁规:故事的走向必须与上面这个基调一致。** 分值为正就不许写成一败涂地,为负就不许粉饰成圆满。\n这条压过一切文采考虑。`
+        : `**铁规一:你的断语必须与上面这个成算一致。** 觉得卦面另有讲究,可以补充细节、可以指出条件,\n` +
+          `但不许把「不成」讲成「能成」、也不许把「成」讲成「难说」;把握度也不许比这个数字乐观或悲观。\n` +
+          // 缘起:一阵里有不少卦问的根本不是「成不成」(如「那时身边的人是什么模样」「往哪条门路走」),
+          // 给这种小问硬套一个成败死命令,会逼着模型把描述题answer成判断题。
+          // 改法:让这条铁规约束的是**方向与力度**,不是成败这个说法本身。
+          `**若这一问本来就不是问成不成**(问的是「什么样」「怎么走」「哪个方向」这类),\n` +
+          `就把上面那个分值当基调用:为正往顺里写、为负往逆里写、近零就写平实,方向不许反着来。\n` +
+          // 缘起:汇总深断时多卦的初断拼在一起,彼此可能矛盾(有的成有的不成),
+          // 原先材料里没说该怎么权衡,模型只能自己挑一个,或者和稀泥。
+          `**铁规二:这一阵里若各卦的初断彼此不一致,不许和稀泥。** 以问得最直接的那一卦为主断,\n` +
+          `其余卦作条件与过程;分歧本身要当面写出来(哪一卦说什么、你为什么以那一卦为准)。\n` +
+          `这两条压过一切文采考虑。`);
+  }
+  // ——— 基调表:唯一一处 ———
+  // 缘起(第四节「一个口径一处算」):接程序初断时,我在 cdBlock 与 wjTone 里
+  // **各写了一遍同样的五档门槛**(3 / 1.2 / -1.4 / -4.3)。数一样,可两处各写各的,
+  // 下次调一处忘了另一处,界面显示的基调就会和喂给模型的锁定基调对不上——
+  // 而那种不一致是静默的,谁都看不出来。现在只留这一张表,两处都取它。
+  const TONE_BANDS = [
+    { min: 3,    t: '顺',   cls: 'ji',    short: '事往成处走,亮堂',      lock: '大顺——成与聚,人事俱旺,结尾亮堂' },
+    { min: 1.2,  t: '小顺', cls: 'ji',    short: '平实里有暖意,小成',    lock: '小顺——平实里有暖意,小成,不写大富大贵' },
+    { min: -1.4, t: '平流', cls: 'ping',  short: '无大起落,日常质地',    lock: '平流——日常质地为主,无大起落,收在安稳里' },
+    { min: -4.3, t: '有坎', cls: 'warn',  short: '先抑,受挫但立得住',    lock: '有坎——先抑,主人公受挫但立得住,结尾不全解、留一口气' },
+    { min: -99,  t: '逆',   cls: 'xiong', short: '事与愿违,散、败或迟',  lock: '逆——事与愿违,散、败或迟,写怅然与体面,不许粉饰成圆满' },
+  ];
+  const toneOf = s => TONE_BANDS.find(b => s >= b.min) || TONE_BANDS[TONE_BANDS.length - 1];
+  // ——— 奇门那一路的人话层 ———
+  // 缘起:接程序初断时,梅花(MH_PLAIN/MH_WANG)、六爻(WHAT_PLAIN/WANG_PLAIN)都做了翻译,
+  // **唯独奇门这一路我把 verdict.reasons 原样端上了台面**。实测采样八千个时刻,
+  // reasons 去重 452 种,其中 439 种是「事落坎宫得死门(凶门)配天芮」这种模板——
+  // 一句话里同时有宫名、八门、九星;另有 6 种带门迫/天盘/三奇/空亡。全是铁律八禁的术语。
+  // 现在按门定人话,宫名与星名一概不上稿(它们只留在 c.report 里给模型推演用)。
+  const QM_GATE = {
+    开门: '路是开着的——适合出面、开张、找人办事',
+    休门: '宜缓不宜急——托人、休整、慢慢来的事顺',
+    生门: '有生机——求财谋生这一路最走得通',
+    伤门: '带着伤气——容易起争执、受损失,硬碰要吃亏',
+    杜门: '路是堵着的——宜守不宜进,适合避风头、闷头做事',
+    景门: '主文书与消息——看着热闹,虚多实少,别把话当准信',
+    死门: '一股死气——这条路眼下走不通,别再耗',
+    惊门: '主惊扰与口舌——提防被搅局、被人说闲话',
+  };
+  const QM_PLAIN = {
+    '宫制门,进展偏慢': '眼下的处境压着你要走的那条路,进展会慢',
+    '门生宫,门路顺': '路子顺着处境走,推得动',
+    '门克宫成门迫,事多阻折': '路子和眼下的处境相冲,事情会一折再折',
+    '事宫落空亡,近期虚而不实、难落地': '这事眼下是虚的,近期落不了地',
+    '人事同宫,事在自己手里': '事在你自己手里,不靠别人点头',
+    '天盘得乙奇相助': '上头有一股清贵之气帮衬',
+    '天盘得丙奇相助': '上头有一股清贵之气帮衬',
+    '天盘得丁奇相助': '上头有一股清贵之气帮衬',
+  };
+  // 把奇门的判语理由整条译成人话;译不动的一律丢掉,不许原样端上去
+  function qmWhy(v) {
+    const out = [];
+    if (QM_GATE[v.gate]) out.push(QM_GATE[v.gate]);
+    else if (v.gateUse) out.push(`这一路主的是:${v.gateUse}`);
+    for (const r of v.reasons || []) {
+      if (/^事落.宫得/.test(r)) continue;            // 模板句全是宫名门名星名,整条不要
+      if (QM_PLAIN[r]) { out.push(QM_PLAIN[r]); continue; }
+      if (/宫|门|天盘|地盘|奇|仪|符|空亡|值使/.test(r)) continue;  // 译不动又带术语的,宁可不说
+      out.push(r);                                   // 剩下的本来就是人话(如「事克我,这事压人,别硬顶」)
+    }
+    if (v.kong) out.push('这事眼下是虚的,近期落不了地');
+    return [...new Set(out)];
+  }
+  // 体用关系是术语,铁律八不许上稿——一次性译成人话
+  const MH_PLAIN = {
+    用生体: '这件事本身在给你送东西,顺水推舟', 体克用: '你压得住这件事,拿得下但要费点手脚',
+    体用比和: '你跟这件事是一路的,合得来', 体生用: '你在往这件事上贴——出得多、回得少',
+    用克体: '这件事正压着你,硬顶要吃亏',
+  };
+  // 梅花那句旺衰注记(实测只有这五种取值)也是术语,一并译成人话
+  const MH_WANG = {
+    凶减吉增: '眼下的节令帮着你——坏的那一面会轻些,好的那一面会重些',
+    吉缓凶速: '眼下的节令不帮你——好事来得慢,坏事来得快',
+    体卦季内平气: '眼下的节令不偏不倚,加不了分也减不了分',
+    力弱: '你自己这一头眼下力气不够,推不太动',
+    体旺有气: '你自己这一头眼下有劲,顶得住',
+  };
+  // 吉凶档 → 语义色。四个法门的判语词汇不同,在这里统一映射,别处不许各写一套。
+  // 四个法门的判语词汇各不相同,这里一次性映射到语义色。
+  // 缘起:头一版只认梅花与黄历那套(大吉/吉/小吉/不利/凶),**漏了奇门五档里的「顺」与「滞」**——
+  // qimen.js:174 的分档是 上吉/顺/平/滞/凶,于是判「顺」的卦被涂成中性墨灰(等于把吉说成平)、
+  // 判「滞」的也是。实测四成以上的奇门卦颜色是错的。凡新增法门,必须回来补这张表。
+  const LV_CLS = c => /大吉|上吉/.test(c) ? 'ji'
+    : /^吉|小吉|^顺/.test(c) ? 'ji'
+    : /大凶|凶/.test(c) ? 'xiong'
+    : /不利|慎|滞/.test(c) ? 'warn' : 'ping';
+  // 程序初断 → 界面上的一块。五个板块、四个法门共用,别处不许再写一份。
+  function cdBlock(c) {
+    if (!c.done || !c.cd) return '';
+    const cd = c.cd;
+    let head;
+    if (cd.cheng && c.cdMode === 'tone') {
+      // 未来镜的主线卦问的是「未来实景如何」,根本不是一个成不成的问题——
+      // 硬安一个「成/几成」是误导。同一个分数换个说法:给基调。
+      // (这个板块本来就靠基调锁定来定故事走向,与它自己的机制也对得上。)
+      const tone = toneOf(cd.score);
+      const yq = cd.yingqi || {};
+      head = `<span class="chip ${tone.cls}">基调 ${tone.t}</span>` +
+        `<span class="chip ping">${esc(tone.short)}</span>` +
+        (yq.date ? `<span class="chip warn">转折 ${esc(yq.date)}</span>` : '');
+    } else if (cd.cheng) {   // 六爻:走 Chuduan,有成算与把握度
+      const cls = cd.cheng === '成' ? 'ji' : cd.cheng === '不成' ? 'xiong' : 'ping';
+      const yq = cd.yingqi || {};
+      head = `<span class="chip ${cls}">${esc(cd.cheng)}</span>` +
+        `<span class="chip ping">把握 ${esc(cd.pct)}</span>` +
+        (yq.date ? `<span class="chip warn">见分晓 ${esc(yq.date)}</span>` : '') +
+        (cd.dir ? `<span class="chip ping">往${esc(cd.dir.dir)}走顺</span>` : '');
+    } else {          // 梅花/小六壬/奇门:各家本来就有的判语,摆到同一个样式里
+      head = `<span class="chip ${LV_CLS(cd.lv)}">${esc(cd.lv)}</span>` +
+        (cd.dirTxt ? `<span class="chip ping">吉方${esc(cd.dirTxt)}</span>` : '') +
+        `<span class="chip ping">${esc(cd.kind)}</span>`;
+    }
+    return `<div class="cdrow">` +
+      `<div class="cdhead">${head}<span class="cdtag">程序初断</span></div>` +
+      `<div class="cdwhy">${cd.why.map(w => '· ' + esc(w)).join('<br>')}</div>` +
+    `</div>`;
   }
   async function dwMakePlan() {
     if (dwBusy) return;
@@ -2116,7 +2285,7 @@
     if (!b || !dwPlan) return;
     const c = dwPlan.groups[Number(b.dataset.g)].casts[Number(b.dataset.c)];
     if (!c || c.done) return;
-    dwCastOne(c);
+    dwCastOne(c, 'dw');
     renderDwPlan();
     dwStatus(`已起 ${dwDone()}/${dwTotal()} 卦。${dwDone() >= dwTotal() ? '全阵起毕,点「汇总深断」。' : ''}`);
   });
@@ -2146,7 +2315,7 @@
       `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why)}</span></button><div class="dwbody">` +
       g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method]}</span><span class="q">${esc(c.q)}</span>` +
         (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary zy-cast" data-g="${gi}" data-c="${ci}">起卦</button>`) +
-      `</div>`).join('') +
+      `</div>` + cdBlock(c)).join('') +
       `</div></div>`).join('');
     $('zy-actions').classList.toggle('hidden', zyDone() === 0);
   }
@@ -2236,7 +2405,7 @@
     if (!b || !zyPlan) return;
     const c = zyPlan.groups[Number(b.dataset.g)].casts[Number(b.dataset.c)];
     if (!c || c.done) return;
-    dwCastOne(c);
+    dwCastOne(c, 'zy');
     renderZy();
     zyStatus(`已起 ${zyDone()}/${zyTotal()} 卦。${zyDone() >= zyTotal() ? '六卦起毕,点「汇总深断」。' : ''}`);
   });
@@ -2340,7 +2509,7 @@
       `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why)}</span></button><div class="dwbody">` +
       g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method]}</span><span class="q">${esc(c.q)}</span>` +
         (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary xy-cast" data-g="${gi}" data-c="${ci}">起卦</button>`) +
-      `</div>`).join('') +
+      `</div>` + cdBlock(c)).join('') +
       `</div></div>`).join('');
     $('xy-actions').classList.toggle('hidden', xyDone() === 0);
   }
@@ -2444,7 +2613,7 @@
     if (!b || !xyPlan) return;
     const c = xyPlan.groups[Number(b.dataset.g)].casts[Number(b.dataset.c)];
     if (!c || c.done) return;
-    dwCastOne(c);
+    dwCastOne(c, 'q');
     renderXy();
     xyStatus(`已起 ${xyDone()}/${xyTotal()} 卦。${xyDone() >= xyTotal() ? '六卦起毕,点「汇总深断」。' : ''}`);
   });
@@ -2457,7 +2626,7 @@
     note: '三卦成景:主线骨架、人物环境、气氛节奏,先断透再动笔。',
     groups: [
       { title: '三卦成景', why: '故事骨架全取于此', casts: [
-        { method: 'liuyao', q: '我想看:«Q»——未来实景如何?', focus: '主线骨架:成败聚散、起伏的先后节点、应期落到季节月份、主人公彼时的处境与心气' },
+        { method: 'liuyao', cdMode: 'tone', q: '我想看:«Q»——未来实景如何?', focus: '主线骨架:成败聚散、起伏的先后节点、应期落到季节月份、主人公彼时的处境与心气' },
         { method: 'meihua', q: '围绕«Q»,那时身边的人与环境是什么模样?', focus: '关键人物(几人、性别、大致相貌性情、与主人公远近)、场所环境(城乡、屋宇、行业、新旧)、人事是聚是散' },
         { method: 'xlr', q: '«Q»到时的节奏与气氛如何?', focus: '气氛底色(安稳/纠缠/快喜/口舌/吉庆/落空)与节拍快慢,入景化作天气、光线、声响' }] },
     ],
@@ -2495,7 +2664,7 @@
       `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why)}</span></button><div class="dwbody">` +
       g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method]}</span><span class="q">${esc(c.q)}</span>` +
         (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary wj-cast" data-c="${ci}">起卦</button>`) +
-      `</div>`).join('') +
+      `</div>` + cdBlock(c)).join('') +
       `</div></div>`;
     $('wj-actions').classList.toggle('hidden', wjDone() === 0);
   }
@@ -2536,8 +2705,17 @@
     if (b) $('wj-q').value = b.textContent.trim();
   });
   // 基调锁定:主线卦断级→故事走向,机械绑死,吉不写惨、凶不硬圆
-  function wjTone(sum) {
-    const lv = (sum || '').split('·').pop() || '';
+  // 缘起(v0.71 的一个真回归):这个函数原本靠 `summary.split('·').pop()` 抠出吉凶等级。
+  // 接程序初断时我给 summary 尾巴加了「·成(八九成)」,于是 pop() 拿到的成了「成(八九成)」,
+  // 六个分支一个都不匹配,**基调锁定悄悄退化成兜底句「依主线卦自定」——等于没锁**。
+  // v0.44 做未来镜时基调锁定正是它的核心机制,这一坏是静默的:界面照常、测试照常绿。
+  // 根子在于「拿给人看的字符串当数据结构解析」。现在改成优先吃程序初断的分值,
+  // 分值是数字,不会因为文案改动而失效;解析摘要只作没有初断时的退路。
+  function wjTone(sumOrCast) {
+    const c = (sumOrCast && typeof sumOrCast === 'object') ? sumOrCast : null;
+    if (c && c.cd && typeof c.cd.score === 'number') return toneOf(c.cd.score).lock;
+    const sum = c ? c.summary : sumOrCast;
+    const lv = (sum || '').split('·')[1] || (sum || '').split('·').pop() || '';
     if (/大吉/.test(lv)) return '大顺——成与聚,人事俱旺,结尾亮堂';
     if (/小吉|平吉/.test(lv)) return '小顺——平实里有暖意,小成,不写大富大贵';
     if (/吉/.test(lv)) return '顺——事往成处走,有暖意,小波折不碍大局';
@@ -2564,7 +2742,7 @@
     const casts = wjPlan.groups[0].casts;
     const c1 = casts[0], c2 = casts[1], c3 = casts[2];
     let material = `【未来镜 · 先解卦,后成文】\n【所看:${wjPlan.q}】\n【视角:${wjPlan.pov}|看多远:由主卦应期定,断到哪年哪季,故事就落在那时,季节衣食随之】` +
-      `\n【基调锁定——违锁即废稿】${c1.done ? `主线卦「${c1.summary}」:故事走向必须为「${wjTone(c1.summary)}」。` : '主线卦未起,以已起之卦定调并明说。'}` +
+      `\n【基调锁定——违锁即废稿】${c1.done ? `主线卦「${(c1.summary || '').split('·')[0]}」:故事走向必须为「${wjTone(c1)}」——这个基调由程序按卦面算死,压过一切文采考虑,违锁即废稿。` : '主线卦未起,以已起之卦定调并明说。'}` +
       `${c2.done ? `人物环境取第二卦「${c2.summary}」。` : ''}${c3.done ? `气氛质地取第三课「${c3.summary}」(以末宫定氛围)。` : ''}` +
       `\n【规矩】三卦先各自断透再动笔;未起之卦的那一路按已起之卦从简处理,不硬编。`;
     for (const c of casts.filter(x => x.done)) {
@@ -2584,8 +2762,11 @@
     if (wjBusy) return;
     if (!wjConvo) { wjStatus('先解卦成文,再追卦续写。', true); return; }
     const t = $('wj-fu').value.trim() || '后来呢?往下会怎么走?';
-    const c = { method: 'liuyao', q: `${wjPlan.q}——${t}` };
-    dwCastOne(c);
+    // 续卦问的还是「往下会怎么走」,不是成不成——与主线卦同一个口径,走基调。
+    // 缘起:头一版漏传 cdMode,于是续卦材料里给模型下的是「必须与这个成算一致」的死命令,
+    // 而这个板块本来是靠基调锁定来定故事走向的,两条指令直接打架。
+    const c = { method: 'liuyao', cdMode: 'tone', q: `${wjPlan.q}——${t}` };
+    dwCastOne(c, 'q');
     const material = `【续卦】所问:${c.q}\n${c.report}\n【前文】即上一篇。接着前文的世界线往下续写成文:新情节的骨架取自这一续卦(先断透再写),已定的人物与事实不许改;文末照附【本篇从何而来】,只交代新增情节的来处。`;
     wjStatus(`已为续篇起一卦(${c.summary || '成卦'}),依卦续写中……`);
     return wjAsk(wjConvo.turns.concat([{ role: 'user', content: material }]), true);
@@ -2607,7 +2788,7 @@
     if (!b || !wjPlan) return;
     const c = wjPlan.groups[0].casts[Number(b.dataset.c)];
     if (!c || c.done) return;
-    dwCastOne(c);
+    dwCastOne(c, 'q');
     renderWj();
     wjStatus(`已起 ${wjDone()}/3 卦。${wjDone() >= 3 ? '三卦齐了,点「解卦成文」。' : ''}`);
   });
@@ -2653,7 +2834,7 @@
       `<div class="dwgroup"><button class="dwgh" type="button"><span class="tri">▾</span><b>${esc(g.title)}</b><span class="why">${esc(g.why)}</span></button><div class="dwbody">` +
       g.casts.map((c, ci) => `<div class="dwcast"><span class="m">${DW_METHODS[c.method]}</span><span class="q">${esc(c.q)}</span>` +
         (c.done ? `<span class="res">✓ ${esc(c.summary)}</span>` : `<button class="primary yl-cast" data-g="${gi}" data-c="${ci}">起卦</button>`) +
-      `</div>`).join('') +
+      `</div>` + cdBlock(c)).join('') +
       `</div></div>`).join('');
     $('yl-actions').classList.toggle('hidden', ylDone() === 0);
   }
@@ -2732,7 +2913,7 @@
     const t = $('yl-fu').value.trim();
     if (!t) { ylStatus('先打上新问题,再掷一卦。', true); return; }
     const c = { method: 'liuyao', q: t };
-    dwCastOne(c);
+    dwCastOne(c, 'yl');
     const material = `【追卦】所问:${t}\n${c.report}\n(依这一卦答此问,第一句就是正面答案;姻缘铁律照旧,与前文诸卦冲突处以本卦为准并明说。)`;
     ylStatus(`已为此问掷一卦(${c.summary || '成卦'}),断中……`);
     return ylAsk(ylConvo.turns.concat([{ role: 'user', content: material }]), true);
@@ -2754,7 +2935,7 @@
     if (!b || !ylPlan) return;
     const c = ylPlan.groups[Number(b.dataset.g)].casts[Number(b.dataset.c)];
     if (!c || c.done) return;
-    dwCastOne(c);
+    dwCastOne(c, 'yl');
     renderYl();
     ylStatus(`已起 ${ylDone()}/${ylTotal()} 卦。${ylDone() >= ylTotal() ? '齐了,点「汇总深断」。' : ''}`);
   });
