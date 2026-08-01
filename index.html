@@ -690,7 +690,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.76</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.77</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -739,7 +739,8 @@
         <option value="女">我是女</option>
       </select>
       <select id="q-age" title="问卦人年龄段,选填;断应期与人生阶段更准"><option value="">年龄·选填</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
-      <span class="note" style="margin:0;align-self:center">选上断得更准:性别定看哪条线,年龄定人生阶段。填一次全程通用,之后不用再填。</span>
+      <select id="q-marital" title="眼下单身还是有伴。只影响姻缘那一类:命盘算得出哪一年感情上动,算不出动了以后是聚是散——那要看你眼下的处境"><option value="">感情·选填</option><option value="单身">眼下单身</option><option value="有伴">眼下有伴</option></select>
+      <span class="note" style="margin:0;align-self:center">选上断得更准:性别定看哪条线,年龄定人生阶段,感情状态定姻缘那一类往哪边说(命盘只算得出哪一年动,算不出是聚是散)。填一次全程通用。</span>
     </div>
   </section>
 
@@ -1310,7 +1311,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.76 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.77 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1361,7 +1362,15 @@
   let duoPlan = null;    // 分占连断:{fkLabel, subs:[{k,q}], idx, done:[{k,q,cast,z,r,report,jing}]}
 
   // —— 问卦人性别与年龄:顶栏为默认;每个问事入口旁可单独填(替别人问)——
-  const GKEY = 'dongxuan_gender', AKEY = 'dongxuan_age';
+  const GKEY = 'dongxuan_gender', AKEY = 'dongxuan_age', MRKEY = 'dongxuan_marital';
+  // 眼下单身还是有伴。只喂给姻缘那一类——命盘算得出哪一年感情上动得最重,
+  // 算不出动了以后是聚是散(回测量出来的,见 dashi.js 里那段),那一层只能看处境。
+  function dxMarital() {
+    const el = $('q-marital');
+    if (el && el.value) return el.value;
+    try { return localStorage.getItem(MRKEY) || ''; } catch (e) { return ''; }
+  }
+  window.dxMarital = dxMarital;
   function gender(ctx) {
     const local = ctx && $('qg-' + ctx) ? $('qg-' + ctx).value : '';
     return local || $('q-gender').value;
@@ -2706,7 +2715,11 @@
   // 旺你牌:八字喜用→颜色方位数字时段;生肖→贵人与冲日(填了生日立刻能看,不用等起卦)
   function renderXyBazi() {
     if (!$('xy-birth').value) { xyBazi = null; $('xy-bazi').innerHTML = ''; return; }
-    try { localStorage.setItem(BKEY, $('xy-birth').value); localStorage.setItem(HRKEY, $('xy-hour').value); } catch (e) {}
+    // v0.77 修一个真错:这里原先无条件把 xy-hour(时辰下拉)的值回写 HRKEY。
+    // 可 v0.75 起 HRKEY 存的可能是钟点串("03:30"),下拉框装不下它、value 会变成空字符串,
+    // 于是**渲染一次就把用户填的钟点抹成「不知道」**,盘悄悄退回中午 12 点。
+    // 规矩:渲染与取盘的路径一律只读不写;只有用户真的动了控件才准回写(走 dxWriteHour)。
+    try { localStorage.setItem(BKEY, $('xy-birth').value); } catch (e) {}
     xyBazi = dxBirthChart('q');
     if (!xyBazi) { $('xy-bazi').innerHTML = ''; return; }
     const c = xyBazi;
@@ -3191,10 +3204,8 @@
   function dlStatus(msg, err) { $('dl-status').textContent = msg; $('dl-status').classList.toggle('err', !!err); }
   function dlChart() {
     if (!$('dl-birth').value) return null;
-    try {
-      localStorage.setItem(BKEY, $('dl-birth').value);
-      localStorage.setItem(HRKEY, $('dl-hour').value);
-    } catch (e) {}
+    // 同上:取盘路径只读不写,免得把用户填的钟点抹成空
+    try { localStorage.setItem(BKEY, $('dl-birth').value); } catch (e) {}
     return dxBirthChart('q');
   }
   // 岁数只用来定「眼下走哪步大运」,填了生日就有
@@ -3284,18 +3295,14 @@
   });
   try {
     const b0 = localStorage.getItem(BKEY); if (b0) $('dl-birth').value = b0;
-    const h0 = localStorage.getItem(HRKEY); if (h0 !== null) $('dl-hour').value = h0;
+    const h0 = localStorage.getItem(HRKEY); if (h0 !== null && !/:/.test(h0)) $('dl-hour').value = h0;
   } catch (e) {}
   $('dl-birth').addEventListener('change', () => {
     try { localStorage.setItem(BKEY, $('dl-birth').value || ''); } catch (e) {}
     const xb = $('xy-birth'); if (xb) xb.value = $('dl-birth').value;
     const jb = $('jr-birth'); if (jb) jb.value = $('dl-birth').value;
   });
-  $('dl-hour').addEventListener('change', () => {
-    try { localStorage.setItem(HRKEY, $('dl-hour').value); } catch (e) {}
-    const xh = $('xy-hour'); if (xh) xh.value = $('dl-hour').value;
-    const jh = $('jr-hour'); if (jh) jh.value = $('dl-hour').value;
-  });
+  $('dl-hour').addEventListener('change', () => { dxWriteHour($('dl-hour').value); });
 
   // —— 梅花易数 ——
   const MH_RULES = '【梅花断法】体卦为己、用卦为事应;用生体大吉,比和吉,体克用可成而迟,体生用耗泄不利,用克体凶。互卦察中间过程,变卦定结局;体卦旺衰以月令五行论;应期以体用卦数或变卦气数推,近取日时、远取月。八卦万物类象随所问细取。';
@@ -3621,6 +3628,13 @@
   $('q-gender').addEventListener('change', () => { localStorage.setItem(GKEY, $('q-gender').value); updateQwho(); });
   if (localStorage.getItem(AKEY)) $('q-age').value = localStorage.getItem(AKEY);
   $('q-age').addEventListener('change', () => { localStorage.setItem(AKEY, $('q-age').value); updateQwho(); });
+  if ($('q-marital')) {
+    if (localStorage.getItem(MRKEY)) $('q-marital').value = localStorage.getItem(MRKEY);
+    $('q-marital').addEventListener('change', () => {
+      localStorage.setItem(MRKEY, $('q-marital').value);
+      try { dxRefreshAmbient(); } catch (e) {}
+    });
+  }
   for (const ctx of ['q', 'dw', 'zy', 'yl']) {
     $('qg-' + ctx).addEventListener('change', updateQwho);
     $('qa-' + ctx).addEventListener('change', updateQwho);
@@ -3729,7 +3743,8 @@
   function wqSaveBirth() {
     try {
       if ($('wq-birth').value) localStorage.setItem(BKEY, $('wq-birth').value);
-      localStorage.setItem(HRKEY, $('wq-hour').value);
+      // 时辰下拉为空**不等于**用户说不知道——多半是他填的是钟点串,下拉装不下。空就别写。
+      if ($('wq-hour').value !== '') dxWriteHour($('wq-hour').value);
       localStorage.setItem(PLKEY, $('wq-place').value);
       if ($('wq-gender').value) localStorage.setItem(GKEY, $('wq-gender').value);
       const jb = $('jr-birth'); if (jb && $('wq-birth').value) jb.value = $('wq-birth').value;
@@ -4004,8 +4019,7 @@
   function dshSaveHour() {
     const v = $('ds-pick').value;
     if (v === '') return;
-    try { localStorage.setItem(HRKEY, v); } catch (e) {}
-    for (const id of ['wq-hour', 'xy-hour', 'jr-hour']) { const el = $(id); if (el) el.value = v; }
+    dxWriteHour(v);
     $('ds-saved').textContent = `已按${Dingshi.HOURS[+v].name}存档,吉日、问机、运势各处都改用这个时辰了。`;
   }
   async function dshAI() {
@@ -4057,7 +4071,11 @@
     if ($('jr-birth')) $('jr-birth').value = p.date || '';
     try {
       if (p.date) localStorage.setItem(BKEY, p.date);
-      if (p.time) { const h = Math.floor(((Number(p.time.split(':')[0]) + 1) % 24) / 2); localStorage.setItem(HRKEY, String(h)); if ($('jr-hour')) $('jr-hour').value = String(h); }
+      // v0.77 修:这里原先把档案里的钟点折成十二时辰序号再存,**把用户填的精确钟点降级了**
+      // (v0.75 定的规矩是「填了钟点就以钟点为准」),而且档案里存 '?'(不知道钟点)时
+      // Number('?') 是 NaN,会往 HRKEY 里写一个字符串 "NaN"。现在照原样传给唯一那处折法。
+      if (p.time === '?') dxWriteHour('');
+      else if (p.time) dxWriteHour(p.time);
       if (p.place !== undefined) { localStorage.setItem(PLKEY, p.place); if ($('jr-place')) $('jr-place').value = p.place; }
       if (p.gender) localStorage.setItem(GKEY, p.gender);
       localStorage.setItem(PROFCUR, id);
@@ -4150,7 +4168,7 @@
       const c = dxBirthChart('jr');
       if (!c || typeof Dashi === 'undefined') return '';
       const yr = parseInt(span, 10);
-      const tl = Dashi.timeline(c, { nowYear: yr });
+      const tl = Dashi.timeline(c, { nowYear: yr, marital: dxMarital() });
       const n = (tl.allNodes || tl.nodes).find(x => x.year === yr);
       if (!n) return '<div class="jnode">一生年表里,这一年没有凸出节点——按部就班之年。</div>';
       return `<div class="jnode"><b>人生节点(${n.age}岁):${esc(n.top.label)}</b>——${esc(n.text)}<span class="jwhy">依据:${n.top.reasons.map(esc).join(';')}</span></div>`;
@@ -4216,15 +4234,11 @@
     jrInit = true;
     try {
       const b = localStorage.getItem(BKEY); if (b) $('jr-birth').value = b;
-      const h = localStorage.getItem(HRKEY); if (h) $('jr-hour').value = h;
+      const h = localStorage.getItem(HRKEY); if (h && !/:/.test(h)) $('jr-hour').value = h;
       const p = localStorage.getItem(PLKEY); if (p) $('jr-place').value = p;
     } catch (e) {}
     const jrReSel = () => { if (jrGrid && jrSel) { const info = jrGrid.days.find(d => d.iso === jrSel); if (info) jrShowDetail(info); } };
-    $('jr-hour').addEventListener('change', () => {
-      try { localStorage.setItem(HRKEY, $('jr-hour').value); } catch (e) {}
-      const xh = $('xy-hour'); if (xh) xh.value = $('jr-hour').value;
-      jrReSel();
-    });
+    $('jr-hour').addEventListener('change', () => { dxWriteHour($('jr-hour').value); jrReSel(); });
     $('jr-place').addEventListener('change', () => {
       try { localStorage.setItem(PLKEY, $('jr-place').value.trim()); } catch (e) {}
       jrReSel();
@@ -4518,6 +4532,35 @@
 
   // ═══════════════════ 命盘常驻侧栏 ═══════════════════
   // 缘起:喜忌、当前大运、今年流年几乎每个板块都要用,可用户得回运势页翻。填过生辰就常驻。
+  // ——— 结论稳不稳(v0.77)———
+  // 缘起:量出来 3000 天里有 9.70% 的日子,十二时辰中至少一个触发从格,而这些日子 **100%** 是
+  // 「换个时辰喜忌就相反」;另测同一钟点换城市(经度),5.04% 的盘从格判定也会变。
+  // 从格一成立喜忌就反 180°,对一个不知道确切钟点的人给一个确定的喜忌,等于替他掷硬币还不告诉他。
+  // 所以这里只做一件事:**把话说清**,不偷偷改结论。
+  let _stabCache = { key: '', val: null };
+  function dxStability() {
+    const bd = ($('jr-birth') && $('jr-birth').value) || localStorage.getItem(BKEY) || '';
+    if (!bd || typeof Dingshi === 'undefined') return null;
+    let hv = ''; try { hv = localStorage.getItem(HRKEY) || ''; } catch (e) {}
+    const hm = dxParseHour(hv);
+    // 填了确切钟点、或至少选了某个时辰的,盘是定的,这里没什么好说;
+    // **一个字都没填的才要紧**——那种情况程序会默默按中午 12 点排盘,人却不知道。
+    if (hm.known) return null;
+    let pl = ''; try { pl = localStorage.getItem(PLKEY) || ''; } catch (e) {}
+    const g = gender('q') || '男';
+    const key = bd + '|' + hv + '|' + pl + '|' + g;
+    if (_stabCache.key === key) return _stabCache.val;
+    let val = null;
+    try {
+      const [y, m, d] = bd.split('-').map(Number);
+      let lon; const p = pl ? Dili.find(pl) : null; if (p) lon = p[2];
+      val = Dingshi.stability({ birth: new Date(y, m - 1, d), gender: g, lon });
+    } catch (e) { val = null; }
+    _stabCache = { key, val };
+    return val;
+  }
+  window.dxStability = dxStability;
+
   function renderSide() {
     const pan = $('sidepan');
     let c = null;
@@ -4547,8 +4590,14 @@
       if (ny) rows.push(['今年', `<span class="chip ${ny.score > 0.3 ? 'ji' : ny.score < -0.3 ? 'xiong' : 'ping'}">${esc(ny.level)}</span>`]);
     } catch (e) {}
     if (c.tiaohou && c.tiaohou.need) rows.push(['最缺', esc(c.tiaohou.need)]);
+    // 结论稳不稳:没填确切钟点时,先告诉他底下这些话靠不靠得住(缘起见 dingshi.js 的 stability)
+    const stab = dxStability();
+    if (stab) rows.push(['准不准', `<span class="chip ${stab.level === '稳' ? 'ji' : (stab.level === '小动' ? 'ping' : 'xiong')}">${esc(stab.level === '稳' ? '时辰不影响' : (stab.level === '小动' ? '力度会变' : '换个时辰就相反'))}</span>`]);
+    const stabLine = stab && stab.level !== '稳'
+      ? `<div class="sp-row"><span class="k"></span><span class="v" style="font-size:.78rem;line-height:1.55;color:var(--dim)">${esc(stab.note).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</span></div>`
+      : '';
     $('sp-body').innerHTML = rows.map(([k, v]) =>
-      `<div class="sp-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('') +
+      `<div class="sp-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('') + stabLine +
       `<div class="sp-row"><span class="k"></span><span class="v"><a href="yunshi.html" class="gold-ink">看细账 →</a></span></div>`;
   }
   $('sp-fold').addEventListener('click', () => {

@@ -46,7 +46,9 @@
   function peiOuClass(gender) { return gender === '女' ? '官杀' : '财星'; }
 
   // 一年的证据链:返回各事型得分与依据
-  function yearEvidence(chart, gz, dayunGz) {
+  // opts.marital:'单身' | '有伴' | 空。只对姻缘一类有用,理由见下面 YINYUAN_HELD 那段。
+  function yearEvidence(chart, gz, dayunGz, opts) {
+    const marital = (opts && opts.marital) || '';
     const g = gz[0], z = gz[1];
     const P = chart.pillars;
     const dz = P.day.zhi, mz = P.month.zhi, yz = P.year.zhi, hz = P.hour.zhi;
@@ -56,9 +58,10 @@
     const gTag = tagOf(chart, GAN_WX[g]), zTag = tagOf(chart, ZHI_WX[z]);
     // dir:+1 吉向、-1 凶向、0 中性(主「变」)。事型的吉凶由它自己的证据定,
     // 不能拿全年干支喜忌一刀切——否则会出现「依据说印星得用、结论却说文书反复」这种自相矛盾。
-    const cats = {}; const add = (k, s, why, dir, tip) => {
-      if (!cats[k]) cats[k] = { score: 0, reasons: [], dirSum: 0, tips: [] };
+    const cats = {}; const add = (k, s, why, dir, tip, ju) => {
+      if (!cats[k]) cats[k] = { score: 0, reasons: [], dirSum: 0, tips: [], juSum: 0 };
       cats[k].score += s; cats[k].reasons.push(why); cats[k].dirSum += s * (dir === undefined ? 0 : dir);
+      if (ju) cats[k].juSum += s * ju;                 // 聚(+)散(-)向:只在姻缘用,且只作旁注不作方向
       if (tip) cats[k].tips.push({ w: s, tip });      // 每条信号自带「所以该怎么办」,断语随信号走而不是套模板
     };
     const flags = [];
@@ -102,16 +105,44 @@
     if (isKong) flags.push('此年落空亡(天中殺):运气之冬——新起之事难扎根,宜守成清账、学习养神,不宜开业置产定亲');
 
     // ——— 姻缘 ———
+    // v0.77 大改:**这一类不再输出无条件的吉凶方向**,只算「动量」(哪一年动、动多重)。
+    // 缘起是回测量出来的三个数,不是我改主意:
+    //   ① 33 人 37 件姻缘事,好坏几乎完全由「这一年发生的是结合还是分离」决定
+    //      ——结合类 28 件里 25 件是好事(89.3%),分离类 7 件里 0 件是好事(0%)。
+    //   ② 而结合还是分离,又几乎完全由「进这一年时是单身还是有伴」决定
+    //      ——未见婚的 27 件里 25 件是结合,已婚的 10 件里 7 件是分离。
+    //   ③ 这两个变量命盘一个都算不出来。实测同一状态内部,旧的方向分对好坏零区分度:
+    //      未见婚组好事平均 0.19 分、坏事 0.96 分(方向还是反的);已婚组 1.17 对 1.11(几乎一样)。
+    //   旧法把「动不动」和「动得好不好」揉成一个方向分,于是结合类判吉 60%、分离类也判吉 75%,
+    //   合起来 47.6%——比抛硬币还差,而这是用户问得最多的一类。
+    // 所以:dir 一律传 0(不表态),改传第六个参数 ju(聚 +1 / 散 -1)——那是古法「合主聚、冲主散」的说法,
+    //   但实测覆盖率只有 3/37(合)与 2/37(冲),32 件两样都没有,**故只作旁注,不计入方向**。
+    // 方向留给处境:调用方传 opts.marital 才给,且断语里必须写明那一层是处境定的,不是卦定的。
     const peiCls = peiOuClass(chart.gender);
     const peiOnGan = gCls === peiCls, peiOnZhi = zCls === peiCls;
-    if (peiOnGan) add('yinyuan', 2, `流年天干${g}为${gShen}(${chart.gender === '女' ? '夫星' : '妻星'})透出`, gTag === '忌' ? -1 : 1, gTag === '忌' ? '对象这条线上你要多贴钱贴心力,别用「我付出了」来要回报' : '对象是明摆着往你这边走的,主动一点就成'); 
-    if (peiOnZhi) add('yinyuan', 1.2, `流年支${z}藏${zhu}为${zShen},配偶星伏于支下`, zTag === '忌' ? -1 : 1);
-    if (heDay) add('yinyuan', 2.5, `流年支${z}与你日支${dz}六合——合动婚姻宫`, 1, '婚姻宫被合动:见家长、订婚、领证这类要「定下来」的动作挑这一年办最顺'); 
-    if (sanheDay) add('yinyuan', 1.8, `流年支${z}与日支${dz}成三合局——婚姻宫被牵动`, 1, '会被一群人推着往前走:相亲、介绍、朋友局里成的概率最高'); 
-    if (isHongluan) add('yinyuan', 2, '红鸾星动(婚恋之喜的老信号)', 1, '这一年适合把婚事摆上桌面:提亲、定日子、办酒'); 
-    if (isTianxi) add('yinyuan', 1.6, '天喜临(喜庆添丁之应)', 1);
-    if (isTaohua) add('yinyuan', 1.4, `桃花(咸池)临${z}——人缘情事活络`, 0, '桃花旺:单身的多出门多见人,有主的把边界划清,暧昧最容易在这一年出事'); 
-    if (chongDay) add('yinyuan', 1.6, `流年支${z}冲你日支${dz}——夫妻宫受冲,聚散都在这一年见分晓`, -1, '夫妻宫被冲:该摊开的话别憋,拖到年底最容易散;也主自己或伴侣身体上的一次折腾'); 
+    if (peiOnGan) add('yinyuan', 2, `流年天干${g}为${gShen}(${chart.gender === '女' ? '夫星' : '妻星'})透出`, 0, gTag === '忌' ? '对象这条线上你要多贴钱贴心力,别用「我付出了」来要回报' : '对象是明摆着往你这边走的,主动一点就成', 0);
+    if (peiOnZhi) add('yinyuan', 1.2, `流年支${z}藏${zhu}为${zShen},配偶星伏于支下`, 0, null, 0);
+    if (heDay) add('yinyuan', 2.5, `流年支${z}与你日支${dz}六合——合动婚姻宫`, 0, '婚姻宫被合动:见家长、订婚、领证这类要「定下来」的动作挑这一年办最顺', 1);
+    if (sanheDay) add('yinyuan', 1.8, `流年支${z}与日支${dz}成三合局——婚姻宫被牵动`, 0, '会被一群人推着往前走:相亲、介绍、朋友局里成的概率最高', 1);
+    if (isHongluan) add('yinyuan', 2, '红鸾星动(婚恋之喜的老信号)', 0, '这一年适合把婚事摆上桌面:提亲、定日子、办酒', 1);
+    if (isTianxi) add('yinyuan', 1.6, '天喜临(喜庆添丁之应)', 0, null, 1);
+    if (isTaohua) add('yinyuan', 1.4, `桃花(咸池)临${z}——人缘情事活络`, 0, '桃花旺:单身的多出门多见人,有主的把边界划清,暧昧最容易在这一年出事', 0);
+    if (chongDay) add('yinyuan', 1.6, `流年支${z}冲你日支${dz}——夫妻宫受冲,聚散都在这一年见分晓`, 0, '夫妻宫被冲:该摊开的话别憋,拖到年底最容易散;也主自己或伴侣身体上的一次折腾', -1);
+    // 方向这一层:命盘不定,处境定。填了才给,且标明来源。
+    if (cats.yinyuan) {
+      if (marital === '单身' || marital === '有伴') {
+        const sign = marital === '单身' ? 1 : -1;
+        cats.yinyuan.dirSum = +(cats.yinyuan.score * 0.6 * sign).toFixed(2);
+        cats.yinyuan.dirFrom = '处境';
+        cats.yinyuan.reasons.push(marital === '单身'
+          ? '按你填的「眼下单身」断:这一动多半往结合上走(这一层是处境定的,不是卦定的——回测里单身状态下的姻缘年 27 件有 22 件是好事)'
+          : '按你填的「眼下有伴」断:这一动多半使在摩擦或聚散上(这一层是处境定的,不是卦定的——回测里有伴状态下的姻缘年 10 件有 7 件是坏事)');
+      } else {
+        cats.yinyuan.dirSum = 0;
+        cats.yinyuan.held = true;    // 方向留白:没有处境就不表态
+        cats.yinyuan.reasons.push('吉凶方向此处留白:同一股力,单身的多半往结合走、有伴的多半使在摩擦上——命盘只定哪一年动,定不了动的方向。要方向就填一下眼下是单身还是有伴');
+      }
+    }
 
     // ——— 事业 ———
     if (gCls === '官杀' || zCls === '官杀') {
@@ -210,9 +241,12 @@
     const neutral = Math.abs(top.dirSum) < 0.6;
     const K = top.key;
     const S = {
-      yinyuan: neutral ? '感情起变化的年份:合与散的力都在,单身的容易遇上人、有主的容易起摩擦——这年别把话憋着,摊开谈就能定方向'
-        : (good ? '感情落定的窗口:从遇上到谈定的节奏会明显快起来,见家长、订婚、领证这类事挑这一年办'
-          : '感情起波的年份:该谈的摊开谈,冷战拖延最伤;有对象的把话说清,没对象的别在这年仓促定终身'),
+      // 姻缘:方向这一层由处境定(见 yearEvidence 里那段实测)。没填处境就把两条路都摆出来,不替人选。
+      yinyuan: top.held
+        ? '感情上动得最重的一年:眼下单身的,这一动八成往结合上走——见家长、订婚、领证挑这一年办;眼下有伴的,同一股力多半使在摩擦与聚散上,该摊开的话别拖过年底。是哪一条,看你此刻的处境,不看命盘'
+        : (neutral ? '感情起变化的年份:合与散的力都在,单身的容易遇上人、有主的容易起摩擦——这年别把话憋着,摊开谈就能定方向'
+          : (good ? '感情落定的窗口:从遇上到谈定的节奏会明显快起来,见家长、订婚、领证这类事挑这一年办'
+            : '感情起波的年份:该谈的摊开谈,冷战拖延最伤;有对象的把话说清,没对象的别在这年仓促定终身')),
       shiye: neutral ? '事业换轨的年份:岗位、公司、常驻地都可能动,与其被动等通知,不如自己先挑好下一步'
         : (good ? '事业往上走的年份:该争的位子、该接的担子别推,主动报名比等着被点名管用'
           : '事业压担子的年份:被管、被挑刺、活儿变重是常态,守住本职别硬顶,熬过去就是资历'),
@@ -259,7 +293,7 @@
   // 节气月为界:取每个公历月 20 日读月柱(必在该月节气之后),再回扫求起始日,得准确区间。
   // 月名按月支定(节气月),不按公历月序——公历一月中旬多半还是丑月(腊月)
   const ZHI_MONTH = { 寅: '正月', 卯: '二月', 辰: '三月', 巳: '四月', 午: '五月', 未: '六月', 申: '七月', 酉: '八月', 戌: '九月', 亥: '十月', 子: '冬月', 丑: '腊月' };
-  function monthsOf(chart, year, dayunGz) {
+  function monthsOf(chart, year, dayunGz, opts) {
     const out = [];
     for (let m = 0; m < 12; m++) {
       const probe = new Date(year, m, 20, 12);
@@ -269,11 +303,12 @@
       for (let d = 19; d >= 1; d--) {
         if (Najia.ganZhi(new Date(year, m, d, 12)).month !== gz) { startDay = d + 1; break; }
       }
-      const ev = yearEvidence(chart, gz, dayunGz);
+      const ev = yearEvidence(chart, gz, dayunGz, opts);
       // 证据规则对年月通用,只有措辞得换口径:同一条规则用在流月上,不能还写「流年」「这一年」
       const toMonth = x => String(x).replace(/流年/g, '流月').replace(/这一年/g, '这个月').replace(/整年/g, '整月');
       const list = Object.keys(ev.cats).map(k => ({
         key: k, label: CATS[k].label, score: ev.cats[k].score, dirSum: ev.cats[k].dirSum,
+        held: !!ev.cats[k].held, juSum: ev.cats[k].juSum || 0,
         reasons: ev.cats[k].reasons.map(toMonth),
         tips: (ev.cats[k].tips || []).map(t => ({ w: t.w, tip: toMonth(t.tip) })),
       })).sort((a, b) => b.score - a.score);
@@ -297,6 +332,14 @@
 
   // 主函数:排一份大事年表
   // opts: { years: 推多少年(默认到 80 岁), nowYear, minScore }
+  // 喂给模型的姻缘口径:方向留白这件事必须写进材料,否则模型会自己补一个吉凶上去
+  const YY_HELD_NOTE = '【姻缘这一类的铁规矩】程序只算出「哪一年感情上动得最重、动多重」,**不给吉凶方向**——' +
+    '因为回测量出来:同一股力,单身的多半往结合走、有伴的多半使在摩擦上,而这个人眼下是单身还是有伴,命盘算不出来。' +
+    '所以写姻缘的年份时:①把年份和力度说死;②把两条路都写出来(单身会怎样、有伴会怎样),让他自己对号;' +
+    '③**绝对不许自己补一个「这年感情大吉」或「这年必有波折」**——那是材料里没有的东西。';
+  const YY_KNOWN_NOTE = m => `【姻缘这一类的口径】客人自述眼下${m}。程序据此把方向定为「${m === '单身' ? '这一动多半往结合上走' : '这一动多半使在摩擦与聚散上'}」。` +
+    `写的时候要说清这一层是按他的处境推的,不是按命盘推的——命盘只定哪一年动。`;
+
   function timeline(chart, opts) {
     opts = opts || {};
     const birthYear = chart.birth.getFullYear();
@@ -335,7 +378,7 @@
     for (let y = startYear; y <= endYear; y++) {
       const gz = Najia.ganZhi(new Date(y, 5, 1, 12)).year;   // 取年中,必在立春之后,年柱以节气为界
       const st = dayunAt(y);
-      const ev = yearEvidence(chart, gz, st ? st.gz : null);
+      const ev = yearEvidence(chart, gz, st ? st.gz : null, opts);
       const age = y - birthYear;
       const gated = ageFilter(ev.cats, age);
       const list = Object.keys(gated).map(k => ({ key: k, label: CATS[k].label, ...gated[k] }))
@@ -388,7 +431,7 @@
     for (const r of yearly) {
       if (!needMonths.has(r.year)) continue;
       const st = dayunAt(r.year);
-      r.months = monthsOf(chart, r.year, st ? st.gz : null);
+      r.months = monthsOf(chart, r.year, st ? st.gz : null, opts);
       r.hot = r.top ? hotMonths(r.months, r.top.key) : [];
     }
     for (const n of trimmed) {
@@ -398,6 +441,8 @@
     return {
       birthYear, startYear, startText: dayun.startText, forward: dayun.forward,
       steps, turns, nodes: trimmed, allNodes: nodes, yearly, nextTen, pastYears,
+      marital: opts.marital || '',
+      maritalNote: (opts.marital === '单身' || opts.marital === '有伴') ? YY_KNOWN_NOTE(opts.marital) : YY_HELD_NOTE,
       childhood: `起运之前(${birthYear}-${startYear - 1}年,${0}-${Math.floor(dayun.startAge)}岁)为童限,按月柱管事:${chart.pillars.month.gz}——这段的底色随父母家境走,不单独排流年大事。`,
     };
   }
@@ -422,7 +467,8 @@
       `${(r.hot || []).length ? ';热月' + r.hot.map(h => h.idx + '月').join('、') : ''}`
     ).join('\n');
     const st = tl.steps.map(s => s.theme).join('\n');
-    return `【人生大事年表(程序按大运流年算死,勿另立结论)】\n起运:${tl.startText},大运${tl.forward ? '顺' : '逆'}行。\n${tl.childhood}\n\n[大运分段]\n${st}\n\n[交运转折带]\n${tl.turns.map(t => t.note).join('\n')}\n\n[重要节点与依据]\n${nd}\n\n[近十年逐年(含热月)]\n${ten}\n\n【写法要求】按时间顺序讲这个人一生的关键年份会发生什么,每个节点必须落到具体的事(结婚/生子/换工作/买房/搬城市/破财/开刀/打官司这类看得见的事),给出年份与年龄,并说清这一年该做什么、别做什么;凡材料给了「应期落月」的,必须把月份说出来,不许只说年份。不许用「机遇与挑战并存」「顺其自然」这类空话,不许把十神、喜忌、干支这些名目写给客人看。`;
+    return `【人生大事年表(程序按大运流年算死,勿另立结论)】\n起运:${tl.startText},大运${tl.forward ? '顺' : '逆'}行。\n${tl.childhood}\n\n[大运分段]\n${st}\n\n[交运转折带]\n${tl.turns.map(t => t.note).join('\n')}\n\n[重要节点与依据]\n${nd}\n\n[近十年逐年(含热月)]\n${ten}\n\n【写法要求】按时间顺序讲这个人一生的关键年份会发生什么,每个节点必须落到具体的事(结婚/生子/换工作/买房/搬城市/破财/开刀/打官司这类看得见的事),给出年份与年龄,并说清这一年该做什么、别做什么;凡材料给了「应期落月」的,必须把月份说出来,不许只说年份。不许用「机遇与挑战并存」「顺其自然」这类空话,不许把十神、喜忌、干支这些名目写给客人看。
+${tl.maritalNote}`;
   }
 
   return { timeline, yearEvidence, material, CATS, ganZhiOfYear, monthsOf, hotMonths, ZHI_MONTH };

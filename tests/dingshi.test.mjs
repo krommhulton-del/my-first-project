@@ -54,10 +54,21 @@ t('全组同一档时,直接告诉人「不用纠结」', () => {
 });
 
 console.log('【三】事件回推:比方向,不比强度(第一版就栽在比强度上)');
+// 2026-08 把这条的判据改了一次,原委照实记:
+//   ① 原判据是「四个抽样里至少三个,方向幅 > 强度幅」,而那四个是当初挑出来的——挑得过巧。
+//      实测同一副盘换几组年份与事型,方向幅与强度幅**相等**的组合很常见(健康类的 dir 恒 = ±score),
+//      于是「逐组比大小」本身就不是个稳的判据,换组样本就会红。
+//   ② 更要紧的是原样本里有一个是姻缘(2022, yinyuan)。v0.77 起姻缘的吉凶方向已整个撤下
+//      (回测量出来命盘对「结婚还是离婚」零区分度,见 dashi.js 里那段),它的方向幅恒为 0。
+//   现改为**不挑样本、看总量**:在有方向的六个事型里取九组年份×事型,
+//   要求「方向的总波动」显著大于「强度的总波动」,并且逐组不许出现方向幅小于强度幅的倒挂。
+//   搬迁与姻缘两类的 dir 结构性为 0(前者本就只主「变」不主吉凶,后者已撤下),不参与本条。
 t('同一年在十二时辰下,方向的波动远大于强度的波动——这是本方法成立的前提', () => {
   const birth = new Date(1985, 10, 3);
-  let dirWins = 0, n = 0;
-  for (const [year, cat] of [[2012, 'shiye'], [2016, 'caiyun'], [2022, 'yinyuan'], [2019, 'wenshu']]) {
+  const CASES = [[2012, 'shiye'], [2016, 'caiyun'], [2020, 'jiankang'], [2019, 'wenshu'],
+    [2014, 'jiankang'], [2018, 'shiye'], [2005, 'caiyun'], [2010, 'wenshu'], [2013, 'guanfei']];
+  let sumS = 0, sumD = 0, inverted = [];
+  for (const [year, cat] of CASES) {
     const ss = [], ds = [];
     for (let i = 0; i < 12; i++) {
       const c = Dingshi.chartAt(birth, i, '女', 113.3);
@@ -65,9 +76,28 @@ t('同一年在十二时辰下,方向的波动远大于强度的波动——这�
       ss.push(e.score); ds.push(e.dir);
     }
     const rng = a => Math.max(...a) - Math.min(...a);
-    n++; if (rng(ds) > rng(ss)) dirWins++;
+    sumS += rng(ss); sumD += rng(ds);
+    if (rng(ds) < rng(ss) - 1e-9) inverted.push(`${year}${cat}(强${rng(ss).toFixed(1)}>方向${rng(ds).toFixed(1)})`);
   }
-  ok(dirWins >= n - 1, `方向波动应普遍大于强度波动,实得 ${dirWins}/${n}`);
+  ok(!inverted.length, '这些组出现了倒挂:' + inverted.join('、'));
+  ok(sumD > sumS * 2, `方向总波动应是强度的两倍以上,实得 方向${sumD.toFixed(1)} / 强度${sumS.toFixed(1)}`);
+  console.log(`      (九组实测:方向总波动 ${sumD.toFixed(1)},强度总波动 ${sumS.toFixed(1)},${(sumD / sumS).toFixed(1)} 倍)`);
+});
+t('姻缘类在任何时辰下都不给方向(v0.77 撤下),也不参与回推', () => {
+  // 缘起:姻缘的方向分回测只有 47.6%,比抛硬币还差;查清病根是「动不动」与「动得好不好」
+  // 被揉成一个分,而后者由处境决定、命盘算不出来。撤下之后不许有人悄悄加回来。
+  const birth = new Date(1985, 10, 3);
+  for (let i = 0; i < 12; i++) {
+    const c = Dingshi.chartAt(birth, i, '女', 113.3);
+    for (const y of [2015, 2022, 2026]) eq(Dingshi.yearEv(c, y, 'yinyuan').dir, 0, `${y}年第${i}个时辰的姻缘方向`);
+  }
+  // 但「动量」还在——那是命盘真算得出来的
+  const anyScore = [0, 3, 6, 9].some(i => Dingshi.yearEv(Dingshi.chartAt(birth, i, '女', 113.3), 2022, 'yinyuan').score > 0);
+  ok(anyScore, '姻缘的动量分不该跟着方向一起消失');
+  // 回推时姻缘一律不计权
+  const c9 = Dingshi.chartAt(birth, 9, '女', 113.3);
+  const a = Dingshi.agreementOf(c9, [{ year: 2022, type: 'yinyuan', good: true }]);
+  eq(a.total, 0, '姻缘事件不该给回推贡献权重');
 });
 t('方向吻合度算得对:全吻合为 1、全相反为 0', () => {
   const c = Dingshi.chartAt(new Date(1985, 10, 3), 9, '女', 113.3);

@@ -1068,6 +1068,75 @@ await t('应期:断卦区直接给出日子与书上原话,无 Key 也看得到'
   ok(/我自己担着/.test(f), '应写明取法先后是本程序排的');
 });
 
+// ——— v0.77:感情状态入口 + 侧栏「准不准」———
+await t('填了确切钟点,任何一次渲染都不许把它抹掉(v0.77 揪出的真错)', async () => {
+  // 缘起:v0.75 把时辰输入改成「可直接填钟点」,折法收归一处。可有三处**回写**没跟着改——
+  //   心愿板块 renderXyBazi、地利取盘 dlChart 会无条件把「时辰下拉」的值写回 HRKEY,
+  //   而下拉装不下 "03:30" 这种钟点串,value 是空的,于是**渲染一次就把钟点抹成「不知道」**,
+  //   盘悄悄退回中午 12 点。实测 1957-06-02:填 03:30 排出的是「喜木水」,
+  //   被抹掉后按中午排是「喜土火金」——**整个相反**。
+  const savedPlace = await page.evaluate(() => localStorage.getItem('dongxuan_birth_place') || '');
+  await page.evaluate(() => {
+    localStorage.setItem('dongxuan_birth', '1957-06-02');
+    localStorage.setItem('dongxuan_birth_hour', '03:30');
+    localStorage.removeItem('dongxuan_birth_place');   // 经度会挪时柱,这条测的不是经度
+  });
+  await page.reload(); await page.waitForTimeout(500);
+  const kept = await page.evaluate(() => localStorage.getItem('dongxuan_birth_hour'));
+  ok(kept === '03:30', '钟点被渲染抹掉了,实得:' + JSON.stringify(kept));
+  const gz = await page.evaluate(() => {
+    const c = window.dxBirthChart('q');
+    return ['year', 'month', 'day', 'hour'].map(k => c.pillars[k].gz).join(' ');
+  });
+  ok(gz.endsWith('戊寅'), '03:30 应排出寅时(戊寅),实得:' + gz);
+  // 同一天按中午排出来的是完全相反的一套喜忌——这正是这个错的杀伤力
+  const xiExact = await page.evaluate(() => window.dxBirthChart('q').yong.xiWx.join('、'));
+  const xiNoon = await page.evaluate(() => {
+    const c = Bazi.chart(new Date(1957, 5, 2, 12, 0), 'undefined' === typeof dxMarital ? '男' : (localStorage.getItem('dongxuan_gender') || '男'));
+    return c.yong.xiWx.join('、');
+  });
+  ok(xiExact !== xiNoon, `这一天填不填钟点本该断出两套喜忌,现在一样(${xiExact}),测例失去意义`);
+  // 走一遍会触发那几处回写的板块(心愿的旺你牌、地利取盘),钟点仍须还在
+  await page.evaluate(() => dxOpenBoard('sec-xinyuan'));
+  await page.waitForTimeout(300);
+  ok((await page.evaluate(() => localStorage.getItem('dongxuan_birth_hour'))) === '03:30', '开了心愿板块之后钟点又没了');
+  await page.evaluate(() => dxOpenBoard('sec-dili'));
+  await page.waitForTimeout(300);
+  ok((await page.evaluate(() => localStorage.getItem('dongxuan_birth_hour'))) === '03:30', '开了地利板块之后钟点又没了');
+  await page.evaluate(p => { if (p) localStorage.setItem('dongxuan_birth_place', p); }, savedPlace);
+});
+await t('感情状态是全局选项,选了就记住', async () => {
+  await page.evaluate(() => { localStorage.removeItem('dongxuan_marital'); });
+  await page.reload(); await page.waitForTimeout(300);
+  ok(await page.isVisible('#q-marital'), '顶栏应有感情状态选项');
+  const title = await page.getAttribute('#q-marital', 'title');
+  ok(/算不出|处境/.test(title || ''), '提示里要讲明命盘算不出聚散:' + title);
+  await page.selectOption('#q-marital', '有伴');
+  ok(await page.evaluate(() => localStorage.getItem('dongxuan_marital')) === '有伴', '选了要存住');
+  await page.reload(); await page.waitForTimeout(300);
+  ok(await page.inputValue('#q-marital') === '有伴', '刷新后要恢复');
+  ok(await page.evaluate(() => window.dxMarital()) === '有伴', 'dxMarital() 应读得到');
+  await page.selectOption('#q-marital', '');
+});
+await t('侧栏「准不准」:一个字没填钟点才提示,填了就不再啰嗦', async () => {
+  // 一个字没填钟点 → 程序其实是按中午 12 点排的,这件事必须当面说
+  await page.evaluate(() => {
+    localStorage.setItem('dongxuan_birth', '1957-06-02');
+    localStorage.removeItem('dongxuan_birth_hour');
+  });
+  await page.reload(); await page.waitForTimeout(500);
+  const a = await page.textContent('#sp-body');
+  ok(a.includes('准不准'), '没填钟点时侧栏应有「准不准」一行:' + a.slice(0, 160));
+  ok(/换个时辰就相反|力度会变/.test(a), '要说清不确定在哪:' + a.slice(0, 200));
+  ok(/定时辰|问准/.test(a), '要指出路子,不能只吓唬人');
+  // 填了确切钟点 → 盘是唯一的,不该再提示
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth_hour', '03:30'); });
+  await page.reload(); await page.waitForTimeout(500);
+  const b = await page.textContent('#sp-body');
+  ok(!b.includes('准不准'), '填了确切钟点还提示,是啰嗦:' + b.slice(0, 160));
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1990-06-15'); localStorage.setItem('dongxuan_birth_hour', '5'); });
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

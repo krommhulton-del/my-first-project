@@ -205,5 +205,66 @@ t('材料含起运、大运分段、转折带、节点依据,且注明不许另�
   ok(m.includes('不许用「机遇与挑战并存」'), '材料须明令禁空话');
 });
 
+console.log('【姻缘】方向留给处境,命盘只算动量(v0.77,队列第 0 条)');
+// 缘起:回测量出来姻缘方向只有 47.6%,比抛硬币还差。查清病根不是参数,是把两件事揉成了一件——
+//   「这一年感情上动不动」是命盘能算的;「动了以后是聚是散」由处境决定,命盘算不出来。
+//   数字:33 人 37 件姻缘事,结合类 28 件里 25 件是好事、分离类 7 件里 0 件是好事;
+//   而结合还是分离,未见婚的 27 件里 25 件是结合、已婚的 10 件里 7 件是分离。
+//   同一状态内部,旧方向分对好坏零区分度(未见婚 好0.19/坏0.96,已婚 好1.17/坏1.11)。
+// 这几条测试守住:撤下的不许悄悄加回来,加回来的必须靠处境且当面说明来源。
+t('不填处境:姻缘一律不给方向,但动量照算', () => {
+  let held = 0, scored = 0;
+  for (const c of charts) {
+    for (const y of [2015, 2020, 2026, 2031]) {
+      const ev = Dashi.yearEvidence(c, Dashi.ganZhiOfYear(y), null);
+      const yy = ev.cats.yinyuan;
+      if (!yy) continue;
+      eq(yy.dirSum, 0, `${y}年的姻缘方向`);
+      ok(yy.held === true, `${y}年的姻缘应标明方向留白`);
+      ok(yy.reasons.some(r => r.includes('单身') && r.includes('有伴')), '留白时必须把两条路都写出来');
+      held++; if (yy.score > 0) scored++;
+    }
+  }
+  ok(held >= 5, '样本里姻缘证据太少,测不出什么:' + held);
+  ok(scored === held, '动量分不该跟着方向一起消失');
+});
+t('填了处境:方向跟着处境走,且必须写明这一层不是卦定的', () => {
+  const c = charts[0];
+  let n = 0;
+  for (const y of [2015, 2020, 2026, 2031]) {
+    const gz = Dashi.ganZhiOfYear(y);
+    const a = Dashi.yearEvidence(c, gz, null, { marital: '单身' }).cats.yinyuan;
+    const b = Dashi.yearEvidence(c, gz, null, { marital: '有伴' }).cats.yinyuan;
+    if (!a || !b) continue;
+    n++;
+    ok(a.dirSum > 0 && b.dirSum < 0, `${y}年:单身应偏吉、有伴应偏凶,实得 ${a.dirSum}/${b.dirSum}`);
+    eq(a.dirSum, -b.dirSum, `${y}年:两条路的力度应当等大反向`);
+    eq(a.score, b.score, `${y}年:动量与处境无关,不该跟着变`);
+    for (const x of [a, b]) {
+      eq(x.dirFrom, '处境');
+      ok(x.reasons.some(r => r.includes('不是卦定的')), '按处境断的那一条必须写明来源');
+    }
+  }
+  ok(n >= 2, '样本不足');
+});
+t('姻缘的断语:留白时两条路都写,不许自己挑一条', () => {
+  const c = charts[1];
+  const tl = Dashi.timeline(c, { nowYear: 2026 });
+  const yy = (tl.allNodes || tl.nodes).filter(n => n.top.key === 'yinyuan');
+  ok(yy.length, '样本盘里没有姻缘节点,换个盘');
+  for (const n of yy) {
+    ok(n.text.includes('单身') && n.text.includes('有伴'), '留白的姻缘断语必须把两条路都摆出来:' + n.text.slice(0, 40));
+    ok(!/这年感情大吉|必有波折/.test(n.text), '留白时不许自己下吉凶断语');
+  }
+});
+t('喂给模型的材料里,姻缘口径写死了「不许自己补吉凶」', () => {
+  const c = charts[0];
+  const held = Dashi.material(c, Dashi.timeline(c, { nowYear: 2026 }));
+  ok(held.includes('不给吉凶方向'), '留白版材料须写明不给方向');
+  ok(held.includes('绝对不许自己补'), '留白版材料须挡住模型自行补一个吉凶');
+  const known = Dashi.material(c, Dashi.timeline(c, { nowYear: 2026, marital: '有伴' }));
+  ok(known.includes('有伴') && known.includes('不是按命盘推的'), '按处境断时须标明来源');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

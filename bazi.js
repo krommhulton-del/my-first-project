@@ -373,16 +373,24 @@
   //   同章又说,出处:《滴天髓阐微·从象章》「绝无一毫财星官杀之气，谓二人同心，强之极矣」;
   //   且明说「如局中印轻，行伤食亦佳」——食伤不破从。
   //   故改为直接称量财与官杀。人群实测:从强占比 0.64% → 0.40%(更严),该样板盘转为判对。
+  //
+  // margin(v0.77 加):离「掉出这一格」还差几分。从格一成立喜忌就翻 180°,
+  //   所以「离门槛多远」跟「是不是从格」一样重要——实测 6000 副盘,判真从的里头
+  //   有 11.9%(从弱)与 13.6%(从强)离门槛不足 1 分,那种盘的喜忌本质上是掷硬币掷出来的。
+  //   本函数只负责把这个距离算出来;要不要因此改口,由上层决定(见 Dingshi.stability)。
   function judgeCong(st, pillars, dayGan) {
     const me = GAN_WX[dayGan], yin = invSheng(me);
     if (!st.hasRoot && st.yinPower <= 8 && st.tong <= 20) {
-      return { type: '从弱', name: '从弱格(四支无根、印星无力,弃命从势)' };
+      return { type: '从弱', name: '从弱格(四支无根、印星无力,弃命从势)',
+        margin: +Math.min(20 - st.tong, 8 - st.yinPower).toFixed(1) };
     }
     if ((st.detail.财 + st.detail.官杀) <= 3 && st.tong >= 70 && ['当令', '得月令之生'].includes(st.deLing)) {
-      return { type: '从强', name: '从强格(满局生扶、财官几无,顺其强势)' };
+      return { type: '从强', name: '从强格(满局生扶、财官几无,顺其强势)',
+        margin: +Math.min(st.tong - 70, 3 - (st.detail.财 + st.detail.官杀)).toFixed(1) };
     }
     if (!st.hasRoot && st.tong <= 30) {
-      return { type: '假从', name: '假从(无根而印比尚存一线,不作真从论,仍以扶抑为主)' };
+      return { type: '假从', name: '假从(无根而印比尚存一线,不作真从论,仍以扶抑为主)',
+        margin: +(30 - st.tong).toFixed(1) };
     }
     return null;
   }

@@ -85,6 +85,8 @@
   // 而「吉凶方向」波动极大(3.6~5.8,能从 -3.8 翻到 0)——因为方向由喜忌定,喜忌正是时柱定的。
   // 所以拿强度回推是无效的(第一版就栽在这:真相酉时被排到第 10)。
   // 改为比**方向**:你说这件事是好事还是坏事,看哪个时辰的喜忌判断与现实吻合。
+  // v0.77 起,姻缘类的吉凶方向已从程序里撤下(回测量出来命盘对那一层零区分度,详见 dashi.js 里那段),
+  // 于是姻缘事件在这里恒不表态。回推时辰要靠事业/财运/健康这几类方向鲜明的事。
   function agreementOf(chart, events) {
     let hit = 0, total = 0;
     const detail = [];
@@ -92,6 +94,7 @@
       if (e.good === undefined || e.good === null) continue;      // 中性事件(搬家换工作)不参与方向判分
       const { score, dir } = yearEv(chart, e.year, e.type);
       const w = Math.abs(dir);
+      if (e.type === 'yinyuan') { detail.push({ ...e, dir: 0, verdict: '姻缘类不参与回推(吉凶方向本程序已撤下)', w: 0 }); continue; }
       if (w < 0.6) { detail.push({ ...e, dir: +dir.toFixed(1), verdict: '此时辰对该年方向不表态', w: 0 }); continue; }
       total += w;
       const agree = (e.good && dir > 0) || (!e.good && dir < 0);
@@ -138,7 +141,9 @@
 
     // 三、事件回推:比「方向吻合度」(见上文 agreementOf 的实测缘由)
     let ranked = [], canDecide = false, reason = '';
-    const usable = events.filter(e => e.good !== undefined && e.good !== null);
+    // 姻缘类不算「可用」:它的吉凶方向已撤下,拿它回推等于拿噪声定时辰
+    const usable = events.filter(e => e.good !== undefined && e.good !== null && e.type !== 'yinyuan');
+    const yyDropped = events.filter(e => e.type === 'yinyuan' && e.good !== undefined && e.good !== null).length;
     if (usable.length >= 3) {
       for (const c of cands) {
         const a = agreementOf(c.chart, usable);
@@ -161,7 +166,8 @@
         }
       }
     } else {
-      reason = `能用来判方向的事只有 ${usable.length} 件(要标明是好事还是坏事才算数),不足三件,无法回推——本次只给「哪些时辰断得一样」这一半答案。`;
+      reason = `能用来判方向的事只有 ${usable.length} 件(要标明是好事还是坏事才算数),不足三件,无法回推——本次只给「哪些时辰断得一样」这一半答案。`
+        + (yyDropped ? `你给的 ${yyDropped} 件姻缘类没算进去:那一类的吉凶方向本程序已经撤下(回测量出来命盘对「结婚还是离婚」零区分度),拿它回推等于拿噪声定时辰。补几件事业、财运、健康类的事就能算。` : '');
     }
 
     // 四、差异面板:各时辰到底差在哪
@@ -182,6 +188,78 @@
           ? `按你给的事回推,最可能是${ranked[0].name}(${ranked[0].span},${ranked[0].gz})。${reason}`
           : `这个范围里断法不止一种(${groups.length} 档),但${reason}建议:再想想有没有更多确凿的事,或者按下面「差异面板」看看这几档差在哪、哪一档更像你。`),
     };
+  }
+
+  // ——— 结论稳不稳:你自己不确定的那点范围内,断出来的东西会不会翻个个儿 ———
+  //
+  // 缘起(v0.77,CLAUDE.md 待办第 9 条「从格边界专项体检」):
+  //   用户当初报的是「样盘一的十二时辰里七个触发从格」。量了一遍,情况比那句话还硬:
+  //   3000 天里有 9.70% 的日子,十二时辰中至少一个触发真从;而这些日子里 **100%** 是
+  //   「换个时辰结论就不一样」,且喜忌也跟着整个翻转。另测经度:同一钟点,北京与乌鲁木齐
+  //   从格判定不同的占 5.04%。
+  //   从格一成立喜忌就反 180°,所以对一个不知道确切钟点的人,程序照旧给一个确定的喜忌,
+  //   等于替他掷了一次硬币还不告诉他。**这不是断法问题,是该不该开口的问题。**
+  //
+  // 做法:拿他自己不确定的那点范围(不知钟点就是十二个时辰;只知道大概就是那几个),
+  //   逐个排盘,看旺衰档/喜忌/从格三样会不会变。会变就当面说清楚,并指路去定时辰。
+  //   **不偷偷改结论**——改了他更不知道自己站在哪。
+  function stability(opts) {
+    const { birth, gender, lon } = opts;
+    const idx = (opts.hours && opts.hours.length ? opts.hours : HOURS.map(h => h.idx)).slice();
+    const seen = idx.map(i => {
+      const c = chartAt(birth, i, gender, lon);
+      return {
+        idx: i, name: HOURS[i].name, span: HOURS[i].span,
+        band: c.strength.band, xi: c.yong.xiWx.slice().sort().join('、'),
+        cong: c.cong ? c.cong.type : '不从',
+        margin: c.cong ? c.cong.margin : null,
+      };
+    });
+    const uniq = k => [...new Set(seen.map(x => x[k]))];
+    const bandVaries = uniq('band').length > 1;
+    const xiVaries = uniq('xi').length > 1;
+    const congVaries = uniq('cong').length > 1;
+    const zhenCong = seen.filter(x => x.cong === '从弱' || x.cong === '从强');
+    // 最险的那一副离门槛还剩多少分(只看真从)
+    const tightest = zhenCong.length ? Math.min(...zhenCong.map(x => x.margin)) : null;
+    // 按「喜忌」分档,好把话说具体:哪几个时辰喜这个、哪几个喜那个
+    const camps = {};
+    for (const x of seen) (camps[x.xi] = camps[x.xi] || []).push(x.name);
+    const campList = Object.keys(camps).map(xi => ({ xi, hours: camps[xi] }))
+      .sort((a, b) => b.hours.length - a.hours.length);
+
+    // 「变了」也要分轻重:两拨时辰的喜用**毫无交集**(木火 vs 土金水)才叫方向相反;
+    // 只是多一味少一味(木水 vs 木火水)是力度之差,不该拿同一句话吓人。
+    const camps0 = [...new Set(seen.map(x => x.xi))].map(x => x.split('、'));
+    let disjoint = false;
+    for (let a = 0; a < camps0.length; a++) for (let b = a + 1; b < camps0.length; b++) {
+      if (!camps0[a].some(w => camps0[b].includes(w))) disjoint = true;
+    }
+
+    let level = '稳', note = '';
+    if (idx.length === 1) {
+      level = '稳'; note = '你给了确切钟点,这副盘是唯一的,下面的结论不受时辰影响。';
+    } else if (xiVaries) {
+      level = disjoint ? '翻盘' : '不稳';
+      note = `你没给确切钟点,而这一天的时辰是分水岭:` +
+        campList.map(c => `${c.hours.join('、')}这${c.hours.length}个时辰旺你的是${c.xi}`).join(';') +
+        (disjoint ? `——**两拨之间毫无交集,方向是相反的**。` : `——**多一味少一味,方向大体一致但力度有出入**。`) +
+        (congVaries && zhenCong.length
+          ? `病根在从格:${zhenCong.map(x => x.name).join('、')}这${zhenCong.length}个时辰判${zhenCong[0].cong},其余不判,` +
+            `而从格一成立,该忌的全变成该喜的。最险的一个离门槛只剩 ${tightest} 分。`
+          : '') +
+        `先把出生钟点问准(问父母、翻出生证、查医院记录);问不准就去「定时辰」板块,拿已经发生过的事回推。` +
+        (disjoint
+          ? `在那之前,下面凡是靠喜忌推出来的话——旺你的颜色方位、哪年得力、择日的「对你」那一层——都只能当一半看。`
+          : `在那之前,下面这些话的大方向可以照着走,只是力度别当准数。`);
+    } else if (bandVaries) {
+      level = '小动'; note = `没给确切钟点,不同时辰的身强身弱档位不同(${uniq('band').join('/')}),但旺你的五行是同一组(${campList[0].xi})——` +
+        `下面的结论方向不变,只是力度上会有出入。`;
+    } else {
+      level = '稳'; note = `没给确切钟点,但这一天的十二个时辰断出来是同一套(${uniq('band')[0]}、旺${campList[0].xi})——时辰不用纠结,填哪个都不影响下面的话。`;
+    }
+    return { level, note, seen, camps: campList, bandVaries, xiVaries, congVaries, tightest,
+      zhenCongHours: zhenCong.map(x => x.name) };
   }
 
   // ——— 民俗征验:列出来,但把话说死——不可验证,只作参考,不作依据 ———
@@ -211,5 +289,5 @@
       `不许拿相貌性格这类说辞硬定时辰,不许出现干支十神喜忌这些名目,不许说「仅供参考」「因人而异」这类空话。`;
   }
 
-  return { solve, parseRange, chartAt, fingerprint, yearScore, yearEv, agreementOf, HOURS, VAGUE, FOLK, FOLK_NOTE, material };
+  return { solve, parseRange, chartAt, fingerprint, yearScore, yearEv, agreementOf, stability, HOURS, VAGUE, FOLK, FOLK_NOTE, material };
 }));

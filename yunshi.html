@@ -66,6 +66,13 @@
   button:disabled { opacity: .4; cursor: not-allowed; }
   .formerr { color: var(--cinnabar); font-size: .9rem; margin-top: 8px; }
   .note { color: var(--dim); font-size: .82rem; margin-top: 8px; line-height: 1.6; }
+  /* 结论稳不稳:时辰不确定时,先把「下面这些话靠不靠得住」摆在最前面 */
+  .stab { border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: .88rem; line-height: 1.7; }
+  .stab b { font-weight: 600; }
+  .stab.warn { background: rgba(197,90,17,.10); border: 1px solid rgba(197,90,17,.35); }
+  .stab.mid { background: rgba(120,120,128,.10); border: 1px solid rgba(120,120,128,.28); }
+  .stab.ok { background: rgba(78,124,116,.10); border: 1px solid rgba(78,124,116,.30); }
+  .stab .st-h { font-weight: 600; margin-bottom: 4px; }
   /* 四柱 */
   .pillars { display: flex; gap: 10px; justify-content: center; text-align: center; }
   .pcol { flex: 1 1 0; background: var(--panel2); border-radius: 8px; padding: 10px 4px; }
@@ -218,7 +225,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.76</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.77</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -234,12 +241,17 @@
     </div>
     <div class="grid">
       <div class="fld"><label>出生日期(阳历/公历)</label><input type="date" id="bdate" min="1900-01-01" max="2100-12-31"></div>
-      <div class="fld"><label>出生时间(几点)</label><input type="time" id="btime" value="12:00"></div>
+      <div class="fld"><label>出生时间(几点)</label><input type="time" id="btime" value="12:00">
+        <label style="font-weight:400;margin-top:6px"><input type="checkbox" id="bt-unknown"> 不知道确切钟点</label></div>
       <div class="fld"><label>性别</label>
         <select id="gender"><option value="男">男</option><option value="女">女</option></select>
       </div>
       <div class="fld"><label>出生地(市/省,选填)</label><input type="text" id="bplace" placeholder="如:成都(校真太阳时)"></div>
+      <div class="fld"><label>眼下感情状态</label>
+        <select id="marital"><option value="">不说</option><option value="单身">单身</option><option value="有伴">有伴</option></select></div>
     </div>
+    <div class="note">「感情状态」只影响姻缘那一类的说法:命盘能算出哪一年感情上动得最重,<b>但动了以后是聚是散,命盘定不了</b>——
+      同一股力,单身的多半往结合走、有伴的多半使在摩擦上。不填就只报哪一年动,不报吉凶。</div>
     <div class="note">用阳历(公历)生日。1986-91年出生的一律自动回拨<b>夏令时</b>,均时差也照校(不填出生地按国标东经120°算);填上出生地再补<b>经度差</b>,时柱才排得最准——新疆西藏等偏西之地能差两个时辰,务必填。</div>
     <div class="formerr" id="in-err"></div>
     <div class="btnrow"><button id="btn-go" class="primary">排盘看运</button></div>
@@ -248,6 +260,7 @@
 
   <section id="sec-ming" class="hidden">
     <h2>你 的 命 盘</h2>
+    <div id="stab-box"></div>
     <div class="pillars" id="pillars"></div>
     <div class="body-line" id="body-line"></div>
     <div class="body-sub" id="body-sub"></div>
@@ -343,6 +356,7 @@
 <script src="dashi.js"></script>
 <script src="geju.js"></script>
 <script src="dili.js"></script>
+<script src="dingshi.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -373,6 +387,9 @@
   const WX_CLS = { 木: 'mu', 火: 'huo', 土: 'tu', 金: 'jin', 水: 'shui' };
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let curChart = null, aiBusy = false, aiContext = null, curSanmei = null;
+  const MKEY = 'dongxuan_marital';
+  let curMarital = '';
+  try { curMarital = localStorage.getItem(MKEY) || ''; } catch (e) {}
 
   // 人体星図:主星五位 + 従星三期(镜像面对读者:左肩在图右)
   function renderSanmei(c) {
@@ -395,12 +412,16 @@
     const d = $('bdate').value, tm = $('btime').value || '12:00';
     if (!d) { $('in-err').textContent = '请先填出生日期。'; return; }
     const [Y, M, D] = d.split('-').map(Number);
-    const [h, mi] = tm.split(':').map(Number);
+    const hourUnknown = !!($('bt-unknown') && $('bt-unknown').checked);
+    const [h, mi] = (hourUnknown ? '12:00' : tm).split(':').map(Number);
     const birth = new Date(Y, M - 1, D, h, mi || 0);
     if (isNaN(birth.getTime()) || Y < 1900 || Y > 2100) { $('in-err').textContent = '日期看起来不对,检查一下。'; return; }
     let lon;
     try { const p = window.Dili && Dili.find($('bplace').value.trim()); if (p) lon = p[2]; } catch (e) {}
+    curMarital = $('marital') ? $('marital').value : '';
+    try { localStorage.setItem(MKEY, curMarital); } catch (e) {}
     curChart = Bazi.chart(birth, $('gender').value, lon);
+    renderStab(birth, $('gender').value, lon, hourUnknown);
     renderMing(curChart);
     try { curSanmei = Sanmei.chart(birth); renderSanmei(curSanmei); } catch (e) { curSanmei = null; }
     renderYun(curChart, new Date());
@@ -413,6 +434,25 @@
     $('sec-ming').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   function todayStr() { const d = new Date(), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`; }
+
+  // ——— 结论稳不稳(v0.77)———
+  // 缘起:量出来 9.70% 的日子里,十二时辰中至少一个触发从格,而这些日子 **100%** 是「换个时辰喜忌就相反」。
+  // 对一个不知道确切钟点的人,程序照旧给一个确定的喜忌,等于替他掷了一次硬币还不告诉他。
+  // 所以:先把「下面这些话靠不靠得住」摆在命盘最前头,再说别的。**不偷偷改结论,只把话说清。**
+  let curStab = null;
+  function renderStab(birth, gender, lon, hourUnknown) {
+    const box = $('stab-box');
+    if (!box) return;
+    if (!hourUnknown) { curStab = null; box.innerHTML = ''; return; }
+    let r = null;
+    try { r = Dingshi.stability({ birth, gender, lon }); } catch (e) { box.innerHTML = ''; return; }
+    curStab = r;
+    const cls = r.level === '翻盘' ? 'warn' : (r.level === '不稳' ? 'warn' : (r.level === '小动' ? 'mid' : 'ok'));
+    const head = r.level === '翻盘' ? '底下这些话,有一半可能是反的'
+      : (r.level === '不稳' ? '底下这些话,方向会随时辰变'
+        : (r.level === '小动' ? '底下这些话方向不变,力度会有出入' : '时辰不用纠结'));
+    box.innerHTML = `<div class="stab ${cls}"><div class="st-h">${esc(head)}</div>${esc(r.note).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</div>`;
+  }
 
   function renderMing(c) {
     const P = c.pillars, cap = { year: '年柱', month: '月柱', day: '日柱', hour: '时柱' };
@@ -493,7 +533,7 @@
   // ——— 人生大事年表 ———
   let curDashi = null;
   function renderDashi(c) {
-    const tl = Dashi.timeline(c, { nowYear: new Date().getFullYear() });
+    const tl = Dashi.timeline(c, { nowYear: new Date().getFullYear(), marital: curMarital });
     curDashi = tl;
     const nowY = new Date().getFullYear();
     $('ds-intro').textContent = `${tl.startText},大运${tl.forward ? '顺' : '逆'}行。${tl.childhood}`;
@@ -752,6 +792,16 @@ ${curDashi ? Dashi.material(c, curDashi) + '\n' : ''}${curSanmei ? Sanmei.materi
   const readProfiles = () => { try { return JSON.parse(localStorage.getItem(PKEY) || '[]'); } catch (e) { return []; } };
   const writeProfiles = a => { try { localStorage.setItem(PKEY, JSON.stringify(a)); } catch (e) {} };
   function profMsg(t, bad) { const e = $('prof-msg'); if (!e) return; e.textContent = t; e.style.color = bad ? 'var(--cinnabar)' : 'var(--wx-mu)'; setTimeout(() => { e.textContent = ''; }, 2600); }
+  // 「不知道确切钟点」勾上时,钟点框停用——省得用户以为那个 12:00 是他自己填的
+  function syncHourUnknown() {
+    const cb = $('bt-unknown'), t = $('btime');
+    if (!cb || !t) return;
+    t.disabled = cb.checked;
+    t.style.opacity = cb.checked ? '.45' : '';
+  }
+  if ($('bt-unknown')) { $('bt-unknown').addEventListener('change', syncHourUnknown); syncHourUnknown(); }
+  if ($('marital')) $('marital').value = curMarital || '';
+
   function renderProfiles(selId) {
     const list = readProfiles(), sel = $('prof-sel');
     if (!sel) return;
@@ -764,7 +814,8 @@ ${curDashi ? Dashi.material(c, curDashi) + '\n' : ''}${curSanmei ? Sanmei.materi
     const p = readProfiles().find(x => x.id === id);
     if (!p) return;
     $('bdate').value = p.date || '';
-    $('btime').value = p.time || '12:00';
+    $('btime').value = p.time === '?' ? '12:00' : (p.time || '12:00');
+    if ($('bt-unknown')) { $('bt-unknown').checked = p.time === '?'; syncHourUnknown(); }
     $('gender').value = p.gender || '男';
     $('bplace').value = p.place || '';
     $('prof-name').value = p.name || '';
@@ -785,7 +836,9 @@ ${curDashi ? Dashi.material(c, curDashi) + '\n' : ''}${curSanmei ? Sanmei.materi
       const list = readProfiles();
       const cur = $('prof-sel').value;
       const rec = { id: cur || ('p' + date.replace(/-/g, '') + '_' + list.length + '_' + name.length),
-        name, date, time: $('btime').value || '12:00', gender: $('gender').value, place: $('bplace').value || '' };
+        name, date,
+        time: ($('bt-unknown') && $('bt-unknown').checked) ? '?' : ($('btime').value || '12:00'),
+        gender: $('gender').value, place: $('bplace').value || '' };
       const i = list.findIndex(x => x.id === rec.id);
       if (i >= 0) list[i] = rec; else list.push(rec);
       writeProfiles(list);

@@ -198,6 +198,49 @@ await t('日月年三种尺度说的不是同一句话', async () => {
   ok(/整整一年都是这个底子/.test(all), '年运要落到「整整一年」');
 });
 
+// ——— v0.77:姻缘方向留白 + 结论稳不稳 ———
+await t('姻缘那一类:不填感情状态,年表把两条路都摆出来,不下吉凶断语', async () => {
+  await page.selectOption('#marital', '');
+  await page.click('#btn-go');
+  await page.waitForSelector('#sec-dashi:not(.hidden)');
+  // 往年节点默认折叠,点开才看得到全部
+  const det = page.locator('#ds-nodes details.dspast');
+  if (await det.count()) await det.first().click();
+  const all = await page.locator('#ds-nodes').innerText();
+  const yy = all.split('\n').filter(l => l.includes('感情'));
+  ok(yy.length, '年表里没有感情类节点,换个生日');
+  const held = yy.filter(l => l.includes('单身') && l.includes('有伴'));
+  ok(held.length, '不填状态时,姻缘断语必须把「单身会怎样、有伴会怎样」两条路都写出来:' + yy[0].slice(0, 60));
+  ok(!/这年感情大吉|感情必有波折/.test(all), '不填状态时不许自己下吉凶断语');
+});
+
+await t('填了感情状态:方向跟着处境走,并写明这一层不是卦定的', async () => {
+  await page.selectOption('#marital', '有伴');
+  await page.click('#btn-go');
+  await page.waitForSelector('#sec-dashi:not(.hidden)');
+  const det = page.locator('#ds-nodes details.dspast');
+  if (await det.count()) await det.first().click();
+  const all = await page.locator('#ds-nodes').innerText();
+  ok(/不是卦定的/.test(all), '按处境断的那一条,依据里必须写明来源:' + all.slice(0, 200));
+  ok(/有伴/.test(all), '依据里要点出用的是哪一种处境');
+});
+
+await t('结论稳不稳:填了钟点不提示;勾了「不知道钟点」就当面说清底下的话靠不靠得住', async () => {
+  ok(!(await page.locator('#stab-box .stab').count()), '填了确切钟点不该跳这个提示');
+  await page.check('#bt-unknown');
+  ok(await page.locator('#btime').isDisabled(), '勾上之后钟点框应停用,免得人以为那个值是他填的');
+  await page.click('#btn-go');
+  await page.waitForSelector('#sec-ming:not(.hidden)');
+  const box = page.locator('#stab-box .stab');
+  ok(await box.count(), '没填钟点就必须给出「稳不稳」的判断');
+  const txt = await box.innerText();
+  ok(/时辰/.test(txt), '话要落到时辰上:' + txt.slice(0, 80));
+  ok(/定时辰|不用纠结/.test(txt), '要么指路去定时辰,要么明说不用纠结:' + txt.slice(0, 120));
+  await page.uncheck('#bt-unknown');
+});
+
+await t('无页面报错', async () => { ok(errs.length === 0, errs.join(' | ')); });
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

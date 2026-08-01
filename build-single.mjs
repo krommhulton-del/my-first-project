@@ -20,7 +20,7 @@ const LS_GUARD = `<script>
 <\/script>`;
 
 let yunshi = read('yunshi.html');
-for (const f of ['najia.js', 'lunar.js', 'bazi.js', 'yunshi.js', 'sanmei.js', 'dili.js', 'dashi.js', 'geju.js']) {
+for (const f of ['najia.js', 'lunar.js', 'bazi.js', 'yunshi.js', 'sanmei.js', 'dili.js', 'dashi.js', 'geju.js', 'dingshi.js']) {
   const tag = `<script src="${f}"></script>`;
   if (!yunshi.includes(tag)) throw new Error('运势页缺少脚本标签:' + f);
   yunshi = yunshi.replace(tag, '<script>\n' + read(f) + '\n</script>');
