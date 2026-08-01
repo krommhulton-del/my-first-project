@@ -56,6 +56,27 @@ t('调候表挂的是《穷通宝鉴》,就要逐格在原文里核得到', () =
   ok(n >= 70, '调候表收得太少,只有 ' + n + ' 格');
   ok(tab._meta['收录口径'].includes('双重印证'), '数据文件须写明收录口径');
   ok(/出处待核/.test(bazi), '未收录的格子退回粗糙规则,那条必须标出处待核');
+  // ③ v0.76 补录余下 41 格之后加的:收的 + 不收的必须正好凑满 120 格,
+  //    且不收的要逐格写明为什么不收——不许有格子悄悄消失。
+  const skip = tab._meta['不收'] || {};
+  ok(n + Object.keys(skip).length === 120,
+    `收了 ${n} 格、明说不收 ${Object.keys(skip).length} 格,加起来不是 120——有格子漏了或重了`);
+  for (const [cell, why] of Object.entries(skip)) {
+    ok(why && why.length > 10, `不收的 ${cell} 没写理由`);
+    const [g, z] = [cell[0], cell[1]];
+    ok(!(tab.table[g] && tab.table[g][z]), `${cell} 既说不收又收在表里`);
+  }
+  ok(tab._meta['补录口径'] && tab._meta['补录口径'].includes('单一来源'),
+    '补录的那批只有原文一个来源,口径里必须写明,不许与双重印证的混为一谈');
+  // ④ 原文自身有分歧的格子,数据文件里记了,bazi.js 也要认得——两处必须是同一批格子,
+  //    否则界面上就会有人看到「原文只有一说」的假象。
+  const yiKeys = Object.keys(tab._meta['补录分歧'] || {}).sort();
+  ok(yiKeys.length >= 5, '原文分歧记得太少,只有 ' + yiKeys.length + ' 格');
+  const inBazi = (bazi.match(/const TIAOHOU_YI = \[([^\]]*)\]/) || [])[1] || '';
+  const baziKeys = (inBazi.match(/'([^']+)'/g) || []).map(x => x.slice(1, -1)).sort();
+  ok(JSON.stringify(yiKeys) === JSON.stringify(baziKeys),
+    `分歧格子两处对不上:数据文件 ${yiKeys.join(',')} / bazi.js ${baziKeys.join(',')}`);
+  for (const k of yiKeys) ok(tab.table[k[0]] && tab.table[k[0]][k[1]], `${k} 记了分歧,表里却没这一格`);
 });
 t('凡写了「出处:《某书》…原话」的地方,原话必须在那本书里搜得到', () => {
   // 缘起:v0.67 开始给六爻各条挂真出处。规矩不变——搜得到才准挂。
