@@ -776,7 +776,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.92</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.93</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1038,6 +1038,7 @@
       <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">定 时 辰 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-hepan"><span class="bg">合</span><span><span class="bt">双 人 合 盘 · 这人跟你对不对得上</span><span class="bd">两副盘摆一起逐层看:他旺不旺你、你旺不旺他、处起来顺不顺、缺的那一味补不补得上、未来十年谁上谁下。恋爱/合伙/朋友/共事分开算</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-zhaigua"><span class="bg">宅</span><span><span class="bt">占 宅 · 这 处 住 得 住 不 住</span><span class="bd">现住的宅指着疑处问、买房盖房租房、要不要弃旧换新、入宅择日按亲分占、修方动土、看地形势——六型各按《增删卜易》原章断,无 Key 也有程序初断</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-mingge"><span class="bg">饭</span><span><span class="bt">命 格 取 向 · 这 人 该 吃 哪 碗 饭</span><span class="bd">仕途、买卖、手艺、文教、武职、清静饭——六路逐条给分,条条挂古书原话;钱从哪条路来、代价是什么,照实说,不绕弯</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dangan"><span class="bg">档</span><span><span class="bt">生 辰 档 案 · 一处管全应用</span><span class="bd">你、家里人、朋友的生辰各存一份,随时切换;能改能删。性别必填——男女的大运方向是反的,填错等于看别人的命</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yanpan"><span class="bg">验</span><span><span class="bt">验 盘 簿 · 这程序对你到底准不准</span><span class="bd">先让它把对某一年的判断封起来(你看不见),你再写下那年实际发生了什么,然后开封计分——连它错在哪几件都摆出来</span></span><span class="bx">›</span></button>
@@ -1318,6 +1319,24 @@
     <div class="stream" id="hp-ai"></div>
   </section>
 
+  <section id="sec-zhaigua" class="voff">
+    <h2>占 宅 · 这 处 住 得 住 不 住</h2>
+    <div class="note">按《增删卜易》占宅诸章断,规矩照书:<b>现住的宅一疑一占</b>(野鹤原话「若以一卦而斷全家之事者予則不能」),
+      问哪处就断哪处;买宅、迁居、入宅、动土、看地各走各章。摇卦用的是真随机三钱,起完程序先给初断,无 Key 也看得到。</div>
+    <div class="qwrow">
+      <select id="zg-type" class="wjin"></select>
+      <select id="zg-qin" class="wjin hidden">
+        <option value="父母">问父母这一头</option><option value="兄弟">问兄弟这一头</option><option value="妻儿">问妻儿这一头</option>
+      </select>
+      <input id="zg-yi" class="wjin hidden" placeholder="疑在哪处?如:大门 / 灶 / 井 / 宅后的树">
+      <button type="button" class="primary" id="btn-zg-go">摇 卦 断 宅</button>
+      <button type="button" class="gold hidden" id="btn-zg-ai">请东玄把这宅讲透</button>
+    </div>
+    <div class="err" id="zg-err"></div>
+    <div id="zg-out"></div>
+    <div class="stream" id="zg-ai"></div>
+  </section>
+
   <section id="sec-mingge" class="voff">
     <h2>命 格 取 向 · 这 人 该 吃 哪 碗 饭</h2>
     <div class="ypwarn" id="mg-honest"></div>
@@ -1508,7 +1527,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.92 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.93 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1551,6 +1570,7 @@
 <script src="hepan.js"></script>
 <script src="mingge.js"></script>
 <script src="gaiyun.js"></script>
+<script src="zhaigua.js"></script>
 <script src="tijian.js"></script>
 <script>
 (function () {
@@ -4731,6 +4751,55 @@
   }
   window.dxHepanFill = hpFill;
 
+  // ═══════════════════ 占宅(v0.93 板块 C):引擎 zhaigua.js,断法全在引擎里 ═══════════════════
+  let zgCast = null, zgRes = null;
+  const zgErr = m => { $('zg-err').textContent = m || ''; };
+  function zgFillTypes() {
+    const sel = $('zg-type'); if (!sel || sel.options.length) return;
+    for (const [k, t] of Object.entries(Zhaigua.TYPES)) {
+      const o = document.createElement('option'); o.value = k; o.textContent = t.name; sel.appendChild(o);
+    }
+    sel.addEventListener('change', () => {
+      $('zg-qin').classList.toggle('hidden', sel.value !== 'ru');
+      $('zg-yi').classList.toggle('hidden', sel.value !== 'jiu');
+    });
+    sel.dispatchEvent(new Event('change'));
+  }
+  function zgRender(r, yi) {
+    $('zg-out').innerHTML =
+      `<div class="ypbox"><h4>程 序 初 断</h4>` +
+      (yi ? `<div class="note ypline">所疑之处:${esc(yi)}(一疑一占,这一卦只断它)</div>` : '') +
+      `<div class="hpv"><b class="key">${esc(r.verdict)}</b></div>` +
+      `<div class="note ypflat">书上凭据:「${esc(r.vq.q)}」《${esc(r.vq.src)}》</div>` +
+      r.sub.map(x => `<div class="hpv ypline">· ${esc(x.plain)}<br><span class="dim">「${esc(x.q)}」</span></div>`).join('') +
+      (r.note ? `<div class="note ypflat">${esc(r.note)}</div>` : '') + `</div>`;
+    $('btn-zg-ai').classList.remove('hidden');
+  }
+  async function zgAI() {
+    if (!zgCast) return;
+    const key = getKey();
+    if (!key) { zgErr('要东玄讲透,先在「问卦」那页的「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
+    zgErr('');
+    $('zg-ai').textContent = '';
+    const yi = $('zg-yi').value.trim();
+    const mat = Zhaigua.material($('zg-type').value, zgCast, { qin: $('zg-qin').value }) +
+      (yi ? `\n【所疑之处】${yi}(一疑一占,只断此处)` : '');
+    try {
+      await llmStream([{ role: 'user', content: mat }], t => { $('zg-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+      dxTijian($('zg-ai'), $('zg-ai').textContent);
+    } catch (e) { zgErr('讲透失败:' + aiErrHint(e, $('ai-provider').value)); }
+  }
+  if ($('btn-zg-go')) {
+    zgFillTypes();
+    $('btn-zg-go').addEventListener('click', () => {
+      zgErr('');
+      zgCast = GuaCore.castHexagram();
+      zgRes = Zhaigua.judge($('zg-type').value, zgCast, { qin: $('zg-qin').value });
+      zgRender(zgRes, $('zg-type').value === 'jiu' ? $('zg-yi').value.trim() : '');
+    });
+    $('btn-zg-ai').addEventListener('click', zgAI);
+  }
+
   // ═══════════════════ 命格取向(v0.90 板块 G):这人该吃哪碗饭 ═══════════════════
   // 断法全在 mingge.js 里算死(引擎只吃 dxBirthChart 的盘,一个断法元素不自算,§四/§五)。
   // 界面只做三件事:排版、把「诚实分级」那段话摆在第一屏、把材料喂给模型。
@@ -5486,11 +5555,11 @@
 
   const VIEWS = {
     ask: ['sec-quick', 'sec-today', 'sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
+    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {

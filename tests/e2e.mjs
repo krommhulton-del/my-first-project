@@ -1103,6 +1103,37 @@ await t('双人合盘:两份档案合一盘,四种关系分开算,不许替人�
   await page.evaluate(() => { localStorage.removeItem('dongxuan_profiles_v1'); localStorage.removeItem('dongxuan_profile_cur'); });
 });
 
+await t('占宅:六型摇卦即断、原话上界面、一疑一占的规矩写明(v0.93)', async () => {
+  // 缘起:板块 C。守三件事:无 Key 也有程序初断、书上凭据挂在界面、jiu 型有疑处输入框。
+  await page.evaluate(() => window.dxOpenBoard('sec-zhaigua'));
+  await page.waitForTimeout(300);
+  const opts = await page.locator('#zg-type option').allTextContents();
+  ok(opts.length === 6, '该有六种问型,实得 ' + opts.length);
+  // jiu 型默认第一项,疑处输入框该在
+  ok(!(await page.locator('#zg-yi').isHidden()), 'jiu 型的疑处输入框该显示');
+  await page.fill('#zg-yi', '大门');
+  await page.click('#btn-zg-go');
+  await page.waitForTimeout(500);
+  const out = await page.locator('#zg-out').innerText();
+  ok(/程 序 初 断/.test(out), '程序初断区要在(无 Key 也看得到)');
+  ok(/书上凭据/.test(out) && /《增删卜易/.test(out), '原话与出处要挂在界面上');
+  ok(/一疑一占/.test(out), '「一疑一占」的规矩要写给人看');
+  ok(/大门/.test(out), '所疑之处要回显');
+  // 换到修方动土型,亲选与疑处该藏起来
+  await page.selectOption('#zg-type', 'xiu');
+  await page.waitForTimeout(150);
+  ok(await page.locator('#zg-yi').isHidden(), '非 jiu 型疑处框该藏');
+  await page.click('#btn-zg-go');
+  await page.waitForTimeout(400);
+  const out2 = await page.locator('#zg-out').innerText();
+  ok(/动得|缓一缓|先停/.test(out2), '修方动土要出结论:' + out2.slice(0, 40));
+  {
+    const r = Tijian.check(out2.replace(/「[^」]*」/g, ''), { zone: '断语' });
+    const bad = r.hits.filter(h => ['空话', '说教', '花钱消灾', '术语'].includes(h.kind));
+    ok(!bad.length, '占宅输出不干净:' + bad.map(h => h.kind + ':' + h.snippet).join('、'));
+  }
+});
+
 await t('改运·运的行当:诊断+六条杠杆、标证据强度、写明不是疗效、无花钱消灾(v0.91)', async () => {
   // 缘起:用户点名的「运的行当」。策划书的验收:六条全取自已有模块、
   // 「不是疗效」那段话必须出现在界面、不许出现任何花钱的东西。
