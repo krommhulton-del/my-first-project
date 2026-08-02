@@ -633,6 +633,42 @@
   .wjcard { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 11px; }
   .wjcard h4 { color: var(--gold); font-weight: normal; letter-spacing: .1em; margin-bottom: 5px; }
   /* 定时辰 */
+  /* ——— 验盘簿:封存态一律用「封蜡」的观感,开封后才见吉凶色 ——— */
+  #sec-yanpan .qwrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
+  .ypbox { border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; margin: 14px 0; background: var(--panel); }
+  .ypbox > h4 { margin: 0 0 8px; font-family: var(--disp); font-weight: normal; letter-spacing: .22em; color: var(--celadon); font-size: .95rem; }
+  .yprec { border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; margin: 10px 0; }
+  .yprec.sealed { border-style: dashed; background: var(--panel2); }
+  .yprec.hit { border-left: 3px solid var(--jade); }
+  .yprec.mis { border-left: 3px solid var(--slate); }
+  .yprec.abst { border-left: 3px solid var(--mute); }
+  .yph { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin-bottom: 6px; }
+  .yph .ypy { font-family: var(--disp); font-size: 1.05rem; color: var(--ink); }
+  .yph .ypt { color: var(--dim); font-size: .82rem; }
+  .ypseal { display: inline-block; border: 1px solid var(--celadon); color: var(--celadon);
+    border-radius: 999px; padding: 1px 9px; font-size: .76rem; letter-spacing: .06em; }
+  .ypform { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+  .ypform select, .ypform input { background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 9px; font-family: inherit; font-size: .92rem; }
+  .ypform .ypwhat { flex: 1 1 190px; min-width: 130px; }
+  .ypv { font-size: .9rem; line-height: 1.75; }
+  .ypv b.ok { color: var(--jade); } .ypv b.no { color: var(--slate); } .ypv b.ab { color: var(--dim); }
+  .yptab { width: 100%; border-collapse: collapse; font-size: .84rem; margin: 8px 0; }
+  .yptab th, .yptab td { border-bottom: 1px solid var(--line); padding: 5px 6px; text-align: right; }
+  .yptab th:first-child, .yptab td:first-child { text-align: left; }
+  .yptab thead th { color: var(--dim); font-weight: normal; }
+  .yptab tr.on td { color: var(--cinnabar); }
+  .ypbig { font-family: var(--disp); font-size: 1.5rem; color: var(--ink); letter-spacing: .04em; }
+  .ypyin { max-width: 150px; }
+  .ypmsg { margin: 0; align-self: center; }
+  .ypheadline { margin-bottom: 10px; }
+  .ypflat { margin: 0; }
+  .ypacts { margin-top: 6px; }
+  .ypmini { font-size: .8rem; padding: 4px 10px; }
+  .ypline { margin-bottom: 6px; }
+  .yptip { margin-top: 2px; }
+  .ypwarn { border: 1px solid rgba(168,106,18,.35); background: var(--ochre-soft);
+    border-radius: 12px; padding: 10px 13px; margin: 10px 0; font-size: .88rem; line-height: 1.75; }
   #sec-dingshi .qwrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
   .dshrs { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
   .dshr { border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; font-size: .86rem;
@@ -716,7 +752,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.81</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.82</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -977,6 +1013,7 @@
     <div class="bmenu">
       <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">定 时 辰 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-yanpan"><span class="bg">验</span><span><span class="bt">验 盘 簿 · 这程序对你到底准不准</span><span class="bd">先让它把对某一年的判断封起来(你看不见),你再写下那年实际发生了什么,然后开封计分——连它错在哪几件都摆出来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dawen"><span class="bg">问</span><span><span class="bt">大问拆阵</span><span class="bd">一句大问,拆成一套卦阵逐个起,汇总深断</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-zhuanyun"><span class="bg">运</span><span><span class="bt">转 运</span><span class="bd">近来不顺?先诊断根源,再给能落地的做法</span></span><span class="bx">›</span></button>
@@ -1226,6 +1263,41 @@
     </details>
   </section>
 
+  <section id="sec-yanpan" class="voff">
+    <h2>验 盘 簿 · 这程序对你到底准不准</h2>
+    <div class="note">别处都是程序说你听。<b>这里反过来:你考它。</b>
+      规矩只有一条,叫<b>盲测</b>——先选一个年份,程序当场把它对那一年的判断<b>连同八类事的全部分数</b>一起封存,
+      你在开封之前一个字都看不见;等你写下那年实际发生了什么,两边再一起摆出来对账。
+      <b>为什么非这么麻烦</b>:先看断语再回想,人一定能想起点对得上的事——这不是不老实,记忆本来就这么工作。
+      封存的东西存在你自己机器上,你要翻当然翻得到;这道规矩挡的不是作弊,是记忆自己往上套。
+      <b>也可以往后封</b>——封一个还没到的年份,那是最硬的一种证据。</div>
+
+    <div id="yp-score"></div>
+
+    <div class="ypbox">
+      <h4>封 一 年</h4>
+      <div class="qwrow">
+        <input type="number" id="yp-year" class="wjin ypyin" placeholder="年份,如 2019">
+        <button type="button" class="primary" id="btn-yp-seal">封存这一年</button>
+        <span class="note ypmsg" id="yp-sealmsg"></span>
+      </div>
+      <div class="note" id="yp-hint"></div>
+    </div>
+
+    <div id="yp-pending"></div>
+    <div id="yp-opened"></div>
+    <div id="yp-ledger"></div>
+
+    <div class="btnrow" id="yp-acts">
+      <button type="button" class="gold hidden" id="btn-yp-ai">请东玄把这份成绩讲透</button>
+      <button type="button" class="ghost hidden" id="btn-yp-export">导出这本簿子</button>
+      <button type="button" class="ghost" id="btn-yp-import">导入一本</button>
+      <input type="file" id="yp-file" accept="application/json" class="hidden">
+    </div>
+    <div class="err" id="yp-err"></div>
+    <div class="stream" id="yp-ai"></div>
+  </section>
+
   <section id="sec-yinyuan" class="fold">
     <h2 class="foldh">姻 缘 · 恋爱专用(问正缘 / 断某人)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
@@ -1349,7 +1421,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.81 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.82 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1388,6 +1460,7 @@
 <script src="dashi.js"></script>
 <script src="wenji.js"></script>
 <script src="dingshi.js"></script>
+<script src="yanpan.js"></script>
 <script src="tijian.js"></script>
 <script>
 (function () {
@@ -4407,6 +4480,233 @@
       const [y, m, d] = v.split('-').map(Number); const dt = new Date(y, m - 1, d, 12);
       return isNaN(dt) ? null : dt; } catch (e) { return null; }
   }
+  // ═══════════════════ 验盘簿:盲测封存,让这程序自己交成绩单 ═══════════════════
+  // 断法与计分全在 yanpan.js 里算死(而 yanpan 的方向又只取自 Dingshi.yearEv),
+  // 这里只管三件事:收输入、把封存的东西**藏严实**、把成绩摊开。
+  //
+  // 「藏严实」是这个板块唯一的技术要点:待开封的记录,**封存内容一个字都不许进 DOM**。
+  // 进了 DOM 就等于摆在眼前,盲测立刻作废——哪怕它被 display:none 盖着也不行。
+  const YPKEY = 'dongxuan_yanpan_v1';
+  let ypWho = '';
+  const ypErr = m => { $('yp-err').textContent = m || ''; };
+  const ypAll = () => { try { return JSON.parse(localStorage.getItem(YPKEY) || '[]'); } catch (e) { return []; } };
+  const ypPut = list => { try { localStorage.setItem(YPKEY, JSON.stringify(list)); } catch (e) { ypErr('存不进去——浏览器的存储可能满了或被禁用。'); } };
+  const ypMine = () => ypAll().filter(r => r && r.who === ypWho);
+  function ypChart() { return dxBirthChart('q'); }
+  // 版本号从页脚那枚印上取,不另写一份(§六 版本号只在三处改,这里只是读)
+  function ypVer() { try { return (document.querySelector('.seal') || {}).textContent.trim() || ''; } catch (e) { return ''; } }
+  function ypToday() { return new Date(); }
+
+  function ypSeal() {
+    ypErr('');
+    const c = ypChart();
+    if (!c) { ypErr('先在「问卦」那页填生日——没有盘就无从封起。'); return; }
+    ypWho = Yanpan.fingerprint(c);
+    const y = parseInt($('yp-year').value, 10);
+    const nowY = ypToday().getFullYear();
+    if (!y || y < 1900 || y > nowY + 30) { ypErr('年份填成 2019 这样,范围在 1900 到 ' + (nowY + 30) + ' 之间。'); return; }
+    const birthY = c.birth.getFullYear();
+    if (y < birthY) { ypErr('这一年你还没出生。'); return; }
+    if (ypMine().some(r => r.year === y)) { ypErr(y + ' 年已经封过了——一年只封一次,免得挑着封。'); return; }
+    let stab = '';
+    let hourKnown = false;
+    try { hourKnown = !!(localStorage.getItem(HRKEY) || ''); } catch (e) {}
+    if (!hourKnown) {
+      try { stab = Dingshi.stability({ birth: new Date(birthY, c.birth.getMonth(), c.birth.getDate()), gender: c.gender, lon: c.lon }).level; } catch (e) {}
+    }
+    const rec = Yanpan.seal(c, y, {
+      now: new Date().toISOString(), engine: ypVer(), hourKnown, stab,
+    });
+    rec.sealed.prospective = y > nowY;
+    const all = ypAll(); all.push(rec); ypPut(all);
+    $('yp-year').value = '';
+    $('yp-sealmsg').innerHTML = `<b>${y} 年已封存</b>——它对这一年八类事的判断已经锁死,` +
+      (rec.sealed.prospective ? '等这一年过完再来开封。' : '你现在看不见。往下写那年实际发生了什么。');
+    ypRender();
+  }
+
+  const YP_GOOD = [['1', '好事'], ['0', '坏事'], ['', '说不上好坏']];
+  function ypCatOpts(sel) {
+    return Yanpan.KEYS.map(k => `<option value="${k}"${k === sel ? ' selected' : ''}>${esc(Yanpan.CATS[k].label)}</option>`).join('');
+  }
+  function ypRender() {
+    const c = ypChart();
+    if (!c) {
+      $('yp-score').innerHTML = '<div class="note">先在「问卦」那页填生日,这本簿子才立得起来。</div>';
+      $('yp-pending').innerHTML = $('yp-opened').innerHTML = $('yp-ledger').innerHTML = '';
+      return;
+    }
+    ypWho = Yanpan.fingerprint(c);
+    const mine = ypMine().sort((a, b) => a.year - b.year);
+    const nowY = ypToday().getFullYear();
+    const birthY = c.birth.getFullYear();
+    $('yp-hint').innerHTML = mine.length ? '' :
+      `建议先封三五个你记得清楚的年份——换工作、搬家、生病、结婚、考试那种年份最好使。` +
+      `你今年 ${nowY - birthY} 岁,起运在 ${Math.round(birthY + c.dayun.startAge)} 年前后。`;
+
+    // —— 待开封:封存内容**绝不进 DOM** ——
+    const pend = mine.filter(r => !r.actual);
+    $('yp-pending').innerHTML = !pend.length ? '' :
+      `<div class="ypbox"><h4>待 开 封 · ${pend.length} 年</h4>` +
+      pend.map(r => {
+        const notYet = r.year > nowY;
+        return `<div class="yprec sealed" data-y="${r.year}">
+          <div class="yph"><span class="ypy">${r.year} 年</span>
+            <span class="ypt">${r.age} 岁</span>
+            <span class="ypseal">${notYet ? '往后封 · 还没到' : '已封存 · 你看不见'}</span></div>` +
+          (notYet
+            ? `<div class="note ypflat">这一年还没过完。到时候再来写实际发生了什么——那才是真正的事前预测。</div>`
+            : `<div class="ypform">
+                <select class="ypcat">${ypCatOpts('')}</select>
+                <select class="ypgood">${YP_GOOD.map(g => `<option value="${g[0]}">${g[1]}</option>`).join('')}</select>
+                <input type="text" class="ypwhat" maxlength="60" placeholder="一句话:那年这类事到底怎么了">
+                <button type="button" class="primary ypopen">开封对账</button>
+              </div>`) +
+          `<div class="btnrow ypacts"><button type="button" class="ghost ypmini ypdel">删掉这一年</button></div>
+        </div>`;
+      }).join('') + '</div>';
+
+    // —— 已开封 ——
+    const opened = mine.filter(r => r.actual);
+    const th = Yanpan.DEFAULT_TH;
+    $('yp-opened').innerHTML = !opened.length ? '' :
+      `<div class="ypbox"><h4>已 开 封 · ${opened.length} 件</h4>` +
+      opened.map(r => {
+        const o = Yanpan.open(r, th);
+        const cls = o.state === '中' ? 'hit' : o.state === '空' ? 'mis' : 'abst';
+        const badge = o.state === '中' ? '<b class="ok">对上了</b>' : o.state === '空' ? '<b class="no">它错了</b>' : '<b class="ab">它没敢表态</b>';
+        return `<div class="yprec ${cls}" data-y="${r.year}">
+          <div class="yph"><span class="ypy">${r.year} 年</span>
+            <span class="ypt">${esc(o.label)} · 你说是${o.good === true ? '好事' : o.good === false ? '坏事' : '说不上'}${o.what ? ' · ' + esc(o.what) : ''}</span></div>
+          <div class="ypv">${badge}。${esc(o.say)}<br>
+            <span class="ypt">封存那会儿,它把「${esc(o.label)}」排在第 ${o.rank}/${o.of} 位;它自己最看重的是「${esc(o.topLabel)}」。${o.edits ? ' · 这条你改过 ' + o.edits + ' 次' : ''}</span></div>
+          <div class="btnrow ypacts">
+            <button type="button" class="ghost ypmini ypedit">改一下我写的</button>
+            <button type="button" class="ghost ypmini ypdel">删掉这一年</button></div>
+        </div>`;
+      }).join('') + '</div>';
+
+    // —— 总账 ——
+    const rep = Yanpan.report(mine, { th });
+    const lines = Yanpan.plain(rep);
+    const m = rep.main;
+    const head = !rep.openedCount ? '' :
+      `<div class="yph ypheadline"><span class="ypbig">` +
+      (m.said ? `${m.said} 次表态,对了 ${m.hit} 次` : '一次也没表态') +
+      `</span>${m.said ? `<span class="ypt">${(m.rate * 100).toFixed(0)}% · 闭眼押一边能得 ${(m.baseline * 100).toFixed(0)}%</span>` : ''}</div>`;
+    const ladder = !m.said ? '' :
+      `<table class="yptab"><thead><tr><th>敢表态的门槛</th><th>表态</th><th>弃权</th><th>中</th><th>空</th><th>命中率</th><th>闭眼押一边</th></tr></thead><tbody>` +
+      rep.ladder.map(x => `<tr class="${x.th === th ? 'on' : ''}"><td>${x.th}</td><td>${x.said}</td><td>${x.abstain}</td><td>${x.hit}</td><td>${x.miss}</td>` +
+        `<td>${x.rate == null ? '—' : (x.rate * 100).toFixed(0) + '%'}</td><td>${x.baseline == null ? '—' : (x.baseline * 100).toFixed(0) + '%'}</td></tr>`).join('') +
+      `</tbody></table><div class="note yptip">门槛抬高,它就更少开口,命中率自然好看——<b>那是闭嘴,不是本事</b>,所以弃权数摆在旁边一起看。</div>`;
+    const rankBox = rep.rank && rep.rank.n >= 3
+      ? `<div class="ypbox"><h4>它有没有把重点放对</h4><div class="ypv">` +
+        `${rep.rank.n} 件里,它把「你说的那一类」平均排在第 <b>${rep.rank.meanRank}</b> 位;瞎排的话期望是第 ${rep.rank.chanceRank} 位。` +
+        `头一名正好撞上的有 ${rep.rank.topHit} 件。${rep.rank.p < 0.05 ? '这个差距还算说得过去' : '这个差距跟瞎排区分不开'}。</div>` +
+        `<div class="note">${esc(rep.rank.caveat)}</div></div>` : '';
+    $('yp-ledger').innerHTML = !rep.openedCount && !rep.sealedCount ? '' :
+      `<div class="ypbox"><h4>总 账</h4>${head}` +
+      lines.map(x => `<div class="ypv ypline">${x.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</div>`).join('') +
+      ladder + `</div>` + rankBox +
+      (rep.openedCount && rep.openedCount < 10
+        ? `<div class="ypwarn"><b>话说在前头:这个数眼下什么都证明不了。</b>十来件事的命中率,跟抛十次硬币抛出七次正面一样常见。
+             要它有意义,得攒到几十件,而且落空那几件一件都不能藏。这本簿子的用处不在数字好看,在于它能把这程序钉在地上。</div>` : '');
+
+    $('btn-yp-ai').classList.toggle('hidden', !rep.openedCount);
+    $('btn-yp-export').classList.toggle('hidden', !mine.length);
+    ypBind();
+  }
+
+  function ypBind() {
+    document.querySelectorAll('#sec-yanpan .ypopen').forEach(b => b.onclick = () => {
+      const box = b.closest('.yprec'), y = +box.dataset.y;
+      const cat = box.querySelector('.ypcat').value;
+      const g = box.querySelector('.ypgood').value;
+      const what = box.querySelector('.ypwhat').value.trim();
+      if (!cat) { ypErr('先选那年发生的是哪一类事。'); return; }
+      ypErr('');
+      const all = ypAll();
+      const r = all.find(x => x.who === ypWho && x.year === y);
+      if (!r) return;
+      r.actual = { at: new Date().toISOString(), type: cat, good: g === '1' ? true : g === '0' ? false : null, what, edits: 0 };
+      ypPut(all); ypRender();
+    });
+    document.querySelectorAll('#sec-yanpan .ypedit').forEach(b => b.onclick = () => {
+      const y = +b.closest('.yprec').dataset.y;
+      const all = ypAll(); const r = all.find(x => x.who === ypWho && x.year === y);
+      if (!r || !r.actual) return;
+      // 改的只是「实际发生了什么」;封存那一头一个字不动,而且改一次记一次
+      const keep = r.actual;
+      r.actual = null; ypPut(all); ypRender();
+      const box = document.querySelector(`#sec-yanpan .yprec[data-y="${y}"]`);
+      if (box) {
+        const cs = box.querySelector('.ypcat'), gs = box.querySelector('.ypgood'), ws = box.querySelector('.ypwhat');
+        if (cs) cs.value = keep.type;
+        if (gs) gs.value = keep.good === true ? '1' : keep.good === false ? '0' : '';
+        if (ws) ws.value = keep.what || '';
+        box.dataset.edits = (keep.edits || 0) + 1;
+        const ob = box.querySelector('.ypopen');
+        if (ob) ob.onclick = () => {
+          const all2 = ypAll(); const r2 = all2.find(x => x.who === ypWho && x.year === y);
+          if (!r2) return;
+          r2.actual = { at: new Date().toISOString(), type: cs.value, good: gs.value === '1' ? true : gs.value === '0' ? false : null,
+            what: ws.value.trim(), edits: (keep.edits || 0) + 1 };
+          ypPut(all2); ypRender();
+        };
+      }
+    });
+    document.querySelectorAll('#sec-yanpan .ypdel').forEach(b => b.onclick = () => {
+      const y = +b.closest('.yprec').dataset.y;
+      ypPut(ypAll().filter(x => !(x.who === ypWho && x.year === y)));
+      ypRender();
+    });
+  }
+
+  async function ypAI() {
+    const key = getKey();
+    if (!key) { ypErr('要东玄把这份成绩讲透,先在「问卦」那页的「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
+    ypErr('');
+    const rep = Yanpan.report(ypMine(), { th: Yanpan.DEFAULT_TH });
+    $('yp-ai').textContent = '';
+    try {
+      await llmStream([{ role: 'user', content: Yanpan.material(rep) }], t => { $('yp-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+      dxTijian($('yp-ai'), $('yp-ai').textContent);
+    } catch (e) { ypErr('讲透失败:' + aiErrHint(e, $('ai-provider').value)); }
+  }
+
+  if ($('btn-yp-seal')) {
+    $('btn-yp-seal').addEventListener('click', ypSeal);
+    $('btn-yp-ai').addEventListener('click', ypAI);
+    $('btn-yp-export').addEventListener('click', () => {
+      const mine = ypMine();
+      const blob = new Blob([JSON.stringify({ v: Yanpan.SCHEMA, exportedAt: new Date().toISOString(), records: mine }, null, 1)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = '验盘簿.json';
+      a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    });
+    $('btn-yp-import').addEventListener('click', () => $('yp-file').click());
+    $('yp-file').addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        try {
+          const j = JSON.parse(rd.result);
+          const recs = (j.records || []).filter(r => r && r.sealed && r.year);
+          if (!recs.length) { ypErr('这个文件里没有可用的记录。'); return; }
+          const all = ypAll();
+          let add = 0;
+          for (const r of recs) if (!all.some(x => x.who === r.who && x.year === r.year)) { all.push(r); add++; }
+          ypPut(all); ypErr(''); ypRender();
+          $('yp-sealmsg').textContent = `导入 ${add} 条(重复的年份已跳过)。`;
+        } catch (err) { ypErr('这个文件读不了:' + err.message); }
+      };
+      rd.readAsText(f);
+      e.target.value = '';
+    });
+  }
+  window.dxYanpanRender = ypRender;   // 供端到端测试与视图切换时刷新
+
   // ═══════════════════ A 还是 B:两个候选并排比 ═══════════════════
   // 缘起:地利、吉日、姻缘都缺「A 和 B 哪个好」的直接比较——用户得自己算两遍再脑补对比。
   // 这里做一个通用对照器:每个候选摊成几层分数,同层并排,最后给一句「选哪个、差多少」。
@@ -4715,11 +5015,11 @@
 
   const VIEWS = {
     ask: ['sec-quick', 'sec-today', 'sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
+    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {
@@ -4748,6 +5048,8 @@
     curBoard = id;
     unfoldSec(id);
     showView('boards');
+    // 验盘簿要在进板块时重算一遍:生日/档案可能在别处改过,簿子得跟着换人
+    if (id === 'sec-yanpan' && window.dxYanpanRender) { try { window.dxYanpanRender(); } catch (e) {} }
   }
   window.dxShowView = showView; window.dxOpenBoard = openBoard; window.dxDrawCard = drawCard;
   $('bottomnav').addEventListener('click', e => {

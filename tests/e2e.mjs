@@ -1038,6 +1038,123 @@ await t('问机板块:一句话给出年/月/日三层应期,并带画像与贵�
   ok((await page.inputValue('#question')).includes('复核'), '应把时间带进问句去复核');
 });
 
+await t('验盘簿:封存期间断语一个字都不许进 DOM(盲测协议的命门)', async () => {
+  await page.evaluate(() => { localStorage.removeItem('dongxuan_yanpan_v1'); });
+  await page.evaluate(() => {
+    localStorage.setItem('dongxuan_birth', '1990-05-20');
+    localStorage.setItem('dongxuan_birth_hour', '09:30');
+  });
+  await page.evaluate(() => window.dxOpenBoard('sec-yanpan'));
+  await page.waitForTimeout(300);
+  // —— 封一个过去的年份 ——
+  await page.fill('#yp-year', '2019');
+  await page.click('#btn-yp-seal');
+  await page.waitForTimeout(400);
+  ok((await page.locator('#yp-pending .yprec').count()) === 1, '封完应出现一条待开封');
+  ok((await page.locator('#yp-sealmsg').innerText()).includes('2019'), '应回执封存了哪一年');
+
+  // **命门**:待开封时,程序对这一年的判断不许能从 DOM 反推出来。
+  // (这条断言第一版写成「DOM 里不许出现任何事型名」——错的:下拉里九类平铺列出,
+  //  恰恰什么都没泄露。真正的不变量是下面这三条。)
+  const sealedTxt = await page.locator('#sec-yanpan').innerText();
+  ok(!/判吉|判凶|方向分|最看重|排在第/.test(sealedTxt), '封存期间漏出了吉凶或排位:' + sealedTxt.slice(0, 120));
+  // ① 下拉的次序必须是那张固定的事型表,不许按程序的分数排——一排序就等于把答案摆出来了
+  const optOrder = await page.locator('#yp-pending .ypcat option').allTextContents();
+  const catOrder = await page.evaluate(() => Object.keys(Yanpan.CATS).map(k => Yanpan.CATS[k].label));
+  ok(JSON.stringify(optOrder) === JSON.stringify(catOrder), '事型下拉被重排过,等于泄题:' + optOrder.join(','));
+  // ② 封存的字段名与小数分值不许进 DOM
+  const html = await page.locator('#yp-pending').innerHTML();
+  ok(!/\bdir\b|\bcalls\b|ranked/.test(html), '待开封节点带上了封存字段:' + html.slice(0, 160));
+  const decs = await page.evaluate(() => {
+    const r = (JSON.parse(localStorage.getItem('dongxuan_yanpan_v1') || '[]')).find(x => x.year === 2019);
+    return Object.values(r.sealed.calls).flatMap(v => [v.dir, v.score])
+      .filter(v => Math.abs(v) >= 1 && v % 1 !== 0).map(String);
+  });
+  ok(!decs.filter(n => html.includes(n)).length, '待开封的 HTML 里带上了封存的分值:' + decs.join(','));
+
+  // ③ **最硬的一条**:同一年份、两副完全不同的盘,待开封的标记必须逐字节相同。
+  //    相同就等于这块 DOM 一个比特的判断信息都没带出来——比逐个词去找漏子可靠得多。
+  //    (两人同年生,岁数一样,所以连岁数那一处都不必抹。)
+  const shot = async (birth) => {
+    await page.evaluate(b => {
+      localStorage.removeItem('dongxuan_yanpan_v1');
+      localStorage.setItem('dongxuan_birth', b);
+      localStorage.setItem('dongxuan_birth_hour', '09:30');
+    }, birth);
+    await page.evaluate(() => window.dxYanpanRender());
+    await page.fill('#yp-year', '2019');
+    await page.click('#btn-yp-seal');
+    await page.waitForTimeout(300);
+    return page.locator('#yp-pending').innerHTML();
+  };
+  const hA = await shot('1990-05-20');
+  const hB = await shot('1990-11-02');
+  ok(hA === hB, '两副不同的盘,待开封的标记居然不一样——有判断信息漏进了 DOM');
+  ok(hA.includes('2019'), '这条测试自己失效了:标记里连年份都没有');
+
+  // 回到 A 的盘继续往下考
+  await page.evaluate(() => { localStorage.removeItem('dongxuan_yanpan_v1'); localStorage.setItem('dongxuan_birth', '1990-05-20'); });
+  await page.evaluate(() => window.dxYanpanRender());
+  await page.fill('#yp-year', '2019');
+  await page.click('#btn-yp-seal');
+  await page.waitForTimeout(300);
+
+  // —— 同一年不许封两次(免得挑着封) ——
+  await page.fill('#yp-year', '2019');
+  await page.click('#btn-yp-seal');
+  await page.waitForTimeout(200);
+  ok((await page.locator('#yp-err').innerText()).includes('已经封过'), '同一年重复封存应被挡下');
+
+  // —— 开封:写下实际发生了什么 ——
+  await page.selectOption('#yp-pending .ypcat', 'shiye');
+  await page.selectOption('#yp-pending .ypgood', '1');
+  await page.fill('#yp-pending .ypwhat', '换了家公司,待遇涨了');
+  await page.click('#yp-pending .ypopen');
+  await page.waitForTimeout(400);
+  ok((await page.locator('#yp-opened .yprec').count()) === 1, '开封后应移到已开封');
+  ok((await page.locator('#yp-pending .yprec').count()) === 0, '待开封里不该还留着');
+  const opened = await page.locator('#yp-opened').innerText();
+  ok(/对上了|它错了|没敢表态/.test(opened), '开封必须给出结论:' + opened.slice(0, 80));
+  ok(/排在第 \d+\/\d+ 位/.test(opened), '应摆出封存时把这一类排第几');
+
+  // —— 总账:样本小的时候必须把话说死,并且不许把弃权换来的高命中率说成本事 ——
+  const led = await page.locator('#yp-ledger').innerText();
+  ok(/什么都证明不了|说明不了/.test(led), '样本不足时必须当面说清:' + led.slice(0, 120));
+  ok(led.includes('闭眼押一边') || /一次也没表态/.test(led), '必须同时报恒猜基线');
+  {
+    const r = Tijian.check(led, { zone: '断语' });
+    const bad = r.hits.filter(h => ['空话', '术语', '说教', '花钱消灾'].includes(h.kind));
+    ok(!bad.length, '总账不干净:' + bad.map(h => h.kind + ':' + h.snippet).join('、'));
+  }
+
+  // —— 往后封:还没到的年份不给填,免得当场就编 ——
+  const nextY = new Date().getFullYear() + 2;
+  await page.fill('#yp-year', String(nextY));
+  await page.click('#btn-yp-seal');
+  await page.waitForTimeout(300);
+  const pend = await page.locator('#yp-pending').innerText();
+  ok(pend.includes('往后封'), '未来年份应标成往后封:' + pend.slice(0, 100));
+  ok((await page.locator('#yp-pending .ypopen').count()) === 0, '还没到的年份不该给开封表单');
+
+  // —— 封存内容确实落到了本机,且改「实际」不动封存 ——
+  const store = await page.evaluate(() => JSON.parse(localStorage.getItem('dongxuan_yanpan_v1') || '[]'));
+  ok(store.length === 2, '两条记录应都存下来');
+  const rec2019 = store.find(r => r.year === 2019);
+  ok(rec2019 && Object.keys(rec2019.sealed.calls).length >= 8, '封存必须锁住八类事的全部分数');
+  const before = JSON.stringify(rec2019.sealed);
+  await page.click('#yp-opened .ypedit');
+  await page.waitForTimeout(300);
+  await page.selectOption('#yp-pending .ypcat', 'jiankang');
+  await page.selectOption('#yp-pending .ypgood', '0');
+  await page.click('#yp-pending .ypopen');
+  await page.waitForTimeout(400);
+  const after = await page.evaluate(() => (JSON.parse(localStorage.getItem('dongxuan_yanpan_v1') || '[]')).find(r => r.year === 2019));
+  ok(JSON.stringify(after.sealed) === before, '改「实际发生了什么」居然动了封存那一头');
+  ok(after.actual.edits === 1, '改过一次要记一次,实得 ' + after.actual.edits);
+  ok((await page.locator('#yp-opened').innerText()).includes('改过 1 次'), '报表上要照实写着改过几次');
+  await page.evaluate(() => { localStorage.removeItem('dongxuan_yanpan_v1'); });
+});
+
 await t('定时辰板块:分组、回推、能不能定、写回档案', async () => {
   await page.evaluate(() => window.dxOpenBoard('sec-dingshi'));
   ok((await page.locator('#ds-hours .dshr').count()) === 12, '十二时辰都要列出来');

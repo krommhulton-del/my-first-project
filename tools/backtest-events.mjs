@@ -23,6 +23,11 @@ const require = createRequire(import.meta.url);
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const Bazi = require(join(ROOT, 'bazi.js'));
 const Dingshi = require(join(ROOT, 'dingshi.js'));
+// 计分与统计一律走 yanpan.js——**那是唯一一份**(§四 一个口径一处算)。
+// 缘起(v0.82):个人验盘簿要报的是同一件事(表态/弃权/命中/恒猜基线/Fisher),
+// 若它另写一套,就会出现「个人验盘说 80%、名人回测说 79.2%」这种谁也说不清的局面。
+// 于是把这一份挪进模块,两边跑同一段代码;本文件改前改后的数字必须一位不差。
+const Yanpan = require(join(ROOT, 'yanpan.js'));
 
 const DATA = JSON.parse(readFileSync(join(ROOT, 'data', 'backtest-cases.json'), 'utf8'));
 // 同一个人、同一年、同一事型,程序只出一个判断——语料里若有两件(如特朗普 2024 两桩官司),
@@ -74,19 +79,20 @@ function dirOf(charts, year, type) {
 }
 
 // —— 主评测 ——
-function score(chartsList, thresh) {
-  let hit = 0, miss = 0, abstain = 0;
-  const misses = [];
+// 把语料摊成 yanpan.tally 认得的行:{dir, good, type, ...}
+// 留神:名人语料这一份**不走 yanpan 的姻缘恒弃权**——它考的是 v0.77 之前就定下的口径,
+// 而 v0.77 之后姻缘的 dir 本来就恒为 0,自然落在门槛以下。两条路殊途同归,但要说清楚。
+function rowsOf(chartsList) {
+  const rows = [];
   for (let i = 0; i < CASES.length; i++) {
     const c = CASES[i], ch = chartsList[i];
-    for (const e of c.events) {
-      const d = dirOf(ch, e.year, e.type);
-      if (Math.abs(d) < thresh) { abstain++; continue; }
-      const agree = (d > 0) === e.good;
-      if (agree) hit++; else { miss++; misses.push({ name: c.name, ...e, dir: +d.toFixed(2) }); }
-    }
+    for (const e of c.events) rows.push({ i, name: c.name, ...e, dir: dirOf(ch, e.year, e.type) });
   }
-  return { hit, miss, abstain, rate: hit + miss ? hit / (hit + miss) : null, misses };
+  return rows;
+}
+function score(chartsList, thresh) {
+  const t = Yanpan.tally(rowsOf(chartsList), thresh);
+  return { hit: t.hit, miss: t.miss, abstain: t.abstain, rate: t.rate, misses: t.misses };
 }
 
 const charts = CASES.map(chartsOf);
@@ -125,20 +131,7 @@ function table(chartsList, thresh, idxs) {
   }
   return { a, b, c, d, rows };
 }
-function lnFact(n) { let s = 0; for (let i = 2; i <= n; i++) s += Math.log(i); return s; }
-function hyperP(a, b, c, d) {
-  return Math.exp(lnFact(a + b) + lnFact(c + d) + lnFact(a + c) + lnFact(b + d) - lnFact(a + b + c + d)
-    - lnFact(a) - lnFact(b) - lnFact(c) - lnFact(d));
-}
-function fisher2(a, b, c, d) {         // 双尾
-  const p0 = hyperP(a, b, c, d), r1 = a + b, k = a + c, n = a + b + c + d;
-  let p = 0;
-  for (let x = Math.max(0, k - (n - r1)); x <= Math.min(r1, k); x++) {
-    const q = hyperP(x, r1 - x, k - x, n - r1 - k + x);
-    if (q <= p0 * 1.0000001) p += q;
-  }
-  return Math.min(1, p);
-}
+const fisher2 = Yanpan.fisher2;        // 双尾 Fisher:只此一份,见 yanpan.js
 const ALL = CASES.map((_, i) => i);
 console.log('\n【二】程序的吉凶判断,与实际的好坏,到底有没有关联?');
 for (const th of [0.001, 0.5, 1.0, 1.5]) {
