@@ -157,14 +157,52 @@ t('神煞表没有凭记忆扩表——起例查不到原文就不许加', () =>
   // 缘起:v0.74 本想扩神煞表,查下来渊海子平里**只有断语、没有起例**
   // (将星/劫煞/亡神/孤辰寡宿的推法一条都搜不到)。按铁律,搜不到就不许挂,
   // 凭训练记忆写表正是宪法明令禁止的。这条测试盯着别有人回头偷偷加。
+  //
+  // v0.87 改口径,**改严不改松**:用户传进《三命通会》之后,这几样的起例头一回
+  // 有了正文,于是表加上了。但旧写法只在渊海子平里松松搜一个「将星者」就算过,
+  // 那既拦不住从别处抄、也不验起例本身抄对没有。现在钉的是**两条路都不许沉默**:
+  //   ① 收了的 —— data/shensha.json 的 items 里有一条,引文在《三命通会》里逐字搜得到;
+  //   ② 没收的 —— 挂在「不收的」名下并写明为什么,同时代码里标「出处待核」。
+  // 两样都不占的表,一律当成凭记忆写,当场红。逐格核表在 tests/shensha.test.mjs。
+  //
+  // 这条一改严,当场揪出旧账:**天乙贵人与文昌两张表是 v0.33 凭口诀写的,至今无出处**
+  // (「甲戊庚牛羊」那套歌诀在《三命通会》里 0 命中)。不删表,但从此挂在明处。
+  const strip = x => x.replace(/<br\s*\/?>/gi, '').replace(/[\s，。、；：？！,.;:?!「」『』()（）《》〈〉·…﹐﹒﹕﹔﹑]/g, '');
   const bazi = readFileSync(join(ROOT, 'bazi.js'), 'utf8');
-  const yh = readFileSync(join(ROOT, 'data', 'classics', '渊海子平.txt'), 'utf8');
-  for (const name of ['将星', '劫煞', '亡神', '孤辰', '寡宿', '金舆']) {
-    if (!new RegExp('const ' + name).test(bazi) && !bazi.includes(name + ':')) continue;
-    ok(yh.includes(name + '者') || yh.includes(name + '：'),
-      `bazi.js 里加了「${name}」的表,可渊海子平里搜不到它的起例——不许凭记忆写`);
+  const ss = JSON.parse(readFileSync(join(ROOT, 'data', 'shensha.json'), 'utf8'));
+  // 条目名带括号注(「桃花(咸池)」),按括号前那截认
+  const key = s => s.replace(/[(（].*$/, '').replace(/\s*\/\s*/g, '');
+  const byName = new Map(ss.items.map(x => [key(x.name), x]));
+  const noSrc = new Set(ss.不收的.flatMap(x => [key(x.name), ...x.name.split(/\s*\/\s*/).map(key)]));
+  for (const x of ss.不收的) ok(x.为什么 && x.为什么.length > 20, `「${x.name}」说不收,可没写清为什么`);
+  const smtx = strip(readFileSync(join(ROOT, 'data', 'classics', '三命通会.txt'), 'utf8'));
+  let n = 0, pend = [];
+  for (const name of ['将星', '华盖', '桃花', '驿马', '劫煞', '亡神', '灾煞', '六厄', '孤辰',
+                      '寡宿', '破碎', '德秀', '金舆', '天乙贵人', '天德', '月德', '太极贵', '文昌']) {
+    // 表在不在:内联常量后头的注、或 SHENSHA_SAY 里的一条断语
+    const has = new RegExp('//[^\\n]*' + name).test(bazi)
+      || new RegExp('[\\s{,]' + name + ' *:').test(bazi);
+    if (!has) continue;
+    const rec = byName.get(name);
+    if (!rec) {
+      // ② 没收的那条路:必须**点名**挂在「不收的」名下并写清为什么。
+      // 这里不许退成「文件里有『出处待核』四个字就算」——那是全文匹配,
+      // 随便哪一处的待核声明都能替别的表遮丑。
+      ok(noSrc.has(name),
+        `bazi.js 里有「${name}」的表,shensha.json 既没收也没说不收——起例出处呢?`);
+      pend.push(name);
+      continue;
+    }
+    // ① 收了的那条路:引文逐字可搜
+    ok(rec.chapter && rec.quote, `「${name}」在 shensha.json 里没写章名或原文`);
+    // 简繁双查(§十二 栽过的跤):这份转录是简体,而 quote 留的是繁体原貌,
+    // 只查一头会得出「书里没有」的错结论。
+    ok(smtx.includes(strip(rec.quote)) || (rec.quoteS && smtx.includes(strip(rec.quoteS))),
+      `「${name}」的起例引文在《三命通会》里搜不到:「${rec.quote}」——不许凭记忆写`);
+    n++;
   }
-  ok(true);
+  ok(n >= 8, `神煞表核到的条数只有 ${n},太少了,是不是判在不在的那个式子写漏了`);
+  console.log(`      (核了 ${n} 张神煞表的起例出处;另有 ${pend.length} 张挂着出处待核:${pend.join('、')})`);
 });
 t('凡自称依某体例的模块,都注明了「出处待核」', () => {
   for (const f of ['najia.js', 'meihua.js', 'qimen.js', 'yunshi.js', 'wenji.js']) {

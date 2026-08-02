@@ -528,6 +528,13 @@
   }
 
   // ——— 神煞引擎(流运断事用)———
+  // 【v0.87 核出来的旧账】下面这两张表是 v0.33 凭口诀写的,**至今无出处**,一并标在这儿:
+  //   · TIANYI(天乙贵人)——「甲戊庚牛羊」那套歌诀在《三命通会》里 0 命中;
+  //     该书「论天乙贵人」一章只讲道理与零星几例,十干全表不在里头。**出处待核。**
+  //   · WENCHANG(文昌)——该书「论太极贵」一章末尾确有一张「文昌贵」
+  //     (甲乙蛇口乙猪头,丙狗丁龙戊向猴…),但**与本表十格只对上两格**(甲巳、戊申),
+  //     是同名不同物,不能拿它冒充出处。本表走的是「食神临官位」。**出处待核。**
+  // 两条都记在 data/shensha.json 的「不收的」里,honesty 测试点名盯着。
   // 口诀依据:天乙「甲戊庚牛羊,乙己鼠猴乡,丙丁猪鸡位,壬癸蛇兔藏,六辛逢虎马」;
   // 咸池(桃花)申子辰在酉、寅午戌在卯、巳酉丑在午、亥卯未在子;驿马寅申亥巳;华盖辰戌丑未;
   // 文昌「甲乙巳午报君知,丙戊申宫丁己鸡,庚猪辛鼠壬逢虎,癸人见卯入云梯」;羊刃甲卯丙戊午庚酉壬子;
@@ -538,8 +545,81 @@
   const YIMA = ['寅', '申', '亥', '巳'];
   const HUAGAI = ['辰', '戌', '丑', '未'];
   const WENCHANG = { 甲: '巳', 乙: '午', 丙: '申', 戊: '申', 丁: '酉', 己: '酉', 庚: '亥', 辛: '子', 壬: '寅', 癸: '卯' };
+  // 羊刃:「羊刃常居祿前一辰」;《三命通会·论羊刃》原文列出「卯者甲之正位、午者丙之正位、
+  // 酉者庚之正位、子者壬之正位」,**但那一章列到「丑者」就转了话题,戊己的刃没写**。
+  // 所以下面的「戊: 午」是通行口径,**这本书里查不到出处**(v0.87 核出来的)。不删,但标清楚。
   const YANGREN = { 甲: '卯', 丙: '午', 戊: '午', 庚: '酉', 壬: '子' };
+  const YANGREN_SRC = { 甲: '三命通会·论羊刃', 丙: '三命通会·论羊刃', 庚: '三命通会·论羊刃', 壬: '三命通会·论羊刃', 戊: '通行口径,出处待核' };
   const HONGLUAN = ['卯', '寅', '丑', '子', '亥', '戌', '酉', '申', '未', '午', '巳', '辰']; // 索引=年支序(子0)
+
+  // ————————————————————————————————————————————————
+  //  神煞全表(v0.87)—— 起例逐条抄自《三命通会》,**不是凭记忆写的**
+  // ————————————————————————————————————————————————
+  // 这张表是本项目挂得最久的一个洞:从 v0.33 起就只有十来个神煞,而 §九 一直写着
+  // 「神煞全表卡在语料上——渊海子平里只有断语、没有起例,将星/劫煞/亡神/孤辰寡宿的推法一条都搜不到,
+  //  按铁律不许凭记忆写表」。挂了三个版本没编。
+  // 2026-08-02 拿到《三命通会》(20.8 万字),里头有**十四个神煞专章**,条条带起例,于是这一轮补上。
+  //
+  // 规矩(与 data/shensha.json 的 _meta.取用规程 同一份):
+  //   · 只收**起例完整、无歧义**的——原文把「哪一局配哪一支」写死的才收;
+  //   · 每一条的原文都逐字可搜(有测试拿 data/shensha.json 逐条核《三命通会》全文);
+  //   · 原文只给道理没给全表的(天乙贵人十干全表、天德逐月表、太极贵),**这一轮不收**,
+  //     照实记在 shensha.json 的「不收的」里。
+  //
+  // **顺手核出三件事**(这是补出处这件事本身的体检价值,与 v0.67 那次同类):
+  //   ① 程序原有的桃花、驿马、华盖三张表,**头一次拿原文对照,逐格吻合**——这是外部对照测试;
+  //   ② 程序原有 YANGREN 里的「戊: 午」,《三命通会·论羊刃》**没写**(那一章列到「丑者」就转了话题),
+  //      所以那一条**无出处**,标在下面;
+  //   ③ 《三命通会》里的「文昌贵」(甲乙蛇口…丙狗丁龙戊向猴)与程序的「文昌」(食神临官位)
+  //      **同名不同物**,不是矛盾,记在案。
+  //
+  // 索引口径与既有表一致:sanheIdx → 申子辰0 / 寅午戌1 / 巳酉丑2 / 亥卯未3
+  const JIANGXING = ['子', '午', '酉', '卯'];   // 三合中位。「故以三合中位謂之將星」
+  const JIESHA    = ['巳', '亥', '寅', '申'];   // 三合绝位。「水絕在巳，申子辰以巳為劫煞」
+  const WANGSHEN  = ['亥', '巳', '申', '寅'];   // 三合临官。「水生木，申子辰以亥為亡神」
+  const ZAISHA    = ['午', '子', '卯', '酉'];   // 冲将星。「常居劫煞之前，衝破將星」
+  const LIUE      = ['卯', '酉', '子', '午'];   // 三合死位。「申子辰水局，水死在卯」
+  // 孤辰寡宿按**方**起(不按三合):亥子丑0 / 寅卯辰1 / 巳午未2 / 申酉戌3
+  const fangIdx = z => '亥子丑'.includes(z) ? 0 : '寅卯辰'.includes(z) ? 1 : '巳午未'.includes(z) ? 2 : 3;
+  const GUCHEN = ['寅', '巳', '申', '亥'];      // 方前一位。「進前一辰見寅為孤」
+  const GUASU  = ['戌', '丑', '辰', '未'];      // 方后一位。「退後一辰見戌為寡」
+  // 破碎(暗金的煞):四仲见巳、四孟见酉、四季见丑。「子午卯酉在巳，寅申巳亥在酉，辰戌丑未在丑」
+  const posuiOf = z => '子午卯酉'.includes(z) ? '巳' : '寅申巳亥'.includes(z) ? '酉' : '丑';
+  // 德秀:按月令三合局取。「寅午戌月，丙丁為德，戊癸為秀」
+  const DEXIU = [
+    { de: '壬癸戊己', xiu: '丙辛甲己' },   // 申子辰月
+    { de: '丙丁', xiu: '戊癸' },           // 寅午戌月
+    { de: '庚辛', xiu: '乙庚' },           // 巳酉丑月
+    { de: '甲乙', xiu: '丁壬' },           // 亥卯未月
+  ];
+  // 一条神煞落到某个流支上时,该说什么(铁律八:白话;铁律七:吉凶两面都给,不许只挑一面)
+  // 某副盘上,某个支落到哪些神煞上。
+  // 神煞以**年支**起为主(古法通例),日支为辅——与既有 flowMarks 的口径一致,不另立一套。
+  function shenShaOf(yearZhi, dayZhi, zhi) {
+    const out = [];
+    const put = (nm, arr, idx) => { if (arr[idx] === zhi) out.push(nm); };
+    for (const base of [yearZhi, dayZhi]) {
+      if (!base) continue;
+      const i = sanheIdx(base), f = fangIdx(base);
+      put('将星', JIANGXING, i); put('华盖', HUAGAI, i); put('桃花', TAOHUA, i); put('驿马', YIMA, i);
+      put('劫煞', JIESHA, i); put('亡神', WANGSHEN, i); put('灾煞', ZAISHA, i); put('六厄', LIUE, i);
+      put('孤辰', GUCHEN, f); put('寡宿', GUASU, f);
+      if (posuiOf(base) === zhi) out.push('破碎');
+    }
+    return [...new Set(out)];
+  }
+  const SHENSHA_SAY = {
+    将星: '将星临:坐得住位子的当口——该领的头、该拍的板,这阵子压得住场',
+    华盖: '华盖临:一个人闷头做事最出活——读书、研艺、谋划挑这阵子,不必硬凑热闹',
+    劫煞: '劫煞动:外头来的夺——奔波、破财、旧摊子守不住,借贷担保合伙这三样避开',
+    亡神: '亡神动:里头丢的——自己疏忽走脱的那种损失,东西证件合同都核两遍',
+    灾煞: '灾煞动:来得急——水火、刀刃、跌坠这几样上格外慢一点,交通与剧烈运动尤其',
+    六厄: '六厄临:办事总差一口气——名分上容易被剥,该争的提前争,别等水到渠成',
+    孤辰: '孤辰临:亲缘上薄的当口——聚少离多,该走动的提前约,别等人来找你',
+    寡宿: '寡宿临:守着的时候多——热闹里也觉得隔一层,自己找点事做比硬合群省劲',
+    破碎: '破碎临:磕碰折损——器物易坏、身上易有小伤,办事常在收尾处出岔,收尾多查一遍',
+  };
+
 
   // 日柱旬空(天中殺二支)
   function kongOf(dayGZ) {
@@ -563,6 +643,12 @@
     if (YANGREN[dg] === flowZhi) marks.push('羊刃现:火气冲——防口角动手、利器磕碰,车马慢行,忍一步海阔');
     if (HONGLUAN[yzIdx] === flowZhi) marks.push('红鸾动:婚恋之喜的信号——感情事在这个当口容易落定');
     if (ZHI[(ZHI.indexOf(HONGLUAN[yzIdx]) + 6) % 12] === flowZhi) marks.push('天喜临:喜庆临门——好消息、喜事、添置之应');
+    // v0.87 补上的九个:起例逐条抄自《三命通会》(见上面那张表的抬头)。
+    // 桃花/驿马/华盖上面已各有一条,这里不重复报。
+    for (const nm of shenShaOf(yz, dz, flowZhi)) {
+      if (['桃花', '驿马', '华盖'].includes(nm)) continue;   // 上面报过了
+      if (SHENSHA_SAY[nm]) marks.push(SHENSHA_SAY[nm]);
+    }
     const kong = kongOf(P.day.gz);
     if (kong.includes(flowZhi)) marks.push('空亡(天中殺):运气之冬——新起之事难留根,不宜开业、置产、定亲这类立根基的动作;宜守成、学习、清旧账、养精神,过了这段自回暖');
     const chong = z => ZHI[(ZHI.indexOf(z) + 6) % 12];
@@ -611,6 +697,7 @@
 
   return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI,
     kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, trueSolarDate, eotMinutes, tiaoHou, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx,
+    JIANGXING, JIESHA, WANGSHEN, ZAISHA, LIUE, GUCHEN, GUASU, DEXIU, SHENSHA_SAY, fangIdx, posuiOf, shenShaOf, YANGREN_SRC,
     SHEN_PLAIN, plainShen, BAND_PLAIN, plainBand, DELING_PLAIN, plainDeLing, CONG_PLAIN, plainGe,
     nayin, changSheng, taiYuan, siLingOf, SILING, daysIntoJie, relations, judgeStrength, judgeCong, wuxingPower, rootsOf, countWuxing, pickYongShen };
 }));
