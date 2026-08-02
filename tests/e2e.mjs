@@ -1142,6 +1142,40 @@ await t('西洋星盘:本命九曜落座、月亮误差声明、合盘相位与�
   await page.evaluate(() => { localStorage.removeItem('dongxuan_profiles_v1'); });
 });
 
+await t('星盘细读与时空盘:第一句+因果链、庙旺上界面、年运应期窗口、月运朔望、太阳返照(v0.98)', async () => {
+  // 缘起:用户 2026-08-02「星盘解读一坨屎」——v0.94 只有每星一句标签。
+  // 守四件事:细读有第一句与因果链;年运有带日子的应期窗口;月运有朔望;返照报回归时刻。
+  await page.evaluate(() => window.dxOpenBoard('sec-xingpan'));
+  await page.waitForTimeout(200);
+  await page.selectOption('#xz-mode', 'natal');
+  await page.click('#btn-xz-go');
+  await page.waitForTimeout(600);
+  const deep = await page.locator('#xz-out').innerText();
+  ok(/第 一 句/.test(deep) && /来 路/.test(deep), '细读要有第一句与来路');
+  ok(/因为/.test(deep) && /所以/.test(deep), '细读得是因果链,不是标签堆');
+  ok(/入庙|旺|陷|落/.test(deep), '庙旺陷落要上界面');
+  ok(/命主星/.test(deep), '有上升就该报命主星');
+  await page.selectOption('#xz-mode', 'trans');
+  await page.click('#btn-xz-go');
+  await page.waitForTimeout(1200);
+  const tr = await page.locator('#xz-out').innerText();
+  ok(/应 期 窗 口/.test(tr), '年运要有应期窗口区');
+  ok(/\d{4}-\d{2}-\d{2}/.test(tr), '应期得是具体日子');
+  ok(/零回测/.test(tr), '时空盘那段说明要写零回测');
+  await page.selectOption('#xz-mode', 'month');
+  await page.click('#btn-xz-go');
+  await page.waitForTimeout(900);
+  const mo = await page.locator('#xz-out').innerText();
+  ok(/朔 望/.test(mo) && /(新月|满月)/.test(mo), '月运要有朔望');
+  ok(/逐 日 细 账/.test(mo), '月运要有逐日细账');
+  await page.selectOption('#xz-mode', 'sr');
+  await page.click('#btn-xz-go');
+  await page.waitForTimeout(900);
+  const sr = await page.locator('#xz-out').innerText();
+  ok(/走回你出生那一度/.test(sr), '返照要报太阳回归');
+  ok(/返 照 盘 与 本 命 盘/.test(sr), '返照要摆与本命的相位');
+});
+
 await t('占宅:六型摇卦即断、原话上界面、一疑一占的规矩写明(v0.93)', async () => {
   // 缘起:板块 C。守三件事:无 Key 也有程序初断、书上凭据挂在界面、jiu 型有疑处输入框。
   await page.evaluate(() => window.dxOpenBoard('sec-zhaigua'));

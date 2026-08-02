@@ -777,7 +777,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.97</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.98</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1039,7 +1039,7 @@
       <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">生 时 校 正 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-hepan"><span class="bg">合</span><span><span class="bt">双 人 合 盘 · 这人跟你对不对得上</span><span class="bd">两副盘摆一起逐层看:他旺不旺你、你旺不旺他、处起来顺不顺、缺的那一味补不补得上、未来十年谁上谁下。恋爱/合伙/朋友/共事分开算</span></span><span class="bx">›</span></button>
-      <button class="bcard" data-b="sec-xingpan"><span class="bg">星</span><span><span class="bt">西 洋 星 盘 · 本命与双人合盘</span><span class="bd">九曜落宫逐度实算(VSOP87 星历,误差逐星实测)、上升与整宫、盘内相位;两人合盘看哪股劲顺哪股劲拧,另给组合中点盘。与中式那套并排摆,永不互相计分</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-xingpan"><span class="bg">星</span><span><span class="bt">西 洋 星 盘 · 细读、年运与合盘</span><span class="bd">九曜逐度实算(VSOP87 星历)+ 本命细读(庙旺、失衡、命主星、图形相位,断成一条因果链);时空盘看未来:年运逐日扫应期窗口、月运带朔望与水逆、太阳返照生日年运盘;双人合盘照旧。与中式那套并排摆,永不互相计分</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-zhaigua"><span class="bg">宅</span><span><span class="bt">占 宅 · 这 处 住 得 住 不 住</span><span class="bd">现住的宅指着疑处问、买房盖房租房、要不要弃旧换新、入宅择日按亲分占、修方动土、看地形势——六型各按《增删卜易》原章断,无 Key 也有程序初断</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-mingge"><span class="bg">饭</span><span><span class="bt">命 格 取 向 · 这 人 该 吃 哪 碗 饭</span><span class="bd">仕途、买卖、手艺、文教、武职、清静饭——六路逐条给分,条条挂古书原话;钱从哪条路来、代价是什么,照实说,不绕弯</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yanpan"><span class="bg">验</span><span><span class="bt">验 盘 簿 · 这程序对你到底准不准</span><span class="bd">先让它把对某一年的判断封起来(你看不见),你再写下那年实际发生了什么,然后开封计分——连它错在哪几件都摆出来</span></span><span class="bx">›</span></button>
@@ -1330,7 +1330,7 @@
     <div class="note">行星位置按 VSOP87 星历实算(截断误差逐星实测 ≤2″,月亮 ±0.3° 当面标注);
       相位「顺/拧」是通行占星口径、零回测。<b>与中式命理并排摆,永不互相计分。</b>本命盘按顶栏当前生辰;合盘从档案里挑两个人。</div>
     <div class="qwrow">
-      <select id="xz-mode" class="wjin"><option value="natal">本命盘(当前生辰)</option><option value="syn">双人合盘(两份档案)</option></select>
+      <select id="xz-mode" class="wjin"><option value="natal">本命细读(当前生辰)</option><option value="trans">年运·时空盘(未来十二个月)</option><option value="month">月运(未来三十五天)</option><option value="sr">太阳返照(生日年运盘)</option><option value="syn">双人合盘(两份档案)</option></select>
       <select id="xz-a" class="wjin hidden"></select>
       <select id="xz-b" class="wjin hidden"></select>
       <button type="button" class="primary" id="btn-xz-go">排 星 盘</button>
@@ -1550,7 +1550,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.97 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.98 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -4847,12 +4847,46 @@
     }
     g.strokeStyle = line;
   }
-  function xzRender(c, syn, names) {
+  function xzRender(c, syn, names, extra) {
     const planetRow = (cc) => Astro.KEYS.map(k => {
       const p = cc.planets[k];
-      return `<div class="hpv ypline">· ${esc(p.name)} 落${esc(p.sign)} ${p.deg}°${p.retro ? '(逆行)' : ''}${cc.houses ? `,第 ${cc.houses[k]} 宫` : ''}<br><span class="dim">${esc(p.plain)}</span></div>`;
+      const d = Astro.dignity(k, p.sign);
+      return `<div class="hpv ypline">· ${esc(p.name)} 落${esc(p.sign)} ${p.deg}°${p.retro ? '(逆行)' : ''}${cc.houses ? `,第 ${cc.houses[k]} 宫` : ''}${d ? ` <span class="dat">${esc(d.st)}</span>` : ''}<br><span class="dim">${esc(p.plain)}${d ? ' · ' + esc(d.plain) : ''}</span></div>`;
     }).join('');
-    let h = `<div class="ypbox"><h4>${names ? esc(names[0]) + ' 的' : ''}本 命 盘</h4>` + planetRow(c) +
+    let h = '';
+    if (extra && extra.deep) {
+      const dp = extra.deep;
+      h += `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(dp.verdict)}</div>` +
+        (dp.moonCaveat ? `<div class="note ypline">${esc(dp.moonCaveat)}</div>` : '') + `</div>` +
+        `<div class="ypbox"><h4>这 副 盘 的 来 路(细读,按通行占星口径算死)</h4><div class="hpv">${esc(dp.story)}</div>` +
+        (dp.ruler ? `<div class="hpv ypline">· ${esc(dp.ruler.plain)}</div>` : '') +
+        dp.pat.slice(1).map(p => `<div class="hpv ypline">· ${esc(p.plain)}</div>`).join('') + `</div>`;
+    }
+    if (extra && extra.trans) {
+      const tr = extra.trans;
+      h += `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(tr.verdict)}</div>` +
+        `<div class="note ypline">时空盘的意思:把此刻起往后十二个月的天空,逐日叠在你本命盘上——窗口与应期的日子是程序逐日扫出来的,说法是通行占星口径,零回测。</div></div>` +
+        `<div class="ypbox"><h4>应 期 窗 口(按起始日排)</h4>` +
+        (tr.wins.length ? tr.wins.map(w =>
+          `<div class="hpv ypline">· <b>${esc(w.from)}${w.to !== w.from ? ' ~ ' + esc(w.to) : ''}</b> ${esc(w.mover)}${esc(w.asp)}你的${esc(w.target)}` +
+          `${w.passes > 1 ? `(来回 ${w.passes} 次,精确应期 ${w.exact.map(esc).join('、')})` : `(精确应期 ${esc(w.exact[0])})`}<br><span class="dim">${esc(w.plain)}</span></div>`).join('')
+          : `<div class="hpv">${esc(tr.verdict)}</div>`) + `</div>`;
+    }
+    if (extra && extra.month) {
+      const mo = extra.month;
+      h += `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(mo.verdict)}</div></div>` +
+        `<div class="ypbox"><h4>朔 望(起头与见分晓)</h4>` + mo.luns.map(l => `<div class="hpv ypline">· ${esc(l.plain)}</div>`).join('') + `</div>` +
+        `<div class="ypbox"><h4>逐 日 细 账(快星应期)</h4>` +
+        mo.evs.map(e => `<div class="hpv ypline">· <b>${esc(e.date)}</b> ${esc(e.mover)}${esc(e.asp)}你的${esc(e.target)}<br><span class="dim">${esc(e.plain)}</span></div>`).join('') + `</div>`;
+    }
+    if (extra && extra.sr) {
+      const sr = extra.sr;
+      h += `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(sr.verdict)}</div></div>` +
+        `<div class="ypbox"><h4>返 照 盘 与 本 命 盘 的 相 位</h4>` +
+        sr.cross.slice(0, 8).map(a => `<div class="hpv ypline">· 返照${esc(a.a)} × 本命${esc(a.b)} ${esc(a.asp)}(差${a.orb}°)——${esc(a.plain)}</div>`).join('') + `</div>` +
+        `<div class="ypbox"><h4>返 照 那 一 刻 的 天 空</h4>` + planetRow(sr.chart) + `</div>`;
+    }
+    if (!extra || extra.deep || extra.syn) h += `<div class="ypbox"><h4>${names ? esc(names[0]) + ' 的' : ''}本 命 盘</h4>` + planetRow(c) +
       (c.asc ? `<div class="hpv ypline">· 上升 落${esc(c.asc.sign)} ${c.asc.deg}°(整星座制,第一宫从这里起)</div>` : '') +
       (c.ascNote ? `<div class="note ypflat">${esc(c.ascNote)}</div>` : '') +
       `<div class="note ypflat">${esc(c.moonNote)}</div></div>`;
@@ -4877,7 +4911,7 @@
     if (!key) { xzErr('要东玄讲透,先在「问卦」那页的「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
     xzErr(''); $('xz-ai').textContent = '';
     try {
-      await llmStream([{ role: 'user', content: Astro.material(xzData.c, xzData.syn, xzData.names) }], t => { $('xz-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+      await llmStream([{ role: 'user', content: Astro.material(xzData.c, xzData.syn, xzData.names, xzData.extra) }], t => { $('xz-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
       dxTijian($('xz-ai'), $('xz-ai').textContent);
     } catch (e) { xzErr('讲透失败:' + aiErrHint(e, $('ai-provider').value)); }
   }
@@ -4890,13 +4924,30 @@
     });
     $('btn-xz-go').addEventListener('click', () => {
       xzErr('');
-      if ($('xz-mode').value === 'natal') {
+      const mode = $('xz-mode').value;
+      if (mode !== 'syn') {
         const bd = xzBirthDate();
         if (!bd) { xzErr('先填出生日期——没有生日排不了星盘。'); return; }
         const geo = xzGeoOf();
         const c = Astro.chart(bd.date, { lat: geo.lat, lon: geo.lon, hourKnown: bd.hourKnown });
-        xzData = { c, syn: null, names: null };
-        xzRender(c); xzWheel(c);
+        const now = new Date();
+        if (mode === 'natal') {
+          const extra = { deep: Astro.deepRead(c) };
+          xzData = { c, syn: null, names: null, extra };
+          xzRender(c, null, null, extra); xzWheel(c);
+        } else if (mode === 'trans') {
+          const extra = { trans: Astro.transits(c, now, 12) };
+          xzData = { c, syn: null, names: null, extra };
+          xzRender(c, null, null, extra); xzWheel(c, Astro.chart(now));   // 本命盘外圈 + 此刻的天空内圈
+        } else if (mode === 'month') {
+          const extra = { month: Astro.monthRun(c, now) };
+          xzData = { c, syn: null, names: null, extra };
+          xzRender(c, null, null, extra); xzWheel(c, Astro.chart(now));
+        } else if (mode === 'sr') {
+          const extra = { sr: Astro.solarReturn(c, now.getFullYear()) };
+          xzData = { c, syn: null, names: null, extra };
+          xzRender(c, null, null, extra); xzWheel(c, extra.sr.chart);
+        }
       } else {
         const list = jrProfiles();
         const pa = list.find(x => x.id === $('xz-a').value), pb = list.find(x => x.id === $('xz-b').value);
