@@ -13,6 +13,7 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Tijian from '../tijian.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -307,7 +308,7 @@ t('程序初断给做法,不是只给理由', () => {
     ok(r.advice && r.advice.length >= 2, '做法条数太少:' + JSON.stringify(r.advice));
     for (const a of r.advice) { seen.add(a.k); n++;
       ok(!/你要明白|学会|与其|要相信|人生/.test(a.v), '做法里在讲道理:' + a.v);
-      ok(!/机遇与挑战|顺其自然|平常心|静观其变|仅供参考|因人而异/.test(a.v), '做法里有空话:' + a.v);
+      ok(!Tijian.check(a.v, { zone: '专业' }).hits.some(h => h.kind === '空话'), '做法里有空话:' + a.v);
       ok(!/用神|世应|旬空|月破|官鬼|妻财|子孙|兄弟/.test(a.v), '做法里有术语:' + a.v);
       ok(a.v.length >= 10, '做法太短等于没说:' + a.v);
     }

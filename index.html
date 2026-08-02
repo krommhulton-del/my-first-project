@@ -489,8 +489,34 @@
   .qwho input[type=number] { width: 84px; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
     border-radius: 6px; padding: 6px 8px; font-size: .88rem; font-family: inherit; }
   .qwho input[type=number]:focus { outline: none; border-color: var(--gold); }
+  /* 断语体检员的结论条:只报不改,摆在稿子底下 */
+  .tj-box { margin: 10px 0 2px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    background: var(--panel2); font-size: .84rem; line-height: 1.7; }
+  .tj-box.bad { border-color: rgba(197,90,17,.45); background: rgba(197,90,17,.08); }
+  .tj-h { font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .tj-score { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--dim); font-weight: 400; }
+  .tj-row { color: var(--dim); }
+  .tj-row b { color: var(--ink); font-weight: 600; margin-right: 6px; }
+  .tj-again { margin-top: 8px; font: inherit; font-size: .82rem; cursor: pointer; border: 1px solid var(--line);
+    background: var(--panel); color: var(--ink); border-radius: 999px; padding: 4px 12px; }
   .qwhint { font-size: .82rem; }
   .qwhint.warn { color: var(--ochre); }
+  /* 「为谁问」收成一行(队列第 10 条:两排选项平铺在首屏,表单占满一屏才见正文)。
+     功能一个没少——两个下拉照旧在里头,点「改」才展开;当前口径直接写在这一行上。 */
+  .qwfold { margin-top: 10px; }
+  .qwfold > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none;
+    color: var(--dim); font-size: .84rem; padding: 5px 0; }
+  .qwfold > summary::-webkit-details-marker { display: none; }
+  .qwfold > summary .qwk { flex: 0 0 auto; }
+  .qwfold > summary .qwhint { flex: 1 1 auto; min-width: 0; }
+  .qwfold > summary .qwedit { flex: 0 0 auto; color: var(--jade); border: 1px solid var(--line);
+    border-radius: 999px; padding: 1px 9px; font-size: .78rem; }
+  .qwfold[open] > summary .qwedit::after { content: '起'; }
+  .qwfold[open] > summary .qwedit { font-size: 0; }
+  .qwfold[open] > summary .qwedit::after { font-size: .78rem; }
+  .qwbody { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 0 2px; }
+  .qwbody select { padding: 6px 8px; font-size: .88rem; }
+  .qwtip { flex: 1 1 220px; color: var(--dim); font-size: .78rem; line-height: 1.6; }
   header .guide { color: var(--dim); font-size: .8rem; margin: 10px auto 0; line-height: 1.7; max-width: 640px; text-align: center; }
   header .guide b { color: var(--gold); font-weight: normal; }
   .fold .foldh { cursor: pointer; }
@@ -690,7 +716,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.77</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.78</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -762,11 +788,14 @@
   <section id="sec-q">
     <h2>所 问 何 事</h2>
     <input type="text" id="question" placeholder="例:此番南下求职,成与不成?(起卦前默念于心)" maxlength="120">
-    <div class="qwho">为谁问:
-      <select id="qg-q" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-      <select id="qa-q" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
-      <span class="qwhint" id="qh-q"></span>
-    </div>
+    <details class="qwfold" id="qwf-q">
+      <summary><span class="qwk">为谁问</span><span class="qwhint" id="qh-q"></span><span class="qwedit">改</span></summary>
+      <div class="qwbody">
+        <select id="qg-q" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
+        <select id="qa-q" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+        <span class="qwtip">不填就按顶上「问卦人」那一栏的口径断;替别人问才需要在这里单独填那个人的。</span>
+      </div>
+    </details>
   </section>
 
   <section id="sec-cast">
@@ -965,11 +994,14 @@
     <div class="foldbody hidden">
     <div class="note">一卦装不下的大问,先请东玄把它<b>拆成阵</b>:分板块、每卦配好卦法与小问;你逐个点「起卦」,起完汇总深断,把各卦应期串成一条时间线。</div>
     <textarea id="dw-q" maxlength="600" placeholder="用你自己的话,把心里那个大问写在这里,越具体拆出来的阵越贴。例:我这几年诸事不顺,想看看往后五年整体走向,哪年转运、该往哪使劲?"></textarea>
-    <div class="qwho">为谁问:
-      <select id="qg-dw" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-      <select id="qa-dw" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
-      <span class="qwhint" id="qh-dw"></span>
-    </div>
+    <details class="qwfold" id="qwf-dw">
+      <summary><span class="qwk">为谁问</span><span class="qwhint" id="qh-dw"></span><span class="qwedit">改</span></summary>
+      <div class="qwbody">
+        <select id="qg-dw" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
+        <select id="qa-dw" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+        <span class="qwtip">不填就按顶上「问卦人」那一栏的口径断;替别人问才需要在这里单独填那个人的。</span>
+      </div>
+    </details>
     <div class="btnrow">
       <button id="btn-dw-plan" class="gold">请东玄拆阵(AI)</button>
       <button id="btn-dw-example" class="ghost">用现成「命途总览」阵</button>
@@ -993,11 +1025,14 @@
     <h2 class="foldh">转 运(近来不顺?先诊断,再给做法)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
     <div class="note">这里不看吉凶定数,只办两件实事:<b>近来不顺的根子在哪</b>,以及<b>接下来怎么做</b>。先诊断(现状、根源、什么最旺你),再给做法(宜忌、方位时机、补救步骤)——每一条都落到当天能做的事上。运有起落,事在人为。</div>
-    <div class="qwho">为谁问:
-      <select id="qg-zy" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-      <select id="qa-zy" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
-      <span class="qwhint" id="qh-zy"></span>
-    </div>
+    <details class="qwfold" id="qwf-zy">
+      <summary><span class="qwk">为谁问</span><span class="qwhint" id="qh-zy"></span><span class="qwedit">改</span></summary>
+      <div class="qwbody">
+        <select id="qg-zy" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
+        <select id="qa-zy" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+        <span class="qwtip">不填就按顶上「问卦人」那一栏的口径断;替别人问才需要在这里单独填那个人的。</span>
+      </div>
+    </details>
     <div class="qwho">看哪个时段:
       <select id="zy-range"><option value="">当下(最近这阵子)</option><option value="近一个月">近一个月</option><option value="近一个季度">近一个季度</option><option value="近半年">近半年</option><option value="近一年">近一年</option><option value="近三年">近三年</option><option value="year">指定某一年</option></select>
       <input type="number" id="zy-year" class="hidden fld fld-sm">
@@ -1195,11 +1230,14 @@
     <h2 class="foldh">姻 缘 · 恋爱专用(问正缘 / 断某人)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
     <div class="note">只办恋爱的事,只给正面答案:<b>是/否、几成、年月日、厘米、位数区间</b>,第一句就是答案。性别定断法取用:男看妻财、女看官鬼。</div>
-    <div class="qwho">为谁问:
-      <select id="qg-yl" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-      <select id="qa-yl" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
-      <span class="qwhint" id="qh-yl"></span>
-    </div>
+    <details class="qwfold" id="qwf-yl">
+      <summary><span class="qwk">为谁问</span><span class="qwhint" id="qh-yl"></span><span class="qwedit">改</span></summary>
+      <div class="qwbody">
+        <select id="qg-yl" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
+        <select id="qa-yl" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+        <span class="qwtip">不填就按顶上「问卦人」那一栏的口径断;替别人问才需要在这里单独填那个人的。</span>
+      </div>
+    </details>
     <div class="qwho">还没对象,问正缘:
       <button id="btn-yl-zl" class="primary">摆正缘八卦阵</button>
       <span class="qwhint">何时·画像·身高·财富·职业·相识·TA的心思·验证,一次摆齐</span>
@@ -1311,7 +1349,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.77 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.78 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1350,6 +1388,7 @@
 <script src="dashi.js"></script>
 <script src="wenji.js"></script>
 <script src="dingshi.js"></script>
+<script src="tijian.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -1399,13 +1438,21 @@
     return s;
   }
   // 各入口「为谁问」提示:空则提醒,有则显示当前口径
+  // 「为谁问」收成一行之后,这句话就是那一行的正文:当前按谁的口径断,一眼看得见,
+  // 要改再点开(队列第 10 条,功能一个没少)。
   function updateQwho() {
     for (const ctx of ['q', 'dw', 'zy', 'yl']) {
       const el = $('qh-' + ctx);
       if (!el) continue;
       const b = querentBrief(ctx);
-      if (b) { el.textContent = `按「${b}」断`; el.classList.remove('warn'); }
-      else { el.textContent = '未填性别年龄——替别人问就填那人的;不填按通用口径,断语易含糊'; el.classList.add('warn'); }
+      const local = ($('qg-' + ctx) && $('qg-' + ctx).value) || ($('qa-' + ctx) && $('qa-' + ctx).value);
+      if (b) {
+        el.textContent = local ? `这一问按「${b}」断(替人问)` : `按「${b}」断`;
+        el.classList.remove('warn');
+      } else {
+        el.textContent = '性别年龄都没填,断语容易含糊——点「改」补一下';
+        el.classList.add('warn');
+      }
     }
   }
 
@@ -1799,7 +1846,7 @@
 一、结论关:每一路开头一句话必须是能单独抄在纸条上、离开上下文也看得懂的硬结论——含「成不成/几成把握/什么时候/多少数/什么方向」至少一样。把握度用「几成」说死(如"七成能成"),禁止"有一定机会""希望不小"这类含糊话。
 二、依据关:结论后面紧跟这一卦里的具体凭据(翻成白话的爻动、旺衰、冲合),让人看得出这话是从卦上来的、不是套话。换一个人换一卦这句话还能用,就说明是空话,删掉重写。
 三、做法关:给的做法必须具体到动作、时间、方向("这周内把话挑明""月底前别签字""往西边的机会先接"),禁止"多沟通""调整心态""顺其自然""保持耐心"这类放之四海皆准的废话——除非卦象确实指向"等",那也要说清等到几月、等什么信号。
-【车轱辘话禁句清单】机遇与挑战并存/有得有失/顺其自然/保持平常心/谋事在人成事在天/一切皆有可能/时间会证明一切/静观其变/随缘/心态最重要/多沟通多包容/凡事有两面——这些句子和它们的变体一律不许出现。同一个意思换着措辞重复说两遍,也算车轱辘话:字数要靠新信息堆,不靠复读。
+【车轱辘话禁句清单】${Tijian.RULES['空话'].words.join('/')}——这些句子和它们的变体一律不许出现。同一个意思换着措辞重复说两遍,也算车轱辘话:字数要靠新信息堆,不靠复读。
 【详细度】每一路不少于150字,画面感、具体人事物、时间数字方位都要给足;但每一句都得带新东西,拿重复和排比凑字数照样算失职。
 
 【输出】纯文本,直接以东玄口吻、大白话说,不加开场白、不加免责声明、不用 markdown 标题。卦象材料由掷卦程序自动提供且真实有效,直接据此细断。`;
@@ -1825,7 +1872,7 @@
 2. 时间尺度跟着问题走:近事落到"阳历几月上/中/下旬"或"某月到某月";远事(问一生、问"最有钱的时候"、问多年后才发生的事)落到年份或年龄段(如"约2037年前后、三十五六岁上下"),并按问卦人年龄核常识——严禁把多年后的事硬塞进眼前一两年。
 3. 钱和数量给数字区间,量级(千/万/十万)点死,不提怎么从卦数算的。
 4. 问人给画像:年龄段(跨度不超十岁)、长相一两笔、性格两笔、干哪行,不泛泛。
-5. 全文禁用:"可能/或许/大概/也许/建议你/你可以考虑/仅供参考/视情况而定/因人而异/总的来说/综上所述/希望对你有帮助"。车轱辘话同禁:"机遇与挑战并存/顺其自然/保持平常心/一切皆有可能/时间会证明/静观其变/随缘/心态最重要/多沟通"——把握度必须用"几成"说死,做法必须具体到动作和时间,同一个意思不许换措辞说第二遍。
+5. 全文禁用:"${Tijian.RULES['模棱'].words.join('/')}"。车轱辘话同禁:"${Tijian.RULES['空话'].words.join('/')}"。说教鸡汤同禁:"${Tijian.RULES['说教'].words.join('/')}"——把握度必须用"几成"说死,做法必须具体到动作和时间,同一个意思不许换措辞说第二遍。
 6. 不用 markdown 记号、不用编号清单、不引古文,像街坊老先生当面唠嗑,不是写报告。真懂行的人能把玄的讲得外行秒懂;掉书袋是心虚。
 7. 零说教、一枝一卦:「你要明白/你需要学会/与其…不如/真正的…是/记住/学会放下/换个角度想/你该反思」这类训导句一个不许写——只报事、断、做法,凶报到事为止不加教育。材料里没有对应卦的新问题不许硬答:明说这一枝还没起卦,请再掷一卦。断语倾向必须跟卦面强弱走,不许比卦面乐观或悲观半分。
 
@@ -1952,6 +1999,7 @@
       });
       text = r.text;
       curAns.textContent = text;
+      dxTijian(curAns, text, dxTijianFacts());
       if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') {
         setStatus('此问触发了模型方的安全过滤,换个问法再试。', true);
         if (!followupText) out.classList.add('hidden'); else curAns.remove();
@@ -1969,6 +2017,60 @@
       aiBusy = false; $('btn-deepread').disabled = false; $('btn-followup').disabled = false; $('btn-followup-gua').disabled = false;
     }
   }
+
+  // ——— 断语体检员:稿子出来之后,机器回头查一遍(队列第 8 条)———
+  // 缘起:铁律一到八管的正是模型写的这些字,可在此之前**没有任何一处在出稿之后回查过**——
+  // 模型不听话时程序不知道,用户也不知道。现在每一段深断出来都过一遍 tijian.js,
+  // 有问题就当面列出来,并给一个「打回重写」——把体检结论直接甩回给模型。
+  // 规矩:体检**只报不改**,一个字都不许替模型改;稿子照旧原样摆着,让人自己看。
+  // 拿得出手的「程序算死的事实」:命盘的喜忌(全应用共用)+ 这一阵各卦的成算。
+  // 留神:一阵多卦,卦与卦本来就可以说不同的话,**只有全体一致时才拿它去对稿**;
+  //       不一致就不表态——宁可少查一条,不可拿含糊的东西去判模型的错。
+  function dxTijianFacts(plan) {
+    const f = {};
+    try {
+      const c = dxBirthChart('q');
+      if (c) { f.xiWx = c.yong.xiWx; f.jiWx = c.yong.jiWx; }
+    } catch (e) {}
+    if (plan && plan.groups) {
+      const cds = [];
+      for (const g of plan.groups) for (const c of (g.casts || [])) if (c.cd && c.cd.cheng) cds.push(c.cd);
+      const ch = [...new Set(cds.map(c => c.cheng))];
+      if (ch.length === 1) {
+        f.cheng = ch[0];
+        const pcts = [...new Set(cds.map(c => c.pct).filter(Boolean))];
+        if (pcts.length === 1) f.pct = pcts[0];
+      }
+    }
+    try { if (typeof dxMarital === 'function' && !dxMarital()) f.held = true; } catch (e) {}
+    return f;
+  }
+  function dxTijian(el, text, facts) {
+    if (!el || typeof Tijian === 'undefined') return null;
+    let res;
+    try { res = Tijian.check(text, { facts: facts || null }); } catch (e) { return null; }
+    const old = el.parentNode && el.parentNode.querySelector('.tj-box');
+    if (old) old.remove();
+    if (res.pass && !res.hits.length) return res;              // 干净就不打扰
+    const box = document.createElement('div');
+    box.className = 'tj-box' + (res.pass ? '' : ' bad');
+    const by = {};
+    for (const h of res.hits) (by[h.kind] = by[h.kind] || []).push(h.snippet || h.why);
+    box.innerHTML = `<div class="tj-h">${res.pass ? '这稿子能看,但有几处不干净' : '这稿子不合格'}` +
+      `<span class="tj-score">${res.score} 分</span></div>` +
+      Object.keys(by).map(k => `<div class="tj-row"><b>${esc(k)}</b>${esc([...new Set(by[k])].slice(0, 6).join('、'))}</div>`).join('') +
+      `<button type="button" class="tj-again">打回重写</button>`;
+    el.parentNode.insertBefore(box, el.nextSibling);
+    box.querySelector('.tj-again').addEventListener('click', () => {
+      const hint = Tijian.rewriteHint(res) || '上一稿有几处不干净,重写一遍:把握度用「几成」说死,做法落到动作与时间。';
+      const fu = $('fu-input');
+      if (fu) { fu.value = hint; fu.scrollIntoView({ behavior: 'smooth', block: 'center' }); fu.focus(); }
+      else { try { navigator.clipboard.writeText(hint); } catch (e) {} }
+      box.querySelector('.tj-again').textContent = fu ? '已填进追问框,点「追问」即可' : '整改要求已复制';
+    });
+    return res;
+  }
+  window.dxTijian = dxTijian;
 
   // —— AI 传输层(深断/追问/拆阵共用):流式请求所选服务商,回传全文与停止原因 ——
   async function llmStream(turns, feed, systemText) {
@@ -2427,7 +2529,7 @@
     let text = '';
     try {
       const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); });
-      text = r.text; ans.textContent = text;
+      text = r.text; ans.textContent = text; dxTijian(ans, text, dxTijianFacts(dwPlan));
       if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { dwStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
       else if (!text) throw new Error('未收到内容');
       else {
@@ -2536,7 +2638,7 @@
     let text = '';
     try {
       const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); });
-      text = r.text; ans.textContent = text;
+      text = r.text; ans.textContent = text; dxTijian(ans, text, dxTijianFacts(zyPlan));
       if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { zyStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
       else if (!text) throw new Error('未收到内容');
       else {
@@ -2783,7 +2885,7 @@
     let text = '';
     try {
       const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); });
-      text = r.text; ans.textContent = text;
+      text = r.text; ans.textContent = text; dxTijian(ans, text, dxTijianFacts(xyPlan));
       if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { xyStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
       else if (!text) throw new Error('未收到内容');
       else {
@@ -2938,7 +3040,7 @@
     let text = '';
     try {
       const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); }, WJ_SYSTEM);
-      text = r.text; ans.textContent = text;
+      text = r.text; ans.textContent = text; dxTijian(ans, text, dxTijianFacts(wjPlan));
       if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { wjStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
       else if (!text) throw new Error('未收到内容');
       else {
@@ -3108,7 +3210,7 @@
     let text = '';
     try {
       const r = await llmStream(turns, ch => { text += ch; ans.textContent = text; ans.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); });
-      text = r.text; ans.textContent = text;
+      text = r.text; ans.textContent = text; dxTijian(ans, text, dxTijianFacts(ylPlan));
       if (r.stopReason === 'refusal' || r.stopReason === 'content_filter') { ylStatus('触发了模型方的安全过滤,换个问法。', true); ans.remove(); }
       else if (!text) throw new Error('未收到内容');
       else {
@@ -3834,6 +3936,7 @@
     $('wq-ai').textContent = '';
     try {
       await llmStream([{ role: 'user', content: mat }], t => { $('wq-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+      dxTijian($('wq-ai'), $('wq-ai').textContent);
     } catch (e) { wqErr('深断失败:' + e.message); }
   }
   if ($('btn-wq-go')) {
@@ -4031,6 +4134,7 @@
     $('ds-ai').textContent = '';
     try {
       await llmStream([{ role: 'user', content: mat }], t => { $('ds-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+      dxTijian($('ds-ai'), $('ds-ai').textContent);
     } catch (e) { dshErr('深断失败:' + aiErrHint(e, $('ai-provider').value)); }
   }
   if ($('btn-ds-go')) {

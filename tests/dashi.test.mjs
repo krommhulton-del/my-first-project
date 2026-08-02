@@ -4,6 +4,7 @@
 import Bazi from '../bazi.js';
 import Dashi from '../dashi.js';
 import Yunshi from '../yunshi.js';
+import Tijian from '../tijian.js';
 
 let pass = 0, fail = 0;
 const t = (name, fn) => { try { fn(); pass++; console.log('  ✓', name); } catch (e) { fail++; console.log('  ✗', name, '\n     ', e.message); } };
@@ -106,7 +107,9 @@ t('大变之年(岁运并临/天克地冲大运)一律保留,不被裁掉', () =
 });
 
 console.log('【三】断语必须落到具体事,禁空话');
-const BANNED = ['机遇与挑战并存', '顺其自然', '保持平常心', '一切皆有可能', '静观其变', '心态最重要', '仅供参考', '因人而异', '总的来说'];
+// 空话表不再各写各的:一律取 tijian.js 那一份权威表(§四 一个口径一处算)。
+// 缘起:实测同一类禁词散在九处以上、内容互不相同,于是「什么算空话」有九个互相冲突的答案。
+const BANNED = Tijian.RULES['空话'].words;
 t('年表断语里没有一句禁用空话', () => {
   for (const c of charts) {
     for (const n of Dashi.timeline(c, { nowYear: 2026 }).nodes) {

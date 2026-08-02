@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Tijian from '../tijian.js';
 const require = createRequire(import.meta.url);
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const Bazi = require(join(ROOT, 'bazi.js'));
@@ -157,7 +158,7 @@ t('白话结论里不出现十神、格局、干支这些字眼', () => {
   for (const st of ['成', '败', '成中带忌', '败中有救', '成败交见', '成败交见,有救应', '未见成败(x)']) {
     const p = Geju.plain({ state: st });
     ok(!BAN.test(p), `白话里带了术语:${p}`);
-    ok(!/仅供参考|因人而异|机遇与挑战/.test(p), '白话里有空话:' + p);
+    ok(!Tijian.check(p, { zone: '专业' }).hits.some(h => h.kind === '空话'), '白话里有空话:' + p);
   }
 });
 t('每条断语的白话也不许带术语——原话里留术语,白话里不许有', () => {

@@ -15,6 +15,7 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Tijian from '../tijian.js';
 const require = createRequire(import.meta.url);
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const GuaCore = require(join(ROOT, 'gua-core.js'));
@@ -114,7 +115,8 @@ t('每条理由都不带术语,且不许有空话', () => {
   // 缘起:头一版禁词表漏了六亲名本身,于是「兄弟动着来帮它」这句大摇大摆过了测试。
   // 六亲、旺衰状态字、爻位名——凡是术数里的名目,成稿里一个都不许有。
   const BAN = /用神|世应|旬空|月破|六亲|纳甲|十神|旺相休囚|飞伏|官鬼|妻财|父母爻|子孙|兄弟|世爻|应爻|[^不]旺相|休囚/;
-  const KONG = /机遇与挑战|顺其自然|平常心|静观其变|仅供参考|因人而异|总的来说/;
+  // 空话表取 tijian.js 那一份权威表(§四 一个口径一处算)
+const KONG = new RegExp(Tijian.RULES['空话'].words.join('|'));
   for (let i = 0; i < 300; i++) {
     const { cast, z } = mk();
     const r = Chuduan.judge(cast, z, QS[i % QS.length], FROM);

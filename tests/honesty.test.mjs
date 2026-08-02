@@ -5,6 +5,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Tijian from '../tijian.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 let pass = 0, fail = 0;
@@ -189,8 +190,21 @@ t('Key 只进 localStorage,不写进任何请求日志或回报文本', () => {
   ok(!/(material|report|回报)[^\n]{0,80}getKey\(\)/.test(html), 'Key 不许进材料或回报文本');
 });
 t('提示词里仍钉着零说教、禁空话、不推荐花钱消灾', () => {
+  // 2026-08 改过一次判据,原委照实记:
+  //   原来这条查的是 index.html 里**有没有「机遇与挑战并存」这几个字**。
+  //   v0.78 把禁词表收归 tijian.js 一处之后,提示词改成从那份表插值生成,
+  //   于是字面上不再有那几个字——旧判据会红,而那不是退步,是「一个口径一处算」落地了。
+  //   新判据比旧的更严:既要提示词确实接上了权威表,也要权威表里真有那些词。
   const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
-  for (const k of ['零说教', '机遇与挑战并存', '花钱消灾']) ok(html.includes(k), 'index.html 缺铁律:' + k);
+  const yun = readFileSync(join(ROOT, 'yunshi.html'), 'utf8');
+  for (const k of ['零说教', '花钱消灾']) ok(html.includes(k), 'index.html 缺铁律:' + k);
+  for (const [f, txt] of [['index.html', html], ['yunshi.html', yun]]) {
+    ok(/Tijian\.RULES\['空话'\]/.test(txt), f + ' 的禁句清单没接上唯一出处 tijian.js');
+    ok(/Tijian\.RULES\['说教'\]/.test(txt), f + ' 的说教禁句没接上唯一出处 tijian.js');
+  }
+  for (const w of ['机遇与挑战并存', '顺其自然', '静观其变']) {
+    ok(Tijian.RULES['空话'].words.includes(w), 'tijian.js 的空话表里少了:' + w);
+  }
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

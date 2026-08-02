@@ -8,6 +8,7 @@ import Najia from '../najia.js';
 import Jiri from '../jiri.js';
 import Yunshi from '../yunshi.js';
 import Wenji from '../wenji.js';
+import Tijian from '../tijian.js';
 
 let pass = 0, fail = 0;
 const t = (name, fn) => { try { fn(); pass++; console.log('  ✓', name); } catch (e) { fail++; console.log('  ✗', name, '\n     ', e.message); } };
@@ -126,7 +127,8 @@ t('用到流月流日的依据,不许还写「流年」「这一年」', () => {
     }
   }
 });
-const BANNED = ['机遇与挑战并存', '顺其自然', '保持平常心', '一切皆有可能', '静观其变', '仅供参考', '因人而异'];
+// 空话表取 tijian.js 那一份权威表(§四 一个口径一处算)
+const BANNED = Tijian.RULES['空话'].words;
 t('推出来的内容里没有一句空话(禁令那段本身不算)', () => {
   for (const c of CHARTS) {
     for (const q of QUESTIONS) {

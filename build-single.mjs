@@ -20,7 +20,7 @@ const LS_GUARD = `<script>
 <\/script>`;
 
 let yunshi = read('yunshi.html');
-for (const f of ['najia.js', 'lunar.js', 'bazi.js', 'yunshi.js', 'sanmei.js', 'dili.js', 'dashi.js', 'geju.js', 'dingshi.js']) {
+for (const f of ['najia.js', 'lunar.js', 'bazi.js', 'yunshi.js', 'sanmei.js', 'dili.js', 'dashi.js', 'geju.js', 'dingshi.js', 'tijian.js']) {
   const tag = `<script src="${f}"></script>`;
   if (!yunshi.includes(tag)) throw new Error('运势页缺少脚本标签:' + f);
   yunshi = yunshi.replace(tag, '<script>\n' + read(f) + '\n</script>');
@@ -55,6 +55,7 @@ html = html
   .replace('<script src="dashi.js"></script>', '<script>\n' + read('dashi.js') + '\n</script>')
   .replace('<script src="wenji.js"></script>', '<script>\n' + read('wenji.js') + '\n</script>')
   .replace('<script src="dingshi.js"></script>', '<script>\n' + read('dingshi.js') + '\n</script>')
+  .replace('<script src="tijian.js"></script>', '<script>\n' + read('tijian.js') + '\n</script>')
   // 桌面单文件版无 Service Worker 与 manifest(file:// 下不适用)
   .replace(/\n  \/\/ —— PWA[\s\S]*?\.catch\(\(\) => \{\}\);\n  \}\n/, '\n')
   .replace('<link rel="manifest" href="manifest.webmanifest">\n', '')

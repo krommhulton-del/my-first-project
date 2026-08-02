@@ -66,6 +66,14 @@
   button:disabled { opacity: .4; cursor: not-allowed; }
   .formerr { color: var(--cinnabar); font-size: .9rem; margin-top: 8px; }
   .note { color: var(--dim); font-size: .82rem; margin-top: 8px; line-height: 1.6; }
+  /* 断语体检员的结论条:只报不改 */
+  .tj-box { margin: 10px 0 2px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    background: var(--panel2); font-size: .84rem; line-height: 1.7; }
+  .tj-box.bad { border-color: rgba(197,90,17,.45); background: rgba(197,90,17,.08); }
+  .tj-h { font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .tj-score { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--dim); font-weight: 400; }
+  .tj-row { color: var(--dim); }
+  .tj-row b { color: var(--ink); font-weight: 600; margin-right: 6px; }
   /* 结论稳不稳:时辰不确定时,先把「下面这些话靠不靠得住」摆在最前面 */
   .stab { border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: .88rem; line-height: 1.7; }
   .stab b { font-weight: 600; }
@@ -225,7 +233,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.77</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.78</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -357,6 +365,7 @@
 <script src="geju.js"></script>
 <script src="dili.js"></script>
 <script src="dingshi.js"></script>
+<script src="tijian.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
@@ -675,7 +684,7 @@
 3. 具体落地:问财给该守该攻、大概进项方向;问工作给升降和压力来处;问感情给冷热聚散;都落到具体月份或时间段。禁止"因人而异""仅供参考""还得看个人"。
 4. 只断事不审人:命主的追求、标准照单全收,不评判、不替他/她预设没说过的立场,不贴标签。问啥答啥,不脑补人生观。
 5. 不用 markdown 标题符号,不用编号清单,像当面说话不是写报告。命盘与流年干支由程序算好且真实,直接据此断。
-6. 直断防空话:每一路开头一句就是硬结论(顺不顺/几成/哪几个月/什么数),把握度用"几成"说死;做法具体到动作和时间。禁句:"机遇与挑战并存/顺其自然/保持平常心/一切皆有可能/时间会证明/静观其变/随缘/心态最重要/多沟通"。哪句话放到随便谁的命上都成立,哪句就是车轱辘话,删了换成带数字带时间的实话;同一个意思不许换措辞说第二遍,字数靠新信息堆。
+6. 直断防空话:每一路开头一句就是硬结论(顺不顺/几成/哪几个月/什么数),把握度用"几成"说死;做法具体到动作和时间。禁句:"${Tijian.RULES['空话'].words.join('/')}";说教鸡汤同禁:"${Tijian.RULES['说教'].words.join('/')}"。哪句话放到随便谁的命上都成立,哪句就是车轱辘话,删了换成带数字带时间的实话;同一个意思不许换措辞说第二遍,字数靠新信息堆。
 【领域对照(心里用,落纸翻白话)】财星=钱与感情(男命兼女人缘);官杀=工作压力升迁与约束(女命兼正缘);印星=贵人文书房子长辈学习;比劫=朋友合伙竞争破财;食伤=才华表达投资副业子女跳槽。`;
 
   function buildMaterial() {
@@ -777,13 +786,35 @@ ${curDashi ? Dashi.material(c, curDashi) + '\n' : ''}${curSanmei ? Sanmei.materi
       }
       out.textContent = text;
       if (stop === 'refusal' || stop === 'content_filter') setStatus('此问触发了模型安全过滤,换个问法再试。', true);
-      else if (!text) throw new Error('未收到内容'); else setStatus('批毕。');
+      else if (!text) throw new Error('未收到内容');
+      else { setStatus('批毕。'); tijianBadge(out, text); }
     } catch (e) {
       if (text) out.textContent = text;
       const hint = /Failed to fetch|NetworkError|TypeError/.test(String(e))
         ? '网络被拦截:托管版禁止外联,请在桌面/本地版用深批。' : String(e.message || e);
       setStatus('深批未成:' + hint, true); if (!text) out.classList.add('hidden');
     } finally { aiBusy = false; $('btn-ai').disabled = false; }
+  }
+
+  // ——— 断语体检员:稿子出来之后机器回头查一遍(队列第 8 条)———
+  // 只报不改:一个字都不许替模型改,稿子照旧原样摆着。
+  // 拿得出手的对账事实:命盘的喜忌;姻缘方向留白时,还要盯住模型有没有自己补一个吉凶。
+  function tijianBadge(el, text) {
+    if (!el || typeof Tijian === 'undefined') return;
+    const facts = {};
+    try { if (curChart) { facts.xiWx = curChart.yong.xiWx; facts.jiWx = curChart.yong.jiWx; } } catch (e) {}
+    if (!curMarital) facts.held = true;
+    let res; try { res = Tijian.check(text, { facts }); } catch (e) { return; }
+    const old = el.parentNode && el.parentNode.querySelector('.tj-box');
+    if (old) old.remove();
+    if (res.pass && !res.hits.length) return;
+    const by = {};
+    for (const h of res.hits) (by[h.kind] = by[h.kind] || []).push(h.snippet || h.why);
+    const box = document.createElement('div');
+    box.className = 'tj-box' + (res.pass ? '' : ' bad');
+    box.innerHTML = `<div class="tj-h">${res.pass ? '这稿子能看,但有几处不干净' : '这稿子不合格'}<span class="tj-score">${res.score} 分</span></div>` +
+      Object.keys(by).map(k => `<div class="tj-row"><b>${esc(k)}</b>${esc([...new Set(by[k])].slice(0, 6).join('、'))}</div>`).join('');
+    el.parentNode.insertBefore(box, el.nextSibling);
   }
 
   // 事件

@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import Tijian from '../tijian.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8737;
@@ -437,17 +438,34 @@ await t('核心运势选时段:近一月/指定某年,问题自动重组', async
   await page.click('.fk[data-id=yunshi_core]');
 });
 
+await t('为谁问:默认收成一行,点开才见选项,功能一个没少(v0.78 表单瘦身)', async () => {
+  await page.click('.tabs button[data-m=liuyao]');
+  // 收起来是默认态:两个下拉不该占着首屏
+  for (const c of ['q', 'dw', 'zy', 'yl']) {
+    ok((await page.locator('#qwf-' + c).count()) === 1, `${c} 的「为谁问」应是可折叠的一行`);
+    ok(!(await page.locator('#qwf-' + c).evaluate(e => e.open)), `${c} 的「为谁问」默认应是收起的`);
+    ok(!(await page.locator('#qg-' + c).isVisible()), `${c} 收起时性别下拉不该露在首屏`);
+  }
+  ok((await page.textContent('#qh-q')).includes('没填'), '空缺时应有提醒');
+  // 点那一行就展开,选项照旧能改
+  await page.locator('#qwf-q > summary').click();
+  ok(await page.locator('#qg-q').isVisible(), '点开之后选项应可见可改');
+  await page.evaluate(() => { document.getElementById('qwf-q').open = false; });
+});
+
 await t('为谁问:问题旁单独填性别年龄(替人问),盖过顶栏默认', async () => {
   await page.click('.tabs button[data-m=liuyao]');
-  ok((await page.textContent('#qh-q')).includes('未填'), '空缺时应有提醒');
+  await page.evaluate(() => { document.getElementById('qwf-q').open = true; });
   await page.selectOption('#qg-q', '女');
   await page.selectOption('#qa-q', '36-40');
   ok((await page.textContent('#qh-q')).includes('女,36-40岁'), '提示应显示当前口径');
+  ok((await page.textContent('#qh-q')).includes('替人问'), '本问单独填了,那一行要标明是替人问的');
   await page.fill('#question', '替人问卦内测');
   await page.click('#btn-auto');
   await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:女,36-40岁'), null, { timeout: 9000 });
   await page.selectOption('#qg-q', '');
   await page.selectOption('#qa-q', '');
+  await page.evaluate(() => { document.getElementById('qwf-q').open = false; });
   ok((await page.locator('#qh-dw').count()) === 1 && (await page.locator('#qh-zy').count()) === 1, '拆阵与转运也应有为谁问');
 });
 
@@ -614,9 +632,11 @@ await t('姻缘板块:正缘八卦阵、断人六卦阵、无Key深断给提示'
   // 性别记忆联动:设主页问卦人性别 → 板内提示应显示口径;板内可单独盖过
   await page.evaluate(() => { const g = document.getElementById('q-gender'); g.value = '女'; g.dispatchEvent(new Event('change')); });
   ok((await page.textContent('#qh-yl')).includes('女'), '板内应显示主页性别记忆:' + (await page.textContent('#qh-yl')));
+  await page.evaluate(() => { document.getElementById('qwf-yl').open = true; });
   await page.selectOption('#qg-yl', '男');
   ok((await page.textContent('#qh-yl')).includes('男'), '板内改选应盖过主页');
   await page.selectOption('#qg-yl', '');
+  await page.evaluate(() => { document.getElementById('qwf-yl').open = false; });
   // 正缘阵:8卦,含一奇门
   await page.click('#btn-yl-zl');
   ok((await page.textContent('#yl-status')).includes('按「女'), '摆阵状态应报所用口径:' + (await page.textContent('#yl-status')).slice(0, 40));
@@ -738,9 +758,10 @@ await t('程序初断给的是做法不是道理:眼下怎么办、什么时候�
   ok(/时候/.test(out) && /门路/.test(out), '缺时候与门路:' + out.slice(0, 160));
   // 铁律一:只留事、断、做法,不许讲道理灌鸡汤
   for (const w of ['你要明白', '学会', '与其', '其实人生', '要相信']) ok(!out.includes(w), '做法里在讲道理:' + w);
-  // 铁律三:禁空话
-  for (const w of ['机遇与挑战', '顺其自然', '平常心', '静观其变', '仅供参考', '因人而异']) {
-    ok(!out.includes(w), '做法里有空话:' + w);
+  // 铁律三:禁空话。词表取 tijian.js 那一份权威表(§四 一个口径一处算),不在这儿另写一份
+  {
+    const k = Tijian.check(out, { zone: '专业' }).hits.filter(h => h.kind === '空话');
+    ok(!k.length, '做法里有空话:' + k.map(h => h.snippet).join('、'));
   }
   // 长脚注收进可展开,不许占满版面压住答案
   ok(/凭什么这么说/.test(out), '出处交代应收成可展开的一行');
@@ -1007,7 +1028,10 @@ await t('问机板块:一句话给出年/月/日三层应期,并带画像与贵�
   ok((await page.locator('#wq-out .wjmon').count()) >= 1, '应列出应期月份');
   ok((await page.locator('#wq-out .wjday').count()) >= 1, '应列出具体日子');
   ok(txt.includes('贵 人 从 哪 来'), '应有贵人卡');
-  ok(!/机遇与挑战并存|顺其自然/.test(txt), '不许出现空话');
+  {
+    const k = Tijian.check(txt, { zone: '专业' }).hits.filter(h => h.kind === '空话');
+    ok(!k.length, '不许出现空话:' + k.map(h => h.snippet).join('、'));
+  }
   ok(await page.locator('#btn-wq-cast').isVisible(), '起卦复核按钮应出现');
   await page.click('#btn-wq-cast');
   await page.waitForTimeout(400);
@@ -1029,8 +1053,13 @@ await t('定时辰板块:分组、回推、能不能定、写回档案', async (
   ok((await page.locator('#ds-out .dsgrp').count()) >= 1, '应给出「断得一样的时辰」分组');
   ok(/可以定|定不了/.test(txt), '必须表态能不能定:' + txt.slice(0, 60));
   ok(txt.includes('差 异 面 板'), '应有差异面板');
-  ok(!/仅供参考|因人而异|机遇与挑战并存|顺其自然/.test(txt), '不许出现空话');
-  ok(!/用神|旺相休囚|十神/.test(txt), '术语不许上稿');
+  {
+    const r = Tijian.check(txt, { zone: '断语' });
+    const k = r.hits.filter(h => h.kind === '空话');
+    ok(!k.length, '不许出现空话:' + k.map(h => h.snippet).join('、'));
+    const j = r.hits.filter(h => h.kind === '术语');
+    ok(!j.length, '术语不许上稿:' + j.map(h => h.snippet).join('、'));
+  }
   // 事件够三件时要给出排名;写回档案后全应用共用同一时辰
   ok((await page.locator('#ds-out .dsrk').count()) >= 2, '四件事应排得出名次');
   await page.selectOption('#ds-pick', '6');
@@ -1135,6 +1164,52 @@ await t('侧栏「准不准」:一个字没填钟点才提示,填了就不再啰
   const b = await page.textContent('#sp-body');
   ok(!b.includes('准不准'), '填了确切钟点还提示,是啰嗦:' + b.slice(0, 160));
   await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1990-06-15'); localStorage.setItem('dongxuan_birth_hour', '5'); });
+});
+
+await t('断语体检员接进了界面:模型的稿子一出来就回查(队列第 8 条)', async () => {
+  // 无 Key 的环境跑不了真深断,这里直接调界面里那个渲染函数,验它把结论摆出来了、
+  // 并且**只报不改**——稿子原文一个字都不许动。
+  const r = await page.evaluate(() => {
+    const box = document.createElement('div');
+    box.className = 'fq-ans';
+    const wrap = document.createElement('div');
+    wrap.appendChild(box);
+    document.body.appendChild(wrap);
+    const draft = '首先,总的来说,这一年机遇与挑战并存,你要明白顺其自然的道理。' +
+      '用神受克、喜忌翻转。建议你保持平常心,可以请一尊开光的貔貅化解。';
+    box.textContent = draft;
+    const res = window.dxTijian(box, draft, { cheng: '成' });
+    const tj = wrap.querySelector('.tj-box');
+    return {
+      hasBox: !!tj,
+      bad: tj ? tj.className.includes('bad') : false,
+      txt: tj ? tj.innerText : '',
+      draftKept: box.textContent === draft,
+      score: res ? res.score : null,
+      kinds: res ? [...new Set(res.hits.map(h => h.kind))] : [],
+      hasBtn: tj ? !!tj.querySelector('.tj-again') : false,
+    };
+  });
+  ok(r.hasBox, '稿子有问题却没给出体检结论');
+  ok(r.bad, '这么脏的稿子应判不合格');
+  ok(r.draftKept, '体检员改了稿子——它只许报,不许改');
+  ok(r.hasBtn, '应给一个「打回重写」');
+  for (const k of ['空话', '说教', '术语', '花钱消灾']) ok(r.kinds.includes(k), '没认出「' + k + '」:' + r.kinds.join('、'));
+  ok(r.score === 0 || r.score < 60, '分数应当很低,实得 ' + r.score);
+  ok(/不合格/.test(r.txt), '结论条要把话说死:' + r.txt.slice(0, 40));
+});
+
+await t('干净的稿子不打扰:体检员一个字都不吭', async () => {
+  const has = await page.evaluate(() => {
+    const box = document.createElement('div'); box.className = 'fq-ans';
+    const wrap = document.createElement('div'); wrap.appendChild(box); document.body.appendChild(wrap);
+    const good = '这事七成能成,落在2026年3月上旬。3月5日之前把合同递上去,别拖过清明。' +
+      '眼下三件事:先找那位姓王的中间人开口,再把报价压到18万以内,月底前把材料补齐。忌往西边跑,少接熟人的合伙局。';
+    box.textContent = good;
+    window.dxTijian(box, good, {});
+    return !!wrap.querySelector('.tj-box');
+  });
+  ok(!has, '干净的稿子不该弹结论条,那是打扰');
 });
 
 await browser.close();
