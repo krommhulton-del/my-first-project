@@ -62,11 +62,14 @@ t('六路的每一条证据、直断与旁注的每一款,都至少触发一次'
     for (const road of r.roads) if (road.ev.length) seen.add('路:' + road.key);
     for (const m of r.money) seen.add('钱:' + m.path);
     for (const z of r.zhi) seen.add('直:' + z.key);
+    for (const g of r.guanxi.items) seen.add('关:' + g.key);
+    for (const m2 of r.mao) seen.add('貌:' + m2.key);
     for (const p of r.pang) seen.add('旁:' + p.key);
   }
   const need = ['路:guan', '路:shang', '路:ji', '路:wen', '路:wu', '路:chu',
     '钱:正路的钱', '钱:买卖的钱', '钱:伴侣与人脉带来的钱', '钱:手艺换的钱', '钱:没有哪条独大',
-    '直:水得地火不现', '直:锋芒有托', '直:锋芒无托', '直:水盛多智', '旁:桃花咸池', '旁:容貌堂堂'];
+    '直:水得地火不现', '直:锋芒有托', '直:锋芒无托', '直:水盛多智', '直:场上饭', '旁:桃花咸池', '旁:容貌堂堂',
+    '关:官弱有库', '关:官重无化', '关:偏财当道', '貌:伤官秀气', '貌:金水相逢', '貌:多带长生'];
   const miss = need.filter(k => !seen.has(k));
   ok(!miss.length, '这些分支一次都没触发(死条):' + miss.join('、'));
   console.log(`      (1500 盘,${seen.size} 个分支全活)`);
@@ -107,6 +110,42 @@ t('时上见财的男命,「入舍」那条必须照说——古书原话最不�
   ok(hit, '样本里没有一副触发「时上见财」的盘——死条或被回避');
 });
 
+t('用户点名的那个格局(女命官弱有库财旺),那句话必须说出来,且必须带「各是各的账」', () => {
+  // 缘起(v0.92):用户原话——官杀弱,但有官库,男人多、多是有妇之夫,
+  // 「但是这不影响他有钱不影响他的社会地位美貌」。出处是硬的(三命通会:明有正夫暗有偏夫)。
+  let found = null;
+  for (let i = 0; i < 4000 && !found; i++) {
+    const c = chartOf(1960 + (i * 7) % 60, 1 + (i * 3) % 12, 1 + (i * 11) % 28, (i * 5) % 24, '女');
+    const r = Mingge.read(c);
+    found = r.guanxi.items.find(x => x.key === '官弱有库') && r;
+  }
+  ok(found, '扫 4000 盘找不到官弱有库的女盘——门槛或判定有问题');
+  const g = found.guanxi.items.find(x => x.key === '官弱有库');
+  ok(/暗处/.test(g.plain) && /归属/.test(g.plain), '该说的事没说全:' + g.plain);
+  ok(/不因此打折|各是各的账/.test(g.plain), '「各层各断」必须在这句话里');
+  ok(g.quote === '明有戊土为正夫，暗有辰戌为偏夫', '要挂三命通会那句硬出处');
+});
+t('关系格局层只要开口,滴天髓的两句告诫必须跟着——升档不许把告诫丢了', () => {
+  for (const { } of [1]) {
+    for (let i = 0; i < 600; i++) {
+      const r = Mingge.read(chartOf(1958 + (i * 11) % 62, 1 + (i * 5) % 12, 1 + (i * 7) % 28, (i * 3) % 24, i % 2 ? '男' : '女'));
+      if (!r.guanxi.items.length) continue;
+      ok(/不可轻断/.test(r.guanxi.note) && /不可一例言命|一例言命/.test(r.guanxi.note), '告诫丢了:' + r.guanxi.note);
+      ok(/各是各的账|不因这一层打折/.test(r.guanxi.note), '「各层各断」那句丢了');
+    }
+  }
+});
+t('升档的道理写在源码里:滴天髓自己给结构清单,反对的是神煞路与轻断——不许无凭升档', () => {
+  ok(/满局官星无印/.test(SRC) && /升为直断/.test(SRC), '升档理由须写在 mingge.js 抬头或该层注释里');
+  ok(/咸池桃花那一路照旧旁注|咸池.*照旧旁注/.test(SRC), '咸池那一路必须还在旁注,不许一起升');
+});
+t('性别没填:关系格局不硬猜,写明两套条文', () => {
+  const c = Bazi.chart(new Date(1988, 3, 12, 14, 30), '', { lon: 116.4 });
+  const r = Mingge.read(c);
+  ok(r.guanxi.items.length === 0, '性别未知不许出关系格局条目');
+  ok(/性别没填/.test(r.guanxi.note), '要写明为什么不给:' + r.guanxi.note);
+});
+
 console.log('【四】道德词禁表 + 性别口径 + 依据结论同向');
 t('全部白话输出(plain/say/verdict)一个道德词都不许有——引文除外', () => {
   const bad = [];
@@ -114,8 +153,11 @@ t('全部白话输出(plain/say/verdict)一个道德词都不许有——引文�
     const texts = [r.verdict, r.honest,
       ...r.roads.flatMap(x => x.ev.map(e => e.plain)),
       ...r.money.flatMap(m => [m.plain, ...(m.more || []).map(x => x.plain)]),
-      ...r.zhi.map(z => z.plain), ...r.pang.map(p => p.say)];
-    for (const s of texts) if (s) for (const w of Mingge.DIRTY) if (s.includes(w)) bad.push(`「${w}」出现在:${s.slice(0, 40)}`);
+      ...r.zhi.map(z => z.plain), ...r.guanxi.items.map(g => g.plain), [r.guanxi.note],
+      ...r.mao.map(m2 => m2.plain), ...r.pang.map(p => p.say)].flat();
+    // 引文除外(「」里的原话照抄不改字)——先剥再扫。这一类误伤前后已栽四次,规矩照 tijian 的 stripQuoted。
+    for (const s0 of texts) { if (!s0) continue; const s = String(s0).replace(/「[^」]*」/g, '');
+      for (const w of Mingge.DIRTY) if (s.includes(w)) bad.push(`「${w}」出现在:${s.slice(0, 40)}`); }
   }
   ok(!bad.length, '道德词漏进白话:\n      ' + [...new Set(bad)].slice(0, 5).join('\n      '));
 });
@@ -157,6 +199,8 @@ t('白话过体检员:无空话、无说教、无花钱消灾、无推演术语'
   for (const r of SAMPLE) {
     for (const road of r.roads) for (const e of road.ev) texts.push(e.plain);
     for (const z of r.zhi) texts.push(z.plain);
+    for (const g of r.guanxi.items) texts.push(g.plain);
+    for (const m2 of r.mao) texts.push(m2.plain);
     for (const m of r.money) texts.push(m.plain);
   }
   for (const s of texts) {

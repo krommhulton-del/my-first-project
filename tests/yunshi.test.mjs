@@ -218,5 +218,30 @@ t('加了时辰之后,断语仍然干净(体检员扫)', () => {
   ok(!bad.length, bad.slice(0, 4).join('\n      '));
 });
 
+
+t('时辰层吃流月(v0.92):月支一换,时辰表跟着换;不传月支走老口径不变', () => {
+  // 缘起:用户两次说日运像流水账。v0.86 修半截,重样率卡在 50%——病根是时辰吉凶只认日干,
+  // 五鼠遁一循环,60 天只有 5 张时辰表。v0.92 按 §九17 预案让时辰层吃流月:
+  // 实测重样率 47.6% → 67.6%,最优时辰逐日变动率 72.7%(改前 73.9%,择时没被搞乱)。
+  const c = Bazi.chart(new Date(1988, 3, 12, 14, 30), '女', { lon: 116.4 });
+  const a = Bazi.jiShi(c, '甲');                 // 老口径
+  const b = Bazi.jiShi(c, '甲', '子');
+  const d = Bazi.jiShi(c, '甲', '午');
+  ok(JSON.stringify(b) !== JSON.stringify(d), '月支子/午两套时辰表不该一样');
+  // 不传月支 = 改前行为(防静默回归):没有任何「大气候」标记
+  ok(!a.some(h => h.marks.some(m => /大气候/.test(m))), '不传月支不该出现月令标记');
+  ok(b.some(h => h.marks.some(m => /大气候/.test(m))), '传了月支该有月令标记');
+  // 月支冲的那个时辰要挨减分:子月冲午时
+  const wu = b.find(h => h.zhi === '午'), wuOld = a.find(h => h.zhi === '午');
+  ok(wu.score < wuOld.score, '子月的午时该比不看月时低分');
+  // 60 天全文重样率:同一人日运不重样须过六成(改前 47.6%)
+  const texts = new Set();
+  for (let i = 0; i < 60; i++) {
+    const r = Yunshi.riYun(c, new Date(2026, 0, 5 + i, 10, 0));
+    texts.add(JSON.stringify(r));
+  }
+  ok(texts.size / 60 >= 0.6, `60 天不重样率 ${(texts.size / 60 * 100).toFixed(0)}%,应≥60%`);
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

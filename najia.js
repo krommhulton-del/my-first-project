@@ -401,5 +401,5 @@
   }
 
   return { ganZhi, zhuangGua, liuShen, dayIndex, sunLongitude, PALACE_MAP, GAN, ZHI, ZHI_WX,
-    yaoPower, jinTui, yongShenOf, locateYong, bareLines, YONG_SHEN };
+    yaoPower, jinTui, yongShenOf, locateYong, bareLines, YONG_SHEN, MU_OF };
 }));

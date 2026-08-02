@@ -35,9 +35,9 @@
 //   门槛是本项目自拟的,逐个在注释里写明校准占比(3000 盘,tools 探针,2026-08)。
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./bazi.js'));
-  } else { root.Mingge = factory(root.Bazi); }
-}(typeof self !== 'undefined' ? self : this, function (Bazi) {
+    module.exports = factory(require('./bazi.js'), require('./najia.js'));
+  } else { root.Mingge = factory(root.Bazi, root.Najia); }
+}(typeof self !== 'undefined' ? self : this, function (Bazi, Najia) {
 
   const inv = (m, v) => Object.keys(m).find(k => m[k] === v);
 
@@ -274,11 +274,106 @@
         quote: '轻佻美貌而多淫也', src: '滴天髓阐微(原文之词照录于此,断语只说事)',
       });
     }
+    // 场上饭(v0.92 补:策划书第③档「职业倾向照说」当初漏落实)——
+    // 水得地火不现、或桃花坐婚配之位而财旺:钱从人情场、酒场、夜里活络的场合来。
+    // 「路伎商贾,须观落地之财」是渊海的明文;说的是钱怎么来,是事,不是评价。
+    {
+      const xcY = Bazi.TAOHUA[Bazi.sanheIdx(chart.pillars.year.zhi)];
+      const chang = (pw.水 >= 35 && pw.火 <= 6) || (chart.pillars.day.zhi === xcY && sp.财星 >= 30);
+      if (chang) out.push({
+        key: '场上饭', tier: '职业倾向',
+        plain: '这一路的钱容易从人情场、酒场、夜里活络的场合来——演出、陪谈、场面上的行当都在这一路。挣得快也散得快,古书教的看法就一条:看落到手里的,不看过手的',
+        tech: `${pw.水 >= 35 && pw.火 <= 6 ? '水得地火不现' : `咸池${xcY}会日宫且财${sp.财星.toFixed(1)}`}`,
+        quote: '路伎商贾，须观落地之财', src: '渊海子平',
+      });
+    }
     // 水盛聪明(渊海,此半句两书无争;后半句「女多淫滥」在打架区,进旁注)。
     if ((chart.dayGan === '壬' || chart.dayGan === '癸') && pw.水 >= 35) out.push({
       key: '水盛多智', tier: '直断',
       plain: '脑子快、心思活,一点就透——这是这副盘里最值钱的本钱',
       tech: `壬癸日主,水${pw.水.toFixed(1)}`, quote: '壬癸之水盛者，聪明多智', src: '渊海子平',
+    });
+    return out;
+  }
+
+  // ══════════ 三之二、关系格局层(v0.92 新增:结构路直断)与相貌层 ══════════
+  //
+  // 【升档的道理,写在明处】策划书原把「明暗夫集多」「杀多则夫多」归进两书打架的旁注,
+  // v0.92 核原文时发现作战地图画错了半张:《滴天髓》自己也给结构清单——
+  // 「满局伤官无财者;满局官星无印者…」逐条列在「不可轻断」那一段**前面**。
+  // 即它反对的是**神煞路**(「桃花咸池,专论女命邪淫,受责鬼神」)与**轻断**,不反对结构断——
+  // 它自己就在结构断。所以:**财官结构的关系格局,两本书不打架,升为直断**;
+  // 咸池桃花那一路照旧旁注。升档必须连它的两句告诫一起带上(GUANXI_CAUTION),一条不许省。
+  //
+  // 【各层各断,不许串】用户点名的规矩:关系那一层是什么格局,**不折损钱、地位、相貌那几层**——
+  // 各是各的账。这一句进每次输出,也进 material 的写法铁规。
+  const GUANXI_CAUTION = '书上把丑话说在前:这一层不可轻断、也不可一例言命——同一副格局,处境、家门、行当都能改它的走法' +
+    '(《滴天髓阐微》原话「不可轻断淫邪，以渎神怒」「然亦不可一例言命」)。这里说的是格局与代价,不是给人定性。';
+  const GUANXI_SPLIT = '这一层说的只是关系的格局——钱、地位、相貌各是各的账,别的层怎么断还怎么断,不因这一层打折。';
+  function guanxiReads(chart) {
+    const sp = shenPower(chart), pr = presence(chart), P = chart.pillars;
+    const out = [];
+    if (!chart.genderKnown) return { items: [], note: '性别没填:关系格局这一层古书男女两套条文(女看官杀为夫、男看财星为妻),不硬猜,填了才给。' };
+    const fem = chart.gender === '女';
+    if (fem) {
+      // R1 财太多官杀太旺(校准 0.3%):两股都过了头——明暗并存。
+      if (sp.财星 >= 35 && sp.官杀 >= 35) out.push({
+        key: '明暗并存', tier: '直断',
+        plain: '关系那一层热闹:明里暗里的人都不缺,名分内的与名分外的并存——盘面结构如此,这是格局不是行为评价。代价也直说:名分那条线越晚理清越贵',
+        tech: `财${sp.财星.toFixed(1)} 官杀${sp.官杀.toFixed(1)},两旺`,
+        quote: '财太多，官杀太旺，乃明暗夫集多', src: '渊海子平(另:杀多则夫多)',
+      });
+      // R2 官弱不透而藏库、财旺(校准 4.3%)——用户点名的那个格局,原话是硬的。
+      const kuZhi = Najia.MU_OF[inv(Bazi.KE, chart.dayWx)];   // 墓库表只此一份(najia)
+      const kuCang = ['year', 'month', 'day', 'hour'].some(k => P[k].zhi === kuZhi && P[k].cang.some(x => ['正官', '七杀'].includes(x.shen)));
+      if (sp.官杀 < 20 && !pr.guan && !pr.sha && kuCang && sp.财星 >= 25) out.push({
+        key: '官弱有库', tier: '直断',
+        plain: '名分上的男人弱,库里收着的不少——来的多在暗处、多半各有归属。这一格古书写得明白:明处一个,暗处一库。你的钱、地位、相貌不因此打折,那几层各是各的账',
+        tech: `官杀${sp.官杀.toFixed(1)}不透而藏${kuZhi}库,财${sp.财星.toFixed(1)}`,
+        quote: '明有戊土为正夫，暗有辰戌为偏夫', src: '三命通会(同章:夫星明暗交集)',
+      });
+      // R3a 满局官星无印(滴天髓自己的结构清单,校准 2.1%)
+      if (sp.官杀 >= 40 && sp.印星 <= 8) out.push({
+        key: '官重无化', tier: '直断',
+        plain: '管束那股力满盘都是、没有东西替你消化——关系那一层压得重,来的都带着要管你的劲。挑人先挑肯不肯让你喘气的',
+        tech: `官杀${sp.官杀.toFixed(1)}而印${sp.印星.toFixed(1)},满局官星无印`,
+        quote: '满局官星无印者', src: '滴天髓阐微(其结构清单自列于「不可轻断」之前)',
+      });
+      // R3b 身旺夫绝官衰食盛(三命通会的结构定义,校准 0.7%)——场上立身那一格,照说。
+      const band = chart.strength.band;
+      if ((band === '身旺' || band === '偏旺') && sp.官杀 <= 10 && sp.食伤 >= 30) out.push({
+        key: '场上立身', tier: '直断',
+        plain: '自己旺、名分星近乎绝、才艺锋芒当家——古书把这一格点给了以色艺立身的行当:吃的是场子饭,名分难稳,钱照挣、名照有。走这一格,合同与账要自己攥',
+        tech: `身${band},官杀${sp.官杀.toFixed(1)}绝而食伤${sp.食伤.toFixed(1)}盛`,
+        quote: '身旺夫绝，官衰食盛', src: '三命通会(此章标题是明代的评语,本程序只取其结构条文)',
+      });
+    } else {
+      // 男命镜像,原话各有各的(渊海):偏财一路。
+      if (sp.财星 >= 35 && ['year', 'month', 'hour'].some(k => P[k].ganShen === '偏财')) out.push({
+        key: '偏财当道', tier: '直断',
+        plain: '钱与人两头都偏得动:名分内的那位未必留得住你的心思,外头的缘分与外快常常一起来——格局如此,代价是家里的账越拖越难算',
+        tech: `财${sp.财星.toFixed(1)}而偏财透干`,
+        quote: '出现偏财，少爱正妻偏爱妾', src: '渊海子平(另:偏财得位，妾胜于妻)',
+      });
+    }
+    return { items: out, note: out.length ? GUANXI_CAUTION + ' ' + GUANXI_SPLIT : '' };
+  }
+
+  // 相貌层(v0.92 新增:三条硬出处,不分性别;容貌堂堂那条触发自拟,仍留在旁注)
+  function maoReads(chart) {
+    const sp = shenPower(chart), pw = chart.wuxing, P = chart.pillars;
+    const out = [];
+    if (sp.食伤 >= 30) out.push({
+      key: '伤官秀气', plain: '聪明外露、相貌带秀气——人堆里认得出来的那种',
+      tech: `食伤${sp.食伤.toFixed(1)}`, quote: '伤官主人聪明，美貌秀气', src: '渊海子平',
+    });
+    if (pw.金 >= 25 && pw.水 >= 25) out.push({
+      key: '金水相逢', plain: '金水两旺的盘,古书直断长相:轮廓清、皮相好',
+      tech: `金${pw.金.toFixed(1)} 水${pw.水.toFixed(1)}`, quote: '金水若相逢，必招美丽容', src: '渊海子平',
+    });
+    if (['year', 'month', 'day', 'hour'].filter(k => P[k].xingyun === '长生').length >= 2) out.push({
+      key: '多带长生', plain: '盘里长生位带得多,古书拿西施作的比——底子里带着让人多看一眼的东西',
+      tech: '四柱行运两处以上临长生', quote: '西施美貌，自身多带长生', src: '渊海子平',
     });
     return out;
   }
@@ -320,6 +415,8 @@
     const roads = sixRoads(chart);
     const money = moneyPaths(chart);
     const zhi = directReads(chart);
+    const guanxi = guanxiReads(chart);
+    const mao = maoReads(chart);
     const pang = sideNotes(chart);
     const top = roads[0], second = roads[1];
     const gap = top.score - (second ? second.score : 0);
@@ -328,7 +425,7 @@
     else verdict = `这碗饭最像:${top.name}(强度${top.score},比第二名${second ? second.name.slice(0, second.name.indexOf('(')) : ''}高${gap})。` +
       (gap < 10 ? '两条路咬得近,都摆出来,别只看第一条。' : '');
     return {
-      shen: shenPower(chart), roads, money, zhi, pang, top, gap, verdict,
+      shen: shenPower(chart), roads, money, zhi, guanxi, mao, pang, top, gap, verdict,
       honest: '这一板块的规矩:规则条条有原话(引文逐字核过),「哪条压过哪条」的排序分是本项目自拟的,零回测。' +
         '两本书打架的那一层只摆原话不下断。说的都是事——钱从哪来、哪条路顺、代价是什么;' +
         '成不成还要看大运流年与你自己的手。',
@@ -354,6 +451,15 @@
       s += '【直断(两书无争,照说不打折)】\n';
       for (const z of r.zhi) s += `— ${z.plain}(推演:${z.tech};原话「${z.quote}」《${z.src}》)\n`;
     }
+    if (r.guanxi.items.length) {
+      s += '【关系格局(结构路直断——两本书都给了结构条文;告诫一并带上)】\n';
+      for (const g of r.guanxi.items) s += `— ${g.plain}(推演:${g.tech};原话「${g.quote}」《${g.src}》)\n`;
+      s += r.guanxi.note + '\n';
+    } else if (r.guanxi.note) s += '【关系格局】' + r.guanxi.note + '\n';
+    if (r.mao.length) {
+      s += '【相貌(有原话的三条,照说)】\n';
+      for (const m2 of r.mao) s += `— ${m2.plain}(推演:${m2.tech};原话「${m2.quote}」《${m2.src}》)\n`;
+    }
     for (const n of r.pang) {
       s += `【旁注·${n.key}(两书打架/触发自拟,不计分不下断)】${n.say}\n`;
       for (const q of n.yh) s += `   渊海一方:「${q.quote}」\n`;
@@ -362,6 +468,8 @@
     s += '【写法铁规】①结论一个字不许比上面乐观或悲观;②只说事,不说那个年代的道德词——' +
       DIRTY.map(w => `「${w}」`).join('') + '一个不许出现(引用原文除外);' +
       '③直断层照说不打折,不许因为话不好听就绕开;旁注层只可摆原话,不许替两本书裁决;' +
+      '关系格局那一层说的是格局与代价,**不折损钱、地位、相貌那几层——各层各断,不许串**;' +
+      '它的两句告诫(不可轻断、不可一例言命)必须原样带给客人;' +
       '④禁空话禁说教,第一句就是答案;⑤' + r.honest;
     return s;
   }

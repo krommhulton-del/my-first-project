@@ -663,7 +663,13 @@
 
   // ——— 时辰吉凶(日运精确到钟点):流日日干五鼠遁排十二时柱,按喜忌与冲合本人年支评分 ———
   const HOUR_SPAN = ['23-1点', '1-3点', '3-5点', '5-7点', '7-9点', '9-11点', '11-13点', '13-15点', '15-17点', '17-19点', '19-21点', '21-23点'];
-  function jiShi(chart, flowDayGan) {
+  // v0.92:加第三参 flowMonthZhi(流月支)。缘起:用户两次说日运像流水账,v0.86 量出病根——
+  // 时辰吉凶只认日干,五鼠遁一循环,60 天只有 5 张时辰表,重样率卡在 50%。
+  // 修法照 §九17 的预案:时辰层吃流月(月建冲时辰为躁、合时辰为稳)。
+  // 出处口径照实:爻的「月破」有《增删卜易》明文,**把冲合用到择时辰上是通行口径的引申,出处待核**;
+  // 分量给小(冲 -1、合 +0.5),不盖过喜忌主项。神煞照 v0.87 的规矩仍不进分。
+  // 不传第三参走老口径(改前行为逐字保留,防静默回归)。
+  function jiShi(chart, flowDayGan, flowMonthZhi) {
     const xi = chart.yong.xiWx, ji = chart.yong.jiWx;
     const byZhi = chart.pillars.year.zhi;
     const LIUHE_H = { 子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午' };
@@ -679,6 +685,10 @@
       if (ji.includes(ZHI_WX[z])) s -= 0.5;
       if (ZHI[(ZHI.indexOf(z) + 6) % 12] === byZhi) { s -= 2; marks.push('冲你年支,避'); }
       if (LIUHE_H[z] === byZhi) { s += 1; marks.push('合你年支'); }
+      if (flowMonthZhi) {
+        if (ZHI[(ZHI.indexOf(z) + 6) % 12] === flowMonthZhi) { s -= 1; marks.push('这个月的大气候冲着这个时辰,躁'); }
+        else if (LIUHE_H[z] === flowMonthZhi) { s += 0.5; marks.push('这个月的大气候正合这个时辰,稳'); }
+      }
       out.push({ gz, zhi: z, span: HOUR_SPAN[i], score: +s.toFixed(1), marks });
     }
     return out;

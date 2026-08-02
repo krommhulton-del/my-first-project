@@ -164,7 +164,7 @@
       }
     }
     // 时辰这一层只有日运用得上(月运年运谈不到时辰)
-    const hl = (opts && opts.hours) ? hourLine(chart, gan) : null;
+    const hl = (opts && opts.hours) ? hourLine(chart, gan, opts.monthZhi) : null;
     if (hl) lines.push(hl.text);
     const score = +s.toFixed(1);
     const L = levelOf(score);
@@ -239,7 +239,7 @@
   function riYun(chart, targetDate) {
     const cal = Najia.ganZhi(targetDate);
     const span = `${targetDate.getFullYear()}-${two(targetDate.getMonth() + 1)}-${two(targetDate.getDate())}`;
-    return judgeCard(chart, cal.day[0], cal.day[1], '日运', span, { gz: cal.day, hours: true });
+    return judgeCard(chart, cal.day[0], cal.day[1], '日运', span, { gz: cal.day, hours: true, monthZhi: cal.monthZhi });
   }
   // 今天该在哪几个时辰办事、哪个时辰避开。
   // **不自己另算**——逐时辰的分与标记全取自 `Bazi.jiShi`(§四:时辰吉凶只此一处),
@@ -249,9 +249,9 @@
   // 病根:开头那一句只有五种可能(明面帮/明面压 × 底下帮/底下压 + 不偏不倚),
   // 正好对上「同一天只有 5 种」——而人第一眼看的就是那一句。
   // 时辰这一层本来就算好了,却只在吉日板块渲染,从没进过日运的话里。
-  function hourLine(chart, dayGan) {
+  function hourLine(chart, dayGan, monthZhi) {
     let hs = [];
-    try { hs = Bazi.jiShi(chart, dayGan) || []; } catch (e) { return null; }
+    try { hs = Bazi.jiShi(chart, dayGan, monthZhi) || []; } catch (e) { return null; }
     if (!hs.length) return null;
     const good = hs.filter(h => h.score >= 1).sort((a, b) => b.score - a.score).slice(0, 3);
     const bad = hs.filter(h => h.score <= -1).sort((a, b) => a.score - b.score).slice(0, 2);
