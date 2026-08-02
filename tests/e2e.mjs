@@ -1103,6 +1103,45 @@ await t('双人合盘:两份档案合一盘,四种关系分开算,不许替人�
   await page.evaluate(() => { localStorage.removeItem('dongxuan_profiles_v1'); localStorage.removeItem('dongxuan_profile_cur'); });
 });
 
+await t('西洋星盘:本命九曜落座、月亮误差声明、合盘相位与组合盘、两套不互相计分(v0.94)', async () => {
+  // 缘起:板块 E 大工程。守四件事:本命盘无 Key 即出、星盘轮画出来、
+  // 月亮 ±0.3° 声明在、合盘出相位与组合盘且诚实横幅写明零回测。
+  await page.evaluate(() => {
+    localStorage.setItem('dongxuan_birth', '1990-05-20');
+    localStorage.setItem('dongxuan_birth_hour', '09:30');
+    localStorage.setItem('dongxuan_birth_place', '北京');
+    localStorage.setItem('dongxuan_profiles_v1', JSON.stringify([
+      { id: 'pA', name: '阿明', date: '1990-05-20', time: '09:30', gender: '男', place: '北京' },
+      { id: 'pB', name: '小红', date: '1993-11-07', time: '20:00', gender: '女', place: '上海' },
+    ]));
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(400);
+  await page.evaluate(() => window.dxOpenBoard('sec-xingpan'));
+  await page.waitForTimeout(200);
+  await page.click('#btn-xz-go');
+  await page.waitForTimeout(600);
+  const out = await page.locator('#xz-out').innerText();
+  ok(/本 命 盘/.test(out), '本命盘区要在');
+  for (const nm of ['太阳', '月亮', '水星', '土星']) ok(out.includes(nm), `九曜少了${nm}`);
+  ok(/±0\.3°/.test(out), '月亮误差声明必须在界面上');
+  ok(/上升/.test(out), '有钟点有地点该排出上升');
+  ok(!(await page.locator('#xz-wheel').isHidden()), '星盘轮该画出来');
+  const honest = await page.locator('#xz-honest').innerText();
+  ok(/零回测/.test(honest) && /不互相计分/.test(honest), '诚实横幅缺关键句:' + honest.slice(0, 60));
+  // 合盘
+  await page.selectOption('#xz-mode', 'syn');
+  await page.waitForTimeout(200);
+  await page.selectOption('#xz-a', 'pA');
+  await page.selectOption('#xz-b', 'pB');
+  await page.click('#btn-xz-go');
+  await page.waitForTimeout(600);
+  const out2 = await page.locator('#xz-out').innerText();
+  ok(/两 盘 相 位/.test(out2) && /组 合 盘/.test(out2), '合盘该出相位与组合盘');
+  ok(/顺|拧/.test(out2), '相位基调要说人话');
+  await page.evaluate(() => { localStorage.removeItem('dongxuan_profiles_v1'); });
+});
+
 await t('占宅:六型摇卦即断、原话上界面、一疑一占的规矩写明(v0.93)', async () => {
   // 缘起:板块 C。守三件事:无 Key 也有程序初断、书上凭据挂在界面、jiu 型有疑处输入框。
   await page.evaluate(() => window.dxOpenBoard('sec-zhaigua'));

@@ -770,13 +770,14 @@
     table.pan { font-size: .82rem; }
     table.pan td, table.pan th { padding: 6px 3px; }
   }
+.xzwheel{max-width:100%;height:auto;display:block;margin:12px auto}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.93</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.94</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1038,6 +1039,7 @@
       <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">定 时 辰 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-hepan"><span class="bg">合</span><span><span class="bt">双 人 合 盘 · 这人跟你对不对得上</span><span class="bd">两副盘摆一起逐层看:他旺不旺你、你旺不旺他、处起来顺不顺、缺的那一味补不补得上、未来十年谁上谁下。恋爱/合伙/朋友/共事分开算</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-xingpan"><span class="bg">星</span><span><span class="bt">西 洋 星 盘 · 本命与双人合盘</span><span class="bd">九曜落宫逐度实算(VSOP87 星历,误差逐星实测)、上升与整宫、盘内相位;两人合盘看哪股劲顺哪股劲拧,另给组合中点盘。与中式那套并排摆,永不互相计分</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-zhaigua"><span class="bg">宅</span><span><span class="bt">占 宅 · 这 处 住 得 住 不 住</span><span class="bd">现住的宅指着疑处问、买房盖房租房、要不要弃旧换新、入宅择日按亲分占、修方动土、看地形势——六型各按《增删卜易》原章断,无 Key 也有程序初断</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-mingge"><span class="bg">饭</span><span><span class="bt">命 格 取 向 · 这 人 该 吃 哪 碗 饭</span><span class="bd">仕途、买卖、手艺、文教、武职、清静饭——六路逐条给分,条条挂古书原话;钱从哪条路来、代价是什么,照实说,不绕弯</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dangan"><span class="bg">档</span><span><span class="bt">生 辰 档 案 · 一处管全应用</span><span class="bd">你、家里人、朋友的生辰各存一份,随时切换;能改能删。性别必填——男女的大运方向是反的,填错等于看别人的命</span></span><span class="bx">›</span></button>
@@ -1319,6 +1321,24 @@
     <div class="stream" id="hp-ai"></div>
   </section>
 
+  <section id="sec-xingpan" class="voff">
+    <h2>西 洋 星 盘 · 本 命 与 双 人 合 盘</h2>
+    <div class="ypwarn" id="xz-honest"></div>
+    <div class="note">行星位置按 VSOP87 星历实算(截断误差逐星实测 ≤2″,月亮 ±0.3° 当面标注);
+      相位「顺/拧」是通行占星口径、零回测。<b>与中式命理并排摆,永不互相计分。</b>本命盘按顶栏当前生辰;合盘从档案里挑两个人。</div>
+    <div class="qwrow">
+      <select id="xz-mode" class="wjin"><option value="natal">本命盘(当前生辰)</option><option value="syn">双人合盘(两份档案)</option></select>
+      <select id="xz-a" class="wjin hidden"></select>
+      <select id="xz-b" class="wjin hidden"></select>
+      <button type="button" class="primary" id="btn-xz-go">排 星 盘</button>
+      <button type="button" class="gold hidden" id="btn-xz-ai">请东玄把这盘讲透</button>
+    </div>
+    <div class="err" id="xz-err"></div>
+    <canvas id="xz-wheel" width="640" height="640" class="xzwheel hidden"></canvas>
+    <div id="xz-out"></div>
+    <div class="stream" id="xz-ai"></div>
+  </section>
+
   <section id="sec-zhaigua" class="voff">
     <h2>占 宅 · 这 处 住 得 住 不 住</h2>
     <div class="note">按《增删卜易》占宅诸章断,规矩照书:<b>现住的宅一疑一占</b>(野鹤原话「若以一卦而斷全家之事者予則不能」),
@@ -1527,7 +1547,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.93 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.94 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1571,6 +1591,8 @@
 <script src="mingge.js"></script>
 <script src="gaiyun.js"></script>
 <script src="zhaigua.js"></script>
+<script src="data/astro-vsop.js"></script>
+<script src="astro.js"></script>
 <script src="tijian.js"></script>
 <script>
 (function () {
@@ -4751,6 +4773,141 @@
   }
   window.dxHepanFill = hpFill;
 
+  // ═══════════════════ 西洋星盘(v0.94 板块 E):引擎 astro.js,位置算死、两套不互相计分 ═══════════════════
+  let xzData = null;   // {c, syn, names}
+  const xzErr = m => { $('xz-err').textContent = m || ''; };
+  function xzBirthDate() {
+    const bd = localStorage.getItem(BKEY) || '';
+    if (!bd) return null;
+    const [y, m, d] = bd.split('-').map(Number);
+    const hm = dxParseHour(localStorage.getItem(HRKEY) || '');
+    // 星盘吃钟表时,不折真太阳时(那是八字的规矩,占星按民用时+时区)
+    return { date: new Date(y, m - 1, d, hm.h, hm.mi), hourKnown: !!(localStorage.getItem(HRKEY) || '').trim() };
+  }
+  function xzGeoOf(place) {
+    try { const p = Dili.find(place || localStorage.getItem(PLKEY) || ''); if (p) return { lat: p[1], lon: p[2] }; } catch (e) {}
+    return {};
+  }
+  function xzProfiles() {
+    const list = jrProfiles().filter(p => p.date);
+    for (const id of ['xz-a', 'xz-b']) {
+      const sel = $(id); if (!sel) continue;
+      const keep = sel.value;
+      sel.innerHTML = '<option value="">挑一份档案</option>' + list.map(p => `<option value="${esc(p.id)}">${esc(p.name || '未命名')}(${esc(p.date)})</option>`).join('');
+      if (keep) sel.value = keep;
+    }
+    return list;
+  }
+  function xzChartOfProfile(p) {
+    const [y, m, d] = String(p.date).split('-').map(Number);
+    const hm = dxParseHour(p.time || '');
+    const g = xzGeoOf(p.place);
+    return Astro.chart(new Date(y, m - 1, d, hm.h, hm.mi), { lat: g.lat, lon: g.lon, hourKnown: !!(p.time || '').trim() });
+  }
+  function xzWheel(c, c2) {
+    const cv = $('xz-wheel'); if (!cv) return;
+    cv.classList.remove('hidden');
+    const g = cv.getContext('2d'), W = cv.width, R = W / 2 - 10, cx = W / 2, cy = W / 2;
+    const css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue('--ink') || '#333', line = css.getPropertyValue('--line') || '#bbb';
+    g.clearRect(0, 0, W, W);
+    g.strokeStyle = line; g.fillStyle = ink; g.lineWidth = 1;
+    const ang = lon => (180 - lon) * Math.PI / 180;   // 白羊 0° 在左,黄道逆时针
+    for (const r of [R, R * 0.82, R * 0.6]) { g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke(); }
+    g.font = '15px KaiTi,STKaiti,serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let i = 0; i < 12; i++) {
+      const a = ang(i * 30);
+      g.beginPath(); g.moveTo(cx + R * 0.82 * Math.cos(a), cy - R * 0.82 * Math.sin(a)); g.lineTo(cx + R * Math.cos(a), cy - R * Math.sin(a)); g.stroke();
+      const am = ang(i * 30 + 15);
+      g.fillText(Astro.SIGNS[i], cx + R * 0.91 * Math.cos(am), cy - R * 0.91 * Math.sin(am));
+    }
+    const put = (cc, rr, mark) => {
+      for (const k of Astro.KEYS) {
+        const p = cc.planets[k], a = ang(p.lon);
+        g.fillText((mark || '') + p.name[0], cx + rr * Math.cos(a), cy - rr * Math.sin(a));
+        g.beginPath(); g.arc(cx + R * 0.82 * Math.cos(a), cy - R * 0.82 * Math.sin(a), 2, 0, 7); g.fill();
+      }
+      if (cc.asc) { const a = ang(cc.asc.lon); g.fillText('升', cx + rr * Math.cos(a) * 0.88, cy - rr * Math.sin(a) * 0.88); }
+    };
+    put(c, R * 0.72);
+    if (c2) put(c2, R * 0.52, '·');
+    // 相位线(两人:交叉相位;单人:盘内)
+    const asps = c2 ? Astro.aspectsOf(c.planets, c2.planets) : Astro.aspectsOf(c.planets);
+    const okc = css.getPropertyValue('--good') || '#4e7c74', badc = css.getPropertyValue('--bad') || '#8a5a3b';
+    for (const asp of asps.slice(0, 14)) {
+      const pa = (c2 ? c : c).planets, pb = (c2 || c).planets;
+      const la = Object.values(pa).find(x => x.name === asp.a), lb = Object.values(pb).find(x => x.name === asp.b);
+      if (!la || !lb) continue;
+      const a1 = ang(la.lon), a2 = ang(lb.lon), rr = R * 0.6;
+      g.strokeStyle = (asp.asp === '拱' || asp.asp === '六合') ? okc : (asp.asp === '合' ? line : badc);
+      g.beginPath(); g.moveTo(cx + rr * Math.cos(a1), cy - rr * Math.sin(a1)); g.lineTo(cx + rr * Math.cos(a2), cy - rr * Math.sin(a2)); g.stroke();
+    }
+    g.strokeStyle = line;
+  }
+  function xzRender(c, syn, names) {
+    const planetRow = (cc) => Astro.KEYS.map(k => {
+      const p = cc.planets[k];
+      return `<div class="hpv ypline">· ${esc(p.name)} 落${esc(p.sign)} ${p.deg}°${p.retro ? '(逆行)' : ''}${cc.houses ? `,第 ${cc.houses[k]} 宫` : ''}<br><span class="dim">${esc(p.plain)}</span></div>`;
+    }).join('');
+    let h = `<div class="ypbox"><h4>${names ? esc(names[0]) + ' 的' : ''}本 命 盘</h4>` + planetRow(c) +
+      (c.asc ? `<div class="hpv ypline">· 上升 落${esc(c.asc.sign)} ${c.asc.deg}°(整星座制,第一宫从这里起)</div>` : '') +
+      (c.ascNote ? `<div class="note ypflat">${esc(c.ascNote)}</div>` : '') +
+      `<div class="note ypflat">${esc(c.moonNote)}</div></div>`;
+    if (syn) {
+      h += `<div class="ypbox"><h4>两 盘 相 位(${esc(names[0])} × ${esc(names[1])})</h4>` +
+        `<div class="hpv"><b class="key">${esc(syn.tone)}</b></div>` +
+        syn.cross.slice(0, 12).map(a => `<div class="hpv ypline">· ${esc(a.a)}×${esc(a.b)} ${esc(a.asp)}(差${a.orb}°)——${esc(a.plain)}${a.approx ? '<span class="dim">(涉月亮,±0.3°)</span>' : ''}</div>`).join('') +
+        `</div><div class="ypbox"><h4>组 合 盘(两人拼成的那副,逐星中点)</h4>` +
+        Astro.KEYS.map(k => `<span class="dat">${esc(syn.comp[k].name)}${esc(syn.comp[k].sign)}</span>`).join(' ') + `</div>`;
+    } else {
+      const asps = Astro.aspectsOf(c.planets);
+      h += `<div class="ypbox"><h4>盘 内 相 位</h4>` +
+        asps.slice(0, 10).map(a => `<div class="hpv ypline">· ${esc(a.a)}×${esc(a.b)} ${esc(a.asp)}(差${a.orb}°)——${esc(a.plain)}</div>`).join('') + `</div>`;
+    }
+    $('xz-out').innerHTML = h;
+    $('xz-honest').textContent = Astro.HONEST;
+    $('btn-xz-ai').classList.remove('hidden');
+  }
+  async function xzAI() {
+    if (!xzData) return;
+    const key = getKey();
+    if (!key) { xzErr('要东玄讲透,先在「问卦」那页的「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
+    xzErr(''); $('xz-ai').textContent = '';
+    try {
+      await llmStream([{ role: 'user', content: Astro.material(xzData.c, xzData.syn, xzData.names) }], t => { $('xz-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+      dxTijian($('xz-ai'), $('xz-ai').textContent);
+    } catch (e) { xzErr('讲透失败:' + aiErrHint(e, $('ai-provider').value)); }
+  }
+  if ($('btn-xz-go')) {
+    $('xz-mode').addEventListener('change', () => {
+      const syn = $('xz-mode').value === 'syn';
+      $('xz-a').classList.toggle('hidden', !syn);
+      $('xz-b').classList.toggle('hidden', !syn);
+      if (syn) xzProfiles();
+    });
+    $('btn-xz-go').addEventListener('click', () => {
+      xzErr('');
+      if ($('xz-mode').value === 'natal') {
+        const bd = xzBirthDate();
+        if (!bd) { xzErr('先填出生日期——没有生日排不了星盘。'); return; }
+        const geo = xzGeoOf();
+        const c = Astro.chart(bd.date, { lat: geo.lat, lon: geo.lon, hourKnown: bd.hourKnown });
+        xzData = { c, syn: null, names: null };
+        xzRender(c); xzWheel(c);
+      } else {
+        const list = jrProfiles();
+        const pa = list.find(x => x.id === $('xz-a').value), pb = list.find(x => x.id === $('xz-b').value);
+        if (!pa || !pb) { xzErr('两边都得挑一份档案。'); return; }
+        if (pa.id === pb.id) { xzErr('挑的是同一个人——换一个。'); return; }
+        const c1 = xzChartOfProfile(pa), c2 = xzChartOfProfile(pb);
+        const syn = Astro.synastry(c1, c2);
+        xzData = { c: c1, syn, names: [pa.name || '这一位', pb.name || '那一位'] };
+        xzRender(c1, syn, xzData.names); xzWheel(c1, c2);
+      }
+    });
+    $('btn-xz-ai').addEventListener('click', xzAI);
+  }
+
   // ═══════════════════ 占宅(v0.93 板块 C):引擎 zhaigua.js,断法全在引擎里 ═══════════════════
   let zgCast = null, zgRes = null;
   const zgErr = m => { $('zg-err').textContent = m || ''; };
@@ -5555,11 +5712,11 @@
 
   const VIEWS = {
     ask: ['sec-quick', 'sec-today', 'sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
+    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-xingpan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-xingpan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {
