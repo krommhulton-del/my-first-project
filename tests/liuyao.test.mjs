@@ -277,6 +277,21 @@ t('五类问题各取其用神,取法与《卜筮正宗》口径一致', () => {
   eq(Najia.yongShenOf('这次考试能过吗').liuQin, '父母');
   eq(Najia.yongShenOf('随便问问').liuQin, null, '不属五类者应退回世应论');
 });
+t('v0.79 那三行「待核」的出处,v0.88 起必须挂着真章名——不许退回待核,也不许再挂「只挂书不挂章」', () => {
+  // 缘起(v0.88):卷之一(维基文库本)与《卜筮正宗》全文到手,用神表最后三行的出处补齐了。
+  // 这条钉住成果:引文对不对由 honesty 的归章核对管,这里只钉「挂没挂、挂在哪一章」。
+  ok(/《增删卜易·用神章第八》/.test(Najia.yongShenOf('这份工作能不能升职').src), '功名官非那行要挂用神章第八');
+  ok(/《增删卜易·用神章第八》/.test(Najia.yongShenOf('这套房子能不能买下来').src), '文书房产那行要挂用神章第八');
+  const bing = Najia.yongShenOf('最近老是生病是怎么回事').src;
+  ok(/《卜筮正宗·用神分类定例第一》/.test(bing) && /病症/.test(bing), '病症那半要挂《卜筮正宗》的明文');
+  ok(/《增删卜易·用神章第八》/.test(bing) && /醫藥/.test(bing), '医药那半要挂用神章第八');
+  const xiong = Najia.yongShenOf('这个合伙人靠不靠谱').src;
+  ok(/《增删卜易·用神章第八》/.test(xiong) && /《卜筮正宗·用神分类定例第一》/.test(xiong), '兄弟那行两本书的明文都要在');
+  ok(/應爻/.test(xiong) && /不驗/.test(xiong), '序言「朋友外人按应爻」的分工与野鹤自注要记在行内,不许只挑对自己有利的那半');
+  for (const q of ['这份工作能不能升职', '这套房子能不能买下来', '最近老是生病是怎么回事', '这个合伙人靠不靠谱']) {
+    ok(!/待核|只挂书不挂章/.test(Najia.yongShenOf(q).src), `「${q}」那行不许再写待核`);
+  }
+});
 t('定位用神:上卦者取卦中之爻(优先动爻、次世爻),不上卦者取伏神', () => {
   let onBoard = 0, viaFu = 0;
   for (const id of Object.keys(Najia.PALACE_MAP)) {

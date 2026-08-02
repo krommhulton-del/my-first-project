@@ -34,9 +34,33 @@ const chapKey = x => String(x).replace(/[\u4e00-\u9fa5]/g, c => S2T[c] || c)
   .replace(/[\s、·]/g, '');
 export { chapKey };
 
+// 维基文库转录的痕迹({{Header2…}}、<onlyinclude>、[[链接|字]]、* 列表符)——
+// 与 <br> 同理,是转录不是正文,比对前抹掉。只对维基文库格式的文件用。
+const wikiClean = raw => raw
+  .replace(/\{\{[^{}]*\}\}/gs, '')
+  .replace(/<[^>]+>/g, '')
+  .replace(/\[\[(?:[^|\]]*\|)?([^\]]*)\]\]/g, '$1')
+  .replace(/^[*#=]+\s*/gm, '');
+
 // 一本书切成章:两种排法都认——① === 章名 === ② 独占一行的「某某章第几」
 export function chaptersOf(book) {
   const raw = readFileSync(join(ROOT, 'data', 'classics', book + '.txt'), 'utf8');
+  // 维基文库本(v0.88 起,《增删卜易》的第二份转录):章界是「########## 增刪卜易/x ##########」,
+  // 真章名在各段 Header2 的 section= 里——章章有明标,不需要目录推断,也就没有「归章判不了」。
+  if (raw.includes('########## 增刪卜易/')) {
+    const ms = [...raw.matchAll(/^########## 增刪卜易\/([^ ]+) ##########$/gm)];
+    const chapters = []; let flatS = '';
+    for (let i = 0; i < ms.length; i++) {
+      const s = ms[i].index + ms[i][0].length;
+      const e = i + 1 < ms.length ? ms[i + 1].index : raw.length;
+      const seg = raw.slice(s, e);
+      const name = ((seg.match(/section\s*=\s*(.+)/) || [])[1] || '增刪卜易/' + ms[i][1]).trim();
+      const body = strip(wikiClean(seg));
+      chapters.push({ name, from: flatS.length, body });
+      flatS += body;
+    }
+    return { flat: raw, flatS, chapters };
+  }
   const flat = raw.replace(/<br\s*\/?>/gi, '\n');
   const marks = [];
   for (const m of flat.matchAll(/^\s*=+\s*(.+?)\s*=+\s*$/gm)) marks.push({ at: m.index, len: m[0].length, name: m[1] });
@@ -46,6 +70,15 @@ export function chaptersOf(book) {
   // 《子平真诠》那种「一．论十干十二支」的排法(全角点),也得认出来,否则整本书切不出章
   for (const m of flat.matchAll(/^\s*([一二三四五六七八九十百零又]+[．.、][^\s]{2,22})\s*$/gm)) {
     if (!marks.some(x => x.at === m.index)) marks.push({ at: m.index, len: m[0].length, name: m[1] });
+  }
+  // 《卜筮正宗》那种「用神分类定例第一」的排法(有「第几」没有「章」字),也得认——
+  // 只对这一本开,别的书开了会把正文里「兑宫第七卦」这类词句误当章名。
+  // 已知边界:该书「世应论用神第二」与正文挤在同一行,认不出来,其内容会归到前一章名下;
+  // 所以挂这本书的章,只许挂独立成行的那些(如「用神分类定例第一」)。
+  if (book === '卜筮正宗') {
+    for (const m of flat.matchAll(/^\s*([^\s=，。、．.：:()（）]{2,20}第[一二三四五六七八九十百零]+)\s*$/gm)) {
+      if (!marks.some(x => x.at === m.index)) marks.push({ at: m.index, len: m[0].length, name: m[1] });
+    }
   }
   marks.sort((a, b) => a.at - b.at);
   const out = [];
@@ -84,7 +117,22 @@ export function tocGaps(book) {
 }
 
 // 一句引文实际落在哪一章
-export function chapterOfQuote(book, quote) {
+// 《增删卜易》从 v0.88 起有两份转录:老转录(卷之二起有正文)与维基文库本(恰是卷之一)。
+// 同一本书,哪份转录里核得到就按哪份归章;两份都核得到而归章不一时,以与所标相符的那份为准
+// (第三个参数就是所标的章,不传则按老转录优先)。两份都核不到,才算搜不到。
+export function chapterOfQuote(book, quote, claimed) {
+  const r = chapterOfQuoteIn(book, quote);
+  if (book === '增删卜易') {
+    let r2 = null;
+    try { r2 = chapterOfQuoteIn('增删卜易-维基文库本', quote); } catch { /* 那份转录不在就算了 */ }
+    const fits = res => res && res.found && claimed && (chapKey(res.chapter) === chapKey(claimed)
+      || chapKey(res.chapter).includes(chapKey(claimed)) || chapKey(claimed).includes(chapKey(res.chapter)));
+    if (!r.found && r2 && r2.found) return { ...r2, transcript: '维基文库本' };
+    if (r.found && r2 && r2.found && !fits(r) && fits(r2)) return { ...r2, transcript: '维基文库本' };
+  }
+  return r;
+}
+function chapterOfQuoteIn(book, quote) {
   const { flatS, chapters } = chaptersOf(book);
   const k = flatS.indexOf(strip(quote));
   if (k < 0) return { found: false };
@@ -142,7 +190,7 @@ if (process.argv[1] && process.argv[1].endsWith('chapter-check.mjs')) {
       else msg = `没带引文,但所挂章「${cs[0].name}」有正文(${cs[0].body.length} 字),放行`;
     }
     else {
-      const r = chapterOfQuote(c.book, c.quote);
+      const r = chapterOfQuote(c.book, c.quote, c.chapter);
       if (!r.found) { msg = '引文在原文里搜不到'; ok = false; }
       else if (!c.chapter) msg = `(未标章)实际落在「${r.chapter}」`;
       else if (chapKey(r.chapter) === chapKey(c.chapter)
@@ -157,7 +205,7 @@ if (process.argv[1] && process.argv[1].endsWith('chapter-check.mjs')) {
   }
   // 顺带报一遍各书里的空壳章(有章名没正文),那是转录的缺口,不是我们的错,但必须知道
   console.log('\n各书里「有章名、没正文」的章(转录缺口,不许往这些章上挂出处):');
-  for (const book of ['增删卜易', '滴天髓阐微', '穷通宝鉴', '渊海子平', '子平真诠']) {
+  for (const book of ['增删卜易', '增删卜易-维基文库本', '卜筮正宗', '滴天髓阐微', '穷通宝鉴', '渊海子平', '子平真诠']) {
     try {
       const { chapters } = chaptersOf(book);
       // 「父章」(如《穷通宝鉴》的「论乙木」)自己没字,正文都在子章(「三春乙木」)里,

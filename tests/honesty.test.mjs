@@ -87,6 +87,9 @@ t('凡写了「出处:《某书》…原话」的地方,原话必须在那本书
   const books = {};
   for (const f of readdirSync(join(ROOT, 'data', 'classics')).filter(x => x.endsWith('.txt')))
     books[f.replace(/\.txt$/, '')] = strip(readFileSync(join(ROOT, 'data', 'classics', f), 'utf8'));
+  // 《增删卜易》有两份转录(老转录缺卷之一正文;维基文库本恰是卷之一)——
+  // 同一本书并成一个键,哪份里搜得到都算搜得到(v0.88)
+  if (books['增删卜易-维基文库本']) books['增删卜易'] += books['增删卜易-维基文库本'];
   let n = 0, bad = [];
   for (const f of ['najia.js', 'bazi.js', 'geju.js', 'yingqi.js']) {
     const txt = readFileSync(join(ROOT, f), 'utf8');
@@ -128,7 +131,7 @@ t('挂了「书·章」的,那句话必须真的出自那一章(v0.79 新增)', 
       else if (cs.every(x => x.body.length < 20)) bad.push(`${c.file}:「${c.chapter}」在本转录里只有章名没有正文,不许往上挂出处`);
       continue;
     }
-    const r = chapterOfQuote(c.book, c.quote);
+    const r = chapterOfQuote(c.book, c.quote, c.chapter);
     if (!r.found) { bad.push(`${c.file}:《${c.book}》里搜不到「${c.quote.slice(0, 20)}」`); continue; }
     if (!c.chapter) continue;                       // 只挂书不挂章的,不作归章要求
     const same = chapKey(r.chapter) === chapKey(c.chapter)
@@ -139,6 +142,20 @@ t('挂了「书·章」的,那句话必须真的出自那一章(v0.79 新增)', 
   }
   ok(!bad.length, '归章核不过:\n      ' + bad.join('\n      '));
   console.log(`      (逐条核了 ${cites.length} 处「书·章」出处的归章)`);
+});
+t('《增删卜易》维基文库本转录:卷之一逐章有正文(v0.88 的地基,塌了用神表就悬空)', async () => {
+  // 缘起(v0.88):老转录的卷之一只有章名没正文,用神表三行因此挂了三个版本的「待核」。
+  // 维基文库本转录到手后,那三行的出处全押在它身上——所以它的完整度必须钉死:
+  // 章数、逐章非空、用神章第八本身的厚度,少一样都等于出处悬空而没人知道。
+  const { chaptersOf } = await import('../tools/chapter-check.mjs');
+  const { chapters } = chaptersOf('增删卜易-维基文库本');
+  ok(chapters.length >= 30, `维基文库本只切出 ${chapters.length} 章,该有 32 章(序+26+又十五+又二十六×4)`);
+  for (const c of chapters) ok(c.body.length >= 20, `「${c.name}」在维基文库本里没正文(${c.body.length} 字)——转录残了`);
+  const yong = chapters.find(c => c.name.includes('用神章第八'));
+  ok(yong && yong.body.length >= 300, '用神章第八的正文太薄,核不住用神表');
+  for (const key of ['官鬼爻爲用神', '父母爻爲用神', '兄弟爻爲用神', '子孫爻爲用神', '妻財爻', '醫藥']) {
+    ok(yong.body.includes(key.replace(/[、，]/g, '')), `用神章第八里搜不到「${key}」——正文对不上`);
+  }
 });
 t('程序初断挂的出处,逐条在原文里核得到', () => {
   // 缘起:v0.74 给初断的几条凭据挂了《增删卜易》的原话。规矩不变——搜得到才准挂。
