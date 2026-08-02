@@ -278,5 +278,73 @@ t('诚实:地气表标明是今人自拟,不冒充古法', () => {
   ok(/出处待核/.test(src), 'dili.js 须写明方位这一层出处待核');
 });
 
+console.log('【七】说人话与死条(v0.81)');
+// 缘起:v0.80 拿断语体检员扫年表,把那一栏洗干净了;这一轮把同一把尺子对准其余模块,
+// 量出地利这边**界面渲染的字有 18.7% 带术语**(忌神/喜用/调候/用神),而七层断整个是摆给客人看的。
+t('七层断给客人看的每一句,一个推演名目都不许有', () => {
+  const Bazi = require('../bazi.js');
+  const Najia = require('../najia.js');
+  const Tijian = require('../tijian.js');
+  const SAMPLES = [['男', new Date(1990, 4, 20, 9, 30), 120.15], ['女', new Date(1985, 7, 3, 20, 0), 116.4],
+    ['男', new Date(1966, 2, 27, 15, 0), 113.3], ['女', new Date(1958, 2, 21, 11, 5), 114.3]];
+  const cities = ['成都', '上海', '广州', '哈尔滨', '海口', '乌鲁木齐', '杭州', '西安'];
+  let total = 0; const bad = [];
+  const scan = (where, str) => {
+    if (!str || typeof str !== 'string') return;
+    total++;
+    const hits = Tijian.check(str, { zone: '断语', minChars: 0 }).hits
+      .filter(h => ['术语', '说教', '空话', '花钱消灾', '模棱'].includes(h.kind));
+    if (hits.length) bad.push(`${where}「${str.slice(0, 34)}」← ${hits.map(h => h.kind + ':' + h.snippet).join('/')}`);
+  };
+  for (const [g, d, lon] of SAMPLES) {
+    const c = Bazi.chart(new Date(d), g, lon);
+    for (const to of cities) {
+      const r = Dili.judge(c, '北京', to, Najia.ganZhi(new Date(2026, 7, 2)).year[1], { age: 36, hour: 10 });
+      if (r.err || r.local) continue;
+      for (const L of ['xiang', 'qi', 'hou', 'cheng', 'ye', 'dayun']) if (r[L]) scan('地利·' + L, r[L].note);
+      scan('地利·总判', r.note); scan('地利·煞旁注', r.shaCaveat);
+      (r.extras || []).forEach(x => scan('地利·旁注', x));
+      ((r.shi && r.shi.best) || []).forEach(x => scan('地利·时', x.why));
+    }
+    const rec = Dili.recommend(c, '北京', { age: 36 });
+    if (rec && !rec.err) {
+      for (const k of ['good', 'bigCities', 'bothWays', 'near']) (rec[k] || []).forEach(x => scan('榜单.' + k, x.why || x.note));
+      ((rec.shi && rec.shi.best) || []).forEach(x => scan('榜单·时', x.why));
+    }
+  }
+  ok(total > 300, `扫到的字段太少(${total}),测试自己可能失效了`);
+  ok(!bad.length, `${bad.length}/${total} 条不干净:\n      ` + bad.slice(0, 8).join('\n      '));
+});
+t('七层断没有死条:每一个判语分支都触发得到', () => {
+  // §十二:写完断法规则,要穷举验一遍有没有「死条」——格局法用这一招揪出过两条永不触发的救应,
+  // 地利七层是 v0.68 加的,此前从没验过。这一条把「全都触发得到」这个结论钉住。
+  const Bazi = require('../bazi.js');
+  const places = Dili.PLACES.map(p => p[0]);
+  const ZH = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+  const got = { xiang: new Set(), qi: new Set(), hou: new Set(), cheng: new Set(), extras: new Set() };
+  let n = 0;
+  for (let y = 1950; y <= 2010; y += 2) for (const mo of [0, 3, 6, 9]) for (const g of ['男', '女']) {
+    const c = Bazi.chart(new Date(y, mo, 15, 10, 0), g, 116.4);
+    for (let k = 0; k < 3; k++) {
+      const r = Dili.judge(c, places[(n * 7 + k * 61) % places.length],
+        places[(n * 13 + k * 97 + 5) % places.length], ZH[(n + k) % 12], { age: 30, hour: 10 });
+      n++;
+      if (r.err || r.local) continue;
+      for (const L of ['xiang', 'qi', 'hou']) if (r[L] && r[L].verdict) got[L].add(r[L].verdict);
+      if (r.cheng) got.cheng.add(r.cheng.band);
+      // 去重取前 12 字:两条「流年注意」的前 8 字一模一样(此处栽过一次,取 8 会把 5 条并成 4 条)
+      (r.extras || []).forEach(x => got.extras.add(x.slice(0, 12)));
+    }
+  }
+  const want = {
+    xiang: ['大旺', '旺', '平', '偏背', '背'],
+    qi: ['大合', '合', '不相干', '略不合', '不合'],
+    hou: ['对症', '半对', '不显', '反着'],
+    cheng: ['邻近', '出省', '跨大区', '远行'],
+  };
+  for (const L of Object.keys(want)) for (const v of want[L]) ok(got[L].has(v), `${L} 层的「${v}」是死条:${n} 次判地里一次没触发`);
+  eq(got.extras.size, 5, `煞层旁注五条应当都触发得到,实得 ${got.extras.size} 条`);
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

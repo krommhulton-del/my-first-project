@@ -352,6 +352,24 @@
   }
 
   const BANDS = [[65, '身旺'], [55, '偏旺'], [45, '中和'], [35, '偏弱'], [-1, '身弱']];
+  // 旺衰五档的大白话对照。**这张表只此一份**(§四 一个口径一处算)。
+  // 缘起(v0.81):拿断语体检员扫程序自己的成稿,发现「身弱」两个字一直原样摆在运势页
+  // 「你这人底子身弱」、侧栏「底子」那一行、地利「先说你的喜忌」那一段里——都是给客人看的,违反铁律八。
+  // band 本身不动(材料、专业区、回测都靠它),只是**客人那一头一律走 plainBand**。
+  const BAND_PLAIN = { 身旺: '厚', 偏旺: '偏厚', 中和: '不厚不薄', 偏弱: '偏薄', 身弱: '薄' };
+  const plainBand = b => BAND_PLAIN[b] || b;
+  // 「得不得令」五种说法的白话对照(同上,只此一份)。运势页命盘那一行直接渲染它。
+  const DELING_PLAIN = {
+    当令: '生在自己当家的月份,一出生就占着地利',
+    得月令之生: '生在有人给你添力的月份',
+    '受月令克(失令)': '生在压着你的月份,起手就吃亏',
+    泄于月令: '生在往外泄你的月份,力气容易散',
+    '克月令(耗力)': '生在得你去克的月份,使的是自己的劲',
+  };
+  const plainDeLing = d => DELING_PLAIN[d] || d;
+  // 从格三档的白话对照(同上,只此一份)。定时辰板块拿它区分「哪几个时辰断得不一样」。
+  const CONG_PLAIN = { 正格: '常规这一档', 从强格: '一路强到底这一档', 从弱格: '整盘顺着势走这一档', 假从: '像顺势又不算这一档' };
+  const plainGe = g => CONG_PLAIN[String(g || '').split('(')[0]] || g;
 
   function judgeStrength(pillars, dayGan, days) {
     const me = GAN_WX[dayGan], yin = invSheng(me);
@@ -576,6 +594,6 @@
 
   return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI,
     kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, trueSolarDate, eotMinutes, tiaoHou, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx,
-    SHEN_PLAIN, plainShen,
+    SHEN_PLAIN, plainShen, BAND_PLAIN, plainBand, DELING_PLAIN, plainDeLing, CONG_PLAIN, plainGe,
     nayin, changSheng, taiYuan, siLingOf, SILING, daysIntoJie, relations, judgeStrength, judgeCong, wuxingPower, rootsOf, countWuxing, pickYongShen };
 }));

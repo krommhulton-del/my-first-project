@@ -134,8 +134,8 @@
         fp, hours: g.map(x => x.name), gzs: g.map(x => x.gz),
         band: g[0].band, xi: g[0].xi, ji: g[0].ji, geju: g[0].geju,
         note: g.length > 1
-          ? `${g.map(x => x.name).join('、')}这${g.length}个时辰断出来完全一样(${g[0].band}、喜${g[0].xi}${g[0].geju ? '、' + g[0].geju : ''})——在这几个之间怎么填都不影响结论,不必纠结。`
-          : `${g[0].name}自成一档(${g[0].band}、喜${g[0].xi}${g[0].geju ? '、' + g[0].geju : ''})。`,
+          ? `${g.map(x => x.name).join('、')}这${g.length}个时辰断出来完全一样(底子${Bazi.plainBand(g[0].band)}、旺你的是${g[0].xi}${g[0].geju ? '、' + Bazi.plainGe(g[0].geju) : ''})——在这几个之间怎么填都不影响结论,不必纠结。`
+          : `${g[0].name}自成一档(底子${Bazi.plainBand(g[0].band)}、旺你的是${g[0].xi}${g[0].geju ? '、' + Bazi.plainGe(g[0].geju) : ''})。`,
       };
     }).sort((a, b) => b.hours.length - a.hours.length);
 
@@ -183,7 +183,7 @@
       range, cands, groups, ranked, canDecide, reason, diffs, sameAll,
       events,
       advice: sameAll
-        ? `好消息:你给的这个范围里,${cands.length} 个时辰断出来完全一样——${groups[0].band}、喜${groups[0].xi}。时辰不用再纠结了,随便填一个都不影响后面所有断语。`
+        ? `好消息:你给的这个范围里,${cands.length} 个时辰断出来完全一样——底子${Bazi.plainBand(groups[0].band)}、旺你的是${groups[0].xi}。时辰不用再纠结了,随便填一个都不影响后面所有断语。`
         : (canDecide
           ? `按你给的事回推,最可能是${ranked[0].name}(${ranked[0].span},${ranked[0].gz})。${reason}`
           : `这个范围里断法不止一种(${groups.length} 档),但${reason}建议:再想想有没有更多确凿的事,或者按下面「差异面板」看看这几档差在哪、哪一档更像你。`),
@@ -245,18 +245,18 @@
         campList.map(c => `${c.hours.join('、')}这${c.hours.length}个时辰旺你的是${c.xi}`).join(';') +
         (disjoint ? `——**两拨之间毫无交集,方向是相反的**。` : `——**多一味少一味,方向大体一致但力度有出入**。`) +
         (congVaries && zhenCong.length
-          ? `病根在从格:${zhenCong.map(x => x.name).join('、')}这${zhenCong.length}个时辰判${zhenCong[0].cong},其余不判,` +
+          ? `病根在「从」的那一档(整盘顺着最旺的一股力走):${zhenCong.map(x => x.name).join('、')}这${zhenCong.length}个时辰判${zhenCong[0].cong},其余不判,` +
             `而从格一成立,该忌的全变成该喜的。最险的一个离门槛只剩 ${tightest} 分。`
           : '') +
         `先把出生钟点问准(问父母、翻出生证、查医院记录);问不准就去「定时辰」板块,拿已经发生过的事回推。` +
         (disjoint
-          ? `在那之前,下面凡是靠喜忌推出来的话——旺你的颜色方位、哪年得力、择日的「对你」那一层——都只能当一半看。`
+          ? `在那之前,下面凡是靠「什么旺你、什么背你」推出来的话——颜色方位、哪年得力、择日的「对你」那一层——都只能当一半看。`
           : `在那之前,下面这些话的大方向可以照着走,只是力度别当准数。`);
     } else if (bandVaries) {
-      level = '小动'; note = `没给确切钟点,不同时辰的身强身弱档位不同(${uniq('band').join('/')}),但旺你的五行是同一组(${campList[0].xi})——` +
+      level = '小动'; note = `没给确切钟点,不同时辰底子的厚薄不同(${uniq('band').map(Bazi.plainBand).join('/')}),但旺你的五行是同一组(${campList[0].xi})——` +
         `下面的结论方向不变,只是力度上会有出入。`;
     } else {
-      level = '稳'; note = `没给确切钟点,但这一天的十二个时辰断出来是同一套(${uniq('band')[0]}、旺${campList[0].xi})——时辰不用纠结,填哪个都不影响下面的话。`;
+      level = '稳'; note = `没给确切钟点,但这一天的十二个时辰断出来是同一套(底子${Bazi.plainBand(uniq('band')[0])}、旺${campList[0].xi})——时辰不用纠结,填哪个都不影响下面的话。`;
     }
     return { level, note, seen, camps: campList, bandVaries, xiVaries, congVaries, tightest,
       zhenCongHours: zhenCong.map(x => x.name) };

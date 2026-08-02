@@ -44,7 +44,10 @@ await t('排盘:四柱四列、日主标注、身强弱大白话', async () => {
   const ss = await page.locator('#pillars .pcol .ss').allTextContents();
   ok(ss.includes('日主'), '日主标注:' + ss.join(','));
   const bl = await page.textContent('#body-line');
-  ok(/身(强|偏强|弱|偏弱)/.test(bl) && /命/.test(bl), '身强弱白话:' + bl);
+  // v0.81 改断言:这一条名叫「大白话」,可断言原先要求那一行必须出现「身强/身弱」——
+  // 钉的正是要洗掉的术语。现在正反两头都钉:必须给出底子的厚薄,且不许再出现那几个名目。
+  ok(/底子/.test(bl) && /(厚|薄|不厚不薄)/.test(bl) && /命/.test(bl), '底子厚薄的大白话:' + bl);
+  ok(!/身(强|旺|弱)|偏(旺|弱)/.test(bl), '这一行不许再出现旺衰的名目:' + bl);
 });
 
 await t('人体星図:五主星三従星、中心星描边、能量点数与天中殺注解', async () => {

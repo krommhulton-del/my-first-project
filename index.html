@@ -716,7 +716,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.80</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.81</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1349,7 +1349,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.80 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.81 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -2834,7 +2834,7 @@
     const chongZhi = '子丑寅卯辰巳午未申酉戌亥'[(byIdx + 6) % 12];
     const hourNote = $('xy-hour').value === '' ? '(时辰未填,时柱按午间估,强弱有一两分误差)' : '';
     $('xy-bazi').innerHTML =
-      `<div class="fblock"><span class="k">你的底牌${hourNote}</span><div class="t">日主<b>${c.dayGan}${c.dayWx}</b>,<b>${c.strength.band}</b>(同党${c.strength.tong}对异党${c.strength.yi})。` +
+      `<div class="fblock"><span class="k">你的底牌${hourNote}</span><div class="t">日主<b>${c.dayGan}${c.dayWx}</b>,底子<b>${Bazi.plainBand(c.strength.band)}</b>(帮你的那半边${c.strength.tong}分,耗你的那半边${c.strength.yi}分)。` +
       `旺你的五行是<b>${xi.join('、')}</b>:颜色穿用${g1.colors}${xi[1] ? ';' + g2.colors : ''},方位利<b>${g1.dir}${xi[1] ? '、' + g2.dir : ''}</b>,吉数${g1.nums}${xi[1] ? ';' + g2.nums : ''},发力时段${g1.hours}。` +
       `背你的五行是${ji.join('、')},少碰${jg.colors}这些色、少往${jg.dir}边使劲。` +
       `贵人属相:<b>${allies.sanhe.join('、')}${allies.liuhe ? '、' + allies.liuhe : ''}</b>;每逢<b>${chongZhi}日</b>冲你,大事绕开(吉日历里已标)。` +
@@ -3341,7 +3341,7 @@
     dlStatus('');
     const hourTip = $('dl-hour').value === '' ? '<b>时辰没填,以下全部按中午估算</b>——喜忌可能整个不同,只当个大概看。' : '';
     $('dl-out').innerHTML =
-      `<div class="fblock"><span class="k">先说你的喜忌</span><div class="t">日主${c.dayGan}${c.dayWx},${c.strength.band}。旺你:${c.yong.xiWx.map(w => DL_WXTXT[w]).join('、')};背你:${c.yong.jiWx.map(w => DL_WXTXT[w]).join('、')}。以<b>${esc(r.from)}</b>为原点论方位。${hourTip}</div></div>` +
+      `<div class="fblock"><span class="k">先说你的喜忌</span><div class="t">日主${c.dayGan}${c.dayWx},底子${Bazi.plainBand(c.strength.band)}。旺你:${c.yong.xiWx.map(w => DL_WXTXT[w]).join('、')};背你:${c.yong.jiWx.map(w => DL_WXTXT[w]).join('、')}。以<b>${esc(r.from)}</b>为原点论方位。${hourTip}</div></div>` +
       dlListBlock('最该去的地方(方位、地气、寒暖三层合分排的)', r.good,
         '括号里依次是城市能级、相对你的方位、那地方自己的地气。徽记:马=驿马方(利变动)、贵=贵人方(利提携)、桃=桃花方(利情缘)。') +
       dlListBlock('这里头的大城市(二线及以上)', r.bigCities, '想要机会多、盘子大的看这一行。') +
@@ -4066,7 +4066,7 @@
         `<div class="dsgrp${g.fp === topFp ? ' top' : ''}"><div class="gh">` +
         `<span class="ghn">${esc(g.hours.join('、'))}</span><span class="ghm">${esc(g.gzs.join('、'))}</span></div>` +
         `<div class="why">${esc(g.note)}</div>` +
-        `<div class="why">这一档:${esc(g.band)};合你的是${esc(g.xi)},不合的是${esc(g.ji)}${g.geju ? ';' + esc(g.geju) : ''}</div></div>`
+        `<div class="why">这一档底子${esc(Bazi.plainBand(g.band))};合你的是${esc(g.xi)},不合的是${esc(g.ji)}${g.geju ? ';' + esc(Bazi.plainGe(g.geju)) : ''}</div></div>`
       ).join('') + `</div>`;
     const rank = r.ranked.length
       ? `<div class="wjcard"><h4>按 你 给 的 事 回 推</h4>` +
@@ -4087,9 +4087,9 @@
       `<div><b class="${r.canDecide ? 'v-ji' : 'v-xiong'}">${r.canDecide ? '可以定' : '定不了'}</b>——${esc(r.reason)}</div></div>`;
     const same = r.diffs.band.length === 1 && r.diffs.xi.length === 1 && r.diffs.geju.length === 1;
     const dif = `<div class="wjcard"><h4>差 异 面 板 · 分 歧 在 哪</h4>` +
-      `<div class="why">强弱档:${esc(r.diffs.band.join(' / '))}</div>` +
+      `<div class="why">底子厚薄:${esc(r.diffs.band.map(x => Bazi.plainBand(x)).join(' / '))}</div>` +
       `<div class="why">合你的五行:${esc(r.diffs.xi.join(' / '))}</div>` +
-      `<div class="why">格局:${esc(r.diffs.geju.join(' / '))}</div>` +
+      `<div class="why">走的是哪一档:${esc(r.diffs.geju.map(x => Bazi.plainGe(x)).join(' / '))}</div>` +
       `<div class="why">${same ? '三项全同——这个范围里时辰填哪个都不影响任何一处断语。'
         : '分歧就在上面这几项。落在同一档的时辰,后面所有板块给你的话完全一样;跨档就不一样了。'}</div></div>`;
     // 钟表时辰 ≠ 太阳时辰:出生地偏西的,整排时辰都会往前挪一格。不说清楚会被当成算错。
@@ -4684,7 +4684,7 @@
     try { for (const x of c.dayun.list) if (age != null && age >= x.fromAge) dy = x; } catch (e) {}
     const rows = [
       ['四柱', `<span class="num">${['year', 'month', 'day', 'hour'].map(k => c.pillars[k].gz).join(' ')}</span>`],
-      ['底子', `${esc(c.strength.band)}`],
+      ['底子', `${esc(Bazi.plainBand(c.strength.band))}`],
       ['帮你的', esc(c.yong.xiWx.join('、'))],
       ['耗你的', esc(c.yong.jiWx.join('、'))],
     ];

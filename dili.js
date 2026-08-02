@@ -295,7 +295,7 @@
   const YIMA = ['寅', '申', '亥', '巳'];
   const TAOHUA = ['酉', '卯', '午', '子'];
   // 这一层为什么不计分,写死在这儿,界面直接取用
-  const SHA_CAVEAT = '这一层只作旁注,不进分数——《增删卜易》说神煞「不能独操祸福之权」,得附在用神旺相上才作数;' +
+  const SHA_CAVEAT = '这一层只作旁注,不进分数——《增删卜易》说神煞「不能独操祸福之权」,得贴着盘里当家的那股力才作数;' +
     '《滴天髓阐微》说得更狠,直接把驿马桃花叫「后人之谬言」。两本书打架,所以摆出来给你看,但不拿它定吉凶。';
 
   // 神煞加持与流年注意(dir 为目标方向;chart 需 dayGan 与 pillars.year.zhi;nowYearZhi 当年年支)
@@ -322,11 +322,11 @@
     const dir = dirOf(deg), wx = DIR_WX[dir];
     const xi = (chart.yong && chart.yong.xiWx) || [], ji = (chart.yong && chart.yong.jiWx) || [];
     let verdict, score, note;
-    if (wx === xi[0]) { verdict = '大旺'; score = 2; note = `${dir}属${wx},正是你第一喜用——往这走,如鱼得水`; }
-    else if (xi.includes(wx)) { verdict = '旺'; score = 1; note = `${dir}属${wx},在你喜用之列——去得,有助力`; }
-    else if (wx === ji[0]) { verdict = '背'; score = -2; note = `${dir}属${wx},正犯你头号忌神——常驻能免则免,非去不可须旺宅化解`; }
-    else if (ji.includes(wx)) { verdict = '偏背'; score = -1; note = `${dir}属${wx},在你忌神之列——不添力,反耗你`; }
-    else { verdict = '平'; score = 0; note = `${dir}属${wx},于你不喜不忌——平常之地,成事靠人不靠地`; }
+    if (wx === xi[0]) { verdict = '大旺'; score = 2; note = `${dir}属${wx},正是最旺你的那一路——往这走,如鱼得水`; }
+    else if (xi.includes(wx)) { verdict = '旺'; score = 1; note = `${dir}属${wx},在旺你的那几路里——去得,有助力`; }
+    else if (wx === ji[0]) { verdict = '背'; score = -2; note = `${dir}属${wx},正是最背你的那一路——常驻能免则免,非去不可得把住处挑旺些`; }
+    else if (ji.includes(wx)) { verdict = '偏背'; score = -1; note = `${dir}属${wx},在背你的那几路里——不添力,反耗你`; }
+    else { verdict = '平'; score = 0; note = `${dir}属${wx},于你不旺不背——平常之地,成事靠人不靠地`; }
     const jian = jianOf(deg);
     return { dir, wx, verdict, score, note, deg: Math.round(deg), jian,
       jianNote: jian ? `方位角${Math.round(deg)}°,骑在${dir}与${jian}的界上——两边的话都得听半句,别当纯正的${dir}用` : '' };
@@ -339,11 +339,11 @@
     const xi = (chart.yong && chart.yong.xiWx) || [], ji = (chart.yong && chart.yong.jiWx) || [];
     const why = whyOf(toName);
     let verdict, score, note;
-    if (wx === xi[0]) { verdict = '大合'; score = 2; note = `这地方本身的气是${wx}——${why}。正撞你第一喜用,人地相得`; }
-    else if (xi.includes(wx)) { verdict = '合'; score = 1; note = `这地方本身的气是${wx}——${why}。在你喜用之列,住着顺`; }
-    else if (wx === ji[0]) { verdict = '不合'; score = -2; note = `这地方本身的气是${wx}——${why}。正是你头号忌神,水土难服,去了容易觉得处处别扭`; }
-    else if (ji.includes(wx)) { verdict = '略不合'; score = -1; note = `这地方本身的气是${wx}——${why}。在你忌神之列,不添力`; }
-    else { verdict = '不相干'; score = 0; note = `这地方本身的气是${wx}——${why}。与你不喜不忌,谈不上帮也谈不上耗`; }
+    if (wx === xi[0]) { verdict = '大合'; score = 2; note = `这地方本身的气是${wx}——${why}。正撞最旺你的那一路,人地相得`; }
+    else if (xi.includes(wx)) { verdict = '合'; score = 1; note = `这地方本身的气是${wx}——${why}。在旺你的那几路里,住着顺`; }
+    else if (wx === ji[0]) { verdict = '不合'; score = -2; note = `这地方本身的气是${wx}——${why}。正是最背你的那一路,水土难服,去了容易觉得处处别扭`; }
+    else if (ji.includes(wx)) { verdict = '略不合'; score = -1; note = `这地方本身的气是${wx}——${why}。在背你的那几路里,不添力`; }
+    else { verdict = '不相干'; score = 0; note = `这地方本身的气是${wx}——${why}。与你不旺不背,谈不上帮也谈不上耗`; }
     return { wx, why, tier: tierOf(toName), verdict, score, note,
       src: '地气五行是本项目自拟的现代对照(看地貌水文与当地立市之本),不是古书上的说法' };
   }
@@ -359,21 +359,21 @@
     let verdict = '不显', score = 0, note;
     const move = nan ? `往南挪了${Math.abs(dLat)}度纬度` : bei ? `往北挪了${dLat}度纬度` : `南北几乎没动(纬度差${dLat}度)`;
     if (need === '火') {
-      if (nan) { verdict = '对症'; score = 1.5; note = `你这盘生得寒,古法调候要暖。${move},越南越暖——这一步走对了症`; }
-      else if (bei) { verdict = '反着'; score = -1.5; note = `你这盘生得寒,古法调候要暖。${move},越走越冷——正撞在病上`; }
+      if (nan) { verdict = '对症'; score = 1.5; note = `你这盘生得寒,按古法得补暖。${move},越南越暖——这一步走对了症`; }
+      else if (bei) { verdict = '反着'; score = -1.5; note = `你这盘生得寒,按古法得补暖。${move},越走越冷——正撞在病上`; }
       else note = `你这盘生得寒,要暖。${move},冷暖没变——这一层帮不上也害不着`;
     } else if (need === '水') {
       // 「润」与「凉」是两件事:往北走得凉,临水而居得润。两者可以各占一半,不许拿一件盖过另一件。
       // 缘起:初版写成「临水就算对症」,于是从哈尔滨南下海口(往南 25.8 度)也判对症——
       // 自己的测试当场抓住。热带海岛确实有水,可它同时把「凉」这一味彻底做反了,只能算半对。
       const linShui = qiOf(b[0]) === '水';
-      if (bei) { verdict = '对症'; score = 1.5; note = `你这盘生得燥,古法调候要润要凉。${move},越北越凉——这一步走对了症${linShui ? `,何况${b[0]}还临水(${whyOf(b[0])}),润凉两味都占了` : ''}`; }
+      if (bei) { verdict = '对症'; score = 1.5; note = `你这盘生得燥,按古法得补润补凉。${move},越北越凉——这一步走对了症${linShui ? `,何况${b[0]}还临水(${whyOf(b[0])}),润凉两味都占了` : ''}`; }
       else if (nan && linShui) { verdict = '半对'; score = 0; note = `你这盘生得燥,要润也要凉。${move}——${b[0]}临水而居(${whyOf(b[0])}),润这一味有了;可越往南越热,凉那一味反倒做背了。两下相抵,这一层算半对`; }
-      else if (nan) { verdict = '反着'; score = -1.5; note = `你这盘生得燥,要润要凉。${move},越走越热——正撞在病上`; }
+      else if (nan) { verdict = '反着'; score = -1.5; note = `你这盘生得燥,得补润补凉。${move},越走越热——正撞在病上`; }
       else if (linShui) { verdict = '对症'; score = 1.5; note = `你这盘生得燥,要润。${move},冷暖没怎么变,但${b[0]}临水而居——${whyOf(b[0])},润这一味有了`; }
       else note = `你这盘生得燥,要润要凉。${move},冷暖没变——这一层帮不上也害不着`;
     } else {
-      note = `古法调候给你取的是${need}——这一味不分南北,得看你到了那儿做什么、住什么样的屋,不在这层里定`;
+      note = `按古法,你这盘缺的是${need}这一味——它不分南北,得看你到了那儿做什么、住什么样的屋,不在这层里定`;
     }
     return { need, dLat, verdict, score, note, src: th.src || '出处待核' };
   }

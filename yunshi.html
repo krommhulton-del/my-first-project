@@ -233,7 +233,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.80</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.81</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -478,11 +478,11 @@
     }).join('');
     const s = c.strength;
     const yongTalk = s.strong
-      ? `你这人底子<b>${esc(s.band)}</b>,自己有劲、有主见。对你添彩的是能"用掉、花掉、管住你"那股劲的五行——也就是${xiPlain(c)};最怕再有人一个劲儿给你加码。`
+      ? `你这人底子<b>${esc(Bazi.plainBand(s.band))}</b>,自己有劲、有主见。对你添彩的是能"用掉、花掉、管住你"那股劲的五行——也就是${xiPlain(c)};最怕再有人一个劲儿给你加码。`
       : (s.band === '中和'
         ? `你这人底子<b>中和</b>——不偏强也不偏弱,这种局扶抑都使不上大劲,取用要看寒暖与缺口:${xiPlain(c)}。`
-        : `你这人底子<b>${esc(s.band)}</b>,劲儿容易不够使。对你添力的是"生你、帮你"的五行——也就是${xiPlain(c)};最怕再被消耗、被压。`);
-    $('body-line').innerHTML = `你是<b>${c.dayGan}${c.dayWx}命</b>(日主${c.dayWx}),<b>${esc(s.band)}</b>。`;
+        : `你这人底子<b>${esc(Bazi.plainBand(s.band))}</b>,劲儿容易不够使。对你添力的是"生你、帮你"的五行——也就是${xiPlain(c)};最怕再被消耗、被压。`);
+    $('body-line').innerHTML = `你是<b>${c.dayGan}${c.dayWx}命</b>,底子<b>${esc(Bazi.plainBand(s.band))}</b>。`;
 
     // —— 力量称重条:同党(比劫+印)对异党(食伤+财+官杀),两边都实打实称过 ——
     const WXC = { 木: 'mu', 火: 'huo', 土: 'tu', 金: 'jin', 水: 'shui' };
@@ -531,8 +531,10 @@
     if (c.tiaohou) pro.push(esc(c.tiaohou.note));
     if (c.neiChong && c.neiChong.length) c.neiChong.forEach(n => pro.push(esc(n)));
     pro.push(`取用:${esc(c.yong.xiName)}`);
-    $('body-sub').innerHTML = `${yongTalk}<br><span style="opacity:.8">命盘:${esc(c.lunarText)} · 日主${esc(s.deLing)}</span>` +
-      (pro.length ? `<br>${pro.join('<br>')}` : '');
+    // pro 是行内话(取用、调候、从格这几行),原先不加标记就接在客人第一眼看的那行下面。
+    // 铁律八管的是「给客人看的成稿」,专业区另算——所以这里把界给划出来,而不是把内容删掉(v0.81)。
+    $('body-sub').innerHTML = `${yongTalk}<br><span style="opacity:.8">命盘:${esc(c.lunarText)} · ${esc(Bazi.plainDeLing(s.deLing))}</span>` +
+      (pro.length ? `<br><span style="opacity:.7">——以下是行内的说法,不懂可以跳过——</span><br>${pro.join('<br>')}` : '');
   }
   function xiPlain(c) {
     const names = { 木: '木(青绿、东方、春木、生发)', 火: '火(红、南方、热闹、表达)', 土: '土(黄、稳、地产、诚信)', 金: '金(白、西方、金属、决断)', 水: '水(黑蓝、北方、流动、智慧)' };

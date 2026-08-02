@@ -9,9 +9,14 @@
 //
 // 注意这套模拟只证明「求解器能反解出自己这套模型」,**不证明这套模型合乎现实**——
 // 后者要靠真实回测语料(见 CLAUDE.md 第七节),现在还没有。
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import Bazi from '../bazi.js';
 import Dashi from '../dashi.js';
 import Dingshi from '../dingshi.js';
+import Tijian from '../tijian.js';
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 let pass = 0, fail = 0;
 const t = (name, fn) => { try { fn(); pass++; console.log('  ✓', name); } catch (e) { fail++; console.log('  ✗', name, '\n     ', e.message); } };
@@ -233,6 +238,43 @@ t('钟表时辰 ≠ 太阳时辰:出生地偏西的整排时辰会挪一格,界�
   eq(offOf(116.4), 0, '北京一带钟表与太阳只差十几分钟,不该错位');
   eq(offOf(104.1), 12, '成都一带差约一小时,十二个时辰应整排前移一格');
   eq(offOf(87.6), 12, '乌鲁木齐差两小时以上,同样整排前移');
+});
+
+console.log('【七】「准不准」那一段得说人话(v0.81)');
+// 缘起:v0.77 加了 stability,那一段在主程序侧栏与运势页都是直接渲染给客人的,
+// 可里头一直写着「喜忌」「身强身弱档位」——v0.81 拿断语体检员扫出来的。
+t('stability 的那段话,一个推演名目都不许有', () => {
+  const S = [['男', new Date(1990, 4, 20)], ['女', new Date(1985, 7, 3)], ['男', new Date(2008, 0, 16)],
+    ['女', new Date(1972, 10, 8)], ['男', new Date(1966, 2, 27)], ['女', new Date(1958, 2, 21)],
+    ['男', new Date(1995, 5, 10)], ['女', new Date(2001, 10, 3)]];
+  const lv = new Set(); const bad = [];
+  for (const [g, d] of S) for (const lon of [116.4, 104.1]) {
+    const r = Dingshi.stability({ birth: new Date(d), gender: g, lon });
+    lv.add(r.level);
+    const hits = Tijian.check(r.note, { zone: '断语', minChars: 0 }).hits
+      .filter(h => ['术语', '说教', '空话', '花钱消灾', '模棱'].includes(h.kind));
+    if (hits.length) bad.push(`${r.level}「${r.note.slice(0, 34)}」← ${hits.map(h => h.kind + ':' + h.snippet).join('/')}`);
+  }
+  ok(lv.size >= 2, `只扫到 ${[...lv].join('/')} 一档,样本不够`);
+  ok(!bad.length, bad.slice(0, 5).join('\n      '));
+});
+t('得不得令的五种说法也各有白话对照', () => {
+  for (const d of ['当令', '得月令之生', '受月令克(失令)', '泄于月令', '克月令(耗力)']) {
+    ok(Bazi.DELING_PLAIN[d], `${d} 没有白话对照`);
+    ok(!/月令/.test(Bazi.plainDeLing(d)), `${d} 的白话对照里还留着「月令」`);
+  }
+});
+t('旺衰五档的白话对照只此一份,且五档一个不缺', () => {
+  for (const b of ['身旺', '偏旺', '中和', '偏弱', '身弱']) {
+    ok(Bazi.BAND_PLAIN[b], `${b} 没有白话对照`);
+    ok(Bazi.plainBand(b) !== b, `${b} 的白话对照跟原样一样,等于没翻`);
+  }
+  // 别处不许另写一套:除 bazi.js 外,源码里不许再出现第二张 band→白话 的表
+  const files = ['dili.js', 'dingshi.js', 'dashi.js', 'yunshi.js', 'index.html', 'yunshi.html'];
+  for (const f of files) {
+    const src = readFileSync(join(ROOT, f), 'utf8');
+    ok(!/身旺\s*:\s*['\u2018\u201c]/.test(src), `${f} 里疑似另写了一张 band 白话表`);
+  }
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
