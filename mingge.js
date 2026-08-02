@@ -378,6 +378,97 @@
     return out;
   }
 
+  // ══════════ 三之三、竞争层(v0.97:雄竞雌竞,男女都做,客观直说)与顶路叙事 ══════════
+  // 用户点名:「不要避讳雄竞雌竞,有一说一,要客观」。出处全是硬的:
+  //   女——「姊妹透出,便见争夫」(渊海);胜负判据「本身自旺,彼身值衰…我正而彼偏」(三命·正偏自处);
+  //   男——「劫财败财,主剋父母及剋妻、破财争斗之事」(渊海);
+  //   策略——三命把打法写到反直觉那层:「用财不宜明露,柱见比劫,则宜透出,使人共见则不能夺;
+  //   赋云:财宜藏,藏则丰厚,露则浮荡」——有人抢时亮出来确权,没人抢才闷声攒。
+  function jingzhengReads(chart) {
+    const sp = shenPower(chart), P = chart.pillars;
+    const band = chart.strength.band;
+    const bodyStrong = band === '身旺' || band === '偏旺';
+    const bijieTou = ['year', 'month', 'hour'].some(k => ['比肩', '劫财'].includes(P[k].ganShen));
+    const bijieOn = sp.比劫 >= 25 || bijieTou;
+    const out = [];
+    if (!chart.genderKnown) return { items: [], note: bijieOn ? '同辈竞争这一层盘上有(同类那股力立着),但男女的争点不同(女争名分、男财与人两头都被抢)——性别没填,不硬断。' : '' };
+    const fem = chart.gender === '女';
+    if (bijieOn && fem) {
+      out.push({
+        key: '雌竞明摆', tier: '直断',
+        plain: '同你抢位子、抢人的,多半是身边同层次的女性——这一层在盘上明摆着,不必羞愧也不必装看不见:它只是格局,像天气一样',
+        tech: `比劫${sp.比劫.toFixed(1)}${bijieTou ? '且透干' : ''}(女)`,
+        quote: '姊妹透出，便见争夫', src: '渊海子平',
+      });
+      out.push(bodyStrong ? {
+        key: '竞而能胜', tier: '直断',
+        plain: '胜负判据书上写死了:自旺者得正位、衰者退偏处。你底子旺——正面把名分拿下,别打消耗战:名分(公开、确定关系、职位坐实)一落定,竞争自动散场',
+        tech: `身${band},自旺者正`,
+        quote: '若本身自旺，彼身值衰，四柱不冲，则我正而彼偏矣', src: '三命通会(正偏自处章)',
+      } : {
+        key: '竞则避正', tier: '直断',
+        plain: '胜负判据书上写死了:旺者得正。你底子眼下不占优——正面消耗是替别人抬轿;打法是错开:换场地、换时机、或者先把自己那股力养起来(哪步运旺你,发力窗那一节写着)再回来争',
+        tech: `身${band},衰者偏,须避其锋`,
+        quote: '若本身自旺，彼身值衰，四柱不冲，则我正而彼偏矣', src: '三命通会(正偏自处章)',
+      });
+    }
+    if (bijieOn && !fem) {
+      out.push({
+        key: '雄竞明摆', tier: '直断',
+        plain: '钱与伴侣在同辈眼里是同一个「财」字——抢你这两样的,就是身边同层次的男性:合伙分账、竞标抢单、情场截胡,都是这一股力',
+        tech: `比劫${sp.比劫.toFixed(1)}${bijieTou ? '且透干' : ''}(男)`,
+        quote: '名曰劫财败财，主剋父母及剋妻、破财争斗之事', src: '渊海子平',
+      });
+      out.push({
+        key: '亮财确权', tier: '直断',
+        plain: '书上的打法反直觉:身边有抢的人,财反而要亮出来——钱走明账、关系定名分、项目落合同,人人看见就抢不走。闷着掖着才是给人下手的空档',
+        tech: '柱见比劫,宜透出',
+        quote: '用财不宜明露，柱见比劫，则宜透出，使人共见则不能夺', src: '三命通会',
+      });
+    }
+    if (!bijieOn && sp.财星 >= 25 && !fem) {
+      out.push({
+        key: '藏财自厚', tier: '直断',
+        plain: '盘里没人跟你抢——这种局面钱要藏:少晒、少许诺、闷声攒,摆出来反而招浮事',
+        tech: `比劫${sp.比劫.toFixed(1)}弱而财${sp.财星.toFixed(1)}`,
+        quote: '财宜藏，藏则丰厚，露则浮荡', src: '三命通会',
+      });
+    }
+    return { items: out, note: out.length ? '这一层说的是竞争的格局与打法——谁在抢、怎么争、代价是什么;不评好坏,像下棋只讲棋理。' : '' };
+  }
+
+  // 顶路因果链叙事(v0.97):把「为什么是这碗饭」讲成一条推理,不是并列的碎句。
+  // 病根是用户点破的:并列短句一眼 AI。这里按 底盘→为什么→几时发力→代价 四段串,连词写死因果。
+  const ROAD_COST = {
+    guan: '这条路的代价:熬资历、守规矩,前半程慢——名分给你的,规矩也都要回去',
+    shang: '这条路的代价:起伏是常态,担保与垫资是两个坑——账要自己攥,别替人背',
+    ji: '这条路的代价:钱来得薄、名声来得慢,靠攒——但手艺在身,饿不死也夺不走',
+    wen: '这条路的代价:窗口窄、看时运,成名前的冷板凳要坐得住',
+    wu: '这条路的代价:拿身体与风险换位子,伤病与背锅都得有预算',
+    chu: '这条路的代价:亲缘与热闹都淡,清静是收益也是账单',
+  };
+  function narrate(chart, roads, age) {
+    const top = roads[0];
+    if (!top || top.score < 25) return '';
+    const sp = shenPower(chart);
+    let s = `先看底盘:你生在底子${Bazi.plainBand(chart.strength.band)}的局里,` +
+      `五股力里最重的是${Object.entries(sp).sort((a, b) => b[1] - a[1])[0][0].replace('星', '')}那一路。`;
+    s += `因为这个底子,${top.ev.length ? top.ev[0].plain.split('——')[0] : ''}——所以这碗饭落在「${top.name.slice(0, top.name.indexOf('('))}」上` +
+      `,不是挑出来的,是盘面推出来的。`;
+    // 发力窗:第一步喜用之运
+    const list = (chart.dayun && chart.dayun.list) || [];
+    let fw = null;
+    for (const d of list) {
+      const gw = Bazi.GAN_WX[d.gz[0]], zw = Bazi.ZHI_WX[d.gz[1]];
+      if (chart.yong.xiWx.includes(gw) || chart.yong.xiWx.includes(zw)) { fw = d; break; }
+    }
+    if (fw) s += `等到${fw.fromAge}岁起的那十年,大运把旺你的那股力送到手上——那是这条路的发力窗` +
+      (age != null && age > fw.fromAge + 10 ? '(这窗你已走过,下一个旺你的十年看运势页的大运分段)' : ',在那之前是攒本钱的年头') + '。';
+    else if (chart.dayun && chart.dayun.unknown) s += '几时发力那一层要大运,而大运缺性别排不了——补上性别这句才有下文。';
+    s += ROAD_COST[top.key] || '';
+    return s;
+  }
+
   // ══════════ 四、旁注层(两书打架,原话并排,不计分不下断——v0.68 成例) ══════════
   function sideNotes(chart) {
     const sp = shenPower(chart), P = chart.pillars;
@@ -410,13 +501,15 @@
   }
 
   // ══════════ 汇总 ══════════
-  function read(chart) {
+  function read(chart, opts) {
     if (!chart) return null;
+    const age = opts && opts.age != null && isFinite(+opts.age) ? +opts.age : null;
     const roads = sixRoads(chart);
     const money = moneyPaths(chart);
     const zhi = directReads(chart);
     const guanxi = guanxiReads(chart);
     const mao = maoReads(chart);
+    const jingzheng = jingzhengReads(chart);
     const pang = sideNotes(chart);
     const top = roads[0], second = roads[1];
     const gap = top.score - (second ? second.score : 0);
@@ -425,7 +518,8 @@
     else verdict = `这碗饭最像:${top.name}(强度${top.score},比第二名${second ? second.name.slice(0, second.name.indexOf('(')) : ''}高${gap})。` +
       (gap < 10 ? '两条路咬得近,都摆出来,别只看第一条。' : '');
     return {
-      shen: shenPower(chart), roads, money, zhi, guanxi, mao, pang, top, gap, verdict,
+      shen: shenPower(chart), roads, money, zhi, guanxi, mao, jingzheng, pang, top, gap, verdict,
+      story: narrate(chart, roads, age),
       honest: '这一板块的规矩:规则条条有原话(引文逐字核过),「哪条压过哪条」的排序分是本项目自拟的,零回测。' +
         '两本书打架的那一层只摆原话不下断。说的都是事——钱从哪来、哪条路顺、代价是什么;' +
         '成不成还要看大运流年与你自己的手。',
@@ -456,6 +550,12 @@
       for (const g of r.guanxi.items) s += `— ${g.plain}(推演:${g.tech};原话「${g.quote}」《${g.src}》)\n`;
       s += r.guanxi.note + '\n';
     } else if (r.guanxi.note) s += '【关系格局】' + r.guanxi.note + '\n';
+    if (r.story) s += '【这碗饭的来路(因果链,已算死)】\n' + r.story + '\n';
+    if (r.jingzheng.items.length) {
+      s += '【竞争层(雄竞雌竞,客观直说)】\n';
+      for (const j of r.jingzheng.items) s += `— ${j.plain}(推演:${j.tech};原话「${j.quote}」《${j.src}》)\n`;
+      s += r.jingzheng.note + '\n';
+    }
     if (r.mao.length) {
       s += '【相貌(有原话的三条,照说)】\n';
       for (const m2 of r.mao) s += `— ${m2.plain}(推演:${m2.tech};原话「${m2.quote}」《${m2.src}》)\n`;

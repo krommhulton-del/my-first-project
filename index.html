@@ -777,7 +777,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.96</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.97</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1550,7 +1550,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.96 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.97 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -4972,6 +4972,7 @@
     $('mg-out').innerHTML =
       `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(r.verdict)}</div>` +
       `<div class="note ypline">六路强度:${r.roads.map(x => esc(x.name.slice(0, x.name.indexOf('('))) + ' ' + x.score).join(' · ')}</div></div>` +
+      (r.story ? `<div class="ypbox"><h4>这 碗 饭 的 来 路</h4><div class="hpv">${esc(r.story)}</div></div>` : '') +
       `<div class="ypbox"><h4>凭 什 么 这 么 排</h4>${r.roads.map(roadBlock).join('') || '<div class="hpv">六路都没立起来的凭据——这副盘吃饭的路在大运流年上。</div>'}</div>` +
       `<div class="ypbox"><h4>钱 从 哪 条 路 来</h4>` +
       r.money.map(m => `<div class="hprel"><b>${esc(m.path)}</b><div class="hpv">${esc(m.plain)}</div>` +
@@ -4984,6 +4985,10 @@
         r.guanxi.items.map(g => `<div class="hpv ypline">· ${esc(g.plain)}<br><span class="dim">「${esc(g.quote)}」《${esc(g.src)}》</span></div>`).join('') +
         `<div class="note ypflat">${esc(r.guanxi.note)}</div></div>`
         : (r.guanxi.note ? `<div class="ypbox"><h4>关 系 格 局</h4><div class="note ypflat">${esc(r.guanxi.note)}</div></div>` : '')) +
+      (r.jingzheng.items.length ? `<div class="ypbox"><h4>竞 争 层(谁在抢、怎么争——只讲棋理,不评好坏)</h4>` +
+        r.jingzheng.items.map(j => `<div class="hpv ypline">· ${esc(j.plain)}<br><span class="dim">「${esc(j.quote)}」《${esc(j.src)}》</span></div>`).join('') +
+        `<div class="note ypflat">${esc(r.jingzheng.note)}</div></div>`
+        : (r.jingzheng.note ? `<div class="ypbox"><h4>竞 争 层</h4><div class="note ypflat">${esc(r.jingzheng.note)}</div></div>` : '')) +
       (r.mao.length ? `<div class="ypbox"><h4>相 貌(有原话的才说)</h4>` +
         r.mao.map(m => `<div class="hpv ypline">· ${esc(m.plain)}<br><span class="dim">「${esc(m.quote)}」《${esc(m.src)}》</span></div>`).join('') + `</div>` : '') +
       (r.pang.length ? `<div class="ypbox"><h4>旁 注(两书打架或触发自拟,不计分不下断)</h4>` +
@@ -5010,7 +5015,8 @@
       if (!c) { mgErr(dxWhyNoChart()); return; }
       mgErr(c.genderKnown ? '' : '性别没填:六路照排(不吃大运),但「伴侣与人脉」那条只按男命口径摆——女命那套要填了性别才给。');
       mgChart = c;
-      mgRender(Mingge.read(c));
+      const mgA = parseFloat(qAge('q'));
+      mgRender(Mingge.read(c, { age: isFinite(mgA) ? mgA : null }));
     });
     $('btn-mg-ai').addEventListener('click', mgAI);
   }

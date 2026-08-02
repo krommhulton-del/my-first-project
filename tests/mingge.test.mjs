@@ -146,6 +146,87 @@ t('性别没填:关系格局不硬猜,写明两套条文', () => {
   ok(/性别没填/.test(r.guanxi.note), '要写明为什么不给:' + r.guanxi.note);
 });
 
+console.log('【三之二】竞争层与因果链叙事(v0.97:雄竞雌竞客观直说;顶路要讲成一条推理)');
+t('竞争层六款(雌竞明摆/竞而能胜/竞则避正/雄竞明摆/亮财确权/藏财自厚)都触发得到,无死条', () => {
+  const seen = new Set();
+  for (const r of SAMPLE) for (const j of r.jingzheng.items) seen.add(j.key);
+  const need = ['雌竞明摆', '竞而能胜', '竞则避正', '雄竞明摆', '亮财确权', '藏财自厚'];
+  const miss = need.filter(k => !seen.has(k));
+  ok(!miss.length, '竞争层死条:' + miss.join('、'));
+});
+t('性别口径不许镜像:男命不出雌竞三款,女命不出雄竞三款;胜负策略必须与旺衰档同向', () => {
+  for (let i = 0; i < 800; i++) {
+    const g = i % 2 ? '男' : '女';
+    const c = chartOf(1959 + (i * 13) % 63, 1 + (i * 7) % 12, 1 + (i * 5) % 28, (i * 9) % 24, g);
+    const r = Mingge.read(c);
+    const keys = r.jingzheng.items.map(j => j.key);
+    if (g === '男') ok(!keys.some(k => ['雌竞明摆', '竞而能胜', '竞则避正'].includes(k)), '男命套了女命竞争规则:' + keys);
+    else ok(!keys.some(k => ['雄竞明摆', '亮财确权', '藏财自厚'].includes(k)), '女命套了男命竞争规则:' + keys);
+    ok(!(keys.includes('竞而能胜') && keys.includes('竞则避正')), '胜与避互斥,不许同报');
+    const strong = c.strength.band === '身旺' || c.strength.band === '偏旺';
+    if (keys.includes('竞而能胜')) ok(strong, `身${c.strength.band}却报「竞而能胜」——策略与旺衰脱钩`);
+    if (keys.includes('竞则避正')) ok(!strong, `身${c.strength.band}却报「竞则避正」`);
+  }
+});
+t('性别没填:竞争层不硬猜——条目为空;盘上真有同类那股力时,note 要当面说明不硬断', () => {
+  let saidNote = false;
+  for (let i = 0; i < 600; i++) {
+    const c = Bazi.chart(new Date(1958 + (i * 11) % 62, (i * 5) % 12, 1 + (i * 7) % 28, (i * 3) % 24, 30), '', { lon: 116.4 });
+    const r = Mingge.read(c);
+    ok(r.jingzheng.items.length === 0, '性别未知不许出竞争条目');
+    if (/不硬断/.test(r.jingzheng.note)) saidNote = true;
+  }
+  ok(saidNote, '600 盘里竟没有一次「性别没填不硬断」的说明——note 是死条');
+});
+t('顶路叙事是一条因果链:底盘→为什么→发力窗→代价,连词齐、路名对、无术语', () => {
+  let n = 0;
+  for (const r of SAMPLE) {
+    if (r.top.score < 25) { ok(!r.story, '没登顶还讲故事:' + r.story); continue; }
+    n++;
+    ok(r.story, `登顶(${r.top.key} ${r.top.score})却没有叙事`);
+    ok(/先看底盘/.test(r.story) && /因为/.test(r.story) && /所以/.test(r.story), '因果连词缺席——并列短句一眼 AI,这正是要治的病:' + r.story.slice(0, 60));
+    ok(r.story.includes('「' + r.top.name.slice(0, r.top.name.indexOf('(')) + '」'), '叙事讲的不是登顶那条路');
+    ok(/代价/.test(r.story), '代价那一段丢了');
+    const rep = Tijian.check(r.story, {});
+    const hard = rep.hits.filter(i => ['空话', '说教', '花钱消灾', '术语'].includes(i.kind));
+    ok(!hard.length, `叙事体检不过:${hard.map(i => i.kind + ':' + i.snippet).join(';')}`);
+  }
+  ok(n >= 100, '登顶样本太少:' + n);
+});
+t('发力窗不许乱指:叙事里报的起运岁,必须真是头一步旺你的大运;性别缺失要改说补性别', () => {
+  let win = 0, noG = 0;
+  for (let i = 0; i < 600; i++) {
+    const g = i % 2 ? '男' : '女';
+    const c = chartOf(1962 + (i * 7) % 58, 1 + (i * 11) % 12, 1 + (i * 3) % 28, (i * 5) % 24, g);
+    const r = Mingge.read(c);
+    if (!r.story) continue;
+    const m = r.story.match(/等到([\d.]+)岁起/);
+    if (m) {
+      win++;
+      const fw = (c.dayun.list || []).find(d => c.yong.xiWx.includes(Bazi.GAN_WX[d.gz[0]]) || c.yong.xiWx.includes(Bazi.ZHI_WX[d.gz[1]]));
+      ok(fw && String(fw.fromAge) === m[1], `叙事报${m[1]}岁,实际头一步喜用大运在${fw && fw.fromAge}岁`);
+    }
+  }
+  for (let i = 0; i < 400; i++) {
+    const c = Bazi.chart(new Date(1960 + (i * 13) % 60, (i * 7) % 12, 1 + (i * 11) % 28, (i * 9) % 24, 30), '', { lon: 116.4 });
+    const r = Mingge.read(c);
+    if (r.story && /几时发力/.test(r.story)) { noG++; ok(/性别/.test(r.story), '大运缺席要说明是缺性别'); }
+  }
+  ok(win >= 30, '带发力窗的叙事太少:' + win);
+  ok(noG >= 5, '性别缺失的「补性别」提示一次没出:死条');
+});
+t('已过窗的口径:年龄明确大于窗尾时,要说「这窗你已走过」,不许当没到', () => {
+  let hit = 0;
+  for (let i = 0; i < 600 && !hit; i++) {
+    const g = i % 2 ? '男' : '女';
+    const c = chartOf(1955 + (i * 7) % 30, 1 + (i * 11) % 12, 1 + (i * 3) % 28, (i * 5) % 24, g);
+    const r0 = Mingge.read(c, { age: 65 });
+    const m = r0.story && r0.story.match(/等到([\d.]+)岁起/);
+    if (m && 65 > +m[1] + 10) { hit++; ok(/已走过/.test(r0.story), '65 岁的人还被当成没到窗:' + r0.story.slice(-80)); }
+  }
+  ok(hit, '构造不出已过窗样本');
+});
+
 console.log('【四】道德词禁表 + 性别口径 + 依据结论同向');
 t('全部白话输出(plain/say/verdict)一个道德词都不许有——引文除外', () => {
   const bad = [];
@@ -154,6 +235,7 @@ t('全部白话输出(plain/say/verdict)一个道德词都不许有——引文�
       ...r.roads.flatMap(x => x.ev.map(e => e.plain)),
       ...r.money.flatMap(m => [m.plain, ...(m.more || []).map(x => x.plain)]),
       ...r.zhi.map(z => z.plain), ...r.guanxi.items.map(g => g.plain), [r.guanxi.note],
+      ...r.jingzheng.items.map(j => j.plain), [r.jingzheng.note, r.story],
       ...r.mao.map(m2 => m2.plain), ...r.pang.map(p => p.say)].flat();
     // 引文除外(「」里的原话照抄不改字)——先剥再扫。这一类误伤前后已栽四次,规矩照 tijian 的 stripQuoted。
     for (const s0 of texts) { if (!s0) continue; const s = String(s0).replace(/「[^」]*」/g, '');
@@ -200,6 +282,7 @@ t('白话过体检员:无空话、无说教、无花钱消灾、无推演术语'
     for (const road of r.roads) for (const e of road.ev) texts.push(e.plain);
     for (const z of r.zhi) texts.push(z.plain);
     for (const g of r.guanxi.items) texts.push(g.plain);
+    for (const j of r.jingzheng.items) texts.push(j.plain);
     for (const m2 of r.mao) texts.push(m2.plain);
     for (const m of r.money) texts.push(m.plain);
   }
