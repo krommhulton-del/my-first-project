@@ -59,6 +59,7 @@ html = html
   .replace('<script src="yanpan.js"></script>', '<script>\n' + read('yanpan.js') + '\n</script>')
   .replace('<script src="hepan.js"></script>', '<script>\n' + read('hepan.js') + '\n</script>')
   .replace('<script src="mingge.js"></script>', '<script>\n' + read('mingge.js') + '\n</script>')
+  .replace('<script src="mingpan.js"></script>', '<script>\n' + read('mingpan.js') + '\n</script>')
   .replace('<script src="gaiyun.js"></script>', '<script>\n' + read('gaiyun.js') + '\n</script>')
   .replace('<script src="zhaigua.js"></script>', '<script>\n' + read('zhaigua.js') + '\n</script>')
   .replace('<script src="data/astro-vsop.js"></script>', '<script>\n' + read('data/astro-vsop.js') + '\n</script>')

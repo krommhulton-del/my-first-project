@@ -1180,6 +1180,34 @@ await t('星盘细读与时空盘:第一句+因果链、庙旺上界面、年运
   ok(/返 照 盘 与 本 命 盘/.test(sr), '返照要摆与本命的相位');
 });
 
+await t('命盘细读:十神组合+宫位+六亲+性格+健康+大运,无 Key 也全出(v1.00)', async () => {
+  // 缘起:用户 2026-08-02「八字的解读太少太少了,要深入的做」。守四件事:
+  // 六层全出、组合挂得出原话、凶的照说、大运缺性别时照实说不硬排。
+  await page.evaluate(() => {
+    localStorage.setItem('dongxuan_birth', '1990-05-20');
+    localStorage.setItem('dongxuan_birth_hour', '09:30');
+    localStorage.setItem('dongxuan_birth_place', '北京');
+    localStorage.setItem('dongxuan_gender', '女');
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(400);
+  await page.evaluate(() => window.dxOpenBoard('sec-mingpan'));
+  await page.waitForTimeout(200);
+  await page.click('#btn-mp-go');
+  await page.waitForTimeout(600);
+  const out = await page.locator('#mp-out').innerText();
+  for (const h of ['第 一 句', '四 柱 宫 位', '六 亲', '性 格', '健 康 倾 向', '大 运 逐 步'])
+    ok(out.includes(h), '缺这一层:' + h);
+  ok(/原话:「.+」《.+》/.test(out), '组合与六亲要把古书原话摆出来');
+  ok(/父母|兄弟|配偶|子女/.test(out), '六亲四路要在');
+  ok(/岁起/.test(out), '大运要落到岁数');
+  const honest = await page.locator('#mp-honest').innerText();
+  ok(/自拟/.test(honest) && /零回测/.test(honest), '诚实横幅要写明门槛自拟零回测:' + honest.slice(0, 50));
+  const r = Tijian.check(out.replace(/「[^」]*」/g, ''), {});
+  const bad = r.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
+  ok(!bad.length, '界面上有不该有的话:' + bad.map(h => h.kind + ':' + h.snippet).join(';'));
+});
+
 await t('占宅:六型摇卦即断、原话上界面、一疑一占的规矩写明(v0.93)', async () => {
   // 缘起:板块 C。守三件事:无 Key 也有程序初断、书上凭据挂在界面、jiu 型有疑处输入框。
   await page.evaluate(() => window.dxOpenBoard('sec-zhaigua'));

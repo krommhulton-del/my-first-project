@@ -367,5 +367,35 @@ t('缺位元素与该元素主星的状态必须合成,不许同一段里既说�
   console.log(`      (300 盘 ${n} 条缺位合成)`);
 });
 
+console.log('【十五】跨设备时区:同一生辰必须排出同一张盘(v0.99 用户报的真错)');
+t('UTC / 东八区 / 纽约 三种设备时区下,本命盘与行运首窗逐字节相同', () => {
+  // 缘起:用户 2026-08-02「你这个新盘排盘都是排错的」。跑数据证实——界面用
+  // new Date(y,m-1,d,h,mi) 建时刻,那是**看盘设备**的本地时区,而星历按绝对时刻算。
+  // 实测同一生辰:上升分别落 天蝎7.3°/巨蟹19.7°/射手26.3°,月亮也换星座。
+  // 修法:出生时刻收归 Astro.birthMoment(按出生地时区折),日期格式化按固定 TZ_OUT。
+  const { execFileSync } = require('node:child_process');
+  const code = `const A=require(${JSON.stringify(join(ROOT, 'astro.js'))});` +
+    `const c=A.chart(A.birthMoment(1990,5,20,9,30),{lat:39.9,lon:116.4});` +
+    `const tr=A.transits(c,new Date(Date.UTC(2026,7,2)),12);` +
+    `const mo=A.monthRun(c,new Date(Date.UTC(2026,7,2)));` +
+    `const sr=A.solarReturn(c,2026,{lat:39.9,lon:116.4});` +
+    `process.stdout.write(JSON.stringify({asc:c.asc,moon:c.planets.moon,w:tr.wins.map(w=>w.from+w.to),m:mo.luns.map(l=>l.date),s:sr.date}));`;
+  const outs = ['UTC', 'Asia/Shanghai', 'America/New_York', 'Pacific/Kiritimati'].map(tz =>
+    execFileSync(process.execPath, ['-e', code], { env: { ...process.env, TZ: tz }, encoding: 'utf8' }));
+  for (let i = 1; i < outs.length; i++) ok(outs[i] === outs[0], `设备时区一换结果就变了(第 ${i} 个)——排盘吃了设备时区`);
+  const o = JSON.parse(outs[0]);
+  ok(o.asc.sign === '狮子', '1990-05-20 09:30 北京的上升应在狮子,实得 ' + o.asc.sign + o.asc.deg);
+  console.log(`      (四个时区逐字节一致;上升 ${o.asc.sign}${o.asc.deg}°、月亮 ${o.moon.sign}${o.moon.deg}°)`);
+});
+t('birthMoment 是唯一入口:界面不许再自己 new Date 建出生时刻', () => {
+  const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
+  // 先剥掉注释再扫——第一版栽在自己的注释上:那段注释正解释着「new Date(y,m-1,…) 是病根」,
+  // 于是断言把解释病根的话当成了病根本身。同类自伤这是第六次,规矩是**扫代码前先去注释**。
+  const seg = html.slice(html.indexOf('function xzBirthDate'), html.indexOf('function xzWheel'))
+    .split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
+  ok(!/new Date\(\s*y\s*,\s*m\s*-\s*1/.test(seg), '星盘那一段又出现了本地时区的 new Date(y,m-1,...)');
+  ok(/Astro\.birthMoment/.test(seg), '出生时刻必须走 Astro.birthMoment');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

@@ -32,6 +32,14 @@
   };
 
   // ── 时间 ──
+  // **出生时刻只此一个入口**(v0.99 加):用户填的是出生地的钟表时,必须按**出生地时区**
+  // 折成绝对时刻。此前界面直接 new Date(y,m-1,d,h,mi),那是**看盘设备**的时区——
+  // 实测同一生辰在 UTC / 东八区 / 纽约三种设备时区下,上升点分别落天蝎、巨蟹、射手,
+  // 月亮也换星座。这是真错,不是精度问题。tzMin 默认 480(东八区,坐标库为中国城市)。
+  function birthMoment(y, mo, d, h, mi, tzMin) {
+    const tz = tzMin == null ? 480 : tzMin;
+    return new Date(Date.UTC(y, mo - 1, d, h || 0, mi || 0) - tz * 60000);
+  }
   // TT−UTC 取 69s(2020 年代实值;误差逐年 ±1s,对行星经度影响 <0.003°,照实记不逐年拟合)
   const jdOf = date => date.getTime() / 86400000 + 2440587.5 + 69 / 86400;
 
@@ -344,7 +352,12 @@
   // 排盘层:行运星位置与本命同一套星历,可核可验。**应期解读是通行占星口径,零回测**。
   const lonAt = (k, jd) => k === 'moon' ? moonPos(jd).lon : geo(k, (jd - 2451545) / 365250).lon;
   const dateOfJd = jd => new Date((jd - 2440587.5 - 69 / 86400) * 86400000);
-  const fmtD = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  // **日期格式化按固定时区,不用设备本地时区**(v0.99 修的真错的另一半):
+  // getFullYear/getMonth 取的是运行环境的本地字段,同一个绝对时刻在不同设备上会格式化成
+  // 不同的日子——应期就会差一天,且「答案之锚」失效。这里统一按东八区(坐标库是中国城市)。
+  const TZ_OUT = 480;
+  const fmtD = d => { const t = new Date(d.getTime() + TZ_OUT * 60000);
+    return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`; };
   const MOVER_TR = { jup: '木星', sat: '土星', ura: '天王星', nep: '海王星' };
   const T_SHORT = { sun: '本命太阳', moon: '本命月亮', mer: '本命水星', ven: '本命金星', mar: '本命火星', asc: '上升点', mc: '天顶' };
   // 行运判语落到生活领域:每条 = 结论 + 通常表现 + 做法,不许拿比喻凑数
@@ -543,7 +556,8 @@
   function solarReturn(natal, year, opts) {
     const L0 = natal.planets.sun.lon;
     const bd = natal.date;
-    let jd = jdOf(new Date(Date.UTC(year, bd.getMonth(), bd.getDate(), 12))) - 3;
+    const bdz = new Date(bd.getTime() + TZ_OUT * 60000);   // 生日的月日按出生地时区取,不用设备本地字段
+    let jd = jdOf(new Date(Date.UTC(year, bdz.getUTCMonth(), bdz.getUTCDate(), 12))) - 3;
     let lo = jd, hi = jd + 6;
     const f = j => { let d = lonAt('sun', j) - L0; while (d > 180) d -= 360; while (d < -180) d += 360; return d; };
     while (f(lo) > 0) lo -= 1;
@@ -629,5 +643,5 @@
   }
 
   return { chart, aspectsOf, synastry, material, ascendant, moonPos, geo, jdOf, SIGNS, PLANET_CN, PLAIN, ASPECTS, HONEST, KEYS,
-    deepRead, transits, monthRun, solarReturn, lunations, dignity, RULER, EXALT, SIGN_CHAR, HOUSE_PLAIN, lonAt };
+    deepRead, transits, monthRun, solarReturn, lunations, dignity, RULER, EXALT, SIGN_CHAR, HOUSE_PLAIN, lonAt, birthMoment, TZ_OUT };
 }));

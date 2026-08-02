@@ -777,7 +777,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.99</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.00</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1041,6 +1041,7 @@
       <button class="bcard" data-b="sec-hepan"><span class="bg">合</span><span><span class="bt">双 人 合 盘 · 这人跟你对不对得上</span><span class="bd">两副盘摆一起逐层看:他旺不旺你、你旺不旺他、处起来顺不顺、缺的那一味补不补得上、未来十年谁上谁下。恋爱/合伙/朋友/共事分开算</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-xingpan"><span class="bg">星</span><span><span class="bt">西 洋 星 盘 · 细读、年运与合盘</span><span class="bd">九曜逐度实算(VSOP87 星历)+ 本命细读(庙旺、失衡、命主星、图形相位,断成一条因果链);时空盘看未来:年运逐日扫应期窗口、月运带朔望与水逆、太阳返照生日年运盘;双人合盘照旧。与中式那套并排摆,永不互相计分</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-zhaigua"><span class="bg">宅</span><span><span class="bt">占 宅 · 这 处 住 得 住 不 住</span><span class="bd">现住的宅指着疑处问、买房盖房租房、要不要弃旧换新、入宅择日按亲分占、修方动土、看地形势——六型各按《增删卜易》原章断,无 Key 也有程序初断</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-mingpan"><span class="bg">盘</span><span><span class="bt">命 盘 细 读 · 一 张 八 字 从 头 讲 一 遍</span><span class="bd">十神组合十六款(条条挂古书原话、凶的照说)、四柱宫位、六亲(父母兄弟配偶子女)、性格、健康倾向、大运逐步主题——这是把一张八字讲透的那一层,不是标签堆</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-mingge"><span class="bg">饭</span><span><span class="bt">命 格 取 向 · 这 人 该 吃 哪 碗 饭</span><span class="bd">仕途、买卖、手艺、文教、武职、清静饭——六路逐条给分,条条挂古书原话;钱从哪条路来、代价是什么,照实说,不绕弯</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yanpan"><span class="bg">验</span><span><span class="bt">验 盘 簿 · 这程序对你到底准不准</span><span class="bd">先让它把对某一年的判断封起来(你看不见),你再写下那年实际发生了什么,然后开封计分——连它错在哪几件都摆出来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
@@ -1360,6 +1361,21 @@
     <div class="stream" id="zg-ai"></div>
   </section>
 
+  <section id="sec-mingpan" class="voff">
+    <h2>命 盘 细 读 · 一 张 八 字 从 头 讲 一 遍</h2>
+    <div class="ypwarn" id="mp-honest"></div>
+    <div class="note">按顶栏当前那份生辰排(换人去「生辰档案」切)。这一页补的是此前缺的那一层——
+      <b>十神组合、四柱宫位、六亲、性格、健康倾向、大运逐步</b>。规矩照旧:每条挂得出古书原话,
+      <b>凶的照说不打折</b>,健康那一层说的是倾向不是诊断。</div>
+    <div class="qwrow">
+      <button type="button" class="primary" id="btn-mp-go">细 读 这 张 盘</button>
+      <button type="button" class="gold hidden" id="btn-mp-ai">请东玄把这盘讲透</button>
+    </div>
+    <div class="err" id="mp-err"></div>
+    <div id="mp-out"></div>
+    <div class="stream" id="mp-ai"></div>
+  </section>
+
   <section id="sec-mingge" class="voff">
     <h2>命 格 取 向 · 这 人 该 吃 哪 碗 饭</h2>
     <div class="ypwarn" id="mg-honest"></div>
@@ -1550,7 +1566,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.99 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.00 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1592,6 +1608,7 @@
 <script src="yanpan.js"></script>
 <script src="hepan.js"></script>
 <script src="mingge.js"></script>
+  <script src="mingpan.js"></script>
 <script src="gaiyun.js"></script>
 <script src="zhaigua.js"></script>
 <script src="data/astro-vsop.js"></script>
@@ -4785,8 +4802,10 @@
     if (!bd) return null;
     const [y, m, d] = bd.split('-').map(Number);
     const hm = dxParseHour(localStorage.getItem(HRKEY) || '');
-    // 星盘吃钟表时,不折真太阳时(那是八字的规矩,占星按民用时+时区)
-    return { date: new Date(y, m - 1, d, hm.h, hm.mi), hourKnown: !!(localStorage.getItem(HRKEY) || '').trim() };
+    // 星盘吃钟表时,不折真太阳时(那是八字的规矩,占星按民用时+时区)。
+    // **但必须按出生地时区折成绝对时刻**——用 new Date(y,m-1,d,h,mi) 折的是看盘设备的时区,
+    // 实测设备换个时区,上升点就换星座(v0.99 修的真错)。入口收归 Astro.birthMoment。
+    return { date: Astro.birthMoment(y, m, d, hm.h, hm.mi), hourKnown: !!(localStorage.getItem(HRKEY) || '').trim() };
   }
   function xzGeoOf(place) {
     try { const p = Dili.find(place || localStorage.getItem(PLKEY) || ''); if (p) return { lat: p[1], lon: p[2] }; } catch (e) {}
@@ -4806,7 +4825,7 @@
     const [y, m, d] = String(p.date).split('-').map(Number);
     const hm = dxParseHour(p.time || '');
     const g = xzGeoOf(p.place);
-    return Astro.chart(new Date(y, m - 1, d, hm.h, hm.mi), { lat: g.lat, lon: g.lon, hourKnown: !!(p.time || '').trim() });
+    return Astro.chart(Astro.birthMoment(y, m, d, hm.h, hm.mi), { lat: g.lat, lon: g.lon, hourKnown: !!(p.time || '').trim() });
   }
   function xzWheel(c, c2) {
     const cv = $('xz-wheel'); if (!cv) return;
@@ -5071,6 +5090,59 @@
       mgRender(Mingge.read(c, { age: isFinite(mgA) ? mgA : null }));
     });
     $('btn-mg-ai').addEventListener('click', mgAI);
+  }
+
+  // ═══════════════════ 命盘细读(v1.00 板块 B′):引擎 mingpan.js,断法全在引擎里算死 ═══════════════════
+  let mpChart = null;
+  const mpErr = m => { $('mp-err').textContent = m || ''; };
+  function mpRender(r) {
+    const tone = t => t === '吉' ? 'good' : t === '凶' ? 'bad' : 'dim';
+    $('mp-out').innerHTML =
+      `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(r.verdict)}</div>` +
+      `<div class="hpv ypline">${esc(r.story)}</div></div>` +
+      (r.combos.length ? `<div class="ypbox"><h4>十 神 组 合(条条挂原话,凶的照说)</h4>` +
+        r.combos.map(c => `<div class="hprel"><b>${esc(c.title)}</b> <span class="dat ${tone(c.tone)}">${esc(c.tone)}</span>` +
+          `<div class="hpv">${esc(c.plain)}</div>` +
+          `<div class="note ypflat">原话:「${esc(c.quote)}」《${esc(c.src)}》</div></div>`).join('') + `</div>`
+        : `<div class="ypbox"><h4>十 神 组 合</h4><div class="hpv">这副盘没有触发古书点名的那些组合——结构平顺,起落主要看大运流年。</div></div>`) +
+      `<div class="ypbox"><h4>四 柱 宫 位(哪一段管哪一头)</h4>` +
+      r.palaces.map(p => `<div class="hpv ypline">· ${esc(p.plain)}</div>`).join('') +
+      `<div class="note ypflat">原话:「${esc(r.palaces[0].quote)}」《${esc(r.palaces[0].src)}》</div></div>` +
+      `<div class="ypbox"><h4>六 亲</h4>` +
+      r.kin.map(k => `<div class="hprel"><b>${esc(k.who)}</b><div class="hpv">${esc(k.plain)}</div>` +
+        `<div class="note ypflat">原话:「${esc(k.quote)}」《${esc(k.src)}》</div></div>`).join('') + `</div>` +
+      `<div class="ypbox"><h4>性 格</h4><div class="hpv">${esc(r.personality)}</div></div>` +
+      `<div class="ypbox"><h4>健 康 倾 向(是倾向不是诊断)</h4><div class="hpv">${esc(r.health.plain)}</div>` +
+      `<div class="note ypflat">原话:「${esc(r.health.quote)}」《${esc(r.health.src)}》</div></div>` +
+      (r.dayun.unknown
+        ? `<div class="ypbox"><h4>大 运 逐 步</h4><div class="hpv">${esc(r.dayun.note)}</div></div>`
+        : `<div class="ypbox"><h4>大 运 逐 步(一步十年,各是什么主题)</h4>` +
+          r.dayun.steps.map(x => `<div class="hpv ypline${x.now ? ' key' : ''}">· ${esc(x.plain)}</div>`).join('') +
+          `<div class="note ypflat">${esc(r.dayun.note)}(原话:「${esc(r.dayun.quote)}」《${esc(r.dayun.src)}》)</div></div>`);
+    $('mp-honest').textContent = r.honest;
+    $('btn-mp-ai').classList.remove('hidden');
+  }
+  async function mpAI() {
+    if (!mpChart) return;
+    if (!getKey()) { mpErr('要东玄讲透,先在「问卦」那页的「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
+    mpErr(''); $('mp-ai').textContent = '';
+    try {
+      const a = parseFloat(qAge('q'));
+      await llmStream([{ role: 'user', content: Mingpan.material(mpChart, { age: isFinite(a) ? a : null }) }],
+        t => { $('mp-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+      dxTijian($('mp-ai'), $('mp-ai').textContent);
+    } catch (e) { mpErr('讲透失败:' + aiErrHint(e, $('ai-provider').value)); }
+  }
+  if ($('btn-mp-go')) {
+    $('btn-mp-go').addEventListener('click', () => {
+      const c = dxBirthChart('q');
+      if (!c) { mpErr(dxWhyNoChart()); return; }
+      mpErr(c.genderKnown ? '' : '性别没填:组合、宫位、六亲、性格、健康照给,但大运那一层排不出(性别一换顺逆全反),配偶星那一层也不硬断。');
+      mpChart = c;
+      const a = parseFloat(qAge('q'));
+      mpRender(Mingpan.read(c, { age: isFinite(a) ? a : null }));
+    });
+    $('btn-mp-ai').addEventListener('click', mpAI);
   }
 
   // ═══════════════════ 改运·运的行当(v0.91 板块 D):引擎 gaiyun.js,一个断法不自算 ═══════════════════
@@ -5773,11 +5845,11 @@
 
   const VIEWS = {
     ask: ['sec-quick', 'sec-today', 'sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-xingpan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
+    boards: ['board-menu', 'sec-vs', 'sec-mingpan', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-xingpan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-xingpan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-vs', 'sec-mingpan', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-xingpan', 'sec-zhaigua', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {
