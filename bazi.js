@@ -166,7 +166,15 @@
       yong = { strong: true, xiWx: [me, yin], jiWx: [KE[me], invKe(me), SHENG[me]].filter((v, i, a) => a.indexOf(v) === i), xiName: '比劫·印(从其强势)', jiName: '克泄耗(逆势为忌)' };
     } else if (cong && cong.type === '从弱') {
       const me = GAN_WX[dayGan];
-      yong = { strong: false, xiWx: [KE[me], SHENG[me], invKe(me)], jiWx: [me, invSheng(me)], xiName: '财官食伤(从其弱势)', jiName: '比劫·印(逆势为忌)' };
+      yong = { strong: false, xiWx: [KE[me], SHENG[me], invKe(me)], jiWx: [me, invSheng(me)],
+        xiName: '财官食伤(从其弱势)' + (cong.shiName ? ';' + cong.shiName : ''), jiName: '比劫·印(逆势为忌)' };
+    } else if (cong && cong.type === '从气') {
+      // 原文把用法也写死了:「气势在木火,要行木火运;气势在金水,要行金水运,反此必凶」——
+      // 喜的就是那两行,其余三行一律为忌,不再按扶抑分强弱。
+      yong = { strong: strength.strong, xiWx: cong.qiWx.slice(),
+        jiWx: ['木', '火', '土', '金', '水'].filter(w => !cong.qiWx.includes(w)),
+        xiName: `${cong.qiWx.join('')}(顺其气势,原文「气势在${cong.qiWx.join('')},要行${cong.qiWx.join('')}运」)`,
+        jiName: '其余三行(逆其气势,原文「反此必凶」)' };
     }
     // 命局内支冲:宫位互冲入注(年=根基长辈,月=门户事业,日=自身婚姻,时=子女晚景)
     const GONG = { year: '根基宫(长辈)', month: '门户宫(事业)', day: '婚姻宫(自身)', hour: '子女宫(晚景)' };
@@ -487,12 +495,40 @@
     const me = GAN_WX[dayGan], yin = invSheng(me);
     const noRoot = st.congHasRoot === undefined ? !st.hasRoot : !st.congHasRoot;
     if (noRoot && st.yinPower <= 8 && st.tong <= 20) {
+      // 从势细目(《滴天髓阐微·从象章》:「视其财官食伤之中,何其独旺,则从旺者之势。
+      // 如三者均停,不分强弱,须行财运以和之」)——从的是哪一神,原文写死了取法。
+      const cai = st.detail.财 || 0, guan = st.detail.官杀 || 0, shi2 = st.detail.食伤 || 0;
+      const arr = [['财', cai], ['官杀', guan], ['食伤', shi2]].sort((x, y) => y[1] - x[1]);
+      const junTing = arr[0][1] - arr[2][1] <= 8;      // 三者均停(差距 ≤8,自拟门槛)
+      const congShen = junTing ? '财' : arr[0][0];
       return { type: '从弱', name: '从弱格(四支无根、印星无力,弃命从势)',
+        shi: congShen, junTing,
+        shiName: junTing
+          ? '三者均停,按古法取财运和解(引通食伤之气、助其财官之势)'
+          : `财官食伤之中${congShen}独旺,从的是这一路之势`,
         margin: +Math.min(20 - st.tong, 8 - st.yinPower).toFixed(1) };
     }
     if ((st.detail.财 + st.detail.官杀) <= 3 && st.tong >= 70 && ['当令', '得月令之生'].includes(st.deLing)) {
       return { type: '从强', name: '从强格(满局生扶、财官几无,顺其强势)',
         margin: +Math.min(st.tong - 70, 3 - (st.detail.财 + st.detail.官杀)).toFixed(1) };
+    }
+    // 从气格(v1.01 新增,《滴天髓阐微·从象章》原文:
+    // 「从气者,不论财官、印绶、食伤之类,如气势在木火,要行木火运,气势在金水,要行金水运,反此必凶」)
+    // ——看的是**全局气势偏向哪两个相生之行**,不论十神类别,而且**原文没要求无根**:
+    // 手抄命例「癸酉癸亥庚申丁亥」庚金坐申(本气根)仍断从气金水,正是这个道理。
+    // 次序排在从弱、从强之后:那两格更具体(一个弃命从他、一个印比同心),先让它们认领。
+    // 门槛「相生两行合计 ≥84 且日主在这一对里」是本项目自拟的,写明可吵——
+    // 逐档量过(4000 盘):80→4.03% · 82→2.90% · **84→2.15%** · 85→1.60%(手抄那一例就掉出去了)。
+    // 取 84 是因为再高就把唯一的外部证据挤掉;**代价照实记:那一例实测 84.5,余量只有 0.5 分**,
+    // 换个人元司令天数就可能掉出去——这一格的门槛是全项目最脆的一处,后续有命例要重新校。
+    // 日主不在这一对里的,气势与日主相背,那是从弱不是从气,不许混。
+    const SHENG_PAIRS = [['木', '火'], ['火', '土'], ['土', '金'], ['金', '水'], ['水', '木']];
+    const bestPair = SHENG_PAIRS
+      .map(pr => ({ wx: pr, v: (st.pow[pr[0]] || 0) + (st.pow[pr[1]] || 0) }))
+      .sort((x, y) => y.v - x.v)[0];
+    if (bestPair && bestPair.v >= 84 && bestPair.wx.includes(me)) {
+      return { type: '从气', name: `从气格(全局气势在${bestPair.wx.join('')},顺其气势而行)`,
+        qiWx: bestPair.wx.slice(), margin: +(bestPair.v - 84).toFixed(1) };
     }
     if (noRoot && st.tong <= 30) {
       return { type: '假从', name: '假从(无根而印比尚存一线,不作真从论,仍以扶抑为主)',
