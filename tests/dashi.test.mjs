@@ -143,8 +143,13 @@ t('事宜随喜忌翻面:同一颗十神,为喜与为忌给的做法必须不同
   ok(ya.yi.join() !== yb.yi.join(), '喜忌相反却给同一套宜:' + ya.yi.join());
 });
 t('神煞带来的具体事项确实进了清单(文昌→递材料、羊刃→别动利器、空亡→别开业)', () => {
+  // v1.01:原先只扫固定的几副样盘 × 120 天。从格口径一改,其中一副的喜忌变了,
+  // 羊刃那一支就扫不到了——**是测试样本太窄,不是分支死了**(独立扫 80 盘实测触发率 7.38%)。
+  // 修法是把样本加宽,不是把断言放松。
   let wc = 0, yr = 0, kw = 0;
-  for (const c of charts) {
+  const wide = charts.concat(Array.from({ length: 24 }, (_, i) =>
+    Bazi.chart(new Date(1960 + (i * 7) % 60, (i * 5) % 12, 1 + (i * 11) % 28, (i * 3) % 24, 30), i % 2 ? '男' : '女', { lon: 116.4 })));
+  for (const c of wide) {
     for (let d = 0; d < 120; d++) {
       const cd = Yunshi.riYun(c, new Date(2026, 0, 1 + d * 3, 12));
       const all = (cd.yi || []).concat(cd.ji || []).join(' ');

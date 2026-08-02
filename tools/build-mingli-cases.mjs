@@ -27,9 +27,37 @@ function labelBand(txt) {
   if (/(日主|日元|身)(甚|太|极)?弱|弱之极|(日主|日元)休囚/.test(txt) && !/不弱|虽弱/.test(txt)) return '弱';
   return null;
 }
+// 从格标签(v1.01 重写)——**头一版是错的,而且错得很凶**:
+// 原来只要判语里出现「从财/从杀/从儿/从旺/从强」五个字就收,于是把这三类全收成了「从格」:
+//   ① **否定句**:dtsy-077「非前造从强论也」、dtsy-231「不能弃命从杀」——原文明说不是;
+//   ② **假设句**:dtsy-079「倘年月时干不杂财官…谓之从强」、dtsy-169「若生丑戌月,为从儿格」
+//      (紧接着「生于未月…必以未中丁火为用」,明说这盘不是);
+//   ③ **理论讨论**:dtsy-063「故旧有从强之说」、dtsy-416「乃从旺从弱之理」、
+//      dtsy-492 把「化气、从气、神气、精气」当术语罗列。
+// 后果:34 例的「从格复现率 38.2%」量的是噪声,而 v0.96 记的「从格纹丝不动」也就无从谈起。
+// 现在改成:**必须命中肯定式的判语句式,且窗口内不许有否定词或假设词**。
+// 判不了的一律标 null(不硬猜)——宁可样本少,不要样本脏。
+const CONG_POS = /(其势从|弃命从|作从[财杀儿旺强势气]论|为从[财杀儿旺强势气]格|真从[财杀儿旺强势气]|只得从|宜从|从[财杀儿旺强势气]格也|从[财杀儿旺强势气]是也|以从[财杀儿旺强势气])/;
+const CONG_NEG = /(非|不能|不可|不作|不宜|岂能|焉能|莫作|若|倘|如原|之说|之理|之意|旧有)/;
 function labelCong(txt) {
-  const m = txt.match(/从(财|杀|儿|旺|强|势|气)/);
-  return m ? '从' + m[1] : (/(不|岂能|焉能)从/.test(txt) ? '不从' : null);
+  // 先找肯定式句式,再看它所在的那一句里有没有否定/假设/理论标记
+  const m = txt.match(CONG_POS);
+  if (m) {
+    const at = m.index;
+    // 取这一句(前后以句读为界)判有没有否定或假设
+    const lo = Math.max(0, txt.lastIndexOf('，', at) + 1 || 0);
+    const sentStart = Math.max(txt.lastIndexOf('。', at) + 1, txt.lastIndexOf('；', at) + 1, 0);
+    const sentEnd = (() => { const a2 = txt.indexOf('。', at), b2 = txt.indexOf('；', at);
+      const c2 = [a2, b2].filter(x => x > 0); return c2.length ? Math.min(...c2) : txt.length; })();
+    const sent = txt.slice(sentStart, sentEnd);
+    if (!CONG_NEG.test(sent)) {
+      const k = sent.match(/从([财杀儿旺强势气])/);
+      if (k) return '从' + k[1];
+    }
+  }
+  // 明确的否定判语才收「不从」(原文自己说不能从)
+  if (/(不能弃命从|不作从[财杀儿旺强势气]论|非[^。；]{0,8}从[财杀儿旺强势气]论|不可从|岂能从|焉能从)/.test(txt)) return '不从';
+  return null;
 }
 function labelOutcome(txt) {
   const good = /(仕至|科甲|连登|发甲|鼎甲|巨富|大富|丰盈|名利两全|寿至|显宦|黄堂|方伯|尚书|侍郎|观察|司马|州牧|县令|遗业丰|万缗|万金)/.test(txt);

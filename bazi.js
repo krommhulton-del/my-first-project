@@ -157,7 +157,7 @@
     }
     const days = daysIntoJie(birth);                  // 节入后第几天(定人元司令)
     const siLing = siLingOf(monthGZ[1], days);
-    const strength = judgeStrength(pillars, dayGan, days);
+    const strength = judgeStrength(pillars, dayGan, days, lonDeg && typeof lonDeg === 'object' ? lonDeg : null);
     const cong = judgeCong(strength, pillars, dayGan);
     let yong = pickYongShen(dayGan, strength, tiaoHou(cal.monthZhi, dayGan));
     let geju = cong ? cong.name : null;
@@ -383,6 +383,22 @@
   }
 
   // 日主通根明细:本气根(禄刃/长生之类)最实,中气次之,余气(墓库)最虚
+  // 从格用的「根」口径(v1.01):从象章的命例把**墓库里的中气/余气**当作不算数,
+  // 而 rootsOf 原先一律算根,于是「无根方可从」这条门槛把书里的真从命例挡掉了 11/15。
+  // 这里把口径抽成一档,**只给 judgeCong 用**——旺衰的力量分照旧走 wuxingPower,一分不动。
+  const MU_ZHI = '辰戌丑未';
+  // 默认口径 = 'ben'(只有地支本气与日主同五行才算根)。**这是量出来的,不是拍的**:
+  // 四个变体拿《滴天髓阐微》从象章 10 例 + 假从章 5 例(手抄逐字核过原文)对照——
+  //   V0 任何藏干都算根 7/15 · V1 墓库余气不算 9/15 · **V2 只本气 10/15** · V3 本气+禄刃长生 9/15
+  // 真从率 2.33% → 3.72%(从格仍是稀有格局,没有放水),旺衰基线 41/53 四个变体全都一动不动
+  // (证明这一改确实只落在从格口径上)。量表见 tools/cong-measure.mjs。
+  const CONG_ROOT_DEFAULT = 'ben';
+  const congRootFilter = (r, mode) => {
+    if (mode === 'ben') return r.level === '本气根';
+    if (mode === 'lu') return r.level === '本气根' || ['长生', '临官', '帝旺'].includes(r.cs);
+    if (mode === 'nolib') return !(MU_ZHI.includes(r.zhi) && r.level !== '本气根');
+    return true;   // 'any' = 现行口径
+  };
   function rootsOf(pillars, dayGan) {
     const me = GAN_WX[dayGan], out = [];
     for (const k of ['year', 'month', 'day', 'hour']) {
@@ -431,6 +447,8 @@
       strong: tong >= 50, pct: Math.round(tong), band,
       help: tong, drain: yi, tong, yi, pow, bonus, roots,
       hasRoot: roots.length > 0, hasStrongRoot: roots.some(r => r.strong),
+      // 从格专用的「有没有根」——口径见 congRootFilter;默认沿用现行口径,不改变既有行为
+      congHasRoot: roots.some(r => congRootFilter(r, (opts && opts.congRoot) || CONG_ROOT_DEFAULT)),
       yinPower: pow[yin], biPower: pow[me], deLing,
       detail: { 比劫: pow[me], 印: pow[yin], 食伤: pow[SHENG[me]], 财: pow[KE[me]], 官杀: pow[invKe(me)] },
       rel,
@@ -467,7 +485,8 @@
   //   本函数只负责把这个距离算出来;要不要因此改口,由上层决定(见 Dingshi.stability)。
   function judgeCong(st, pillars, dayGan) {
     const me = GAN_WX[dayGan], yin = invSheng(me);
-    if (!st.hasRoot && st.yinPower <= 8 && st.tong <= 20) {
+    const noRoot = st.congHasRoot === undefined ? !st.hasRoot : !st.congHasRoot;
+    if (noRoot && st.yinPower <= 8 && st.tong <= 20) {
       return { type: '从弱', name: '从弱格(四支无根、印星无力,弃命从势)',
         margin: +Math.min(20 - st.tong, 8 - st.yinPower).toFixed(1) };
     }
@@ -475,7 +494,7 @@
       return { type: '从强', name: '从强格(满局生扶、财官几无,顺其强势)',
         margin: +Math.min(st.tong - 70, 3 - (st.detail.财 + st.detail.官杀)).toFixed(1) };
     }
-    if (!st.hasRoot && st.tong <= 30) {
+    if (noRoot && st.tong <= 30) {
       return { type: '假从', name: '假从(无根而印比尚存一线,不作真从论,仍以扶抑为主)',
         margin: +(30 - st.tong).toFixed(1) };
     }

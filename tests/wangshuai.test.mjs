@@ -162,16 +162,22 @@ t('日主之根按本气/中气/余气分级,禄刃之根记为本气', () => {
 });
 
 console.log('【三】从格铁门槛:有根不从');
-t('扫描四千盘:凡判从弱格者,四支必无一丝日主之根', () => {
+// v1.01 改口径后这两条要跟着改——**改的是定义,不是把门槛拆了**:
+// 「有根不从」这条铁律照旧,只是「什么算根」按《滴天髓阐微·从象章》的命例重定为**只认本气**。
+// 原文自己两边都说过(衰旺章、地支章把库根当根,从象章的命例又当它不是),
+// 判从格该以**讲从格的那一章**的命例为准——那一章 15 例实测 7/15 → 10/15。
+// 代价照实记:v0.54 手挑的三副「误判样本」里,己丑丁丑甲子戊辰 与 壬辰壬子丁亥庚戌
+// 在新定义下重新落回从弱(它们的根都在墓库里)。两边证据打架,取证据更对口的那一边。
+t('扫描四千盘:凡判从弱格者,四支必无一丝日主之**本气**根', () => {
   const d0 = new Date(1950, 0, 1);
   let ruo = 0, bad = 0;
   for (let i = 0; i < 4000; i++) {
     const d = new Date(d0.getTime() + i * 7 * 86400000); d.setHours((i % 12) * 2 + 1);
     const c = Bazi.chart(new Date(d), i % 2 ? '男' : '女');
-    if (c.cong && c.cong.type === '从弱') { ruo++; if (c.strength.hasRoot) bad++; }
+    if (c.cong && c.cong.type === '从弱') { ruo++; if (c.strength.congHasRoot) bad++; }
   }
   ok(ruo > 0, '样本里应当有从弱格');
-  eq(bad, 0, '有根却判从弱的盘数');
+  eq(bad, 0, '有本气根却判从弱的盘数');
 });
 t('从格是稀有格局:真从占比应在 5% 以内(旧法曾高达 11%)', () => {
   const d0 = new Date(1950, 0, 1);
@@ -183,12 +189,26 @@ t('从格是稀有格局:真从占比应在 5% 以内(旧法曾高达 11%)', () 
   }
   ok(cong / n < 0.05, '从格占比=' + (cong / n * 100).toFixed(2) + '%');
 });
-t('曾误判的三个实盘,今判正格身弱且指得出根', () => {
-  for (const [four, wantRoot] of [['己丑丁丑甲子戊辰', '辰'], ['辛卯己亥丙子癸巳', '巳'], ['壬辰壬子丁亥庚戌', '戌']]) {
+t('v0.54 那三副实盘:根照旧认得出;从不从按新定义分成两类,照实钉', () => {
+  // v0.54 立这条时用的是旧定义(任何藏干都算根),三副盘一律要求「不从」。
+  // v1.01 按从象章命例把「根」重定为只认本气之后,其中两副的根都在墓库里(辰中乙、戌中丁),
+  // 于是重新落回从弱。**这不是把测试改绿,是定义变了**——两边证据打架时取更对口的那一边,
+  // 代价写在明处:①根照旧要认得出(rootsOf 一分不动,专业区照旧摆得出来);
+  // ②本气根还在的那一副(丙坐巳=禄)必须照旧不从——这一条守住了,说明门槛没被拆掉。
+  const CASES = [
+    ['己丑丁丑甲子戊辰', '辰', false],   // 甲木之根在辰(中气乙木,墓库)→ 新定义下不算根
+    ['辛卯己亥丙子癸巳', '巳', true],    // 丙火坐巳=本气根·临官 → 照旧不从
+    ['壬辰壬子丁亥庚戌', '戌', false],   // 丁火之根在戌(中气,火墓)→ 新定义下不算根
+  ];
+  for (const [four, wantRoot, mustNotCong] of CASES) {
     const c = mkChart(four);
-    ok(!c.geju || !c.geju.includes('从弱'), four + ' 仍被判从弱');
-    ok(c.strength.roots.some(r => r.zhi === wantRoot), four + ' 应认出' + wantRoot + '中之根');
-    ok(c.yong.xiWx.includes(c.dayWx), four + ' 身弱当喜比劫');
+    ok(c.strength.roots.some(r => r.zhi === wantRoot), four + ' 应认出' + wantRoot + '中之根(根的清单一分没动)');
+    if (mustNotCong) {
+      ok(!c.cong || c.cong.type !== '从弱', four + ' 有本气根却判从弱——门槛被拆了');
+      ok(c.yong.xiWx.includes(c.dayWx), four + ' 身弱当喜比劫');
+    } else {
+      ok(!c.strength.congHasRoot, four + ' 的根在墓库,新定义下不该算本气根');
+    }
   }
 });
 t('假从只作标注,不翻喜忌(宁可少断,不可反断)', () => {
@@ -367,6 +387,56 @@ t('命例基线不许倒退:旺衰子集复现 ≥ 41/53(v0.96 合化落地后�
   }
   ok(n === 53, '旺衰子集该 53 例,实得 ' + n);
   ok(hit >= 41, `复现 ${hit}/53,倒退了(v0.96 基线 41)`);
+});
+
+console.log('【从格的根:v1.01 拿从象章命例定的口径】');
+t('从格用的「根」只认地支本气——四变体量过,这一档在手抄命例上最准', () => {
+  // 缘起:命例基线里「从格 38.2%」挂了三个版本纹丝不动,这一轮查出**那个数本身是错的**:
+  // 抽标签的正则把否定句(「非前造从强论也」「不能弃命从杀」)、假设句(「倘…谓之从强」)、
+  // 理论讨论(「旧有从强之说」)全当判语收了,34 例里 30 例是假标签。
+  // 可信的尺是 v0.76 手抄的 15 例(从象章 10 + 假从章 5,逐字核回原文)。四变体实测:
+  //   任何藏干算根 7/15 · 墓库余气不算 9/15 · **只本气 10/15** · 本气+禄刃长生 9/15
+  // 真从率 2.33%→3.72%(仍是稀有格局),旺衰基线四变体全为 41/53(证明只动了从格口径)。
+  const HAND = [['戊戌丙辰乙未丙戌', 1], ['壬寅壬寅庚寅戊寅', 1], ['丙寅庚寅壬午乙巳', 1],
+    ['丁卯壬寅庚午丙戌', 1], ['辛巳辛丑乙酉乙酉', 1], ['癸卯乙卯甲寅乙亥', 1],
+    ['丙午甲午丙午甲午', 1], ['丙戌壬辰癸巳甲寅', 1], ['癸酉乙丑丙申丙申', 1]];
+  const mk = four => { const gz = four.match(/.{2}/g), p = {};
+    ['year', 'month', 'day', 'hour'].forEach((k, i) => { p[k] = { gz: gz[i], gan: gz[i][0], zhi: gz[i][1] }; }); return p; };
+  let hit = 0;
+  for (const [four] of HAND) {
+    const p = mk(four);
+    const st = Bazi.judgeStrength(p, p.day.gan, 15);
+    const cong = Bazi.judgeCong(st, p, p.day.gan);
+    if (cong && cong.type) hit++;
+  }
+  ok(hit >= 7, `从象章 9 例真从只认出 ${hit} 例——口径又收紧回去了`);
+  console.log(`      (从象章 9 例认出 ${hit} 例)`);
+});
+t('真从仍是稀有格局:6000 盘真从率不许超过 6%(防「为了对上命例而放水」)', () => {
+  let real = 0, n = 0;
+  for (let i = 0; i < 3000; i++) {
+    const d = new Date(1940 + (i * 7) % 86, (i * 5) % 12, 1 + (i * 11) % 28, (i * 3) % 24, 30);
+    const c = Bazi.chart(d, i % 2 ? '男' : '女', { lon: 116.4 });
+    n++; if (c.cong && c.cong.type && c.cong.type !== '假从') real++;
+  }
+  const rate = real / n;
+  ok(rate > 0.01 && rate < 0.06, `真从率 ${(rate * 100).toFixed(2)}%——高于 6% 是放水,低于 1% 是又挡死了`);
+  console.log(`      (3000 盘真从率 ${(rate * 100).toFixed(2)}%)`);
+});
+t('congRoot 口径可切换,且切换只动从格不动旺衰(改错地方当场红)', () => {
+  const DATA = JSON.parse(readFileSync(new URL('../data/mingli-cases.json', import.meta.url), 'utf8'));
+  const mk = four => { const gz = four.replace(/ /g, '').match(/.{2}/g), p = {};
+    ['year', 'month', 'day', 'hour'].forEach((k, i) => { p[k] = { gz: gz[i], gan: gz[i][0], zhi: gz[i][1] }; }); return p; };
+  for (const mode of ['any', 'nolib', 'ben', 'lu']) {
+    let n = 0, h = 0;
+    for (const c of DATA.cases) {
+      if (!c.labels.band) continue;
+      const p = mk(c.four);
+      const st = Bazi.judgeStrength(p, p.day.gan, 15, { congRoot: mode });
+      n++; if ((st.strong ? '旺' : '弱') === c.labels.band) h++;
+    }
+    ok(h === 41 && n === 53, `${mode} 口径下旺衰基线变成 ${h}/${n}——从格口径不该碰旺衰`);
+  }
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
