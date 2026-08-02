@@ -238,7 +238,7 @@ await t('结论稳不稳:填了钟点不提示;勾了「不知道钟点」就当
   ok(await box.count(), '没填钟点就必须给出「稳不稳」的判断');
   const txt = await box.innerText();
   ok(/时辰/.test(txt), '话要落到时辰上:' + txt.slice(0, 80));
-  ok(/定时辰|不用纠结/.test(txt), '要么指路去定时辰,要么明说不用纠结:' + txt.slice(0, 120));
+  ok(/生时校正|定时辰|不用纠结/.test(txt), '要么指路去生时校正,要么明说不用纠结:' + txt.slice(0, 120));
   await page.uncheck('#bt-unknown');
 });
 

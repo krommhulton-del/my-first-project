@@ -134,7 +134,7 @@ t('结论稳不稳:填了确切钟点就说稳,一个字没填而这天是分水
   ok(all.xiVaries && all.congVaries, '这一天的喜忌与从格都该随时辰变');
   ok(all.camps.length >= 2, '应当分出两个以上的喜忌阵营');
   ok(all.note.includes('相反'), '话必须说到「方向是相反的」这一层');
-  ok(all.note.includes('定时辰'), '必须指路去定时辰,不能只吓唬人');
+  ok(all.note.includes('生时校正') || all.note.includes('定时辰'), '必须指路去生时校正,不能只吓唬人');
   ok(all.zhenCongHours.length > 0 && all.tightest !== null, '应报出哪几个时辰判从、最险的离门槛多少分');
   // 给了确切时辰就没什么好说
   const one = Dingshi.stability({ birth, gender: '男', lon: 116.4, hours: [3] });

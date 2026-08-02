@@ -243,5 +243,29 @@ t('时辰层吃流月(v0.92):月支一换,时辰表跟着换;不传月支走老�
   ok(texts.size / 60 >= 0.6, `60 天不重样率 ${(texts.size / 60 * 100).toFixed(0)}%,应≥60%`);
 });
 
+
+t('性别融进解读(v0.95,用户点名):男财日带姻缘线、女官日带姻缘线、空性别不硬断、不许镜像', () => {
+  // 缘起:用户 2026-08-02——「性别在日运里面要把它融入到解读里面,不是把选项加上就可以了」。
+  // 口径有出处:男以财为妻星、女以官为夫星。
+  const scan = (g, wantCls) => {
+    const c = Bazi.chart(new Date(1990, 4, 20, 9, 30), g, { lon: 116.4 });
+    for (let d = 0; d < 60; d++) {
+      const r = Yunshi.riYun(c, new Date(2026, 0, 5 + d, 10, 0));
+      if (r.cls === wantCls) return r;
+    }
+    return null;
+  };
+  const m = scan('男', '财星');
+  ok(m && /男命的钱与姻缘走同一条道/.test(m.text), '男命财星日该带姻缘线:' + (m && m.text.slice(0, 80)));
+  const f = scan('女', '官杀');
+  ok(f && /女命的名分与姻缘走同一条道/.test(f.text), '女命官杀日该带姻缘线:' + (f && f.text.slice(0, 80)));
+  const u = scan('', '财星') || scan('', '官杀');
+  ok(u && /性别没填,这一层不硬断/.test(u.text), '空性别该说明不硬断:' + (u && u.text.slice(-80)));
+  const mGuan = scan('男', '官杀');
+  ok(mGuan && !/女命/.test(mGuan.text) && !/夫/.test(mGuan.text), '男命官杀日不许套女命读法(不镜像)');
+  const fCai = scan('女', '财星');
+  ok(fCai && !/男命/.test(fCai.text), '女命财星日不许套男命读法(不镜像)');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

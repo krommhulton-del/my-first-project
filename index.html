@@ -632,7 +632,7 @@
   .wjport { border-left: 3px solid var(--gold); padding-left: 10px; margin-top: 7px; font-size: .9rem; line-height: 1.8; }
   .wjcard { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 11px; }
   .wjcard h4 { color: var(--gold); font-weight: normal; letter-spacing: .1em; margin-bottom: 5px; }
-  /* 定时辰 */
+  /* 生时校正 */
   /* ——— 验盘簿:封存态一律用「封蜡」的观感,开封后才见吉凶色 ——— */
   #sec-yanpan .qwrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
   .ypbox { border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; margin: 14px 0; background: var(--panel); }
@@ -777,7 +777,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.94</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.95</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1037,12 +1037,11 @@
     <h2>专 项 · 各有各的阵法</h2>
     <div class="bmenu">
       <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
-      <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">定 时 辰 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">生 时 校 正 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-hepan"><span class="bg">合</span><span><span class="bt">双 人 合 盘 · 这人跟你对不对得上</span><span class="bd">两副盘摆一起逐层看:他旺不旺你、你旺不旺他、处起来顺不顺、缺的那一味补不补得上、未来十年谁上谁下。恋爱/合伙/朋友/共事分开算</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-xingpan"><span class="bg">星</span><span><span class="bt">西 洋 星 盘 · 本命与双人合盘</span><span class="bd">九曜落宫逐度实算(VSOP87 星历,误差逐星实测)、上升与整宫、盘内相位;两人合盘看哪股劲顺哪股劲拧,另给组合中点盘。与中式那套并排摆,永不互相计分</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-zhaigua"><span class="bg">宅</span><span><span class="bt">占 宅 · 这 处 住 得 住 不 住</span><span class="bd">现住的宅指着疑处问、买房盖房租房、要不要弃旧换新、入宅择日按亲分占、修方动土、看地形势——六型各按《增删卜易》原章断,无 Key 也有程序初断</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-mingge"><span class="bg">饭</span><span><span class="bt">命 格 取 向 · 这 人 该 吃 哪 碗 饭</span><span class="bd">仕途、买卖、手艺、文教、武职、清静饭——六路逐条给分,条条挂古书原话;钱从哪条路来、代价是什么,照实说,不绕弯</span></span><span class="bx">›</span></button>
-      <button class="bcard" data-b="sec-dangan"><span class="bg">档</span><span><span class="bt">生 辰 档 案 · 一处管全应用</span><span class="bd">你、家里人、朋友的生辰各存一份,随时切换;能改能删。性别必填——男女的大运方向是反的,填错等于看别人的命</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yanpan"><span class="bg">验</span><span><span class="bt">验 盘 簿 · 这程序对你到底准不准</span><span class="bd">先让它把对某一年的判断封起来(你看不见),你再写下那年实际发生了什么,然后开封计分——连它错在哪几件都摆出来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dawen"><span class="bg">问</span><span><span class="bt">大问拆阵</span><span class="bd">一句大问,拆成一套卦阵逐个起,汇总深断</span></span><span class="bx">›</span></button>
@@ -1053,7 +1052,11 @@
       <button class="bcard" data-b="sec-dili"><span class="bg">地</span><span><span class="bt">地 利 · 去哪儿旺我</span><span class="bd">八字合方位,实算全国哪省哪市旺你、哪向背你</span></span><span class="bx">›</span></button>
       <button class="bcard" data-href="yunshi.html"><span class="bg">命</span><span><span class="bt">看人运势 · 八字命盘</span><span class="bd">四柱排盘、人体星図、日月年运、东玄细批(独立一页)</span></span><span class="bx">›</span></button>
     </div>
-  </section>
+      <div class="note">— 档 案(不属占卜类目,单独放这儿)—</div>
+    <div class="bmenu-archive">
+      <button class="bcard" data-b="sec-dangan"><span class="bg">档</span><span><span class="bt">生 辰 档 案(存在这台机器上,不上传)</span><span class="bd">你、家里人、朋友的生辰各存一份,全应用通用,能改能删。这里是档案不是占卜——单独放在底下,免得混在卦里让人误会</span></span><span class="bx">›</span></button>
+    </div>
+</section>
   <div id="board-back" class="voff"><button class="ghost" id="btn-board-back">‹ 回专项列表</button></div>
 
   <section id="sec-dawen" class="fold">
@@ -1245,7 +1248,7 @@
   </section>
 
   <section id="sec-dingshi" class="voff">
-    <h2>定 时 辰 · 不知道自己几点生的</h2>
+    <h2>生 时 校 正 · 不知道自己几点生的</h2>
     <div class="note">时辰只动一根柱,却压着全盘约两成的分量:实测同一副盘扫十二时辰,有的扫出五种断法,也有的连着七个时辰一模一样。
       这里办两件事——<b>一、拿你确凿发生过的事回推</b>是哪个时辰;<b>二、告诉你哪几个时辰其实断得一样</b>,落在同一档的怎么填都不影响。定完写回档案,全应用通用。</div>
     <div class="qwrow">
@@ -1298,7 +1301,7 @@
     <div class="stream" id="ds-ai"></div>
 
     <details class="dsfolk" id="ds-folk">
-      <summary>民间那些「看长相定时辰」的说法(点开看,但别拿它定论)</summary>
+      <summary>民间那些「看长相生时校正」的说法(点开看,但别拿它定论)</summary>
       <ul id="ds-folk-list"></ul>
       <div class="note" id="ds-folk-note"></div>
     </details>
@@ -1495,7 +1498,7 @@
       <select id="dl-hour"><option value="">时辰不清楚</option><option value="0">子时(23-1点)</option><option value="1">丑时(1-3点)</option><option value="2">寅时(3-5点)</option><option value="3">卯时(5-7点)</option><option value="4">辰时(7-9点)</option><option value="5">巳时(9-11点)</option><option value="6">午时(11-13点)</option><option value="7">未时(13-15点)</option><option value="8">申时(15-17点)</option><option value="9">酉时(17-19点)</option><option value="10">戌时(19-21点)</option><option value="11">亥时(21-23点)</option></select><input type="time" id="dl-clock" class="fld fld-sm" title="知道确切钟点就填这里,比选时辰准" placeholder="几点几分">
       现居:<input type="text" id="dl-from" placeholder="省或大城市,如:武汉" class="fld fld-md">
     </div>
-    <div class="note" id="dl-hrnote">时辰这一项要紧:喜忌是从八字来的,时辰一变喜忌可能整个翻过来(实测同一天十二个时辰里有七个会翻)。<b>知道确切钟点的,直接填右边那个时间框</b>——比选时辰准,尤其是<b>半夜 0 点到 1 点出生的</b>:选「子时」会按夜里那一段算,日柱要差一天(逐日实测 26/26 全错),填钟点才不会错。真不知道的,去「定时辰」板块先把它定下来。</div>
+    <div class="note" id="dl-hrnote">时辰这一项要紧:喜忌是从八字来的,时辰一变喜忌可能整个翻过来(实测同一天十二个时辰里有七个会翻)。<b>知道确切钟点的,直接填右边那个时间框</b>——比选时辰准,尤其是<b>半夜 0 点到 1 点出生的</b>:选「子时」会按夜里那一段算,日柱要差一天(逐日实测 26/26 全错),填钟点才不会错。真不知道的,去「生时校正」板块先把它定下来。</div>
     <div class="btnrow">
       <button id="btn-dl-rec" class="primary">给我挑旺地</button>
       <input type="text" id="dl-to" placeholder="或写个目标地验一验" class="fld fld-lg">
@@ -1547,7 +1550,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.94 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.95 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -3039,7 +3042,7 @@
   window.dxChartFrom = dxChartFrom;
   // 排不出盘时,说清到底差什么;别笼统说「先填生日」
   function dxWhyNoChart() { return '先填出生日期——没有生日就排不出盘。'; }
-  // **只有吃大运的板块才需要这一道**(年表、问机、验盘簿、定时辰、地利的「时」层)。
+  // **只有吃大运的板块才需要这一道**(年表、问机、验盘簿、生时校正、地利的「时」层)。
   // 只吃喜忌的(日运月运、旺你牌、择日「对你」层)照常算——喜忌不看性别,实测改变 0.0%。
   function dxNeedGender(c) {
     if (!c) return dxWhyNoChart();
@@ -4241,7 +4244,7 @@
     $('wq-q').addEventListener('keydown', e => { if (e.key === 'Enter') wqGo(); });
   }
 
-  // ——————————————— 定时辰:拿已经发生过的事把时辰回推出来 ———————————————
+  // ——————————————— 生时校正:拿已经发生过的事把时辰回推出来 ———————————————
   // 断法全在 dingshi.js 里算死(方向回推 + 同结论分组),这里只管收输入、摊结果。
   const DSH_CATS = [
     ['yinyuan', '姻缘·恋爱结婚'], ['shiye', '事业·工作'], ['caiyun', '财运·钱'],
@@ -5046,7 +5049,7 @@
   function daSave(list) { try { localStorage.setItem(PROFKEY, JSON.stringify(list)); } catch (e) { daErr('存不进去——浏览器存储可能满了或被禁用。'); } }
   function daNewId(date, name) { return 'p' + String(date || '').replace(/-/g, '') + '_' + Date.now().toString(36) + '_' + (name || '').length; }
 
-  // 一份档案「准不准」:只报事实,不改判(与 v0.77 定时辰那一段同口径)
+  // 一份档案「准不准」:只报事实,不改判(与 v0.77 生时校正那一段同口径)
   function daQuality(p) {
     const bad = [];
     if (!p.gender) bad.push('<b>性别没填</b>——这一份排不出大运,年表、问机、验盘簿都用不了');

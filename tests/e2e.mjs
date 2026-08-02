@@ -1568,7 +1568,7 @@ await t('侧栏「准不准」:一个字没填钟点才提示,填了就不再啰
   const a = await page.textContent('#sp-body');
   ok(a.includes('准不准'), '没填钟点时侧栏应有「准不准」一行:' + a.slice(0, 160));
   ok(/换个时辰就相反|力度会变/.test(a), '要说清不确定在哪:' + a.slice(0, 200));
-  ok(/定时辰|问准/.test(a), '要指出路子,不能只吓唬人');
+  ok(/生时校正|定时辰|问准/.test(a), '要指出路子,不能只吓唬人');
   // 填了确切钟点 → 盘是唯一的,不该再提示
   await page.evaluate(() => { localStorage.setItem('dongxuan_birth_hour', '03:30'); });
   await page.reload(); await page.waitForTimeout(500);

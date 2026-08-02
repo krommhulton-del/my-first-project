@@ -171,6 +171,22 @@
     const cls = SHISHEN_CLASS[shen];
     const dom = DOMAIN[cls] || { area: '综合', good: '', bad: '' };
     const domainText = score >= 0 ? dom.good : dom.bad;
+    // 性别融进解读(v0.95,用户点名:不是加个选项就完了,要进话里)。
+    // 口径有出处:男以财为妻星、女以官为夫星(《渊海子平》《增删卜易·用神章第八》两头都有)。
+    // 性别没填不硬猜,但**这条线的存在要告诉人**——瞒着才是敷衍。
+    let qingLine = '';
+    const scaleWord = { 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段';
+    if (cls === '财星' && chart.genderKnown && chart.gender === '男') {
+      qingLine = score >= 0
+        ? `另有一层:男命的钱与姻缘走同一条道——${scaleWord}钱头顺,感情那头也开着口,谈事的场合留意谈心的人。`
+        : `另有一层:男命的钱与姻缘走同一条道——${scaleWord}破财的路数也常带着感情的纠缠,两头一起看紧。`;
+    } else if (cls === '官杀' && chart.genderKnown && chart.gender === '女') {
+      qingLine = score >= 0
+        ? `另有一层:女命的名分与姻缘走同一条道——${scaleWord}事业上被托付,感情那头多半也有人给信号,别把两头混作一头。`
+        : `另有一层:女命的名分与姻缘走同一条道——${scaleWord}压得紧的不只是活,感情那头的拉扯同根同源,分开处置。`;
+    } else if ((cls === '财星' || cls === '官杀') && !chart.genderKnown) {
+      qingLine = `这股力还兼着感情那条线,但男女读法相反(男看钱那路、女看名分那路)——性别没填,这一层不硬断。`;
+    }
     return {
       label, span, gz: gan + zhi, score, level: L.lv, tone: L.tone,
       shen, cls, area: dom.area, lines,
@@ -187,7 +203,7 @@
         ? `${{ 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段'}主${dom.area}这一摊,${hl.text}`
         : `${{ 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段'}主${dom.area}这一摊。`)
         + `整体${L.tone}。${domainText}`
-        + (SCALE[one] ? SCALE[one][score >= 0 ? 'good' : 'bad'] : ''),
+        + (SCALE[one] ? SCALE[one][score >= 0 ? 'good' : 'bad'] : '') + qingLine,
       domainText, area2: dom.area,
       yi: yiList, ji: jiList, when: P4,   // 具体事宜:照着做的事,与照着躲的事
     };
