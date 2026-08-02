@@ -11,12 +11,28 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const Bazi = require(join(ROOT, 'bazi.js'));
 const DATA = JSON.parse(readFileSync(join(ROOT, 'data', 'mingli-cases.json'), 'utf8'));
 
-function mk(four) {
+// 司令天数:判语明写的用明写的(v0.96 回填);只写司令干的按分野表反查该干中段;都没有按月中 15
+function silingDays(c, monthZhi) {
+  const s = c.labels.siling;
+  if (!s) return 15;
+  if (s.days) return s.days;
+  if (s.gan) {
+    let acc = 0;
+    for (const [g, d] of (Bazi.SILING[monthZhi] || [])) {
+      if (g === s.gan) return acc + Math.ceil(d / 2);
+      acc += d;
+    }
+  }
+  return 15;
+}
+function mk(c) {
+  const four = typeof c === 'string' ? c : c.four;
   const gz = four.split(' ');
   const pillars = {};
   ['year', 'month', 'day', 'hour'].forEach((k, i) => { pillars[k] = { gz: gz[i], gan: gz[i][0], zhi: gz[i][1] }; });
-  const st = Bazi.judgeStrength(pillars, pillars.day.gan, 15);
-  return { pillars, st, cong: Bazi.judgeCong(st, pillars, pillars.day.gan) };
+  const days = typeof c === 'string' ? 15 : silingDays(c, pillars.month.zhi);
+  const st = Bazi.judgeStrength(pillars, pillars.day.gan, days);
+  return { pillars, st, days, cong: Bazi.judgeCong(st, pillars, pillars.day.gan) };
 }
 
 // ── 旺衰 ──
@@ -24,7 +40,7 @@ let n = 0, hit = 0; const miss = [];
 for (const c of DATA.cases) {
   if (!c.labels.band) continue;
   n++;
-  const { st } = mk(c.four);
+  const { st } = mk(c);
   const got = st.strong ? '旺' : '弱';
   if (got === c.labels.band) hit++;
   else miss.push(`${c.id} ${c.four} 书判「${c.labels.band}」程序「${got}(${st.band},${st.pct}%)」——${c.judgment.slice(0, 40)}`);
@@ -38,7 +54,7 @@ let cn = 0, chit = 0; const cmiss = [];
 for (const c of DATA.cases) {
   if (!c.labels.cong) continue;
   cn++;
-  const { cong } = mk(c.four);
+  const { cong } = mk(c);
   const gotCong = !!(cong && cong.type);
   const wantCong = c.labels.cong !== '不从';
   if (gotCong === wantCong) chit++;
@@ -52,7 +68,7 @@ let yn = 0, yhit = 0; const ymiss = [];
 for (const c of DATA.cases) {
   if (!c.labels.yong) continue;
   yn++;
-  const { pillars, st } = mk(c.four);
+  const { pillars, st } = mk(c);
   const th = Bazi.tiaoHou(pillars.month.zhi, pillars.day.gan);
   const y = Bazi.pickYongShen(pillars.day.gan, st, th);
   if (y && y.xiWx && y.xiWx.includes(c.labels.yong)) yhit++;

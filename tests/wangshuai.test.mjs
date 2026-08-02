@@ -321,5 +321,53 @@ t('源码里不许再留「拿不到性别就当男」这种默认', () => {
   ok(!/gender\s*\|\|\s*['\u2018\u201c]男/.test(src), "bazi.js 里还留着 gender || '男'");
 });
 
+
+console.log('【化气】天干五合化气(v0.96,先量后落;默认他干贴合开、日干化气格关)');
+t('乙庚贴合于秋月无争合:月干乙按金计力(与关掉比,金升木降)', () => {
+  const P = { year: { gz: '庚戌', gan: '庚', zhi: '戌' }, month: { gz: '乙酉', gan: '乙', zhi: '酉' },
+    day: { gz: '丁丑', gan: '丁', zhi: '丑' }, hour: { gz: '丙午', gan: '丙', zhi: '午' } };
+  const on = Bazi.wuxingPower(P, '丁', 15), off = Bazi.wuxingPower(P, '丁', 15, { hua: 'off' });
+  ok(on.pow['金'] > off.pow['金'] && on.pow['木'] < off.pow['木'],
+    `乙从庚化该金升木降:on金${on.pow['金']} off金${off.pow['金']} on木${on.pow['木']} off木${off.pow['木']}`);
+});
+t('争合不化:柱中另见乙来抢,力量分与关掉一字不差', () => {
+  const P = { year: { gz: '庚戌', gan: '庚', zhi: '戌' }, month: { gz: '乙酉', gan: '乙', zhi: '酉' },
+    day: { gz: '丁丑', gan: '丁', zhi: '丑' }, hour: { gz: '乙巳', gan: '乙', zhi: '巳' } };
+  eq(JSON.stringify(Bazi.wuxingPower(P, '丁', 15).pow), JSON.stringify(Bazi.wuxingPower(P, '丁', 15, { hua: 'off' }).pow), '争合竟然化了');
+});
+t('化神不当令不化:乙庚贴合于寅月,与关掉一字不差', () => {
+  const P = { year: { gz: '庚戌', gan: '庚', zhi: '戌' }, month: { gz: '乙寅', gan: '乙', zhi: '寅' },
+    day: { gz: '丁丑', gan: '丁', zhi: '丑' }, hour: { gz: '丙午', gan: '丙', zhi: '午' } };
+  eq(JSON.stringify(Bazi.wuxingPower(P, '丁', 15).pow), JSON.stringify(Bazi.wuxingPower(P, '丁', 15, { hua: 'off' }).pow), '不当令竟然化了');
+});
+t('日干化气格默认关:默认输出与 hua:other 逐字节同,与 hua:all 不同(防有人悄悄开)', () => {
+  // 丁壬贴合于春月:day 模式会把日主换成木,默认不许
+  const P = { year: { gz: '甲寅', gan: '甲', zhi: '寅' }, month: { gz: '壬卯', gan: '壬', zhi: '卯' },
+    day: { gz: '丁亥', gan: '丁', zhi: '亥' }, hour: { gz: '庚子', gan: '庚', zhi: '子' } };
+  const dft = Bazi.judgeStrength(P, '丁', 15), oth = Bazi.judgeStrength(P, '丁', 15, { hua: 'other' });
+  eq(JSON.stringify(dft.pow), JSON.stringify(oth.pow), '默认该等于 other');
+  const day = Bazi.judgeStrength(P, '丁', 15, { hua: 'all', huaChen: false });
+  ok(JSON.stringify(dft.pow) !== JSON.stringify(day.pow), '这副盘 day 模式该有区别,说明开关是活的');
+});
+t('命例基线不许倒退:旺衰子集复现 ≥ 41/53(v0.96 合化落地后的数)', () => {
+  const DATA = JSON.parse(readFileSync(new URL('../data/mingli-cases.json', import.meta.url), 'utf8'));
+  let n = 0, hit = 0;
+  for (const c of DATA.cases) {
+    if (!c.labels.band) continue;
+    n++;
+    const gz = c.four.split(' ');
+    const P = {};
+    ['year', 'month', 'day', 'hour'].forEach((k, i) => { P[k] = { gz: gz[i], gan: gz[i][0], zhi: gz[i][1] }; });
+    let days = 15;
+    const sl = c.labels.siling;
+    if (sl && sl.days) days = sl.days;
+    else if (sl && sl.gan) { let acc = 0; for (const [g, d] of (Bazi.SILING[P.month.zhi] || [])) { if (g === sl.gan) { days = acc + Math.ceil(d / 2); break; } acc += d; } }
+    const st = Bazi.judgeStrength(P, P.day.gan, days);
+    if ((st.strong ? '旺' : '弱') === c.labels.band) hit++;
+  }
+  ok(n === 53, '旺衰子集该 53 例,实得 ' + n);
+  ok(hit >= 41, `复现 ${hit}/53,倒退了(v0.96 基线 41)`);
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

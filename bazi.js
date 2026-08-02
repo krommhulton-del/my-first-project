@@ -302,7 +302,46 @@
   const POS_W = { dayGan: 9, monthGan: 9, yearGan: 8, hourGan: 8, monthZhi: 28, dayZhi: 16, yearZhi: 11, hourZhi: 11 };
   const CANG_RATIO = { 1: [1], 2: [0.7, 0.3], 3: [0.6, 0.28, 0.12] };
 
-  function wuxingPower(pillars, dayGan, days) {
+  // ——— 天干五合化气(v0.96,依《滴天髓阐微·化象章》;**先量后定**)———
+  // 原注写死的条件:「丙辛生于冬月,戊癸生于夏月,乙庚生于秋月,丁壬生于春月,独自相合…此为真化矣」,
+  // 甲己则「生于四季」;任氏又加「合则化,化亦必得五土而后成,五土者辰也」——辰这一档单独开关量。
+  // 「独自相合」= 无争合妒合:柱中另见同字来抢合的,一律不化(原注:再见甲乙不作争合论**那是既化之后**;未化前见之即争)。
+  // mode:'off' 全关|'other' 只他干贴合|'day' 只日干贴合|'all' 两样都开;needChen:日干化须柱见辰。
+  // **默认值由 tools/hua-measure.mjs 量定(2026-08-02)**:
+  //   'other'(他干贴合化)——命例复现 75.5%→77.4%,判语反复点名的正是它(乙从庚化、戊癸从化),
+  //     影响面 6000 盘实测:力量分变 4.15%、喜忌完全翻盘 0.37%,有界,落为默认;
+  //   日干化气格默认**关**——原注(四季当令即真)与任氏(化必得辰)两说不一,子集仅 +1 例,
+  //     按收窄不放大,待化象章命例专项验过再议(记在 docs/命例复现-01)。
+  const HE_GAN = { 甲: '己', 己: '甲', 乙: '庚', 庚: '乙', 丙: '辛', 辛: '丙', 丁: '壬', 壬: '丁', 戊: '癸', 癸: '戊' };
+  const HUA_WX = { 甲己: '土', 乙庚: '金', 丙辛: '水', 丁壬: '木', 戊癸: '火' };
+  const HUA_MONTH = { 土: '辰戌丑未', 金: '申酉戌', 水: '亥子丑', 火: '巳午未', 木: '寅卯辰' };
+  const comboWx = (x, y) => HUA_WX[[x, y].sort((a, b) => GAN.indexOf(a) - GAN.indexOf(b)).join('')];
+  const HUA_DEFAULT = 'other';
+  function huaMap(pillars, mode, needChen) {
+    mode = mode === undefined || mode === null ? HUA_DEFAULT : mode;
+    if (mode === 'off') return null;
+    const ks = ['year', 'month', 'day', 'hour'];
+    const gans = ks.map(k => pillars[k].gan), zhis = ks.map(k => pillars[k].zhi);
+    const out = {};
+    for (const [a, b] of [[0, 1], [1, 2], [2, 3]]) {          // 只认贴干
+      const ga = gans[a], gb = gans[b];
+      if (HE_GAN[ga] !== gb) continue;
+      const isDay = (a === 2 || b === 2);
+      if (isDay && mode === 'other') continue;
+      if (!isDay && mode === 'day') continue;
+      const hua = comboWx(ga, gb);
+      if (!HUA_MONTH[hua].includes(zhis[1])) continue;         // 化神当令(按月支之季,原注口径)
+      // 独自相合:其余两干里再见这对里的任一字,即争合妒合,不化
+      const others = [0, 1, 2, 3].filter(i => i !== a && i !== b).map(i => gans[i]);
+      if (others.includes(ga) || others.includes(gb)) continue;
+      if (isDay && needChen && !zhis.includes('辰')) continue;  // 任氏:化必得辰(只对日干化收这一档)
+      out[ks[a]] = hua; out[ks[b]] = hua;
+    }
+    return Object.keys(out).length ? out : null;
+  }
+
+  function wuxingPower(pillars, dayGan, days, opts) {
+    const hm = huaMap(pillars, opts && opts.hua, opts && opts.huaChen);
     const add = {}; for (const w of ['木', '火', '土', '金', '水']) add[w] = 0;
     const ks = ['year', 'month', 'day', 'hour'];
     // 一、天干(日干本身也占位:日主即比肩,自己是自己的党)
@@ -311,7 +350,10 @@
     const rooted = g => allZhi.some(z => CANGGAN[z].some(c => GAN_WX[c] === GAN_WX[g]));
     for (const k of ks) {
       const g = pillars[k].gan;
-      add[GAN_WX[g]] += ganW[k] * (rooted(g) ? 1.3 : 0.6); // 有根方能任事,虚透力减
+      // 化了的干按化神五行计力(根也看化神之根)——化气开关见 huaMap
+      const wx = hm && hm[k] ? hm[k] : GAN_WX[g];
+      const hasRoot = hm && hm[k] ? allZhi.some(z => CANGGAN[z].some(c => GAN_WX[c] === wx)) : rooted(g);
+      add[wx] += ganW[k] * (hasRoot ? 1.3 : 0.6); // 有根方能任事,虚透力减
     }
     // 二、地支(月支按人元司令比例,余支按本气/中气/余气)
     const zhiW = { year: POS_W.yearZhi, month: POS_W.monthZhi, day: POS_W.dayZhi, hour: POS_W.hourZhi };
@@ -375,9 +417,11 @@
   const CONG_PLAIN = { 正格: '常规这一档', 从强格: '一路强到底这一档', 从弱格: '整盘顺着势走这一档', 假从: '像顺势又不算这一档' };
   const plainGe = g => CONG_PLAIN[String(g || '').split('(')[0]] || g;
 
-  function judgeStrength(pillars, dayGan, days) {
-    const me = GAN_WX[dayGan], yin = invSheng(me);
-    const { pow, bonus, rel } = wuxingPower(pillars, dayGan, days);
+  function judgeStrength(pillars, dayGan, days, opts) {
+    // 日干若真化(mode 含 day),「我」即化神——化气格的本义(化得真者只论化)
+    const hm0 = huaMap(pillars, opts && opts.hua, opts && opts.huaChen);
+    const me = (hm0 && hm0.day) ? hm0.day : GAN_WX[dayGan], yin = invSheng(me);
+    const { pow, bonus, rel } = wuxingPower(pillars, dayGan, days, opts);
     const tong = +(pow[me] + pow[yin]).toFixed(1);                    // 同党:比劫+印
     const yi = +(100 - tong).toFixed(1);                              // 异党:食伤+财+官杀
     const roots = rootsOf(pillars, dayGan);

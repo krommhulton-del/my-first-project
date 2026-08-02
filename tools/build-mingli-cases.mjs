@@ -39,6 +39,20 @@ function labelOutcome(txt) {
   if (good && bad) return '先吉后凶或吉凶互见';
   return null;
 }
+// 司令回填(v0.96):判语明写节入深浅或司令干的,抽出来喂基线——书给的真值,不用月中近似
+const CN_NUM = { 一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10 };
+function cnNum(s) {
+  if (/^十/.test(s)) return 10 + (CN_NUM[s[1]] || 0);
+  if (/十/.test(s)) { const [a,b]=s.split('十'); return (CN_NUM[a]||1)*10 + (CN_NUM[b]||0); }
+  return CN_NUM[s] || null;
+}
+function labelSiling(txt) {
+  let m = txt.match(/(?:立春|雨水|惊蛰|春分|清明|谷雨|立夏|小满|芒种|夏至|小暑|大暑|立秋|处暑|白露|秋分|寒露|霜降|立冬|小雪|大雪|冬至|小寒|大寒)后?([一二三四五六七八九十]+)日/);
+  if (m) { const d = cnNum(m[1]); if (d && d <= 31) return { days: d, from: m[0] }; }
+  m = txt.match(/([甲乙丙丁戊己庚辛壬癸])[木火土金水]?(?:司令|当令|司权|秉令)/);
+  if (m) return { gan: m[1], from: m[0] };
+  return null;
+}
 function labelYong(txt) {
   const m = txt.match(/(?:只可|专|当|必须|还须|仍须)?用([金木水火土])(?!局)/) || txt.match(/以([金木水火土])为用/);
   return m ? m[1] : null;
@@ -62,12 +76,12 @@ for (const m of raw.matchAll(CASE_RE)) {
     id: 'dtsy-' + String(cases.length + 1).padStart(3, '0'),
     four, dayun, chapter: chapterAt(m.index),
     judgment: ju.slice(0, 600),
-    labels: { band: labelBand(ju), cong: labelCong(ju), outcome: labelOutcome(ju), yong: labelYong(ju) },
+    labels: { band: labelBand(ju), cong: labelCong(ju), outcome: labelOutcome(ju), yong: labelYong(ju), siling: labelSiling(ju) },
   });
 }
 
-const stat = { total: cases.length, band: 0, cong: 0, outcome: 0, yong: 0 };
-for (const c of cases) for (const k of ['band', 'cong', 'outcome', 'yong']) if (c.labels[k]) stat[k]++;
+const stat = { total: cases.length, band: 0, cong: 0, outcome: 0, yong: 0, siling: 0 };
+for (const c of cases) for (const k of ['band', 'cong', 'outcome', 'yong', 'siling']) if (c.labels[k]) stat[k]++;
 const out = {
   _meta: {
     源: '《滴天髓阐微》(data/classics/滴天髓阐微.txt,简体转录),抽取器 tools/build-mingli-cases.mjs',
@@ -83,4 +97,4 @@ const out = {
 };
 writeFileSync(join(ROOT, 'data', 'mingli-cases.json'), JSON.stringify(out, null, 1));
 console.log(`共抽得 ${stat.total} 例(四柱+判语逐字核回原文)`);
-console.log(`带旺衰标签 ${stat.band} · 从格标签 ${stat.cong} · 吉凶结局 ${stat.outcome} · 用神五行 ${stat.yong}`);
+console.log(`带旺衰标签 ${stat.band} · 从格 ${stat.cong} · 吉凶 ${stat.outcome} · 用神 ${stat.yong} · 司令明文 ${stat.siling}`);
