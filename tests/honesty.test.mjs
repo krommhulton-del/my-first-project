@@ -107,6 +107,39 @@ t('凡写了「出处:《某书》…原话」的地方,原话必须在那本书
   ok(!bad.length, '这些出处核不到:\n      ' + bad.join('\n      '));
   console.log(`      (共核了 ${n} 处挂出处的引文)`);
 });
+t('挂了「书·章」的,那句话必须真的出自那一章(v0.79 新增)', async () => {
+  // 缘起:此前的核对只验「这句话在这本书里搜得到」,**没验它是不是出自所标的那一章**。
+  // 一查就查出三件事:
+  //   ①《增删卜易》这份转录的卷之一(第一到第二十六章)只有章名、没有正文,
+  //     而 najia.js 曾把「用神取法」的总纲挂在其中的「用神章第八」上——挂了个查不到的出处;
+  //   ②旬空那条引文标的是「旬空章第二十六」(也在卷之一),实际落在卷之二后段;
+  //   ③bazi.js 的「就使逢库，亦为有根」标的是「地支章」,实际落在「九、干支总论」。
+  // 判定逻辑在 tools/chapter-check.mjs,连**「归章判不了」也要报**——
+  // 该书目录列 133 章、正文只有 98 个标题,丢了标题的那几段谁也说不清属于哪一章,那种一律不许标章。
+  const { citationsIn, chapterOfQuote, chaptersOf, chapKey } = await import('../tools/chapter-check.mjs');
+  const SRC = ['najia.js', 'bazi.js', 'geju.js', 'yingqi.js', 'chuduan.js', 'dashi.js'];
+  const cites = citationsIn(SRC);
+  ok(cites.length >= 10, '挂「书·章」的出处太少,只有 ' + cites.length);
+  const bad = [];
+  for (const c of cites) {
+    if (!c.quote) {
+      const cs = chaptersOf(c.book).chapters.filter(x => chapKey(x.name) === chapKey(c.chapter));
+      if (!cs.length) bad.push(`${c.file}:《${c.book}》里没有「${c.chapter}」这一章`);
+      else if (cs.every(x => x.body.length < 20)) bad.push(`${c.file}:「${c.chapter}」在本转录里只有章名没有正文,不许往上挂出处`);
+      continue;
+    }
+    const r = chapterOfQuote(c.book, c.quote);
+    if (!r.found) { bad.push(`${c.file}:《${c.book}》里搜不到「${c.quote.slice(0, 20)}」`); continue; }
+    if (!c.chapter) continue;                       // 只挂书不挂章的,不作归章要求
+    const same = chapKey(r.chapter) === chapKey(c.chapter)
+      || chapKey(r.chapter).includes(chapKey(c.chapter)) || chapKey(c.chapter).includes(chapKey(r.chapter));
+    if (same) continue;
+    if (r.ambiguous) bad.push(`${c.file}:「${c.quote.slice(0, 14)}」落在「${r.couldBe.join('/')}」之间,归章判不了,不许标章`);
+    else bad.push(`${c.file}:「${c.quote.slice(0, 14)}」标的是「${c.chapter}」,实际落在「${r.chapter}」`);
+  }
+  ok(!bad.length, '归章核不过:\n      ' + bad.join('\n      '));
+  console.log(`      (逐条核了 ${cites.length} 处「书·章」出处的归章)`);
+});
 t('程序初断挂的出处,逐条在原文里核得到', () => {
   // 缘起:v0.74 给初断的几条凭据挂了《增删卜易》的原话。规矩不变——搜得到才准挂。
   const strip = x => x.replace(/<br\s*\/?>/gi, '').replace(/[\s，。、；：？！,.;:?!「」『』()（）《》〈〉·…﹐﹒﹕﹔﹑]/g, '');
