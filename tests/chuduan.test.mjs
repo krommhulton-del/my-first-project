@@ -176,5 +176,53 @@ t('不自己另算断卦元素——旺衰、用神、应期一律走既有模�
   ok(/Yingqi\./.test(src), '应期须走 yingqi');
 });
 
+console.log('【五】断语的因果链(v1.05,核心板块回炉收尾)');
+t('断语五段齐:结论(几成)→这个数怎么来的→应期落到日→做法→只答这一问', () => {
+  // 缘起:初断给的是四条并列观察 + 一个做法清单,谁也不接谁——读者看得见每一条,
+  // 却拿不到「这几成是怎么算出来的」。
+  const day = new Date(2026, 7, 3, 10, 0);
+  let n = 0;
+  for (let i = 0; i < 60; i++) {
+    const cast = GuaCore.castHexagram();
+    const z = Najia.zhuangGua(cast.benId, day, { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
+    const r = Chuduan.judge(cast, z, QS[i % QS.length], day);
+    const st = Chuduan.story(r, QS[i % QS.length]);
+    n++;
+    ok(st.length > 100, '断语太短:' + st);
+    ok(/把握。/.test(st), '第一句要把几成说死(铁律三)');
+    ok(/这个数是这么来的/.test(st), '缺「怎么算出来的」那一段——正是要治的病:' + st.slice(0, 60));
+    ok(/三层叠起来/.test(st), '缺收束那一句');
+    ok(/不比卦面多说半分/.test(st), '缺铁律七那句自陈');
+    ok(/只答这一问/.test(st), '缺一枝一卦的边界(铁律四)');
+    if (r.yingqi && r.yingqi.date) ok(st.includes(r.yingqi.date), '应期那一天没进断语');
+    ok(!/。。|;;/.test(st), '标点重了:' + st.slice(0, 80));
+    const rep = Tijian.check(st.replace(/「[^」]*」/g, ''), {});
+    const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
+    ok(!bad.length, `断语体检不过:${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
+  }
+  ok(n >= 60, '样本太少');
+});
+t('断语与初断同向:说成的不许写成不了,几成与 pct 一致(不许比卦面乐观悲观)', () => {
+  const day = new Date(2026, 7, 3, 10, 0);
+  for (let i = 0; i < 80; i++) {
+    const cast = GuaCore.castHexagram();
+    const z = Najia.zhuangGua(cast.benId, day, { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
+    const r = Chuduan.judge(cast, z, QS[i % QS.length], day);
+    const st = Chuduan.story(r, QS[i % QS.length]);
+    const head = st.split('。')[0];
+    if (r.cheng === '成') ok(/能成/.test(head) && !/成不了/.test(head), '程序判成,断语却不是:' + head);
+    if (r.cheng === '不成') ok(/成不了/.test(head), '程序判不成,断语却不是:' + head);
+    ok(st.includes(r.pct), '几成与初断给的不一致');
+  }
+});
+t('答案之锚:同一卦同一时刻反复讲五十次,逐字一致', () => {
+  const day = new Date(2026, 7, 3, 10, 0);
+  const cast = GuaCore.castHexagram();
+  const z = Najia.zhuangGua(cast.benId, day, { moving: cast.lines.map(l => l.moving), bianId: cast.bianId });
+  const r = Chuduan.judge(cast, z, QS[0], day);
+  const first = Chuduan.story(r, QS[0]);
+  for (let i = 0; i < 50; i++) ok(Chuduan.story(Chuduan.judge(cast, z, QS[0], day), QS[0]) === first, '第' + i + '次不一致');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

@@ -211,5 +211,43 @@
     };
   }
 
-  return { judge, bandOf, BANDS, relToShi };
+  // ══════════ 断语的因果链(v1.05,深造期第二期第三块,核心板块回炉收尾)══════════
+  // 缘起:用户「口语化的解读一看就知道很 AI」「原先的项目没有改进」。
+  // 病根与年运、年表那两块同源:初断给的是**四条并列观察(why)+ 一个做法清单(advice)**,
+  // 谁也不接谁——读者看得见每一条,却拿不到「这几成是怎么算出来的」。
+  // 改法:**结论(几成)→ 这个数怎么来的(用神一头、你自己一头、动静一层,逐层递进)→
+  // 应期落到哪一天 → 具体做法 → 卦没照到的地方照实说**。
+  // 本函数只做串联,**一个断卦元素不自算**(成算、应期、方位全取自 judge 的结果,§四)。
+  function story(res, ask) {
+    if (!res) return '';
+    const q = (ask && ask.q) ? String(ask.q).slice(0, 30) : '这一问';
+    // 一、结论先行(铁律二 + 铁律三:把握度用几成说死)
+    const dot = x => !x ? '' : (/[。;;!?]$/.test(x) ? x : x + '。');
+    let s = `${q}:${res.cheng === '成' ? '能成' : res.cheng === '不成' ? '成不了' : '悬着'},${res.pct}把握。${dot(res.say)}`;
+    // 二、这个数怎么来的——三层递进,层与层之间是真依赖(用神有没有气 → 世应谁占上风 → 卦动不动)
+    const w = res.why || [];
+    if (w.length) {
+      s += '这个数是这么来的:';
+      s += w[0] + (w.length > 1 ? ';' : '。');
+      if (w.length > 1) s += `而${w[1].replace(/^你/, '你')}` + (w.length > 2 ? ';' : '。');
+      if (w.length > 2) s += `再看整卦:${w.slice(2, 4).join(';')}。`;
+      s += `三层叠起来,才落到「${res.pct}」这个数上——不比卦面多说半分,也不少说半分。`;
+    }
+    // 三、应期:落到具体日子(不是「近期」这种话)
+    if (res.yingqi && res.yingqi.date) {
+      s += `什么时候见分晓:${res.yingqi.date}前后。${dot(res.yingqi.say)}`;
+      if (res.yingqi.others && res.yingqi.others.length) {
+        const o = res.yingqi.others[0];
+        s += `另有一解落在${o.date},古法两解并存时取先到的那一天,所以按前一个日子准备。`;
+      }
+    }
+    // 四、做法:具体到动作与方向
+    const adv = (res.advice || []).filter(a => a && a.v);
+    if (adv.length) s += '该怎么办:' + adv.map(a => `${a.k}——${a.v}`).join(';') + '。';
+    // 五、边界(铁律六:卦面没照到的地方明写)
+    s += '这一卦只答这一问;别的枝节要另起一卦,拿这一卦硬答别的问题不作数。';
+    return s;
+  }
+
+  return { judge, story, bandOf, BANDS, relToShi };
 }));

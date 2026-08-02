@@ -777,7 +777,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.04</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.05</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1566,7 +1566,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v1.04 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.05 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -2731,10 +2731,15 @@
         (cd.dirTxt ? `<span class="chip ping">吉方${esc(cd.dirTxt)}</span>` : '') +
         `<span class="chip ping">${esc(cd.kind)}</span>`;
     }
+    // v1.05:六爻那一路把四条并列理由串成一条因果链(结论→这个数怎么来的→应期→做法→边界)。
+    // 串联走 Chuduan.story(§四:只取用不重造);出得来叙事就用叙事,出不来才退回并列的理由。
+    let story = '';
+    try { if (cd.cheng && c.cdMode !== 'tone') story = Chuduan.story(cd, { q: c.q || c.title || '' }) || ''; } catch (e) { story = ''; }
     return `<div class="cdrow">` +
       `<div class="cdhead">${head}<span class="cdtag">程序初断</span></div>` +
-      `<div class="cdwhy">${cd.why.map(w => '· ' + esc(w)).join('<br>')}</div>` +
-      cdDo(cd) + cdJing(c.jing) +
+      (story ? `<div class="cdwhy">${esc(story)}</div>`
+             : `<div class="cdwhy">${cd.why.map(w => '· ' + esc(w)).join('<br>')}</div>`) +
+      (story ? '' : cdDo(cd)) + cdJing(c.jing) +
     `</div>`;
   }
   async function dwMakePlan() {
