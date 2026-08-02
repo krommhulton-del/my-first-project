@@ -1042,6 +1042,100 @@ await t('问机板块:一句话给出年/月/日三层应期,并带画像与贵�
   ok((await page.inputValue('#question')).includes('复核'), '应把时间带进问句去复核');
 });
 
+await t('生辰档案:新建/改/复制/删,性别必填,切换全应用通用(v0.84)', async () => {
+  await page.evaluate(() => {
+    localStorage.removeItem('dongxuan_profiles_v1');
+    localStorage.removeItem('dongxuan_profile_cur');
+  });
+  await page.evaluate(() => window.dxOpenBoard('sec-dangan'));
+  await page.waitForTimeout(300);
+  ok((await page.locator('#da-list').innerText()).includes('还没有档案'), '空簿子要说清');
+
+  // —— 新建:性别不填不许存 ——
+  await page.click('#btn-da-new');
+  await page.waitForTimeout(200);
+  await page.fill('#da-f-name', '我');
+  await page.fill('#da-f-date', '1990-05-20');
+  await page.fill('#da-f-time', '09:30');
+  await page.click('#btn-da-save');
+  await page.waitForTimeout(200);
+  ok((await page.locator('#da-err').innerText()).includes('性别'), '性别没填就该被挡下');
+  ok((await page.locator('#sec-dangan .darow').count()) === 0, '被挡下就不该存进去');
+
+  await page.selectOption('#da-f-gender', '女');
+  await page.click('#btn-da-save');
+  await page.waitForTimeout(300);
+  ok((await page.locator('#sec-dangan .darow').count()) === 1, '补上性别应存得下');
+  ok((await page.locator('#sec-dangan .darow').innerText()).includes('我'), '名字应显示');
+
+  // —— 再建一份,性别空着的老档案要被标出来 ——
+  await page.click('#btn-da-new');
+  await page.waitForTimeout(200);
+  await page.fill('#da-f-name', '老妈');
+  await page.fill('#da-f-date', '1962-03-08');
+  await page.selectOption('#da-f-gender', '女');
+  await page.click('#btn-da-save');
+  await page.waitForTimeout(300);
+  ok((await page.locator('#sec-dangan .darow').count()) === 2, '应有两份');
+  const txt = await page.locator('#sec-dangan').innerText();
+  ok(/钟点没填/.test(txt), '没填钟点的那份要当面标出来');
+  ok(/三分之二|翻盘|只能当一半看/.test(txt), '要说清没填钟点的后果');
+
+  // —— 复制 ——
+  await page.locator('#sec-dangan .darow').first().locator('.dacopy').click();
+  await page.waitForTimeout(300);
+  ok((await page.locator('#sec-dangan .darow').count()) === 3, '复制后应有三份');
+  ok((await page.locator('#sec-dangan').innerText()).includes('副本'), '副本要标出来');
+
+  // —— 改:改完不许新增一条 ——
+  await page.locator('#sec-dangan .darow').first().locator('.daedit').click();
+  await page.waitForTimeout(200);
+  await page.fill('#da-f-name', '我自己');
+  await page.click('#btn-da-save');
+  await page.waitForTimeout(300);
+  ok((await page.locator('#sec-dangan .darow').count()) === 3, '改一份不许变成新增一份');
+  ok((await page.locator('#sec-dangan').innerText()).includes('我自己'), '改名应生效');
+
+  // —— 用这份:写回全局,全应用通用 ——
+  await page.locator('#sec-dangan .darow').nth(1).locator('.dause').click();
+  await page.waitForTimeout(400);
+  const bd = await page.evaluate(() => localStorage.getItem('dongxuan_birth'));
+  ok(bd === '1962-03-08', '「用这份」应写回全局生日,实得 ' + bd);
+  ok((await page.locator('#sec-dangan .darow.on').count()) === 1, '正在用的那份要标出来');
+
+  // —— 删:要二次确认;确认后删掉 ——
+  page.once('dialog', d => d.accept());
+  await page.locator('#sec-dangan .darow').first().locator('.dadel').click();
+  await page.waitForTimeout(400);
+  ok((await page.locator('#sec-dangan .darow').count()) === 2, '删完应剩两份');
+  await page.evaluate(() => { localStorage.removeItem('dongxuan_profiles_v1'); localStorage.removeItem('dongxuan_profile_cur'); });
+});
+
+await t('问机·姻缘分两路:想谈一个的报到月,想定下来的报到年(v0.84)', async () => {
+  await page.evaluate(() => {
+    localStorage.setItem('dongxuan_birth', '1995-04-10');
+    localStorage.setItem('dongxuan_birth_hour', '14:00');
+    localStorage.setItem('dongxuan_gender', '女');
+  });
+  await page.evaluate(() => window.dxOpenBoard('sec-wenji'));
+  await page.waitForTimeout(300);
+  await page.fill('#wq-birth', '1995-04-10');
+  await page.selectOption('#wq-gender', '女');
+  await page.fill('#wq-q', '我什么时候能谈个恋爱');
+  await page.click('#btn-wq-go');
+  await page.waitForTimeout(1500);
+  const out = await page.locator('#wq-out').innerText();
+  ok(/这 一 路 分 两 头 说|分两头说/.test(out), '问姻缘时应给出两路:' + out.slice(0, 100));
+  ok(/容易开始点什么的月份|一个月都没挑出来/.test(out), '近档要报到月');
+  ok(/门槛低不等于看得准|一个月都没挑出来/.test(out), '必须当面说清「报得密不等于看得准」');
+  ok(/不报是好是坏/.test(out), '两路都不许给吉凶方向,这句话要在');
+  {
+    const r = Tijian.check(out, { zone: '断语' });
+    const bad = r.hits.filter(h => ['空话', '术语', '说教', '花钱消灾'].includes(h.kind));
+    ok(!bad.length, '问机输出不干净:' + bad.map(h => h.kind + ':' + h.snippet).join('、'));
+  }
+});
+
 await t('验盘簿:封存期间断语一个字都不许进 DOM(盲测协议的命门)', async () => {
   await page.evaluate(() => { localStorage.removeItem('dongxuan_yanpan_v1'); });
   await page.evaluate(() => {

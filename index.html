@@ -667,6 +667,19 @@
   .ypacts { margin-top: 6px; }
   .ypmini { font-size: .8rem; padding: 4px 10px; }
   .ypline { margin-bottom: 6px; }
+  .romfar { margin-top: 6px; }
+  /* ——— 生辰档案 ——— */
+  .darow { border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; margin: 9px 0; }
+  .darow.on { border-color: var(--celadon); background: var(--celadon-soft); }
+  .dah { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+  .dah .dan { font-family: var(--disp); font-size: 1.06rem; }
+  .dah .dat { color: var(--dim); font-size: .84rem; }
+  .dabad { color: var(--ochre); font-size: .82rem; }
+  .daform { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin: 8px 0; }
+  .daform input, .daform select { background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 9px; font-family: inherit; font-size: .92rem; }
+  .daform .danm { width: 110px; }
+  .daform .dapl { width: 140px; }
   .yptip { margin-top: 2px; }
   .ypwarn { border: 1px solid rgba(168,106,18,.35); background: var(--ochre-soft);
     border-radius: 12px; padding: 10px 13px; margin: 10px 0; font-size: .88rem; line-height: 1.75; }
@@ -753,7 +766,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.83</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.84</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1014,6 +1027,7 @@
     <div class="bmenu">
       <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">定 时 辰 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-dangan"><span class="bg">档</span><span><span class="bt">生 辰 档 案 · 一处管全应用</span><span class="bd">你、家里人、朋友的生辰各存一份,随时切换;能改能删。性别必填——男女的大运方向是反的,填错等于看别人的命</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yanpan"><span class="bg">验</span><span><span class="bt">验 盘 簿 · 这程序对你到底准不准</span><span class="bd">先让它把对某一年的判断封起来(你看不见),你再写下那年实际发生了什么,然后开封计分——连它错在哪几件都摆出来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dawen"><span class="bg">问</span><span><span class="bt">大问拆阵</span><span class="bd">一句大问,拆成一套卦阵逐个起,汇总深断</span></span><span class="bx">›</span></button>
@@ -1264,6 +1278,22 @@
     </details>
   </section>
 
+  <section id="sec-dangan" class="voff">
+    <h2>生 辰 档 案 · 一处管全应用</h2>
+    <div class="note">存一次,全应用通用——运势、年表、择日、地利、验盘簿都吃这份档案。
+      可以存几份(你自己、家里人、朋友),随时切换。<b>性别必填</b>:古法男女的大运方向是反的
+      (阳男阴女顺行、阴男阳女逆行),实测性别一换,大运顺逆 100% 翻转、往后每一年的断法跟着全改。
+      <b>钟点能填就填</b>:不填的话,喜忌有三分之二的概率会随时辰翻盘,底下那些话就只能当一半看。
+      <b>东西只存在你这台机器上</b>,不上传、不出网。</div>
+    <div class="btnrow">
+      <button type="button" class="primary" id="btn-da-new">新建一份</button>
+      <button type="button" class="ghost" id="btn-da-fromcur">把当前用的存成一份</button>
+    </div>
+    <div class="err" id="da-err"></div>
+    <div id="da-edit"></div>
+    <div id="da-list"></div>
+  </section>
+
   <section id="sec-yanpan" class="voff">
     <h2>验 盘 簿 · 这程序对你到底准不准</h2>
     <div class="note">别处都是程序说你听。<b>这里反过来:你考它。</b>
@@ -1422,7 +1452,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.83 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.84 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -4033,6 +4063,18 @@
         (y.tips.length ? `<div class="why">该怎么做:${esc(y.tips.join(';'))}</div>` : '') +
         (y.flags.length ? `<div class="why">另:${esc(y.flags.join(';'))}</div>` : '') + mons + `</div>`;
     }).join('');
+    // 问姻缘时,把「容易开始点什么」那一路摆在最前面(v0.84)
+    const rom = r.romance && (r.romance.near.length || r.romance.far.length)
+      ? `<div class="wjcard"><h4>这 一 路 分 两 头 说</h4>` +
+        `<div class="why ypline">下面那几年说的是「定得下来」那种;要是你眼下只想先谈一个、先认识点人,看这一行——` +
+        `同一批依据,只是落到月上,因为这种事本来就发生得密。</div>` +
+        (r.romance.near.length
+          ? `<div class="ypv"><b>容易开始点什么的月份:</b>` +
+            r.romance.near.slice(0, 8).map(x => `${x.year}年${x.month}月<span class="ypt">(${esc(x.span || '')})</span>`).join('、') + `</div>`
+          : `<div class="ypv">未来两年里,这一档一个月都没挑出来——照实说没有,不硬凑。</div>`) +
+        (r.romance.far.length ? `<div class="ypv romfar"><b>容易定下来的年份:</b>` + r.romance.far.map(x => x.year + '年').join('、') + `</div>` : '') +
+        `<div class="note">${esc(r.romance.note)}<br>${esc(r.romance.heldNote)}</div></div>`
+      : '';
     const g = r.guiren;
     const gui = `<div class="wjcard"><h4>贵 人 从 哪 来</h4><div>${esc(g.note)}</div>` +
       (g.years.length ? `<div class="why">未来逢贵人之年:${g.years.map(x => x.year + '年').join('、')}</div>` : '') +
@@ -4047,7 +4089,7 @@
     const foot = `<div class="note">口径:年份月份日子都是按你的八字推的窗口,不是保票——同样的窗口,主动去办才有事,躲着不动就只是过去了。` +
       `每一条都列了依据,对不上的当场驳回我。日子已经过了三道门槛:黄历不忌、你的日运为吉、建除合这件事。` +
       `想再稳一手,点下面「起一卦复核」——命理定时机、卦象定成败,两头对上才叫准。</div>`;
-    $('wq-out').innerHTML = head + years + gui + also + foot;
+    $('wq-out').innerHTML = head + rom + years + gui + also + foot;
   }
   function wqToCast() {
     if (!wqRes) return;
@@ -4538,6 +4580,143 @@
       const [y, m, d] = v.split('-').map(Number); const dt = new Date(y, m - 1, d, 12);
       return isNaN(dt) ? null : dt; } catch (e) { return null; }
   }
+  // ═══════════════════ 生辰档案:增删改查,一处管全应用 ═══════════════════
+  // 这个板块**一个断法都不许自己算**(§四)——它只管存取。
+  // 「这份档案准不准」那一行取自 Dingshi.stability,不自己另判。
+  //
+  // 缘起(v0.84):档案簿原先只是吉日板块里的一个下拉 + 一个「存档」按钮,
+  // 只能存和切,**不能删、不能改**;而且存档时性别默认「男」——
+  // 那正是 v0.83 修掉的那个 100% 的洞的另一半。
+  let daEditing = null;   // null=没在编;{id:null}=新建;{id:'p...'}=改某一份
+  const daErr = m => { $('da-err').textContent = m || ''; };
+  const daCur = () => { try { return localStorage.getItem(PROFCUR) || ''; } catch (e) { return ''; } };
+  function daSave(list) { try { localStorage.setItem(PROFKEY, JSON.stringify(list)); } catch (e) { daErr('存不进去——浏览器存储可能满了或被禁用。'); } }
+  function daNewId(date, name) { return 'p' + String(date || '').replace(/-/g, '') + '_' + Date.now().toString(36) + '_' + (name || '').length; }
+
+  // 一份档案「准不准」:只报事实,不改判(与 v0.77 定时辰那一段同口径)
+  function daQuality(p) {
+    const bad = [];
+    if (!p.gender) bad.push('<b>性别没填</b>——这一份排不出大运,年表、问机、验盘簿都用不了');
+    if (!p.date) bad.push('<b>生日没填</b>');
+    const noClock = !p.time || p.time === '??:??' || /NaN/.test(p.time);
+    if (noClock) bad.push('钟点没填——喜忌有三分之二的概率会随时辰翻盘,底下的话只能当一半看');
+    else if (p.gender && p.date) {
+      try {
+        const [y, m, d] = p.date.split('-').map(Number);
+        const st = Dingshi.stability({ birth: new Date(y, m - 1, d), gender: p.gender, lon: undefined });
+        if (st && st.level && st.level !== '稳') { /* 填了钟点就不必再报稳定度 */ }
+      } catch (e) {}
+    }
+    if (!p.place) bad.push('出生地没填——时柱按东八区排,偏西的地方会差一格');
+    return bad;
+  }
+
+  function daFormHtml(p) {
+    p = p || { name: '', date: '', time: '', gender: '', place: '' };
+    return `<div class="ypbox"><h4>${p.id ? '改 这 一 份' : '新 建 一 份'}</h4>
+      <div class="daform">
+        <input type="text" class="danm" id="da-f-name" maxlength="12" placeholder="叫什么(我/老妈/阿强)" value="${esc(p.name || '')}">
+        <input type="date" id="da-f-date" value="${esc(p.date || '')}">
+        <input type="time" id="da-f-time" value="${esc(/^\d\d:\d\d$/.test(p.time || '') ? p.time : '')}" title="几点几分,知道就填">
+        <select id="da-f-gender"><option value="">性别·必填</option><option value="男"${p.gender === '男' ? ' selected' : ''}>男</option><option value="女"${p.gender === '女' ? ' selected' : ''}>女</option></select>
+        <input type="text" class="dapl" id="da-f-place" placeholder="出生地(市/省)" value="${esc(p.place || '')}">
+      </div>
+      <div class="btnrow ypacts">
+        <button type="button" class="primary" id="btn-da-save">存下来</button>
+        <button type="button" class="ghost ypmini" id="btn-da-cancel">不改了</button>
+      </div>
+      <div class="note ypflat">性别必填:男女的大运方向是反的,不填这一份就排不出大运。钟点不知道可以空着,但底下会照实标出来。</div>
+    </div>`;
+  }
+
+  function daRender() {
+    const list = jrProfiles();
+    const cur = daCur();
+    $('da-edit').innerHTML = daEditing ? daFormHtml(daEditing.id ? list.find(x => x.id === daEditing.id) : null) : '';
+    $('da-list').innerHTML = !list.length
+      ? '<div class="note">还没有档案。点上面「新建一份」,或者先在「问卦」那页填好生日再点「把当前用的存成一份」。</div>'
+      : list.map(p => {
+        const bad = daQuality(p);
+        return `<div class="darow${p.id === cur ? ' on' : ''}" data-id="${esc(p.id)}">
+          <div class="dah"><span class="dan">${esc(p.name || '(没起名)')}</span>
+            <span class="dat">${esc(p.date || '生日未填')}${/^\d\d:\d\d$/.test(p.time || '') ? ' ' + esc(p.time) : ' 钟点未填'}
+              · ${esc(p.gender || '性别未填')}${p.place ? ' · ' + esc(p.place) : ''}</span>
+            ${p.id === cur ? '<span class="ypseal">正在用</span>' : ''}</div>
+          ${bad.length ? `<div class="dabad">${bad.join('<br>')}</div>` : ''}
+          <div class="btnrow ypacts">
+            ${p.id === cur ? '' : '<button type="button" class="ghost ypmini dause">用这份</button>'}
+            <button type="button" class="ghost ypmini daedit">改</button>
+            <button type="button" class="ghost ypmini dacopy">复制一份</button>
+            <button type="button" class="ghost ypmini dadel">删</button>
+          </div></div>`;
+      }).join('');
+    daBind();
+  }
+
+  function daBind() {
+    const byId = id => jrProfiles().find(x => x.id === id);
+    document.querySelectorAll('#sec-dangan .dause').forEach(b => b.onclick = () => {
+      const id = b.closest('.darow').dataset.id;
+      jrApplyProfile(id); daErr(''); daRender();
+    });
+    document.querySelectorAll('#sec-dangan .daedit').forEach(b => b.onclick = () => {
+      daEditing = { id: b.closest('.darow').dataset.id }; daErr(''); daRender();
+    });
+    document.querySelectorAll('#sec-dangan .dacopy').forEach(b => b.onclick = () => {
+      const p = byId(b.closest('.darow').dataset.id); if (!p) return;
+      const list = jrProfiles();
+      list.push(Object.assign({}, p, { id: daNewId(p.date, p.name), name: (p.name || '') + '(副本)' }));
+      daSave(list); daRender();
+    });
+    document.querySelectorAll('#sec-dangan .dadel').forEach(b => b.onclick = () => {
+      const id = b.closest('.darow').dataset.id, p = byId(id);
+      // 本机存储没有回收站,删了就没了——所以问一句
+      if (!confirm(`删掉「${(p && p.name) || '这一份'}」?本机存储没有回收站,删了找不回来。`)) return;
+      daSave(jrProfiles().filter(x => x.id !== id));
+      if (daCur() === id) { try { localStorage.removeItem(PROFCUR); } catch (e) {} }
+      daRender(); jrRenderProfiles();
+    });
+    const sv = $('btn-da-save');
+    if (sv) sv.onclick = () => {
+      const name = $('da-f-name').value.trim(), date = $('da-f-date').value,
+        time = $('da-f-time').value, g = $('da-f-gender').value, place = $('da-f-place').value.trim();
+      if (!date) { daErr('生日得填。'); return; }
+      if (!g) { daErr('性别得填——男女的大运方向是反的,不填这一份排不出大运。'); return; }
+      daErr('');
+      const list = jrProfiles();
+      if (daEditing && daEditing.id) {
+        const p = list.find(x => x.id === daEditing.id);
+        if (p) Object.assign(p, { name: name || p.name, date, time, gender: g, place });
+      } else {
+        list.push({ id: daNewId(date, name), name: name || '未命名', date, time, gender: g, place });
+      }
+      daSave(list); daEditing = null; daRender(); jrRenderProfiles();
+    };
+    const cc = $('btn-da-cancel');
+    if (cc) cc.onclick = () => { daEditing = null; daErr(''); daRender(); };
+  }
+
+  if ($('btn-da-new')) {
+    $('btn-da-new').addEventListener('click', () => { daEditing = { id: null }; daErr(''); daRender(); });
+    $('btn-da-fromcur').addEventListener('click', () => {
+      let date = '', time = '', g = '', place = '';
+      try {
+        date = localStorage.getItem(BKEY) || '';
+        const hv = localStorage.getItem(HRKEY) || '';
+        const hm = dxParseHour(hv);
+        time = /^\d\d?:\d\d$/.test(hv) ? hv : (hv ? `${String(hm.h).padStart(2, '0')}:${String(hm.mi).padStart(2, '0')}` : '');
+        g = localStorage.getItem(GKEY) || '';
+        place = localStorage.getItem(PLKEY) || '';
+      } catch (e) {}
+      if (!date) { daErr('当前还没填生日,存不了。先去「问卦」那页填。'); return; }
+      daEditing = { id: null };
+      daErr(''); daRender();
+      // 把当前值预填进表单
+      if ($('da-f-date')) { $('da-f-date').value = date; $('da-f-time').value = time; $('da-f-gender').value = g; $('da-f-place').value = place; }
+    });
+  }
+  window.dxDanganRender = daRender;
+
   // ═══════════════════ 验盘簿:盲测封存,让这程序自己交成绩单 ═══════════════════
   // 断法与计分全在 yanpan.js 里算死(而 yanpan 的方向又只取自 Dingshi.yearEv),
   // 这里只管三件事:收输入、把封存的东西**藏严实**、把成绩摊开。
@@ -5080,11 +5259,11 @@
 
   const VIEWS = {
     ask: ['sec-quick', 'sec-today', 'sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
+    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {
@@ -5115,6 +5294,7 @@
     showView('boards');
     // 验盘簿要在进板块时重算一遍:生日/档案可能在别处改过,簿子得跟着换人
     if (id === 'sec-yanpan' && window.dxYanpanRender) { try { window.dxYanpanRender(); } catch (e) {} }
+    if (id === 'sec-dangan' && window.dxDanganRender) { try { window.dxDanganRender(); } catch (e) {} }
   }
   window.dxShowView = showView; window.dxOpenBoard = openBoard; window.dxDrawCard = drawCard;
   $('bottomnav').addEventListener('click', e => {

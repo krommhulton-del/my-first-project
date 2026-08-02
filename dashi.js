@@ -137,21 +137,45 @@
     // 所以:dir 一律传 0(不表态),改传第六个参数 ju(聚 +1 / 散 -1)——那是古法「合主聚、冲主散」的说法,
     //   但实测覆盖率只有 3/37(合)与 2/37(冲),32 件两样都没有,**故只作旁注,不计入方向**。
     // 方向留给处境:调用方传 opts.marital 才给,且断语里必须写明那一层是处境定的,不是卦定的。
+    // ——— 姻缘分两路(v0.84)———
+    // 缘起(用户 2026-08-02):「谈恋爱不一定以结婚为前提,也可能只是很久没谈了想试一下。
+    // 这个程度也应该放得近一点……但不能因为要近就胡编乱造,一定要客观。」
+    //
+    // 先量后改,量出两件事:
+    //   ① **按「拆两档各报各的年份」去做,日期不会变近,反而更远**——
+    //      只靠「动一动」类够 3.4 分门槛的第一年平均落在 2033.36,而现在报的是 2029.63,
+    //      而且 78 副盘里只有 59 副有。那条路走不通,已作废。
+    //   ② 病根不在权重,在**粒度**:3.4 这个门槛是按「人生大事」校准的,
+    //      而「谈一个」本来就是小事、本来就发生得密。同一批证据落到**月**上,
+    //      近档门槛 2.0 时:36/36 副盘都有信号,**第一个窗口平均在 3.4 个月之后**,
+    //      未来 24 个月里命中 3.9 个月(约六分之一,仍有区分度)。
+    //
+    // 所以修法是:**不动任何权重、不新造任何证据**,只把已有的姻缘证据分成两营,
+    //   「定下来」那一营照旧报年份(**报出来的年份一个都不许变**,有测试钉着),
+    //   「动一动」那一营另外报未来两年的月份窗口。
+    // 铁律(**这一条我头一版写错过,照实改**):原先写的是「近档单条权重不许高于远档最低权重」,
+    //   可配偶星透干 2.0 本来就大于天喜 1.6,那句话根本不成立。
+    //   真正成立、也真正管用的不变量是:**这八条的权重一分没动**,拆档只是给已有证据贴了个标签。
+    //   有测试拿一张冻结的权重表逐条比对——只要有人为了「让它更近」去动某一条的分,测试当场变红。
     const peiCls = peiOuClass(chart.gender);
     const peiOnGan = gCls === peiCls, peiOnZhi = zCls === peiCls;
-    if (peiOnGan) add('yinyuan', 2, `今年明面上那股力正是${chart.gender === '女' ? '男人缘' : '女人缘'}这一路,摆在台面上`, 0, gTag === '忌' ? '对象这条线上你要多贴钱贴心力,别用「我付出了」来要回报' : '对象是明摆着往你这边走的,主动一点就成', 0,
+    let yyNear = 0, yyFar = 0;
+    const near = w => { yyNear += w; }, far = w => { yyFar += w; };
+    if (peiOnGan) { near(2); } if (peiOnGan) add('yinyuan', 2, `今年明面上那股力正是${chart.gender === '女' ? '男人缘' : '女人缘'}这一路,摆在台面上`, 0, gTag === '忌' ? '对象这条线上你要多贴钱贴心力,别用「我付出了」来要回报' : '对象是明摆着往你这边走的,主动一点就成', 0,
       `流年天干${g}为${gShen}(${chart.gender === '女' ? '夫星' : '妻星'})透出`);
-    if (peiOnZhi) add('yinyuan', 1.2, `今年底下暗着走的也是${chart.gender === '女' ? '男人缘' : '女人缘'}这一路——不摆在明面上,但一直在`, 0, null, 0,
+    if (peiOnZhi) { near(1.2); } if (peiOnZhi) add('yinyuan', 1.2, `今年底下暗着走的也是${chart.gender === '女' ? '男人缘' : '女人缘'}这一路——不摆在明面上,但一直在`, 0, null, 0,
       `流年支${z}藏${zhu}为${zShen},配偶星伏于支下`);
-    if (heDay) add('yinyuan', 2.5, '今年这股力与你婚姻那一块正好合在一处', 0, '婚姻这一块被合动:见家长、订婚、领证这类要「定下来」的动作挑这一年办最顺', 1,
+    if (heDay) { far(2.5); } if (heDay) add('yinyuan', 2.5, '今年这股力与你婚姻那一块正好合在一处', 0, '婚姻这一块被合动:见家长、订婚、领证这类要「定下来」的动作挑这一年办最顺', 1,
       `流年支${z}与你日支${dz}六合——合动婚姻宫`);
-    if (sanheDay) add('yinyuan', 1.8, `今年有几股力凑成一团、正往你的婚姻这一块使`, 0, '会被一群人推着往前走:相亲、介绍、朋友局里成的概率最高', 1,
+    if (sanheDay) { far(1.8); } if (sanheDay) add('yinyuan', 1.8, `今年有几股力凑成一团、正往你的婚姻这一块使`, 0, '会被一群人推着往前走:相亲、介绍、朋友局里成的概率最高', 1,
       `流年支${z}与日支${dz}成三合局——婚姻宫被牵动`);
-    if (isHongluan) add('yinyuan', 2, '红鸾星动(婚恋之喜的老信号)', 0, '这一年适合把婚事摆上桌面:提亲、定日子、办酒', 1);
-    if (isTianxi) add('yinyuan', 1.6, '天喜临(喜庆添丁之应)', 0, null, 1);
-    if (isTaohua) add('yinyuan', 1.4, '桃花当值——人缘情事活络', 0, '桃花旺:单身的多出门多见人,有主的把边界划清,暧昧最容易在这一年出事', 0, `桃花(咸池)临${z}——人缘情事活络`);
-    if (chongDay) add('yinyuan', 1.6, '今年这股力正冲着你婚姻那一块来——聚散都在这一年见分晓', 0, '婚姻这一块被冲:该摊开的话别憋,拖到年底最容易散;也主自己或伴侣身体上的一次折腾', -1,
+    if (isHongluan) { far(2); } if (isHongluan) add('yinyuan', 2, '红鸾星动(婚恋之喜的老信号)', 0, '这一年适合把婚事摆上桌面:提亲、定日子、办酒', 1);
+    if (isTianxi) { far(1.6); } if (isTianxi) add('yinyuan', 1.6, '天喜临(喜庆添丁之应)', 0, null, 1);
+    if (isTaohua) { near(1.4); } if (isTaohua) add('yinyuan', 1.4, '桃花当值——人缘情事活络', 0, '桃花旺:单身的多出门多见人,有主的把边界划清,暧昧最容易在这一年出事', 0, `桃花(咸池)临${z}——人缘情事活络`);
+    if (chongDay) { near(1.6); } if (chongDay) add('yinyuan', 1.6, '今年这股力正冲着你婚姻那一块来——聚散都在这一年见分晓', 0, '婚姻这一块被冲:该摊开的话别憋,拖到年底最容易散;也主自己或伴侣身体上的一次折腾', -1,
       `流年支${z}冲你日支${dz}——夫妻宫受冲,聚散都在这一年见分晓`);
+    // 两营的分数挂到姻缘那一类上,供 romanceTracks 取用(不参与总分,总分一分没动)
+    if (cats.yinyuan) { cats.yinyuan.nearScore = +yyNear.toFixed(2); cats.yinyuan.farScore = +yyFar.toFixed(2); }
     // 方向这一层:命盘不定,处境定。填了才给,且标明来源。
     if (cats.yinyuan) {
       if (marital === '单身' || marital === '有伴') {
@@ -363,6 +387,7 @@
       const list = Object.keys(ev.cats).map(k => ({
         key: k, label: CATS[k].label, score: ev.cats[k].score, dirSum: ev.cats[k].dirSum,
         held: !!ev.cats[k].held, juSum: ev.cats[k].juSum || 0,
+        nearScore: ev.cats[k].nearScore || 0, farScore: ev.cats[k].farScore || 0,
         reasons: ev.cats[k].reasons.map(toMonth),
         techs: (ev.cats[k].techs || []).map(toMonth),
         tips: (ev.cats[k].tips || []).map(t => ({ w: t.w, tip: toMonth(t.tip) })),
@@ -514,6 +539,60 @@
     return GAN[gi] + ZHI[zi];
   }
 
+  // ——— 姻缘的两路应期(v0.84)———
+  // far:「定下来」那一路,照旧按年报,门槛与年表节点同一个(3.4),**报出来的年份一个都不许变**。
+  // near:「动一动」那一路,按**月**报未来 24 个月,门槛 2.0。
+  //
+  // 两条铁规矩:
+  //   ① **不许为了让它更近而调高近档的分**。八条证据的权重一分没动(有冻结表钉着);
+  //      近档报得近纯粹因为它触发得密(桃花年年有、六合三年一遇),不是因为我加了权。
+  //   ② **方向照旧不给**(v0.77):这两路都只报「哪一年/哪几个月有动静」,不报是好是坏。
+  //      单身的人问「什么时候能谈一个」,程序给窗口,**不承诺结果**。
+  const NEAR_TH = 2.0, FAR_TH = 3.4, NEAR_MONTHS = 24;
+  function romanceTracks(chart, opts) {
+    const o = opts || {};
+    const from = o.from instanceof Date ? o.from : new Date();
+    const y0 = from.getFullYear(), m0 = from.getMonth() + 1;
+    const years = o.years || 12;
+    const birthYear = chart.birth.getFullYear();
+    const dyAt = y => (chart.dayun.list || []).find(d => (y - birthYear) >= d.fromAge && (y - birthYear) < d.fromAge + 10);
+
+    const far = [];
+    for (let y = y0; y < y0 + years; y++) {
+      const du = dyAt(y);
+      const ev = yearEvidence(chart, ganZhiOfYear(y), du ? du.gz : null, o);
+      const yy = ev.cats.yinyuan;
+      if (!yy || yy.score < FAR_TH) continue;
+      if ((yy.farScore || 0) <= 0) continue;              // 全靠近档凑够分的,不算「定下来」
+      far.push({ year: y, age: y - birthYear, score: +yy.score.toFixed(1), farScore: yy.farScore,
+        reasons: yy.reasons.slice(0, 3) });
+    }
+    const nearList = [];
+    for (let k = 0; k < NEAR_MONTHS; k++) {
+      const y = y0 + Math.floor((m0 - 1 + k) / 12), mi = ((m0 - 1 + k) % 12) + 1;
+      const du = dyAt(y);
+      const ms = monthsOf(chart, y, du ? du.gz : null, o);
+      const m = ms.find(x => x.idx === mi);
+      if (!m) continue;
+      const yy = (m.cats || []).find(x => x.key === 'yinyuan');
+      if (!yy || (yy.nearScore || 0) < NEAR_TH) continue;
+      nearList.push({ year: y, month: mi, name: m.name, span: m.span,
+        score: +(yy.nearScore || 0).toFixed(1), reasons: yy.reasons.slice(0, 2) });
+    }
+    // 诚实那一段:门槛低就报得密,这件事必须当面说,不能让人以为「报得多=看得准」
+    const dens = nearList.length;
+    return {
+      near: nearList, far, nearTh: NEAR_TH, farTh: FAR_TH, span: NEAR_MONTHS,
+      note: dens
+        ? `「容易开始点什么」这一档报了未来两年里的 ${dens} 个月(约每 ${(NEAR_MONTHS / dens).toFixed(1)} 个月一次)。`
+          + `它报得密,是因为这一档收的本来就是小事——桃花、配偶星引动这类年年都有;`
+          + `**门槛低不等于看得准**,它只挑出「这几个月比别的月份活络」,不承诺那几个月一定会怎样。`
+        : '未来两年里,这一档一个月都没挑出来——照实说没有,不硬凑一个。',
+      heldNote: '这两路都只报什么时候有动静,**不报是好是坏**——那要看你眼下是单身还是有伴,'
+        + '是处境定的,不是命盘定的。',
+    };
+  }
+
   // 交给 AI 的材料(结构化,断语已由程序算死,AI 只许解释不许另立结论)
   function material(chart, tl) {
     const nd = tl.nodes.slice(0, 24).map(n =>
@@ -530,5 +609,6 @@
 ${tl.maritalNote}`;
   }
 
-  return { timeline, yearEvidence, material, CATS, ganZhiOfYear, monthsOf, hotMonths, ZHI_MONTH };
+  return { timeline, yearEvidence, material, CATS, ganZhiOfYear, monthsOf, hotMonths, ZHI_MONTH,
+    romanceTracks, NEAR_TH, FAR_TH };
 }));

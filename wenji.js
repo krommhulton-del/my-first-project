@@ -301,8 +301,16 @@
     // 起卦复核用的用神(与断卦那边同口径)
     const yong = Najia.yongShenOf(question, chart.gender);
 
+    // 问姻缘时,另给一路「容易开始点什么」的月份窗口(v0.84)。
+    // 断法全在 dashi.romanceTracks 里算死,这里只取用——**不自己另算喜忌、不自己另定门槛**(§四)。
+    // 缘起:用户说「谈恋爱不必以结婚为前提,想谈一个的那种,应期该报得近些」。
+    // 量出来的结论是:病根在粒度不在权重,所以小事报到月、大事仍报到年。
+    const romance = catKey === 'yinyuan'
+      ? Dashi.romanceTracks(chart, { from: opts.from instanceof Date ? opts.from : new Date(nowYear, 0, 1), years: span })
+      : null;
+
     return {
-      question, topic, nowYear, span, windows,
+      question, topic, nowYear, span, windows, romance,
       guiren: Object.assign({}, gr, { years: grYears, months: grMonths, days: grDays }), also, yong,
       empty: windows.length === 0,
     };

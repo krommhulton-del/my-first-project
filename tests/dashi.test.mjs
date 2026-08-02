@@ -331,5 +331,87 @@ t('白话与原文是一一对应的两列,不许一多一少', () => {
   }
 });
 
+console.log('【九】姻缘分两路:「谈一个」与「定下来」不是一回事(v0.84)');
+// 缘起(用户 2026-08-02):谈恋爱不必以结婚为前提,「想谈一个」这一路的应期该报得近些,
+// 但他同时叮嘱「不能因为要近就胡编乱造」。所以先量:
+//   ① 按「拆两档各报各的年份」做,日期**反而更远**(近档够 3.4 分的第一年平均 2033.36,
+//      现在报的是 2029.63,78 副盘里只有 59 副有)——那条路当场作废;
+//   ② 病根在粒度不在权重。同一批证据落到**月**上,近档门槛 2.0:36/36 副盘都有信号,
+//      第一个窗口平均在 **3.4 个月**之后。
+// 于是修法是「不动权重、只贴标签、小事报到月」。这一节把这件事的三条命门钉死。
+t('**权重一分没动**:八条姻缘证据比对冻结表', () => {
+  // 这张表是拆档之前的原样。谁要为了「让它更近」去动某一条的分,这条测试当场变红。
+  const FROZEN = { 配偶星透干: 2, 配偶星伏支: 1.2, 六合婚姻宫: 2.5, 三合局: 1.8, 红鸾: 2, 天喜: 1.6, 桃花: 1.4, 冲婚姻宫: 1.6 };
+  const KEY = { 配偶星透干: '明面上那股力', 配偶星伏支: '底下暗着走', 六合婚姻宫: '正好合在一处',
+    三合局: '凑成一团', 红鸾: '红鸾星动', 天喜: '天喜临', 桃花: '桃花当值', 冲婚姻宫: '正冲着你婚姻' };
+  const seen = {};
+  for (const c of charts) for (let y = 2015; y < 2045; y++) {
+    const yy = Dashi.yearEvidence(c, Dashi.ganZhiOfYear(y), null, {}).cats.yinyuan;
+    if (!yy) continue;
+    // 只有一条证据的年份,总分就是那一条的权重——拿它反推,不必读源码
+    if (yy.reasons.filter(r => !/留白|处境/.test(r)).length !== 1) continue;
+    const r = yy.reasons.find(x => !/留白|处境/.test(x));
+    for (const k of Object.keys(KEY)) if (r.includes(KEY[k])) seen[k] = +yy.score.toFixed(2);
+  }
+  const got = Object.keys(seen).length;
+  ok(got >= 6, `只反推出 ${got} 条证据的权重,样本不够(要 ≥6)`);
+  for (const k of Object.keys(seen)) eq(seen[k], FROZEN[k], `「${k}」的权重被动过`);
+});
+t('两营正好覆盖八条:近 + 远 恒等于姻缘总分', () => {
+  let n = 0;
+  for (const c of charts) for (let y = 2015; y < 2045; y++) {
+    const yy = Dashi.yearEvidence(c, Dashi.ganZhiOfYear(y), null, {}).cats.yinyuan;
+    if (!yy) continue;
+    n++;
+    const sum = +((yy.nearScore || 0) + (yy.farScore || 0)).toFixed(2);
+    ok(Math.abs(sum - yy.score) < 0.001, `${y} 年:近${yy.nearScore}+远${yy.farScore} ≠ 总分${yy.score}`);
+  }
+  ok(n > 100, `样本太少(${n})`);
+});
+t('「动一动」报到月、「定下来」报到年,而且都给得出来', () => {
+  let withNear = 0;
+  for (const c of charts) {
+    const r = Dashi.romanceTracks(c, { from: new Date(2026, 7, 2) });
+    ok(Array.isArray(r.near) && Array.isArray(r.far), '两路都要有');
+    for (const x of r.near) {
+      ok(x.month >= 1 && x.month <= 12, '近档必须落到月');
+      ok(x.score >= Dashi.NEAR_TH, `近档分 ${x.score} 低于门槛`);
+    }
+    for (const x of r.far) {
+      ok(x.year >= 2026, '远档必须是年');
+      ok(x.score >= Dashi.FAR_TH, `远档分 ${x.score} 低于门槛`);
+      ok(x.farScore > 0, '全靠近档凑够分的年份,不许算作「定下来」');
+    }
+    if (r.near.length) withNear++;
+  }
+  ok(withNear >= charts.length - 1, `${charts.length} 副盘里只有 ${withNear} 副有近档信号,门槛怕是定高了`);
+});
+t('近档确实比远档近——但这是量出来的,不是调出来的', () => {
+  const FROM = new Date(2026, 7, 2);
+  let nearFirst = [], farFirst = [];
+  for (const c of charts) {
+    const r = Dashi.romanceTracks(c, { from: FROM });
+    if (r.near.length) nearFirst.push((r.near[0].year - 2026) * 12 + r.near[0].month - 8);
+    if (r.far.length) farFirst.push((r.far[0].year - 2026) * 12);
+  }
+  const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+  ok(nearFirst.length && farFirst.length, '样本不足');
+  ok(avg(nearFirst) < avg(farFirst), `近档第一个窗口(${avg(nearFirst).toFixed(1)}月)该早于远档(${avg(farFirst).toFixed(1)}月)`);
+  ok(avg(nearFirst) <= 12, `近档第一个窗口平均 ${avg(nearFirst).toFixed(1)} 个月,不够近`);
+});
+t('报得密这件事必须当面说,且两路都不许给吉凶方向', () => {
+  const r = Dashi.romanceTracks(charts[0], { from: new Date(2026, 7, 2) });
+  ok(/门槛低不等于看得准|一个月都没挑出来/.test(r.note), '没把「报得密」这件事说清:' + r.note);
+  ok(/不报是好是坏/.test(r.heldNote), '两路都不许给方向,这句话得在:' + r.heldNote);
+  const all = (r.note + r.heldNote + r.near.map(x => x.reasons.join('')).join('') + r.far.map(x => x.reasons.join('')).join(''));
+  // 这条断言第一版把「一定会」也算作违规,结果误伤了自己那句诚实话
+  // ——「不承诺那几个月**一定会**怎样」是个否定句,正是该说的。改成只抓肯定式的断言。
+  ok(!/感情大吉|必有波折|必定[有能]|铁定/.test(all), '不许自己补一个吉凶断语');
+  ok(!/(?<!不承诺|不许|不会)一定[会能]遇/.test(all), '不许承诺一定遇得到');
+  const hits = Tijian.check(r.note + ' ' + r.heldNote, { zone: '断语', minChars: 0 }).hits
+    .filter(h => ['术语', '说教', '空话', '花钱消灾'].includes(h.kind));
+  ok(!hits.length, '这两段话不干净:' + hits.map(h => h.kind + ':' + h.snippet).join('、'));
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);
