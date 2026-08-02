@@ -668,6 +668,16 @@
   .ypmini { font-size: .8rem; padding: 4px 10px; }
   .ypline { margin-bottom: 6px; }
   .romfar { margin-top: 6px; }
+  /* ——— 双人合盘 ——— */
+  .hplayer { border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; margin: 9px 0; }
+  .hplayer > .hph { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin-bottom: 5px; }
+  .hplayer .hpn { font-family: var(--disp); font-size: 1rem; }
+  .hpv { font-size: .9rem; line-height: 1.75; color: var(--dim); }
+  .hpb { border-radius: 999px; padding: 1px 9px; font-size: .78rem; border: 1px solid var(--line); }
+  .hpb.shun { color: var(--jade); border-color: var(--jade); }
+  .hpb.ning { color: var(--slate); border-color: var(--slate); }
+  .hprel { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
+  .hprel > b { font-family: var(--disp); font-weight: normal; }
   /* ——— 生辰档案 ——— */
   .darow { border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; margin: 9px 0; }
   .darow.on { border-color: var(--celadon); background: var(--celadon-soft); }
@@ -766,7 +776,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.84</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.85</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1027,6 +1037,7 @@
     <div class="bmenu">
       <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">定 时 辰 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-hepan"><span class="bg">合</span><span><span class="bt">双 人 合 盘 · 这人跟你对不对得上</span><span class="bd">两副盘摆一起逐层看:他旺不旺你、你旺不旺他、处起来顺不顺、缺的那一味补不补得上、未来十年谁上谁下。恋爱/合伙/朋友/共事分开算</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dangan"><span class="bg">档</span><span><span class="bt">生 辰 档 案 · 一处管全应用</span><span class="bd">你、家里人、朋友的生辰各存一份,随时切换;能改能删。性别必填——男女的大运方向是反的,填错等于看别人的命</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yanpan"><span class="bg">验</span><span><span class="bt">验 盘 簿 · 这程序对你到底准不准</span><span class="bd">先让它把对某一年的判断封起来(你看不见),你再写下那年实际发生了什么,然后开封计分——连它错在哪几件都摆出来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
@@ -1278,6 +1289,23 @@
     </details>
   </section>
 
+  <section id="sec-hepan" class="voff">
+    <h2>双 人 合 盘 · 这人跟你对不对得上</h2>
+    <div class="ypwarn" id="hp-honest"></div>
+    <div class="note">从档案里挑两个人。没有档案先去「生辰档案」建两份——<b>两边都得填性别</b>。
+      这里<b>不给「合适/不合适」</b>:只把两副盘对得上的地方和对不上的地方摆出来,再说清对不上的地方通常卡在什么事上。</div>
+    <div class="qwrow">
+      <select id="hp-a" class="wjin"></select>
+      <span class="dat">与</span>
+      <select id="hp-b" class="wjin"></select>
+      <button type="button" class="primary" id="btn-hp-go">合一盘</button>
+      <button type="button" class="gold hidden" id="btn-hp-ai">请东玄把这盘讲透</button>
+    </div>
+    <div class="err" id="hp-err"></div>
+    <div id="hp-out"></div>
+    <div class="stream" id="hp-ai"></div>
+  </section>
+
   <section id="sec-dangan" class="voff">
     <h2>生 辰 档 案 · 一处管全应用</h2>
     <div class="note">存一次,全应用通用——运势、年表、择日、地利、验盘簿都吃这份档案。
@@ -1452,7 +1480,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.84 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.85 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1492,6 +1520,7 @@
 <script src="wenji.js"></script>
 <script src="dingshi.js"></script>
 <script src="yanpan.js"></script>
+<script src="hepan.js"></script>
 <script src="tijian.js"></script>
 <script>
 (function () {
@@ -2920,8 +2949,22 @@
     // 也就是说填错性别看到的基本是另一个人的一生。时辰不知道情有可原(v0.77 因此选择「照算但把话说清」),
     // 性别没人不知道——所以这一层的处置不是「说清」,是**拒绝出盘**。
     // 性别照实传下去,**不许在这里顶一个「男」**;bazi 那头会据实标 genderKnown 并把大运停掉。
-    try { return Bazi.chart(dt, gender(ctx || 'q'), lon); } catch (e) { return null; }
+    return dxChartFrom({ date: bd, hour: hv, gender: gender(ctx || 'q'), lon });
   }
+  // **全应用唯一一处调 Bazi.chart**(§四:命盘唯一入口,有结构测试守着)。
+  // dxBirthChart 拿的是「当前这个人」;合盘要拿档案里任意一个人,所以把入口抽到这里共用。
+  // 缘起(v0.85):合盘板块头一版自己写了一个 hpChartOf 直接调 Bazi.chart,
+  // 结构测试当场逮住——那正是它守的东西:两处排盘入口,喜忌迟早分家。
+  function dxChartFrom(p) {
+    if (!p || !p.date) return null;
+    const [y, m, d] = String(p.date).split('-').map(Number);
+    if (!y) return null;
+    const hm = dxParseHour(p.hour || '');
+    let lon = p.lon;
+    if (lon == null && p.place) { try { const x = Dili.find(p.place); if (x) lon = x[2]; } catch (e) {} }
+    try { return Bazi.chart(new Date(y, m - 1, d, hm.h, hm.mi), p.gender, lon); } catch (e) { return null; }
+  }
+  window.dxChartFrom = dxChartFrom;
   // 排不出盘时,说清到底差什么;别笼统说「先填生日」
   function dxWhyNoChart() { return '先填出生日期——没有生日就排不出盘。'; }
   // **只有吃大运的板块才需要这一道**(年表、问机、验盘簿、定时辰、地利的「时」层)。
@@ -4580,6 +4623,84 @@
       const [y, m, d] = v.split('-').map(Number); const dt = new Date(y, m - 1, d, 12);
       return isNaN(dt) ? null : dt; } catch (e) { return null; }
   }
+  // ═══════════════════ 双人合盘:两副盘摆一起,逐层看哪儿顺哪儿拧 ═══════════════════
+  // 断法全在 hepan.js 里算死,这里只管挑人、摆结果。
+  // 这个板块的诚实分级是全项目最低的一档,所以 HONEST 那段话摆在**第一屏**,不许收进脚注。
+  let hpRes = null;
+  const hpErr = m => { $('hp-err').textContent = m || ''; };
+  // 走全应用唯一那个排盘入口(§四),不自己再开一处
+  function hpChartOf(p) {
+    if (!p || !p.date || !p.gender) return null;
+    return dxChartFrom({ date: p.date, hour: p.time || '', gender: p.gender, place: p.place || '' });
+  }
+  function hpFill() {
+    if ($('hp-honest')) $('hp-honest').innerHTML = Hepan.HONEST.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+    const list = jrProfiles();
+    const usable = list.filter(p => p.date && p.gender);
+    const opts = usable.map(p => `<option value="${esc(p.id)}">${esc(p.name || '未命名')}(${esc(p.date)}${p.gender ? ' ' + esc(p.gender) : ''})</option>`).join('');
+    for (const id of ['hp-a', 'hp-b']) {
+      const sel = $(id); if (!sel) continue;
+      const keep = sel.value;
+      sel.innerHTML = `<option value="">挑一份档案</option>` + opts;
+      if (keep) sel.value = keep;
+    }
+    const short = list.length - usable.length;
+    hpErr(usable.length >= 2 ? '' :
+      (list.length < 2
+        ? '至少要两份档案才合得了盘。去「生辰档案」把两个人都建上。'
+        : `有 ${short} 份档案缺生日或性别,合盘用不了——去「生辰档案」补齐(性别尤其要紧,男女的大运方向是反的)。`));
+  }
+  function hpRender(r) {
+    const L = r.layers;
+    const badge = v => `<span class="hpb ${/顺|补得上/.test(v) ? 'shun' : /拧|补不上/.test(v) ? 'ning' : ''}">${esc(v)}</span>`;
+    const layer = (nm, v, body) => `<div class="hplayer"><div class="hph"><span class="hpn">${nm}</span>${badge(v)}</div><div class="hpv">${body}</div></div>`;
+    const rels = Object.keys(r.rels).map(k => {
+      const x = r.rels[k];
+      return `<div class="hprel"><b>${esc(x.label)}</b> ${badge(x.band)}<div class="hpv">${esc(x.say)}</div>` +
+        `<div class="note ypflat">这一路为什么这么看重:${esc(x.why)}</div></div>`;
+    }).join('');
+    $('hp-out').innerHTML =
+      `<div class="ypbox"><h4>四 种 关 系 分 开 算</h4>` +
+      `<div class="note ypline">同一对人,合伙可能极好、过日子可能极累——所以不合成一个总分。</div>` + rels + `</div>` +
+      `<div class="ypbox"><h4>逐 层 摊 开</h4>` +
+      layer(`${esc(r.nameB)}旺不旺${esc(r.nameA)}`, L.ta2me.verdict, L.ta2me.lines.map(esc).join('')) +
+      layer(`${esc(r.nameA)}旺不旺${esc(r.nameB)}`, L.me2ta.verdict, L.me2ta.lines.map(esc).join('')) +
+      layer('两个人处起来顺不顺', L.gong.verdict, L.gong.items.map(x => esc(x.why)).join('<br>')) +
+      layer(`${esc(r.nameB)}补不补得上${esc(r.nameA)}`, L.buA.verdict, L.buA.lines.map(esc).join('')) +
+      layer(`${esc(r.nameA)}补不补得上${esc(r.nameB)}`, L.buB.verdict, L.buB.lines.map(esc).join('')) +
+      layer('未来十年谁上谁下', '', esc(L.yun.line)) + `</div>` +
+      `<div class="ypbox"><h4>拧 了 怎 么 绕</h4>` +
+      r.howto.map(x => `<div class="hpv ypline">· ${esc(x)}</div>`).join('') + `</div>` +
+      `<div class="note">${esc(r.heldNote)}</div>`;
+    $('btn-hp-ai').classList.remove('hidden');
+  }
+  async function hpAI() {
+    if (!hpRes) return;
+    const key = getKey();
+    if (!key) { hpErr('要东玄把这盘讲透,先在「问卦」那页的「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
+    hpErr('');
+    $('hp-ai').textContent = '';
+    try {
+      await llmStream([{ role: 'user', content: Hepan.material(hpRes) }], t => { $('hp-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+      dxTijian($('hp-ai'), $('hp-ai').textContent);
+    } catch (e) { hpErr('讲透失败:' + aiErrHint(e, $('ai-provider').value)); }
+  }
+  if ($('btn-hp-go')) {
+    $('btn-hp-go').addEventListener('click', () => {
+      const list = jrProfiles();
+      const pa = list.find(x => x.id === $('hp-a').value), pb = list.find(x => x.id === $('hp-b').value);
+      if (!pa || !pb) { hpErr('两边都得挑一份档案。'); return; }
+      if (pa.id === pb.id) { hpErr('挑的是同一个人——换一个。'); return; }
+      const ca = hpChartOf(pa), cb = hpChartOf(pb);
+      if (!ca || !cb) { hpErr('有一份档案缺生日或性别,排不出盘——去「生辰档案」补齐。'); return; }
+      hpErr('');
+      hpRes = Hepan.pair(ca, cb, { nameA: pa.name || '这一位', nameB: pb.name || '那一位' });
+      hpRender(hpRes);
+    });
+    $('btn-hp-ai').addEventListener('click', hpAI);
+  }
+  window.dxHepanFill = hpFill;
+
   // ═══════════════════ 生辰档案:增删改查,一处管全应用 ═══════════════════
   // 这个板块**一个断法都不许自己算**(§四)——它只管存取。
   // 「这份档案准不准」那一行取自 Dingshi.stability,不自己另判。
@@ -5259,11 +5380,11 @@
 
   const VIEWS = {
     ask: ['sec-quick', 'sec-today', 'sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
+    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {
@@ -5295,6 +5416,7 @@
     // 验盘簿要在进板块时重算一遍:生日/档案可能在别处改过,簿子得跟着换人
     if (id === 'sec-yanpan' && window.dxYanpanRender) { try { window.dxYanpanRender(); } catch (e) {} }
     if (id === 'sec-dangan' && window.dxDanganRender) { try { window.dxDanganRender(); } catch (e) {} }
+    if (id === 'sec-hepan' && window.dxHepanFill) { try { window.dxHepanFill(); } catch (e) {} }
   }
   window.dxShowView = showView; window.dxOpenBoard = openBoard; window.dxDrawCard = drawCard;
   $('bottomnav').addEventListener('click', e => {

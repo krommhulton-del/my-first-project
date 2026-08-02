@@ -1042,6 +1042,67 @@ await t('问机板块:一句话给出年/月/日三层应期,并带画像与贵�
   ok((await page.inputValue('#question')).includes('复核'), '应把时间带进问句去复核');
 });
 
+await t('双人合盘:两份档案合一盘,四种关系分开算,不许替人做决定(v0.85)', async () => {
+  // 先建两份档案(合盘吃的是档案,性别必填)
+  await page.evaluate(() => {
+    localStorage.setItem('dongxuan_profiles_v1', JSON.stringify([
+      { id: 'pA', name: '阿明', date: '1990-05-20', time: '09:30', gender: '男', place: '' },
+      { id: 'pB', name: '小红', date: '1993-11-07', time: '20:00', gender: '女', place: '' },
+      { id: 'pC', name: '缺性别的', date: '1988-02-02', time: '', gender: '', place: '' },
+    ]));
+  });
+  await page.evaluate(() => window.dxOpenBoard('sec-hepan'));
+  await page.waitForTimeout(300);
+
+  // 诚实那段话必须在第一屏,而且写着「自拟」「没有回测」
+  const honest = await page.locator('#hp-honest').innerText();
+  ok(/自拟/.test(honest), '第一屏要写明这套算法是自拟的:' + honest.slice(0, 60));
+  ok(/回测/.test(honest), '第一屏要写明零回测');
+  ok(/别当判决/.test(honest), '第一屏要写明当参考别当判决');
+
+  // 缺性别的那份不许进下拉
+  const opts = await page.locator('#hp-a option').allTextContents();
+  ok(!opts.some(x => x.includes('缺性别的')), '缺性别的档案不该出现在合盘的候选里');
+  ok(opts.some(x => x.includes('阿明')) && opts.some(x => x.includes('小红')), '两份齐备的档案该在候选里');
+
+  // 同一个人不许合
+  await page.selectOption('#hp-a', 'pA');
+  await page.selectOption('#hp-b', 'pA');
+  await page.click('#btn-hp-go');
+  await page.waitForTimeout(200);
+  ok((await page.locator('#hp-err').innerText()).includes('同一个人'), '挑了同一个人该被挡下');
+
+  await page.selectOption('#hp-b', 'pB');
+  await page.click('#btn-hp-go');
+  await page.waitForTimeout(600);
+  const out = await page.locator('#hp-out').innerText();
+  ok(/四 种 关 系 分 开 算/.test(out), '四种关系要分开列');
+  for (const k of ['谈恋爱', '合伙做事', '做朋友', '共事']) ok(out.includes(k), `少了「${k}」这一路`);
+  ok(/旺不旺/.test(out), '逐层要摊开');
+  ok(/拧 了 怎 么 绕/.test(out), '要给出「拧了怎么绕」');
+  ok(/未来十年/.test(out), '要有同期运那一层');
+
+  // **自律**:通篇不许替人做去留的决定
+  // 扫之前先把**免责声明整句**剥掉:那一句原样引着「合适不合适」「该不该在一起」,
+  // 说的正是「这里不报这些」——拿禁词表去扫它,等于禁止程序声明自己不做某件事。
+  // (同一类误伤前后栽过两次,记在案。)
+  const scanTxt = out.replace(/这里不报[\s\S]*?一副盘定不了。/g, '');
+  ok(!/合适|该不该在一起|建议分开|天生一对|命中注定/.test(scanTxt), '出现了替人做决定的话');
+  ok(/一副盘定不了|你自己的事/.test(out), '要写明决定是人做的');
+
+  // 说人话
+  {
+    const r = Tijian.check(out, { zone: '断语' });
+    const bad = r.hits.filter(h => ['空话', '术语', '说教', '花钱消灾'].includes(h.kind));
+    ok(!bad.length, '合盘输出不干净:' + bad.map(h => h.kind + ':' + h.snippet).join('、'));
+  }
+  // 四种关系的叙述不许一模一样
+  const says = await page.locator('#hp-out .hprel .hpv').allTextContents();
+  ok(says.length === 4, '该有四段关系叙述,实得 ' + says.length);
+  ok(new Set(says).size >= 2, '四种关系的叙述完全一样——那四个分类就成了摆设');
+  await page.evaluate(() => { localStorage.removeItem('dongxuan_profiles_v1'); localStorage.removeItem('dongxuan_profile_cur'); });
+});
+
 await t('生辰档案:新建/改/复制/删,性别必填,切换全应用通用(v0.84)', async () => {
   await page.evaluate(() => {
     localStorage.removeItem('dongxuan_profiles_v1');
