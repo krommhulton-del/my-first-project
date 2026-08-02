@@ -24,11 +24,11 @@
   const SIGNS = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼'];
   const PLANET_CN = { sun: '太阳', moon: '月亮', mer: '水星', ven: '金星', mar: '火星', jup: '木星', sat: '土星', ura: '天王星', nep: '海王星' };
   const PLAIN = {
-    sun: '你这人的主心骨(自我、精气神)', moon: '你心里那一汪(情绪、安全感、离不开什么)',
-    mer: '你的脑子与嘴(想法怎么转、话怎么说)', ven: '你动心的路数(喜欢什么、怎么亲近人)',
-    mar: '你的火气与干劲(怎么争、怎么上)', jup: '你的运气口(哪里容易放大、松快)',
-    sat: '你的紧箍(哪里收紧、哪里磨你也成你)', ura: '你不按牌理的那一下(说变就变的地方)',
-    nep: '你的雾区(理想、迷糊、说不清的向往)',
+    sun: '自我、意志与人生主线', moon: '情绪、安全感与生活习惯',
+    mer: '思维、语言与信息', ven: '感情、审美与人际吸引力',
+    mar: '行动力、竞争与脾气', jup: '机会、扩张与信念',
+    sat: '责任、限制与长期结构', ura: '突变、独立与反常规',
+    nep: '想象、直觉与迷失',
   };
 
   // ── 时间 ──
@@ -124,11 +124,11 @@
 
   // ── 相位(通行占星口径:角度与容许度;解读零回测)──
   const ASPECTS = [
-    { deg: 0, orb: 8, key: '合', plain: '搅在一处——这两股劲不分家,好坏都放大' },
-    { deg: 60, orb: 4, key: '六合', plain: '帮衬——顺手就能借上力' },
-    { deg: 90, orb: 6, key: '刑', plain: '磨——两头别着劲,出事也出功夫' },
-    { deg: 120, orb: 6, key: '拱', plain: '顺滑——不费劲就通,容易理所当然' },
-    { deg: 180, orb: 8, key: '冲', plain: '拉扯——两头来回摆,压到一头另一头翘' },
+    { deg: 0, orb: 8, key: '合', plain: '两种功能绑在一起运作,互相放大,吉凶同源' },
+    { deg: 60, orb: 4, key: '六合', plain: '配合顺畅,能互相借力' },
+    { deg: 90, orb: 6, key: '刑', plain: '互相牵制,靠长期磨合出成果,压力持续但可控' },
+    { deg: 120, orb: 6, key: '拱', plain: '天然协调,不费力,也因此容易被闲置' },
+    { deg: 180, orb: 8, key: '冲', plain: '两端拉扯,常要在两种需求之间分场合取舍' },
   ];
   function aspectsOf(pa, pb) {
     const out = [];
@@ -184,94 +184,160 @@
     const homes = Object.keys(RULER).filter(s => RULER[s] === key);
     if (!homes.length) return null;                     // 天海无传统庙旺,不论(照实说)
     const opp = s => SIGNS[(SIGNS.indexOf(s) + 6) % 12];
-    if (homes.includes(sign)) return { st: '入庙', plain: '落在自家地界,这股劲使得顺、成色足' };
-    if (EXALT[key] === sign) return { st: '旺', plain: '落在抬它的地界,劲头比平常足' };
-    if (homes.map(opp).includes(sign)) return { st: '陷', plain: '落在对家地界,这股劲得绕着使,费一倍功夫' };
-    if (EXALT[key] && opp(EXALT[key]) === sign) return { st: '落', plain: '落在压它的地界,起劲慢、容易泄' };
+    if (homes.includes(sign)) return { st: '入庙', plain: '在自己主管的星座,功能完整,是全盘可靠的支点' };
+    if (EXALT[key] === sign) return { st: '旺', plain: '在擢升它的星座,发挥高于平均水平' };
+    if (homes.map(opp).includes(sign)) return { st: '陷', plain: '在对宫星座,发挥受限,这项功能要刻意经营才立得起来' };
+    if (EXALT[key] && opp(EXALT[key]) === sign) return { st: '落', plain: '在压制它的星座,起效慢,人在这方面常自我怀疑' };
     return null;
   }
   const SIGN_CHAR = {
-    白羊: '冲在头里,先动手再盘算,火来得快去得也快', 金牛: '认实惠不认虚话,慢热,攥住了就不撒手',
-    双子: '脑子转得比话快,样样通,烦了就换台', 巨蟹: '把人护在壳里,记性长,情绪跟着潮水走',
-    狮子: '要台面也撑得起台面,吃软不吃硬', 处女: '眼里揉不下沙子,活儿要挑不出毛病才肯交',
-    天秤: '先看关系再看事,两头找平,拖是它的税', 天蝎: '不动声色,盯得深,认定了就到底',
-    射手: '要远方要意义,拴不住,话直得扎人', 摩羯: '把日子过成工程,能扛,慢富',
-    水瓶: '不合群不是装的,道理大过人情', 双鱼: '边界薄,共情快,容易替别人疼',
+    白羊: '行动快,竞争心强,想到就做,耐性短', 金牛: '求稳务实,钱物与感官上有定见,认定的事不轻易改',
+    双子: '反应快,靠信息与表达立身,广而不深', 巨蟹: '重感情重归属,护短,情绪随亲近的人起落',
+    狮子: '自尊心强,要被认可,肯扛事,受不得冷落', 处女: '重细节重秩序,标准高,先挑毛病后办事',
+    天秤: '重关系重分寸,擅长权衡,决断偏慢', 天蝎: '话少心深,洞察与控制欲都强,不轻信人',
+    射手: '要自由要意义,乐观直率,受不了拘束', 摩羯: '目标明确,能吃苦,走长线,情感表达节制',
+    水瓶: '理性重原则,独立,与人群保持距离', 双鱼: '敏感共情,想象力强,边界与执行力是短板',
   };
-  const HOUSE_PLAIN = ['门面与身架', '钱袋与家底', '说话、跑腿与近亲', '家宅与根', '恋爱、玩与孩子', '日常、差事与身体',
-    '伴侣与对家', '共财、债与深水', '远方、学问与见识', '名分、事业与顶头', '圈子与同道', '暗处、独处与旧账'];
+  const HOUSE_PLAIN = ['自我与外在形象', '金钱与自有资产', '学习、沟通与近亲', '家庭与根基', '恋爱、子女与创作', '日常事务与健康',
+    '婚姻与合作', '共有财产与危机', '高等学问与远行', '事业与社会地位', '朋友圈与愿景', '独处、潜意识与幕后'];
   const ELEM_OF = i => ['火', '土', '风', '水'][i % 4];
   const MODE_OF = i => ['开创', '固定', '变动'][i % 3];
   const ELEM_PLAIN = {
-    火: { strong: '先动后想,劲起得快', miss: '点火难——起心动念慢半拍,常要外头递火才动' },
-    土: { strong: '落地、攒得住,不见兔子不撒鹰', miss: '悬空——想得多落得少,钱与日子容易没个抓手' },
-    风: { strong: '话与念头不断电,靠说与写立身', miss: '闷——不爱解释,别人猜你费劲' },
-    水: { strong: '感受当家,别人的情绪你先接到', miss: '感受那一路不过明路——不是没有,是不入账,攒久了走身体' },
+    火: { strong: '行动先于思考,启动快,热得快也冷得快', miss: '缺火:启动力弱,想得多动得慢,常要外部期限或旁人推动才动手' },
+    土: { strong: '务实,重结果与积累,不做没把握的事', miss: '缺土:落实力弱,计划多兑现少,钱和日程需要外部结构(记账、定期检查)来托底' },
+    风: { strong: '靠语言与信息立身,善沟通,善权衡', miss: '缺风:不习惯解释自己,沟通靠行动代替语言,容易被人误读' },
+    水: { strong: '感受力强,情绪与直觉参与所有决定', miss: '缺水:情绪不易被自己察觉,压力倾向积压,最后从身体或突然的爆发找出口' },
   };
-  const MODE_PLAIN = { 开创: '起头的人——开局有瘾,守成没劲', 固定: '守成的人——认准就钉死,转向最贵', 变动: '看风使舵的人——弯道快,直道容易飘' };
+  const MODE_PLAIN = { 开创: '习惯主动开局,从零到一强,守成阶段容易松劲', 固定: '认定就不改,耐力强,转向成本高', 变动: '适应力强,随环境调整,方向感需要外部锚点' };
 
+  // 元素↔主星的通行对应(火=火星、土=土星、风=水星、水=月亮),用于「缺某元素」与该元素主星
+  // 状态的**合成**:缺位而主星有力,与缺位而主星也失力,是两种完全不同的人——
+  // v0.99 之前两条各说各话,同一段里既写「行动力弱」又写「行动力是长项」,行家一眼看穿。
+  const ELEM_RULER = { 火: 'mar', 土: 'sat', 风: 'mer', 水: 'moon' };
+  const ELEM_COMBO = {
+    火: { ok: '不是没有行动力,而是行动不以冲动的形式出现:启动偏慢,一旦决定则持续性强。发力方式靠计划推动,不靠一时上头',
+      bad: '行动力确实是短板:启动要靠外部期限、他人推动或既定流程,自驱动的场合最容易拖' },
+    土: { ok: '落实力不来自天性而来自纪律:一旦建立制度与流程就极稳,但离开结构就会松散。对策是把重要的事写进固定日程,不靠状态',
+      bad: '落实这一环确实薄:计划与兑现之间常年有缺口,需要外部记账、定期复盘这类硬工具补位' },
+    风: { ok: '不是不会表达,是不愿意常规社交:表达与分析能力本身在线,只在必要场合启用。对策是主动补一次说明,别让沉默替你发言',
+      bad: '沟通确实是弱项:习惯用行动代替解释,容易被长期误读。对策是把关键的事写下来发出去,不指望别人领会' },
+    水: { ok: '情绪并非不存在,而是走私人渠道:只在极亲近的人面前显露,外部场合近乎不可见。亲密关系里需要主动说明这一点',
+      bad: '情绪确实不易被自己察觉:压力倾向积压,最后从身体或突然的爆发找出口。对策是设固定的复盘时点,不等有感觉才处理' },
+  };
+  const PERSONAL = ['sun', 'moon', 'mer', 'ven', 'mar'];   // 个人行星
   function deepRead(c) {
     const P = c.planets;
-    // 一、元素与三态失衡(9 曜逐个点数;日月是大头,占两票)
+    // 一、元素与三态失衡
+    // **口径(本项目定,写明可吵)**:只统计个人行星(日月各 2 票、水金火各 1 票)、上升 1 票、
+    // 木土各 1 票;**天王海王不计入**——它们一星座停 7 到 14 年,同代人人手一份,
+    // 拿它断个人性格是外行错。v0.98 曾把三颗世代星算进去,于是太阳金牛上升狮子(两个固定)
+    // 的盘被算成「开创型」,同一段里自相矛盾;这一版按此口径修掉,并加一致性校验。
     const ec = { 火: 0, 土: 0, 风: 0, 水: 0 }, mc = { 开创: 0, 固定: 0, 变动: 0 };
+    const vote = (sign, w) => { const i = SIGNS.indexOf(sign); ec[ELEM_OF(i)] += w; mc[MODE_OF(i)] += w; };
     for (const k of KEYS) {
-      const i = SIGNS.indexOf(P[k].sign), w = (k === 'sun' || k === 'moon') ? 2 : 1;
-      ec[ELEM_OF(i)] += w; mc[MODE_OF(i)] += w;
+      if (k === 'ura' || k === 'nep') continue;
+      vote(P[k].sign, (k === 'sun' || k === 'moon') ? 2 : 1);
     }
+    if (c.asc) vote(c.asc.sign, 1);
     const eSort = Object.entries(ec).sort((a, b) => b[1] - a[1]);
     const missing = eSort.filter(([, v]) => v === 0).map(([k]) => k);
     const domin = eSort[0][1] >= 5 ? eSort[0][0] : null;
     const mSort = Object.entries(mc).sort((a, b) => b[1] - a[1]);
+    // 一致性校验:主导三态必须至少与日月上升之一相符,否则不报——统计被中间层带偏时宁可不说
+    const coreModes = [MODE_OF(SIGNS.indexOf(P.sun.sign)), MODE_OF(SIGNS.indexOf(P.moon.sign))]
+      .concat(c.asc ? [MODE_OF(SIGNS.indexOf(c.asc.sign))] : []);
+    const modeOK = coreModes.includes(mSort[0][0]);
     // 二、庙旺陷落逐星(传统七曜;天海不论)
     const digs = [];
     for (const k of KEYS) { const d = dignity(k, P[k].sign); if (d) digs.push({ key: k, name: P[k].name, sign: P[k].sign, ...d }); }
     const good = digs.filter(d => d.st === '入庙' || d.st === '旺');
     const badd = digs.filter(d => d.st === '陷' || d.st === '落');
-    // 三、图形相位(星群/大三角/T三角;大十字九曜带常规容许度极难凑齐,不设——设了就是死条)
+    const digOf = k => digs.find(d => d.key === k) || null;
+    // 二之二、缺位元素 × 该元素主星状态 的**合成**(不许并排各说各的)
+    const combos = missing.map(e => {
+      const rk = ELEM_RULER[e], rd = digOf(rk), strong = !!(rd && (rd.st === '入庙' || rd.st === '旺'));
+      return { elem: e, ruler: PLANET_CN[rk], st: rd ? rd.st : '不在传统庙旺表内', strong,
+        plain: `${e}元素在个人行星里缺位,而它的主星${PLANET_CN[rk]}${rd ? '正好' + rd.st : '本身不在传统庙旺表内'}——` +
+          (strong ? ELEM_COMBO[e].ok : ELEM_COMBO[e].bad) };
+    });
+    // 三、图形相位
+    // **星群要求至少含一颗个人行星**:三颗世代星(天海)凑一堆是同代人的共同背景,
+    // 不是个人特征——v0.98 因此给 1989–1991 年生人人手发了一份「摩羯星群」。
     const asps = aspectsOf(P);
     const pat = [];
     const bySign = {};
-    for (const k of KEYS) (bySign[P[k].sign] = bySign[P[k].sign] || []).push(P[k].name);
-    for (const [s, arr] of Object.entries(bySign)) if (arr.length >= 3) pat.push({ kind: '星群', sign: s, who: arr, plain: `${s}里挤了 ${arr.length} 颗星(${arr.join('、')}):这个星座的事在你身上浓度超标,${SIGN_CHAR[s].split(',')[0]}——好处坏处都是它给的` });
+    for (const k of KEYS) (bySign[P[k].sign] = bySign[P[k].sign] || []).push(k);
+    for (const [sg, keys] of Object.entries(bySign)) {
+      if (keys.length < 3) continue;
+      const per = keys.filter(k => PERSONAL.includes(k));
+      if (!per.length) continue;                 // 纯世代星群:是时代背景不是个人特征,不报
+      pat.push({ kind: '星群', sign: sg, who: keys.map(k => PLANET_CN[k]),
+        plain: `${sg}座聚了 ${keys.length} 颗星(${keys.map(k => PLANET_CN[k]).join('、')},其中${per.map(k => PLANET_CN[k]).join('、')}属个人行星):` +
+          `${sg}的行事方式在你身上权重极高——${SIGN_CHAR[sg]}。长处与代价都从这里来` });
+    }
     const has = (a, b, t) => asps.some(x => ((x.a === a && x.b === b) || (x.a === b && x.b === a)) && x.asp === t);
-    const names = KEYS.map(k => P[k].name);
+    const names = KEYS.map(k => PLANET_CN[k]);
     for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) for (let k2 = j + 1; k2 < names.length; k2++) {
       const [a, b, cc] = [names[i], names[j], names[k2]];
-      if (has(a, b, '拱') && has(b, cc, '拱') && has(a, cc, '拱')) pat.push({ kind: '大三角', who: [a, b, cc], plain: `${a}、${b}、${cc}拱成一圈(大三角):这三股劲互相递力,是天生顺的那条环——顺到容易偷懒,得有意识拿它干正事` });
+      if (has(a, b, '拱') && has(b, cc, '拱') && has(a, cc, '拱')) pat.push({ kind: '大三角', who: [a, b, cc], plain: `${a}、${b}、${cc}构成大三角:这三种功能天然协作,是全盘阻力最小的通道;因为不费力,常年被闲置——把重要事务有意识地放到这条通道上,利用率通常远低于它的能力` });
       for (const [x, y, z] of [[a, b, cc], [a, cc, b], [b, cc, a]])
-        if (has(x, y, '冲') && has(x, z, '刑') && has(y, z, '刑')) pat.push({ kind: 'T三角', who: [x, y, z], apex: z, plain: `${x}冲${y},两头又都刑${z}(T 三角):${z}是全盘的泄压口,大事小情最后都挤到它头上——把${z}管的那一摊安顿好,一盘都松` });
+        if (has(x, y, '冲') && has(x, z, '刑') && has(y, z, '刑')) pat.push({ kind: 'T三角', who: [x, y, z], apex: z, plain: `${x}与${y}对冲,两端又同时刑${z}(T 三角):全盘的压力最终汇到${z}。${z}代表的事项安排得当,整盘都稳;安排不当,问题会反复从这一处爆发` });
     }
-    // 四、命主星(要上升;天蝎水瓶双鱼按传统主星,冥王未做照实说)
+    // 四、命主星:**必须报出它的庙旺状态并给结论**(命主星落陷是行家必说的头等判断)
     let ruler = null;
     if (c.asc) {
-      const rk = RULER[c.asc.sign], rp = P[rk];
-      ruler = { key: rk, name: rp.name, sign: rp.sign, house: c.houses ? c.houses[rk] : null,
-        plain: `你的命主星(上升${c.asc.sign}的主星)是${rp.name},落${rp.sign}${c.houses ? `第${c.houses[rk]}宫(${HOUSE_PLAIN[c.houses[rk] - 1]})` : ''}——一盘的方向盘握在这颗星手里,它顺你就顺` };
+      const rk = RULER[c.asc.sign], rp = P[rk], rd = digOf(rk);
+      const hs = c.houses ? c.houses[rk] : null;
+      ruler = { key: rk, name: rp.name, sign: rp.sign, house: hs, dig: rd ? rd.st : null,
+        plain: `命主星(上升${c.asc.sign}的主星)是${rp.name},在${rp.sign}${hs ? `第${hs}宫(${HOUSE_PLAIN[hs - 1]})` : ''}` +
+          (rd ? `,且${rd.st}` : '') + '。' +
+          (rd && (rd.st === '入庙' || rd.st === '旺')
+            ? `命主星有力:整盘的推进力可靠,${hs ? `重心落在${HOUSE_PLAIN[hs - 1]}这一块,主动往这个方向使力最顺` : '主动争取的成功率高于被动等待'}`
+            : rd && (rd.st === '陷' || rd.st === '落')
+              ? `命主星失位:这是全盘头一条要说的——起步与自我推进先天费劲,成事多靠外部结构(团队、制度、期限)托一把;${hs ? `吃力最明显的场合在${HOUSE_PLAIN[hs - 1]}` : '单打独斗最吃亏'}`
+              : `命主星无庙旺可论(天王海王不在传统庙旺表内),按落宫看:重心在${hs ? HOUSE_PLAIN[hs - 1] : '需要出生时间才能定'}`) };
     }
     // 五、最紧的硬相位(终身课题)
     const hard = asps.filter(x => x.asp === '刑' || x.asp === '冲')[0] || null;
-    // 六、因果链叙事(先答案后凭据;连词写死因果,不许并列短句堆)
+    // 六、叙事:**连词只连真依赖**——v0.98 强制每句带「因为」,产出过「因为底子不厚不薄,所以财重」
+    // 这类假推理,比并列短句更糟。这一版只在真有因果的两处用因果连词。
     const sunP = P.sun, moonP = P.moon;
     const se = ELEM_OF(SIGNS.indexOf(sunP.sign)), me = ELEM_OF(SIGNS.indexOf(moonP.sign));
     const pairOK = (se === me) || (se === '火' && me === '风') || (se === '风' && me === '火') || (se === '土' && me === '水') || (se === '水' && me === '土');
-    const verdict = `明面是${sunP.sign}(${SIGN_CHAR[sunP.sign].split(',')[0]}),里子是${moonP.sign}(${SIGN_CHAR[moonP.sign].split(',')[0]})` +
-      (c.asc ? `,门面挂的是${c.asc.sign}` : '') + '——' +
-      (se === me ? '表里一条道,痛快也好懂。' : pairOK ? '一明一暗合得拢,互相递劲。' : '明面里子两套账,外人只看得见一半,自己得两头都喂。');
-    let story = `先看底子:${domin ? `九曜里${domin}最重,${ELEM_PLAIN[domin].strong}——这是出厂设置` : `四样元素分得开,${eSort[0][0]}略重(${ELEM_PLAIN[eSort[0][0]].strong})`}` +
-      (missing.length ? `;而${missing.join('、')}一票没有,${missing.map(m => ELEM_PLAIN[m].miss).join(';')}——这不是毛病,是配置,后头的事都从这儿来` : '') + '。';
-    story += `因为主心骨(太阳)落在${sunP.sign},${SIGN_CHAR[sunP.sign]}`;
+    const verdict = `太阳${sunP.sign}(${SIGN_CHAR[sunP.sign].split('，')[0]}),月亮${moonP.sign}(${SIGN_CHAR[moonP.sign].split('，')[0]})` +
+      (c.asc ? `,上升${c.asc.sign}` : '') + '——' +
+      (se === me ? '外在表现与内在需要一致,表里如一,行为好预判,内耗小。' : pairOK ? '外在与内在不同路但互补,一动一静互相支撑。' : '外在追求与内在需要方向不同:别人看到的你和你自己感受到的你有差距,两边都要给到位置——长期只顾一头,另一头会出问题。');
+    let story = `先看配置:${domin ? `个人行星里${domin}元素最重——${ELEM_PLAIN[domin].strong}` : `四种元素分布尚均,${eSort[0][0]}略多(${ELEM_PLAIN[eSort[0][0]].strong})`}` +
+      (combos.length ? `。${combos.map(x => x.plain).join('。')}` : '') + '。';
+    story += `太阳(自我与主线)在${sunP.sign}——${SIGN_CHAR[sunP.sign]}`;
     const sd = dignity('sun', sunP.sign);
-    if (sd) story += `,又${sd.plain}`;
-    if (c.houses) story += `,摆在第${c.houses.sun}宫——所以你的正事在「${HOUSE_PLAIN[c.houses.sun - 1]}」这一摊,劲要往这儿使`;
-    story += `。可里子(月亮)要的是${moonP.sign}那一套——${SIGN_CHAR[moonP.sign]}` +
-      (se === me || pairOK ? ',好在与明面递得上劲,不打架。' : ':明面要的与心里要的不是一样东西,所以外人按明面待你,你自己得记得给里子留口粮。');
-    if (good.length) story += `这盘里最得力的是${good[0].name}(${good[0].st},${good[0].plain})——${good[0].name === '太阳' ? '主心骨本身' : PLAIN[good[0].key].split('(')[0]}是长项,可着劲用。`;
-    if (badd.length) story += `最费劲的是${badd[0].name}(${badd[0].st}):${PLAIN[badd[0].key].split('(')[0]}那一摊天生要多花一倍功夫——知道贵,别硬省。`;
+    if (sd) story += `,且${sd.plain}`;
+    if (c.houses) story += `,落第${c.houses.sun}宫;因此人生的主战场在「${HOUSE_PLAIN[c.houses.sun - 1]}」,重要决定按这条主线取舍`;
+    story += `。月亮(情绪与安全感)在${moonP.sign}:内在按「${SIGN_CHAR[moonP.sign]}」的方式运转` +
+      (se === me || pairOK ? ',与太阳同路或互补,内外取向一致,无明显冲突。' : ';这套需要与太阳的方向不同,亲密关系和独处时要按月亮的规矩来——长期拿外在标准压内在需要,是这类配置最常见的内耗来源。');
+    if (good.length) {
+      const g = good[0], gh = c.houses ? c.houses[g.key] : null;
+      story += `全盘最可靠的一颗星是${g.name}(${g.st}):${PLAIN[g.key]}是长项` +
+        (gh ? `,最见效的场合是${HOUSE_PLAIN[gh - 1]}` : '') + ',决策与抗压优先依赖这一部分。';
+    }
+    if (badd.length) {
+      const b = badd[0], bh = c.houses ? c.houses[b.key] : null;
+      story += `最吃力的一颗是${b.name}(${b.st}):${PLAIN[b.key]}这部分天生费劲` +
+        (bh ? `,集中显现在${HOUSE_PLAIN[bh - 1]}这一块` : '') + ',补法是外部方法与固定流程,不靠临场发挥。';
+    }
+    if (ruler && ruler.dig && (ruler.dig === '陷' || ruler.dig === '落')) story += ruler.plain + '。';
     if (pat.length) story += pat[0].plain + '。';
-    if (hard) story += `全盘拧得最紧的一处:${hard.a}${hard.asp}${hard.b}(只差${hard.orb}°)——${hard.aPlain.split('(')[0]}与${hard.bPlain.split('(')[0]}这两股劲长期别着;这是终身课题,处法是轮流喂,不是选边。`;
-    if (mSort[0][1] >= 5) story += `办事的路数上,你是${MODE_PLAIN[mSort[0][0]]}。`;
-    return { verdict, story, elems: ec, modes: mc, missing, domin, digs, pat, ruler, hard,
-      moonCaveat: moonP.nearCusp ? '月亮近星座交界(±0.3°定不死),里子那几句得两个星座都看看。' : '' };
+    if (hard) {
+      const ka = KEYS.find(k => PLANET_CN[k] === hard.a), kb = KEYS.find(k => PLANET_CN[k] === hard.b);
+      const ha = c.houses && ka ? c.houses[ka] : null, hb = c.houses && kb ? c.houses[kb] : null;
+      story += `全盘最紧的硬相位:${hard.a}${hard.asp}${hard.b}(相差仅${hard.orb}°)。${hard.a}(${hard.aPlain})与${hard.b}(${hard.bPlain})互相牵制,是需要终身管理的张力;` +
+        (ha && hb && ha !== hb
+          ? `落点分别在「${HOUSE_PLAIN[ha - 1]}」和「${HOUSE_PLAIN[hb - 1]}」——处理办法是把这两块分到不同时段各自办完,不在同一件事里同时满足两边。`
+          : `处理办法是分场合、分时段轮流满足两边,同时兼顾必定两头落空。`);
+    }
+    if (modeOK && mSort[0][1] >= 5) story += `做事方式上,${MODE_PLAIN[mSort[0][0]]}。`;
+    return { verdict, story, elems: ec, modes: mc, missing, domin, digs, pat, ruler, hard, combos, modeOK,
+      moonCaveat: moonP.nearCusp ? '月亮位置临近星座交界(公式误差±0.3°),与内在相关的判断请把相邻星座的描述也对照看。' : '' };
   }
 
   // ══════════ 行运(时空盘看未来):把任一天的天空叠在本命盘上,逐日扫出应期窗口 ══════════
@@ -280,20 +346,26 @@
   const dateOfJd = jd => new Date((jd - 2440587.5 - 69 / 86400) * 86400000);
   const fmtD = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const MOVER_TR = { jup: '木星', sat: '土星', ura: '天王星', nep: '海王星' };
-  const T_SHORT = { sun: '主心骨', moon: '心里那一汪', mer: '脑子与嘴', ven: '动心与人缘', mar: '火气与干劲', asc: '门面与身架', mc: '名分与事业' };
+  const T_SHORT = { sun: '本命太阳', moon: '本命月亮', mer: '本命水星', ven: '本命金星', mar: '本命火星', asc: '上升点', mc: '天顶' };
+  // 行运判语落到生活领域:每条 = 结论 + 通常表现 + 做法,不许拿比喻凑数
+  const T_DOMAIN = { sun: '你本人的目标、状态与健康', moon: '情绪、家庭与居住', mer: '沟通、学业与文书合同', ven: '感情、金钱与合作', mar: '行动、竞争与冲突', asc: '个人整体际遇', mc: '事业方向与名声' };
   const TRANS_SAY = {
-    jup: { 合: '放大年:{T}这一摊有人递梯子,敢伸手就接得住;毛病是容易把摊子铺过头',
-      刑: '机会来得别扭:{T}那头给的甜头带钩,答应之前把代价问清', 拱: '顺风窗:{T}这一摊不用使猛劲,把现成的路走宽就是',
-      冲: '对面递来的放大镜:抬你的人也架你,{T}这一摊别把话说满' },
-    sat: { 合: '验收年:{T}这一摊前几年攒的账一并清算——扎实的落定,虚的拆掉;累,但落下来的都归你',
-      刑: '压测:{T}这一摊被摁进慢车道,躲不过;把该补的课补了,压力到点自己撤', 拱: '打地基:{T}这一摊进展不快,但这阵子定下的规矩往后十年都用得上',
-      冲: '对家来对账:{T}这一摊有人跟你较真,含糊过不去,拿凭据说话' },
-    ura: { 合: '掀桌:{T}这一摊旧格局待不住了,变化多半来得突然——留好退路,但别死守旧摊',
-      刑: '电门:{T}这一摊说变就变,计划别定死,留三成余地', 拱: '松绑:{T}这一摊有不伤根基的新路,试新的成本这阵子最低',
-      冲: '对面掀桌:变化从别人那头来,{T}这一摊被动的成分大,先稳住自己那半' },
-    nep: { 合: '起雾:{T}这一摊看不真——理想化、错认、账目糊;凡要签字的,拿给明白人过目',
-      刑: '漏水:{T}这一摊有说不清的损耗,界限画清,别替人扛糊涂账', 拱: '开窍:{T}这一摊的直觉与想象这阵子好使,宜创作养神,不宜下重注',
-      冲: '对面起雾:别人给的图景打七折听,兑现看行动不看话' },
+    jup: { 合: '扩张窗口:{T}上机会密度明显高于平常,容易得到资源与信任。这类行运最常见的损耗是同时推进的事项过多——选一条主线推进,其余暂缓',
+      刑: '机会带条件:{T}上出现的好事与现有安排相冲,接之前先算清要让出什么;两头都要,通常两头都受损',
+      拱: '顺风段:{T}上推进现有计划阻力最小;此类时段的常见结果是空过,有既定计划的人获益最大',
+      冲: '来自他人的抬举:{T}上别人给的承诺与期待偏高,机会是真的,兑现按七成估,合同条款照常抠' },
+    sat: { 合: '结算定形:{T}上过去几年的积累在这段时间定型——扎实的固化为长期结构,虚的被拆掉。实际感受多为负担重、进度慢;这段确立的框架通常管十年以上',
+      刑: '硬考核:{T}上外部标准收紧,回避无效,补足短板是唯一出路;压力有明确期限,窗口一过自行减轻',
+      拱: '筑基段:{T}上适合立规矩、签长约、做长期投入;进展不快但极稳,此期建立的秩序日后长期受益',
+      冲: '对面较真:{T}上有人或制度与你对账,含糊过不去;把凭据、合同、边界事先理清,是过关的具体办法' },
+    ura: { 合: '格局松动:{T}上旧安排待不住了,变化常以突发形式出现(调动、搬迁、关系转折)。这类变化多半回不去,顺势重组比原地死守划算,但要留出过渡的余量',
+      刑: '不稳定段:{T}上计划易被打断,意外率高;对策是缩短计划周期、不做刚性承诺、留三成余地',
+      拱: '低成本试新:{T}上换方法、换领域不伤根基,试错成本这段时间最低,适合把想试的事排进来',
+      冲: '变数在对方:{T}上的变化由别人或环境发起,你在应对的一方;先稳住自己可控的部分,再谈条件' },
+    nep: { 合: '判断力下降:{T}上易理想化、易被误导,签字画押的事请第三方过目;同期想象力与直觉变好,创作、修养类的事宜做,大额投入缓做',
+      刑: '隐性损耗:{T}上有不易察觉的流失(精力、金钱、边界);对策具体到动作:定期对账,把不愿说出口的拒绝说出口',
+      拱: '灵感段:{T}上感受力好用,适合创作、学习、休整;不适合大额投入与重大承诺',
+      冲: '图景失真:对方或环境呈现给你的{T}与实际有出入;判断以可验证的行动为准,不以口头承诺为准' },
   };
   const T_ASPS = [{ deg: 0, key: '合' }, { deg: 90, key: '刑' }, { deg: 120, key: '拱' }, { deg: 180, key: '冲' }];
   function transits(natal, fromDate, months) {
@@ -302,6 +374,10 @@
     const targets = [];
     for (const k of ['sun', 'moon', 'mer', 'ven', 'mar']) targets.push({ k, lon: natal.planets[k].lon, approx: natal.planets[k].approx });
     if (natal.asc) { targets.push({ k: 'asc', lon: natal.asc.lon }); targets.push({ k: 'mc', lon: natal.asc.mc }); }
+    // 命主星:行运打到它是全盘的事,分量比打到别的星重——v0.98 算了命主星却从不在年运里标它,
+    // 「看运势先看行运有没有动到这颗星」那句话自己从不执行。这一版把它接上。
+    const rulerK = natal.asc ? RULER[natal.asc.sign] : null;
+    if (rulerK && !targets.some(t => t.k === rulerK)) targets.push({ k: rulerK, lon: natal.planets[rulerK].lon, approx: natal.planets[rulerK].approx });
     // 回归两条(土星回归/木星回归)只认「合」
     const rets = [{ k: 'sat', lon: natal.planets.sat.lon }, { k: 'jup', lon: natal.planets.jup.lon }];
     const movers = ['jup', 'sat', 'ura', 'nep'];
@@ -335,14 +411,23 @@
           else { exact.push(seg.reduce((a, b) => (b.off < a.off ? b : a)).d); seg = i < g.length ? [g[i]] : []; }
         }
         const say = isRet ?
-          (m === 'sat' ? '土星回归(约二十九年半一回):上一轮怎么活的,这两年逐项验收;推着你把「该定的」定下来——熬过去换的是自己的骨架' :
-            '木星回归(约十二年一回):新一轮扩张的起点,这阵子起的头会长十二年') :
-          TRANS_SAY[m][asp.key].replace(/\{T\}/g, T_SHORT[tk]);
-        wins.push({ mover: MOVER_TR[m], target: T_SHORT[tk], asp: asp.key,
+          (m === 'sat' ? '土星回归(约二十九年半一次,人生结构换代的节点):上一阶段积累的生活结构在这两年逐项受检,该定下的定下,撑不住的散掉。体感是压力与责任明显加重;这两年做的重大选择(职业、婚姻、去留)质量高、管得久' :
+            '木星回归(约十二年一次):新一轮成长周期的起点,这一年立项的方向通常能发展十二年,值得把最想做的事在此立起来') :
+          TRANS_SAY[m][asp.key].replace(/\{T\}/g, T_DOMAIN[tk]);
+        // 截断窗:窗口从扫描第 0 天就开始,说明它在查询起点之前已经开始,此刻只剩尾段。
+        // v0.98 曾拿这种伪影当全年主线报(一条 11 天后就结束、精确应期恰好等于今天的尾巴),
+        // 内行一眼看穿。**主线不选截断窗**,且当面注明它早已开始。
+        const truncStart = g[0].d === 0;
+        const isRuler = !isRet && rulerK && tk === rulerK;
+        wins.push({ mover: MOVER_TR[m], target: T_SHORT[tk] || PLANET_CN[tk], asp: asp.key,
           from: fmtD(dateOfJd(jd0 + g[0].d)), to: fmtD(dateOfJd(jd0 + g[g.length - 1].d)),
           exact: exact.map(d => fmtD(dateOfJd(jd0 + d))), passes: exact.length, ret: !!isRet,
-          weight: (isRet ? 10 : { sat: 8, ura: 7, nep: 6, jup: 5 }[m]) + (tk === 'sun' || tk === 'moon' || tk === 'asc' ? 2 : 0) + (asp.key === '合' || asp.key === '冲' ? 1 : 0),
-          plain: say + (approx ? '(压的是本命月亮,位置±0.3°,应期得放宽几天)' : '') });
+          truncStart, isRuler, domain: T_DOMAIN[tk] || PLAIN[tk],
+          weight: (isRet ? 10 : { sat: 8, ura: 7, nep: 6, jup: 5 }[m]) + (tk === 'sun' || tk === 'moon' || tk === 'asc' ? 2 : 0) + (asp.key === '合' || asp.key === '冲' ? 1 : 0)
+            + (isRuler ? 2 : 0) - (truncStart ? 6 : 0),
+          plain: say + (isRuler ? '。这一条动的是命主星,牵动的是全盘而不只是这一块,分量要加重看' : '')
+            + (truncStart ? '。(此窗在查询起点之前就已开始,当前处于尾段,余下日子按收尾安排)' : '')
+            + (approx ? '(此条压的是本命月亮,其位置有±0.3°误差,应期日子请放宽几天看)' : '') });
       }
     };
     for (const m of movers) {
@@ -351,11 +436,12 @@
       if (r) scanOne(m, r.k, r.lon, T_ASPS[0], false, true);
     }
     wins.sort((a, b) => a.from < b.from ? -1 : a.from > b.from ? 1 : b.weight - a.weight);
-    const main = wins.slice().sort((a, b) => b.weight - a.weight)[0] || null;
+    const rank = wins.slice().sort((a, b) => b.weight - a.weight);
+    const main = rank.find(w => !w.truncStart) || rank[0] || null;
     return { from: fmtD(fromDate), months, wins,
-      verdict: !wins.length ? `未来${months}个月慢星不压你本命的要害——大格局无大动,日子按小年过,具体起落看月运。` :
-        `未来${months}个月的主戏:${main.mover}${main.asp}你的${main.target}(${main.from}${main.to !== main.from ? '~' + main.to : ''}` +
-        `${main.passes > 1 ? `,来回${main.passes}次,精确应期 ${main.exact.join('、')}` : `,应期${main.exact[0]}`})。${main.plain}` };
+      verdict: !wins.length ? `未来${months}个月没有慢行星与你本命的要点成相位——大结构上无事,起落都在短周期里,看月运即可。` :
+        `未来${months}个月的主线:${main.mover}${main.asp}${main.target}(${main.from}${main.to !== main.from ? '~' + main.to : ''}` +
+        `${main.passes > 1 ? `,因逆行往返${main.passes}次,精确应期 ${main.exact.join('、')}` : `,精确应期 ${main.exact[0]}`})。${main.plain}` };
   }
 
   // ── 月运:快星(日水金火)+ 朔望,三十五天一张细账 ──
@@ -386,8 +472,8 @@
     for (const k of ['sun', 'moon', 'ven', 'mar']) targets.push({ k, lon: natal.planets[k].lon, approx: natal.planets[k].approx });
     if (natal.asc) { targets.push({ k: 'asc', lon: natal.asc.lon }); targets.push({ k: 'mc', lon: natal.asc.mc }); }
     const movers = ['sun', 'mer', 'ven', 'mar'];
-    const MSAY = { sun: '这几天灯照在{T}上——这一摊被看见,该露面露面', mer: '这几天的话与文书都绕着{T}走——该谈的趁这几天谈',
-      ven: '这几天人缘的甜头落在{T}——软事(人情、和解、示好)挑这几天办', mar: '这几天的火落在{T}——干仗与赶工都在这儿,火气也在这儿,别双押' };
+    const MSAY = { sun: '太阳过境:{T}这几天成为焦点,适合露面、汇报、推进正事', mer: '水星过境:{T}相关的沟通、谈判与文书这几天办效率最高',
+      ven: '金星过境:{T}上的人际事项顺,示好、和解、谈钱都容易谈拢', mar: '火星过境:{T}上劲头与火气一起来,适合攻坚,防同一领域的口角' };
     const evs = [];
     for (const m of movers) {
       const lons = []; for (let d = 0; d <= N; d++) lons.push(lonAt(m, jd0 + d));
@@ -400,9 +486,9 @@
             const off = Math.abs(dd - asp.deg);
             if (off <= ORB && (!best || off < best.off)) best = { d, off };
           }
-          if (best) evs.push({ date: fmtD(dateOfJd(jd0 + best.d)), mover: PLANET_CN[m], asp: asp.key, target: T_SHORT[t.k],
+          if (best) evs.push({ date: fmtD(dateOfJd(jd0 + best.d)), mover: PLANET_CN[m], asp: asp.key, target: T_SHORT[t.k], domain: T_DOMAIN[t.k],
             hard: asp.key === '刑' || asp.key === '冲',
-            plain: MSAY[m].replace(/\{T\}/g, T_SHORT[t.k]) + (asp.key === '刑' ? ';不过这一下是别着劲来的,顺序错一步就呛' : asp.key === '冲' ? ';劲从对面来,接得住是助力,接不住是顶撞' : '') });
+            plain: MSAY[m].replace(/\{T\}/g, T_DOMAIN[t.k]) + (asp.key === '刑' ? ';以紧张的形式出现,当天先排顺序再动手,不要同时开两件' : asp.key === '冲' ? ';由对方先发起,当天宜接不宜定——先把对方的条件听全,决定挪到次日' : '') });
         }
       }
     }
@@ -411,8 +497,8 @@
     const luns = lunations(fromDate, N).map(l => {
       const si = Math.floor(l.lon / 30);
       const house = natal.asc ? ((si - Math.floor(natal.asc.lon / 30) + 12) % 12 + 1) : null;
-      return { ...l, house, plain: l.kind === '新月' ? `${l.date} ${l.sign}新月${house ? `落你第${house}宫` : ''}:起头的日子——「${house ? HOUSE_PLAIN[house - 1] : SIGN_CHAR[l.sign].split(',')[0]}」这一摊,这天前后开的头带一个月的势` :
-        `${l.date} ${l.sign}满月${house ? `落你第${house}宫` : ''}:见分晓的日子——「${house ? HOUSE_PLAIN[house - 1] : SIGN_CHAR[l.sign].split(',')[0]}」这一摊摊牌、收账、情绪也满,别挑这天谈崩` };
+      return { ...l, house, plain: l.kind === '新月' ? `${l.date} ${l.sign}新月${house ? `(落你第${house}宫)` : ''}:适合开头的日子——${house ? HOUSE_PLAIN[house - 1] : '这个星座相关'}的事,这天前后启动的事,顺势期约一个月` :
+        `${l.date} ${l.sign}满月${house ? `(落你第${house}宫)` : ''}:见结果的日子——${house ? HOUSE_PLAIN[house - 1] : '这个星座相关'}的事在这两天出阶段性结果,情绪也到高点;适合收尾结算,重大谈判避开` };
     });
     // 水星逆行段(通行口径:文书合同多看一遍;不神化)
     const retro = [];
@@ -426,14 +512,35 @@
     }
     if (seg) retro.push(seg);
     const hardN = evs.filter(e => e.hard).length;
-    return { from: fmtD(fromDate), evs, luns, retro,
-      verdict: `这三十五天里快星应期 ${evs.length} 处(其中较劲的 ${hardN} 处)、朔望 ${luns.length} 次` +
-        (retro.length ? `,水星有一段走回头路(${retro.map(r => r.from + '~' + r.to).join('、')}:文书、合同、票,签之前多看一遍,旧事重提多半在这段)` : '') +
-        '。逐日细账在下面,拣与你正事相关的用,不必天天对表。' };
+    // 第一句必须是结论(铁律二)。v0.98 这里报的是库存清点(「应期 14 处、朔望 2 次」),
+    // 换个人也成立,且把「挑哪天」这件本该程序做的事推回给用户。这一版直接点名:
+    // 最值得用的一天(软相位里权重最高)、最该避开的一天(硬相位里权重最高)。
+    const SOFT_W = { 金星: 4, 木星: 4, 太阳: 3, 水星: 2, 火星: 1 };
+    const HARD_W = { 火星: 4, 太阳: 2, 水星: 2, 金星: 1 };
+    const best = evs.filter(e => !e.hard).sort((a, b) => (SOFT_W[b.mover] || 0) - (SOFT_W[a.mover] || 0))[0] || null;
+    const worst = evs.filter(e => e.hard).sort((a, b) => (HARD_W[b.mover] || 0) - (HARD_W[a.mover] || 0))[0] || null;
+    let vd = '';
+    if (best) vd += `这三十五天里最好用的一天是 ${best.date}(${best.mover}${best.asp}${best.target}):${best.domain}这一类事排在这天推进,阻力最小。`;
+    if (worst) vd += `最该避开的是 ${worst.date}(${worst.mover}${worst.asp}${worst.target}):这天不宜在${worst.domain}上摊牌、签约或硬碰。`;
+    if (!best && !worst) vd += '这三十五天快星没有落到你本命的要点上,是平淡的一段,按既定节奏推进即可。';
+    const nm = luns.find(l => l.kind === '新月'), fm = luns.find(l => l.kind === '满月');
+    if (nm) vd += `要起头的事挑 ${nm.date} 前后(新月)。`;
+    if (fm) vd += `要收尾结账挑 ${fm.date} 前后(满月),同期情绪也到高点。`;
+    return { from: fmtD(fromDate), evs, luns, retro, best, worst,
+      verdict: vd +
+        (retro.length ? `水星有一段逆行(${retro.map(r => r.from + '~' + r.to).join('、')}),文书、合同、出行与设备易出岔子,签署前多核对,旧人旧事此段容易回头——适合复盘,不适合开新。` : '') +
+        `全期快星应期 ${evs.length} 处(其中带张力的 ${hardN} 处)、朔望 ${luns.length} 次,逐日明细见下。` };
   }
 
   // ── 太阳返照盘(生日年运盘):太阳走回本命度数那一刻起盘,管一整年 ──
-  function solarReturn(natal, year) {
+  // **口径改过一次(v0.99)**:v0.98 拿「返照盘对本命盘的软相位数 vs 硬相位数」定年运基调——
+  // 没有哪一派这么做,且 n=3~7 的计数毫无区分度,产出的话(「基调由你主动选择的方向决定」)
+  // 是放谁身上都成立的空话。这一版改报通行占星真正在看的三样硬信息:
+  //   ① 返照盘上升落本命第几宫(这一年的重心搬到哪一块);
+  //   ② 返照月亮落本命第几宫(这一年的情绪与日常绕着什么转);
+  //   ③ 有没有行星合返照盘的上升/天顶(合四轴的星定这一年的主角)。
+  // 前两样要出生地经纬度才排得出,没有就照实说排不了,不拿计数凑数。
+  function solarReturn(natal, year, opts) {
     const L0 = natal.planets.sun.lon;
     const bd = natal.date;
     let jd = jdOf(new Date(Date.UTC(year, bd.getMonth(), bd.getDate(), 12))) - 3;
@@ -443,12 +550,31 @@
     while (f(hi) < 0) hi += 1;
     for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (f(mid) < 0) lo = mid; else hi = mid; }
     const at = dateOfJd((lo + hi) / 2);
-    const src = chart(at);
+    const src = chart(at, opts || {});
     const cross = aspectsOf(src.planets, natal.planets).slice(0, 8);
-    const smooth = cross.filter(x => x.asp === '拱' || x.asp === '六合').length, hard = cross.filter(x => x.asp === '刑' || x.asp === '冲').length;
-    return { at, date: fmtD(at), chart: src, cross,
-      verdict: `太阳在 ${fmtD(at)} 走回你出生那一度(误差<0.01°,这一刻可查天文年历核对)——占星通行做法拿这一刻的天空当你这一年的年运盘。` +
-        `返照盘与本命盘之间${smooth > hard ? `顺的多(顺${smooth}拧${hard})——这一年借得上旧底子` : hard > smooth ? `拧的多(拧${hard}顺${smooth})——这一年跟自己的老路数别劲,变阵之年` : `顺拧对半(各${smooth}处)——这一年顺不顺看你把劲用在哪头`}。` };
+    const natalAscSign = natal.asc ? Math.floor(natal.asc.lon / 30) : null;
+    const houseIn = lon => natalAscSign == null ? null : ((Math.floor(norm(lon) / 30) - natalAscSign + 12) % 12 + 1);
+    const srAscH = src.asc ? houseIn(src.asc.lon) : null;
+    const moonH = houseIn(src.planets.moon.lon);
+    // 合四轴(返照盘自己的上升/天顶):容许度 8°/5°,通行口径
+    const angles = [];
+    if (src.asc) {
+      for (const k of KEYS) {
+        for (const [alon, an, orb] of [[src.asc.lon, '上升', 8], [src.asc.mc, '天顶', 5]]) {
+          let d = Math.abs(src.planets[k].lon - alon); if (d > 180) d = 360 - d;
+          if (d <= orb) angles.push({ key: k, name: PLANET_CN[k], angle: an, orb: +d.toFixed(1), plain: PLAIN[k] });
+        }
+      }
+    }
+    let vd = `太阳在 ${fmtD(at)} 走回你出生那一度(误差<0.01°,这一刻可查天文年历核对)——占星通行做法拿这一刻的天空当你这一年的年运盘。`;
+    if (srAscH) vd += `这一年的重心落在本命第${srAscH}宫:${HOUSE_PLAIN[srAscH - 1]}——一年里心力与事件密度都往这一块偏,年度计划按它排。`;
+    else vd += '返照盘的上升要出生地与钟点才排得出,这里缺,重心那一层不硬给。';
+    if (moonH) vd += `情绪与日常绕着本命第${moonH}宫(${HOUSE_PLAIN[moonH - 1]})转,这一年的起伏多半从这里来。`;
+    if (angles.length) {
+      const a0 = angles.sort((x, y) => x.orb - y.orb)[0];
+      vd += `${a0.name}合${a0.angle}(差${a0.orb}°),是这一年的主角星:${a0.plain}这一路会被显著放大,好坏都由它带。`;
+    } else if (src.asc) vd += '没有行星合返照盘的四轴,这一年没有单一主角,按上面两条的领域推进即可。';
+    return { at, date: fmtD(at), chart: src, cross, ascHouse: srAscH, moonHouse: moonH, angles, verdict: vd };
   }
 
   const HONEST = '这一页的诚实分级分两层:行星落在哪个星座哪一度(含行运、返照的位置与应期日子)是排盘层,可核可验' +

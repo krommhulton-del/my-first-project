@@ -141,7 +141,7 @@ console.log('【七】措辞与诚实分级');
 t('行星白话、相位白话过体检员;HONEST 写明零回测与两套不互相计分', () => {
   for (const s of [...Object.values(Astro.PLAIN), ...Astro.ASPECTS.map(a => a.plain)]) {
     const rep = Tijian.check(s, {});
-    const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语'].includes(h.kind));
+    const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
     ok(!bad.length, `体检不过:${s} → ${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
   }
   ok(/零回测/.test(Astro.HONEST) && /不互相计分/.test(Astro.HONEST), 'HONEST 缺关键句');
@@ -209,7 +209,7 @@ t('压本命月亮的窗口必须带±0.3°放宽几天的声明——不许把�
   let found = null;
   for (let y = 2026; y <= 2032 && !found; y++) {
     const tr = Astro.transits(NATAL, new Date(Date.UTC(y, 0, 1)), 12);
-    found = tr.wins.find(w => w.target === '心里那一汪');
+    found = tr.wins.find(w => w.target === '本命月亮');
   }
   ok(found, '七年里竟无一个压月亮的窗口——扫描有漏');
   ok(/±0\.3°/.test(found.plain) && /放宽/.test(found.plain), '缺月亮误差声明:' + found.plain);
@@ -263,7 +263,12 @@ t('细读与行运的全部白话过体检员;叙事是因果链(连词齐)不�
     const c = Astro.chart(new Date(Date.UTC(1955 + (i * 13) % 70, (i * 7) % 12, 1 + (i * 5) % 28, (i * 11) % 24)), { lat: 25 + (i % 25), lon: 90 + (i % 50) });
     const dp = Astro.deepRead(c);
     texts.push(dp.verdict, dp.story);
-    ok(/因为/.test(dp.story) && /所以/.test(dp.story), '细读叙事缺因果连词:' + dp.story.slice(0, 50));
+    // 同 mingge:v0.98 强制每句带「因为」,评审查出产出假因果。改钉真链条结构——
+    // 起于配置(先看配置)、经太阳与月亮两段、收于「因此」这类真推论连词。
+    ok(/先看配置/.test(dp.story), '细读要从元素配置起:' + dp.story.slice(0, 40));
+    ok(/太阳(自我与主线)/.test(dp.story.replace(/[()]/g, m => m === '(' ? '(' : ')')) || /太阳\(自我与主线\)/.test(dp.story), '缺太阳那一段');
+    ok(/月亮\(情绪与安全感\)/.test(dp.story), '缺月亮那一段');
+    ok(/因此|所以/.test(dp.story) || !dp.ruler, '缺收束的推论连词:' + dp.story.slice(0, 60));
   }
   const tr = Astro.transits(NATAL, new Date(Date.UTC(2026, 7, 2)), 12);
   const mo = Astro.monthRun(NATAL, new Date(Date.UTC(2026, 7, 2)));
@@ -272,7 +277,7 @@ t('细读与行运的全部白话过体检员;叙事是因果链(连词齐)不�
   for (const s of texts) {
     if (!s || seen2.has(s.slice(0, 16))) continue; seen2.add(s.slice(0, 16));
     const rep = Tijian.check(s, {});
-    const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语'].includes(h.kind));
+    const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
     ok(!bad.length, `体检不过:${s.slice(0, 34)} → ${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
   }
 });
@@ -282,6 +287,84 @@ t('material 带上细读与年运月运;HONEST 把行运的位置/说法两层�
   ok(/细读/.test(m) && /年运·行运窗口/.test(m) && /月运/.test(m) && /太阳返照/.test(m), '材料缺块');
   ok(/勿另立结论/.test(m), '细读块要写明程序已算死');
   ok(/零回测/.test(Astro.HONEST) && /行运|应期/.test(Astro.HONEST), 'HONEST 要把行运也纳入分级');
+});
+
+console.log('【十四】v0.99 对抗评审查出的三个真缺陷,逐条钉死');
+t('元素/三态统计不许把天王海王算进去——世代星一星座停 7–14 年,断个人性格是外行错', () => {
+  // 缘起:v0.98 把三颗世代星计入四正,于是太阳金牛(固定)+ 上升狮子(固定)的盘
+  // 被算成「开创型」,同一段里自相矛盾。评审一眼识破。
+  const c = Astro.chart(new Date(Date.UTC(1990, 4, 20, 1, 30)), { lat: 31.2, lon: 121.5 });
+  const dp = Astro.deepRead(c);
+  const tot = Object.values(dp.modes).reduce((a, b) => a + b, 0);
+  // 日月各2 + 水金火各1 + 木土各1 + 上升1 = 10;若把天海算进去会变成 12
+  ok(tot === 10, `三态票数应为 10(日月各2、水金火木土各1、上升1),实得 ${tot}——天海八成又被算进去了`);
+  ok(dp.modes['固定'] >= dp.modes['开创'], `太阳金牛+上升狮子该偏固定,实得 开创${dp.modes['开创']} 固定${dp.modes['固定']}`);
+  // 一致性校验必须在:主导三态与日月上升全不符时不许开口
+  let checked = 0;
+  for (let i = 0; i < 200; i++) {
+    const cc = Astro.chart(new Date(Date.UTC(1950 + (i * 7) % 80, (i * 5) % 12, 1 + (i * 11) % 28, (i * 3) % 24)), { lat: 30, lon: 120 });
+    const d2 = Astro.deepRead(cc);
+    if (!d2.modeOK) { checked++; ok(!/做事方式上/.test(d2.story), '三态与日月上升不符时不许报三态那句'); }
+  }
+  console.log(`      (200 盘里 ${checked} 盘触发一致性拦截)`);
+});
+t('星群必须含至少一颗个人行星——纯世代星群是同代人的共同背景,不是个人特征', () => {
+  // 缘起:v0.98 给 1989–1991 年生人人手发了一份「摩羯星群」(土天海),这是外行标志。
+  let pure = 0, ok9 = 0;
+  for (let i = 0; i < 400; i++) {
+    const c = Astro.chart(new Date(Date.UTC(1950 + (i * 7) % 80, (i * 5) % 12, 1 + (i * 11) % 28, (i * 3) % 24)), { lat: 30, lon: 120 });
+    const dp = Astro.deepRead(c);
+    for (const p of dp.pat) {
+      if (p.kind !== '星群') continue;
+      ok9++;
+      const per = p.who.filter(n => ['太阳', '月亮', '水星', '金星', '火星'].includes(n));
+      if (!per.length) pure++;
+    }
+  }
+  ok(pure === 0, `报出了 ${pure} 个纯世代行星星群——门槛没守住`);
+  ok(ok9 > 0, '400 盘一个星群都没有,门槛过严成了死条');
+  console.log(`      (400 盘 ${ok9} 个星群,纯世代星群 0)`);
+});
+t('年运主线不许取扫描起点的截断窗;命主星被行运打到必须标出来', () => {
+  // 缘起:v0.98 拿一条 11 天后就结束、精确应期恰好等于查询当天的尾巴当全年主线。
+  for (let i = 0; i < 40; i++) {
+    const c = Astro.chart(new Date(Date.UTC(1960 + (i * 3) % 60, (i * 5) % 12, 1 + (i * 7) % 28, (i * 11) % 24)), { lat: 31.2, lon: 121.5 });
+    const tr = Astro.transits(c, new Date(Date.UTC(2026, 7, 2)), 12);
+    if (!tr.wins.length) continue;
+    const nonTrunc = tr.wins.filter(w => !w.truncStart);
+    const mainIsTrunc = /主线/.test(tr.verdict) && nonTrunc.length && tr.wins.filter(w => w.truncStart).some(w => tr.verdict.includes(w.from + '~' + w.to) && tr.verdict.indexOf('主线') >= 0 && tr.verdict.includes(w.mover + w.asp + w.target));
+    ok(!(nonTrunc.length && mainIsTrunc), '主线取到了截断窗');
+    for (const w of tr.wins) {
+      if (w.truncStart) ok(/已开始/.test(w.plain), '截断窗要注明它早已开始:' + w.plain.slice(-30));
+      if (w.isRuler) ok(/命主星/.test(w.plain), '打到命主星要标出来');
+    }
+  }
+});
+t('月运第一句是结论不是库存清点(铁律二);返照报的是重心宫位不是软硬相位计数', () => {
+  const c = Astro.chart(new Date(Date.UTC(1990, 4, 20, 1, 30)), { lat: 31.2, lon: 121.5 });
+  const mo = Astro.monthRun(c, new Date(Date.UTC(2026, 7, 2)));
+  ok(/最好用的一天|最该避开|没有落到你本命的要点/.test(mo.verdict.slice(0, 40)), '月运第一句要先给结论:' + mo.verdict.slice(0, 50));
+  ok(!/^这三十五天:快星应期/.test(mo.verdict), '第一句又退回库存清点了');
+  const sr = Astro.solarReturn(c, 2026, { lat: 31.2, lon: 121.5 });
+  ok(/重心落在本命第\d+宫/.test(sr.verdict), '返照要报重心宫位:' + sr.verdict.slice(-80));
+  ok(!/软相位|硬相位相当|顺的多|拧的多/.test(sr.verdict), '软硬相位计数法已废,不许回流');
+  ok(sr.ascHouse >= 1 && sr.ascHouse <= 12, '返照上升宫位算错:' + sr.ascHouse);
+});
+t('缺位元素与该元素主星的状态必须合成,不许同一段里既说短板又说长项', () => {
+  // 缘起:v0.98 同一段里写「缺火:启动力弱」又写「火星入庙:行动力是长项」,零合成。
+  let n = 0;
+  for (let i = 0; i < 300; i++) {
+    const c = Astro.chart(new Date(Date.UTC(1950 + (i * 11) % 80, (i * 7) % 12, 1 + (i * 5) % 28, (i * 3) % 24)), { lat: 30, lon: 120 });
+    const dp = Astro.deepRead(c);
+    for (const cb of dp.combos) {
+      n++;
+      ok(/缺位/.test(cb.plain) && /主星/.test(cb.plain), '合成句要同时点出缺位与主星:' + cb.plain.slice(0, 30));
+      // 主星有力时不许再说这一路「确实是短板」
+      if (cb.strong) ok(!/确实是短板|确实是弱项|确实薄|确实不易/.test(cb.plain), '主星有力却仍断为短板,没合成:' + cb.plain);
+    }
+  }
+  ok(n > 0, '300 盘一个缺位元素都没有,合成层是死条');
+  console.log(`      (300 盘 ${n} 条缺位合成)`);
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

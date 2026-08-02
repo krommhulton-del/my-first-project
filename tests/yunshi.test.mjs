@@ -181,7 +181,7 @@ t('第一句就是具体答案,不是「今天整体如何」(铁律二)', () =>
   for (let d = 0; d < 12; d++) {
     const t0 = Yunshi.riYun(c, new Date(2026, 7, 2 + d)).text;
     const first = t0.split('。')[0];
-    ok(/主.+这一摊/.test(first), '第一句要说清今天主哪一摊事:' + first);
+    ok(/重点在.+/.test(first), '第一句要说清今天重点在哪一类事:' + first);
     ok(!/^今天整体/.test(t0), '不许拿「今天整体如何」开头——那句只有五种说法:' + first);
   }
 });

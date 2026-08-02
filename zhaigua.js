@@ -146,7 +146,7 @@
     if (he) { score += 1; sub.push({ plain: '这一卦上下相合,这桩事有始有终——能成,而且成了顺', tech: '六合卦', q: '爻逢六合終見享通', src: '增删卜易' }); }
     if (chong) { score -= 2; sub.push({ plain: '这一卦上下对冲,住不长久——就算成了,也是过渡的住处,别按安家的钱砸进去', tech: '六冲卦', q: '但不喜其六沖六沖不久之象', src: '增删卜易' }); }
     if (fanYin) { score -= 2; sub.push({ plain: '这一卦是走回头路的样子——买了要反悔、住了多愁叹,这处不合适', tech: '卦反吟', q: '卦遇反吟多於愁嘆', src: '增删卜易' }); }
-    if (caiMoving && !fuOK) { score -= 1; sub.push({ plain: '钱那股力正冲着宅的根基——这处别定,另寻别处更合适', tech: '财动克父', q: '財爻發動他方仁里另宜求', src: '增删卜易' }); }
+    if (caiMoving && !fuOK) { score -= 1; sub.push({ plain: '财的动向正冲着宅的根基——这处别定,另寻别处更合适', tech: '财动克父', q: '財爻發動他方仁里另宜求', src: '增删卜易' }); }
     if (shiBian && shiBian.jinTui === '进神') { score += 1; sub.push({ plain: '越住越兴,置业能一处变几处', tech: '世化进神', q: '世動而化進綿長百代', src: '增删卜易' }); }
     if (shiBian && shiBian.jinTui === '退神') { score -= 1; sub.push({ plain: '勉强成了也会退掉——成后生悔,这处别勉强', tech: '世化退神', q: '世動化退勉彊成之終須退悔', src: '增删卜易' }); }
     if (shi.power && shi.power.ruMu && shi.liuQin === '官鬼') { score -= 3; sub.push({ plain: '这一卦最忌的样子出现了——这处不要,换,不商量', tech: '世随鬼入墓', q: '最忌隨官入墓須防鬼動傷身', src: '增删卜易' }); }
@@ -193,7 +193,7 @@
       if (hurtMoving) {
         const jueZhi = JUE[hurtMoving.wx];
         const anFang = (Dili.ZHI_DIR && Dili.ZHI_DIR[CHANGSHENG[yong.wx]]) || '';
-        sub.push({ plain: `挑克得住那股冲撞的时辰进门:${jueZhi}时(那股力到${jueZhi}就绝);${qin}的床榻安在${anFang}一带(他那一头之力最生发的方位)`,
+        sub.push({ plain: `挑克得住冲撞的时辰进门:${jueZhi}时(冲撞之力到${jueZhi}即绝);${qin}的床榻安在${anFang}一带(他那一方之力最生发的方位)`,
           tech: `忌神${hurtMoving.zhi}(${hurtMoving.wx})绝于${jueZhi};用神${yong.wx}长生于${CHANGSHENG[yong.wx]}`,
           q: '凡六親所犯之神令之趨避無一不驗', src: '增删卜易·入宅六親凶吉章第一百十一' });
       }

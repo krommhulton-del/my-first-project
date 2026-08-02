@@ -54,8 +54,8 @@
       if (cur) {
         const shen = Bazi.shiShen(chart.dayGan, cur.gz[0]);
         dayunLine = `你眼下这十年走的是「${Bazi.plainShen(shen)}」这一路当家` +
-          (chart.yong.jiWx.includes(Bazi.GAN_WX[cur.gz[0]]) ? ',而且明面那股力正是背你的那一路——这十年顺水的事少,底下六条杠杆才更要紧' :
-            (chart.yong.xiWx.includes(Bazi.GAN_WX[cur.gz[0]]) ? ',明面那股力是旺你的——顺水,杠杆是锦上添花' : ',明面那股力不帮不压'));
+          (chart.yong.jiWx.includes(Bazi.GAN_WX[cur.gz[0]]) ? ',而且这十年明面走的正是背你的五行——顺水的事少,底下六条杠杆才更要紧' :
+            (chart.yong.xiWx.includes(Bazi.GAN_WX[cur.gz[0]]) ? ',这十年明面走的是旺你的五行——顺水,杠杆是锦上添花' : ',明面不帮不压'));
         tech.push(`现行大运${cur.gz}(${shen}),${cur.fromAge}岁起`);
       } else dayunLine = `还没起运(${chart.dayun.startText || ''}),这几年主要看家里给的底子`;
     }
@@ -82,7 +82,7 @@
       const bad = ahead.filter(n => n.top.dirSum < 0).slice(0, 1);
       const yy = ahead.find(n => n.top.key === 'yinyuan');
       for (const n of good) shiItems.push({
-        do_: `${n.year} 年动「${n.top.label}」这一摊——${rephrase(n.top.reasons && n.top.reasons[0])}`,
+        do_: `${n.year} 年宜动「${n.top.label}」——${rephrase(n.top.reasons && n.top.reasons[0])}`,
         tech: (n.top.techs && n.top.techs[0]) || '',
       });
       for (const n of bad) shiItems.push({
@@ -90,7 +90,7 @@
         tech: (n.top.techs && n.top.techs[0]) || '',
       });
       if (yy) shiItems.push({
-        do_: `${yy.year} 年感情那一摊动得重——是聚是散不看盘看处境,去「运势」或年表填了感情状态再看方向`,
+        do_: `${yy.year} 年感情一事动得重——是聚是散不看盘看处境,去「运势」或年表填了感情状态再看方向`,
         tech: '姻缘只报动量,方向归处境(v0.77)',
       });
       if (!shiItems.length) shiItems.push({ do_: '未来五年没有哪年的信号过线——年份挑不出轻重,具体日子照下一条办', tech: '年表未来五年无过阈节点' });

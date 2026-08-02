@@ -295,7 +295,7 @@
   const YIMA = ['寅', '申', '亥', '巳'];
   const TAOHUA = ['酉', '卯', '午', '子'];
   // 这一层为什么不计分,写死在这儿,界面直接取用
-  const SHA_CAVEAT = '这一层只作旁注,不进分数——《增删卜易》说神煞「不能独操祸福之权」,得贴着盘里当家的那股力才作数;' +
+  const SHA_CAVEAT = '这一层只作旁注,不进分数——《增删卜易》说神煞「不能独操祸福之权」,得贴着盘里当家的力量才作数;' +
     '《滴天髓阐微》说得更狠,直接把驿马桃花叫「后人之谬言」。两本书打架,所以摆出来给你看,但不拿它定吉凶。';
 
   // 神煞加持与流年注意(dir 为目标方向;chart 需 dayGan 与 pillars.year.zhi;nowYearZhi 当年年支)
@@ -303,7 +303,7 @@
     const out = [];
     try {
       const yz = chart.pillars.year.zhi;
-      if (ZHI_DIR[YIMA[sanheIdx(yz)]] === dir) out.push('兼你的驿马方:利变动发展,动则有机,搬迁跳槽都吃这股劲');
+      if (ZHI_DIR[YIMA[sanheIdx(yz)]] === dir) out.push('兼你的驿马方:利变动发展,动则有机,搬迁跳槽皆宜');
       const ty = TIANYI[chart.dayGan] || '';
       if ([...ty].some(z => ZHI_DIR[z] === dir)) out.push('兼天乙贵人方:利求人成事,易遇提携之人');
       if (ZHI_DIR[TAOHUA[sanheIdx(yz)]] === dir) out.push('兼桃花方:人缘情缘活络,单身宜往');

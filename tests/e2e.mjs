@@ -1152,7 +1152,11 @@ await t('星盘细读与时空盘:第一句+因果链、庙旺上界面、年运
   await page.waitForTimeout(600);
   const deep = await page.locator('#xz-out').innerText();
   ok(/第 一 句/.test(deep) && /来 路/.test(deep), '细读要有第一句与来路');
-  ok(/因为/.test(deep) && /所以/.test(deep), '细读得是因果链,不是标签堆');
+  // v0.99:原先钉字面「因为/所以」,而对抗评审查出那个「因为」连的是假因果(见 astro.test.mjs 【十四】)。
+  // 改钉真链条结构:起于配置、经太阳月亮两段、收于推论连词。
+  ok(/先看配置/.test(deep), '细读要从元素配置起');
+  ok(/太阳/.test(deep) && /月亮/.test(deep), '细读要有太阳与月亮两段');
+  ok(/因此|所以|两者|叠加/.test(deep), '缺收束的推论连词,退回标签堆了');
   ok(/入庙|旺|陷|落/.test(deep), '庙旺陷落要上界面');
   ok(/命主星/.test(deep), '有上升就该报命主星');
   await page.selectOption('#xz-mode', 'trans');
@@ -1202,7 +1206,7 @@ await t('占宅:六型摇卦即断、原话上界面、一疑一占的规矩写�
   ok(/动得|缓一缓|先停/.test(out2), '修方动土要出结论:' + out2.slice(0, 40));
   {
     const r = Tijian.check(out2.replace(/「[^」]*」/g, ''), { zone: '断语' });
-    const bad = r.hits.filter(h => ['空话', '说教', '花钱消灾', '术语'].includes(h.kind));
+    const bad = r.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
     ok(!bad.length, '占宅输出不干净:' + bad.map(h => h.kind + ':' + h.snippet).join('、'));
   }
 });

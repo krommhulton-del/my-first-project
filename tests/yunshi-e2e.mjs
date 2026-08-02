@@ -182,7 +182,7 @@ await t('往年细账:能翻到出生起运以来每一年,并明说是给用户
 
 await t('三件说清楚:明面底下是什么、月年不按日历、等级五档', async () => {
   const how = await page.locator('#yun-howto').innerText();
-  ok(/明面上那股力/.test(how) && /底下那股力/.test(how), '要解释明面与底下各指什么:' + how.slice(0, 60));
+  ok(/「明面」/.test(how) && /「底下」/.test(how), '要解释明面与底下各指什么:' + how.slice(0, 60));
   ok(/节气/.test(how) && /立春/.test(how), '要说清月按节气、年按立春');
   ok(/大吉|平顺/.test(how), '要给出五档尺度');
   const cards = await page.locator('#yun-cards').innerText();

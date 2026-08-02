@@ -123,7 +123,7 @@ t('全部 verdict 与 plain 过体检员(空话/说教/花钱消灾/术语)', ()
     for (const s of [r.verdict, ...r.sub.map(x => x.plain), r.note || '']) {
       const k = s.slice(0, 12); if (!s || seen.has(k)) continue; seen.add(k);
       const rep = Tijian.check(s, {});
-      const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语'].includes(h.kind));
+      const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
       ok(!bad.length, `体检不过:${s.slice(0, 26)}… → ${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
     }
   }

@@ -65,9 +65,9 @@ t('300 盘里六条杠杆条条在场、条条有货', () => {
 t('时杠杆的三种话(动/守/姻缘动量)都真出现过——没有死分支', () => {
   const seen = new Set();
   for (const { p } of SAMPLE) for (const it of p.levers[0].items) {
-    if (/年动「/.test(it.do_)) seen.add('动');
+    if (/年宜动「/.test(it.do_)) seen.add('动');
     if (/年守——/.test(it.do_)) seen.add('守');
-    if (/感情那一摊动得重/.test(it.do_)) seen.add('姻缘');
+    if (/感情一事动得重/.test(it.do_)) seen.add('姻缘');
   }
   for (const k of ['动', '守', '姻缘']) ok(seen.has(k), `「${k}」那一款一次都没出现——死分支`);
 });
@@ -128,7 +128,7 @@ t('杠杆动作过体检员(空话/说教/花钱消灾/术语四关)', () => {
   for (const { p } of SAMPLE) for (const l of p.levers) for (const it of l.items) {
     const k = it.do_.slice(0, 12); if (seen.has(k)) continue; seen.add(k);
     const r = Tijian.check(it.do_, {});
-    const bad = r.hits.filter(h => ['空话', '说教', '花钱消灾', '术语'].includes(h.kind));
+    const bad = r.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
     ok(!bad.length, `体检不过:${it.do_.slice(0, 28)}… → ${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
   }
 });

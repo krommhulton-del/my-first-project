@@ -168,7 +168,7 @@ t('性别口径不许镜像:男命不出雌竞三款,女命不出雄竞三款;�
     if (keys.includes('竞则避正')) ok(!strong, `身${c.strength.band}却报「竞则避正」`);
   }
 });
-t('性别没填:竞争层不硬猜——条目为空;盘上真有同类那股力时,note 要当面说明不硬断', () => {
+t('性别没填:竞争层不硬猜——条目为空;盘上真有同辈竞争配置时,note 要当面说明不硬断', () => {
   let saidNote = false;
   for (let i = 0; i < 600; i++) {
     const c = Bazi.chart(new Date(1958 + (i * 11) % 62, (i * 5) % 12, 1 + (i * 7) % 28, (i * 3) % 24, 30), '', { lon: 116.4 });
@@ -184,11 +184,16 @@ t('顶路叙事是一条因果链:底盘→为什么→发力窗→代价,连词
     if (r.top.score < 25) { ok(!r.story, '没登顶还讲故事:' + r.story); continue; }
     n++;
     ok(r.story, `登顶(${r.top.key} ${r.top.score})却没有叙事`);
-    ok(/先看底盘/.test(r.story) && /因为/.test(r.story) && /所以/.test(r.story), '因果连词缺席——并列短句一眼 AI,这正是要治的病:' + r.story.slice(0, 60));
+    // v0.99 改钉:原先钉的是字面「因为」,而对抗评审查出那个「因为」连的是**假因果**
+    // (命局的厚薄推不出「财重」这类独立观测)。**钉字面连词等于钉住假推理**——
+    // 这一版改钉真链条结构:先给基础 → 用「同时」承接独立观测 → 用「两者叠加」收束到结论。
+    ok(/先看命局基础/.test(r.story), '叙事要从命局基础起:' + r.story.slice(0, 40));
+    ok(/同时/.test(r.story) && /两者叠加/.test(r.story), '缺承接与收束,退回并列短句了:' + r.story.slice(0, 80));
+    ok(!/因为这个基础/.test(r.story), '「因为这个基础」是被查出的假因果句式,不许回流');
     ok(r.story.includes('「' + r.top.name.slice(0, r.top.name.indexOf('(')) + '」'), '叙事讲的不是登顶那条路');
     ok(/代价/.test(r.story), '代价那一段丢了');
     const rep = Tijian.check(r.story, {});
-    const hard = rep.hits.filter(i => ['空话', '说教', '花钱消灾', '术语'].includes(i.kind));
+    const hard = rep.hits.filter(i => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(i.kind));
     ok(!hard.length, `叙事体检不过:${hard.map(i => i.kind + ':' + i.snippet).join(';')}`);
   }
   ok(n >= 100, '登顶样本太少:' + n);
@@ -200,7 +205,7 @@ t('发力窗不许乱指:叙事里报的起运岁,必须真是头一步旺你的
     const c = chartOf(1962 + (i * 7) % 58, 1 + (i * 11) % 12, 1 + (i * 3) % 28, (i * 5) % 24, g);
     const r = Mingge.read(c);
     if (!r.story) continue;
-    const m = r.story.match(/等到([\d.]+)岁起/);
+    const m = r.story.match(/([\d.]+)岁起的十年/);
     if (m) {
       win++;
       const fw = (c.dayun.list || []).find(d => c.yong.xiWx.includes(Bazi.GAN_WX[d.gz[0]]) || c.yong.xiWx.includes(Bazi.ZHI_WX[d.gz[1]]));
@@ -210,7 +215,7 @@ t('发力窗不许乱指:叙事里报的起运岁,必须真是头一步旺你的
   for (let i = 0; i < 400; i++) {
     const c = Bazi.chart(new Date(1960 + (i * 13) % 60, (i * 7) % 12, 1 + (i * 11) % 28, (i * 9) % 24, 30), '', { lon: 116.4 });
     const r = Mingge.read(c);
-    if (r.story && /几时发力/.test(r.story)) { noG++; ok(/性别/.test(r.story), '大运缺席要说明是缺性别'); }
+    if (r.story && /起效时间/.test(r.story)) { noG++; ok(/性别/.test(r.story), '大运缺席要说明是缺性别'); }
   }
   ok(win >= 30, '带发力窗的叙事太少:' + win);
   ok(noG >= 5, '性别缺失的「补性别」提示一次没出:死条');
@@ -221,7 +226,7 @@ t('已过窗的口径:年龄明确大于窗尾时,要说「这窗你已走过」
     const g = i % 2 ? '男' : '女';
     const c = chartOf(1955 + (i * 7) % 30, 1 + (i * 11) % 12, 1 + (i * 3) % 28, (i * 5) % 24, g);
     const r0 = Mingge.read(c, { age: 65 });
-    const m = r0.story && r0.story.match(/等到([\d.]+)岁起/);
+    const m = r0.story && r0.story.match(/([\d.]+)岁起的十年/);
     if (m && 65 > +m[1] + 10) { hit++; ok(/已走过/.test(r0.story), '65 岁的人还被当成没到窗:' + r0.story.slice(-80)); }
   }
   ok(hit, '构造不出已过窗样本');
@@ -289,7 +294,7 @@ t('白话过体检员:无空话、无说教、无花钱消灾、无推演术语'
   for (const s of texts) {
     if (seen.has(s.slice(0, 14))) continue; seen.add(s.slice(0, 14));
     const rep = Tijian.check(s, {});
-    const hard = rep.hits.filter(i => ['空话', '说教', '花钱消灾', '术语'].includes(i.kind));
+    const hard = rep.hits.filter(i => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(i.kind));
     ok(!hard.length, `体检不过:${s.slice(0, 30)}… → ${hard.map(i => i.kind + ':' + i.snippet).join(';')}`);
   }
 });
