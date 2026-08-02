@@ -776,7 +776,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.89</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.90</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1038,6 +1038,7 @@
       <button class="bcard" data-b="sec-wenji"><span class="bg">机</span><span><span class="bt">问 机 · 什么时候轮到你</span><span class="bd">问一句话:哪一年、哪几个月、哪几天;那阵子遇到的人什么路数、贵人从哪来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dingshi"><span class="bg">辰</span><span><span class="bt">定 时 辰 · 不知道自己几点生的</span><span class="bd">拿已经发生过的事回推时辰;顺带告诉你哪几个时辰其实断得一样、不用纠结</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-hepan"><span class="bg">合</span><span><span class="bt">双 人 合 盘 · 这人跟你对不对得上</span><span class="bd">两副盘摆一起逐层看:他旺不旺你、你旺不旺他、处起来顺不顺、缺的那一味补不补得上、未来十年谁上谁下。恋爱/合伙/朋友/共事分开算</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-mingge"><span class="bg">饭</span><span><span class="bt">命 格 取 向 · 这 人 该 吃 哪 碗 饭</span><span class="bd">仕途、买卖、手艺、文教、武职、清静饭——六路逐条给分,条条挂古书原话;钱从哪条路来、代价是什么,照实说,不绕弯</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dangan"><span class="bg">档</span><span><span class="bt">生 辰 档 案 · 一处管全应用</span><span class="bd">你、家里人、朋友的生辰各存一份,随时切换;能改能删。性别必填——男女的大运方向是反的,填错等于看别人的命</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yanpan"><span class="bg">验</span><span><span class="bt">验 盘 簿 · 这程序对你到底准不准</span><span class="bd">先让它把对某一年的判断封起来(你看不见),你再写下那年实际发生了什么,然后开封计分——连它错在哪几件都摆出来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
@@ -1306,6 +1307,22 @@
     <div class="stream" id="hp-ai"></div>
   </section>
 
+  <section id="sec-mingge" class="voff">
+    <h2>命 格 取 向 · 这 人 该 吃 哪 碗 饭</h2>
+    <div class="ypwarn" id="mg-honest"></div>
+    <div class="note">按顶栏当前那份生辰排(改人去「生辰档案」切)。这里的规矩:<b>条条挂得出古书原话</b>,
+      挂不出的只作旁注不进结论;「哪条压过哪条」的排序分是本程序自拟的,零回测;
+      <b>该说的照说,不拿道德词评人</b>——钱从哪条路来、代价是什么,是事;「贱」「淫」是明代的评语,不是事。
+      两本书打架的那几句,原话两边并排摆,本程序不替谁裁。</div>
+    <div class="qwrow">
+      <button type="button" class="primary" id="btn-mg-go">排这碗饭</button>
+      <button type="button" class="gold hidden" id="btn-mg-ai">请东玄把这碗饭讲透</button>
+    </div>
+    <div class="err" id="mg-err"></div>
+    <div id="mg-out"></div>
+    <div class="stream" id="mg-ai"></div>
+  </section>
+
   <section id="sec-dangan" class="voff">
     <h2>生 辰 档 案 · 一处管全应用</h2>
     <div class="note">存一次,全应用通用——运势、年表、择日、地利、验盘簿都吃这份档案。
@@ -1480,7 +1497,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.89 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.90 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1521,6 +1538,7 @@
 <script src="dingshi.js"></script>
 <script src="yanpan.js"></script>
 <script src="hepan.js"></script>
+<script src="mingge.js"></script>
 <script src="tijian.js"></script>
 <script>
 (function () {
@@ -4701,6 +4719,55 @@
   }
   window.dxHepanFill = hpFill;
 
+  // ═══════════════════ 命格取向(v0.90 板块 G):这人该吃哪碗饭 ═══════════════════
+  // 断法全在 mingge.js 里算死(引擎只吃 dxBirthChart 的盘,一个断法元素不自算,§四/§五)。
+  // 界面只做三件事:排版、把「诚实分级」那段话摆在第一屏、把材料喂给模型。
+  let mgChart = null;
+  const mgErr = m => { $('mg-err').textContent = m || ''; };
+  function mgRender(r) {
+    const ev = e => `<div class="hpv ypline">· ${esc(e.plain)}<br><span class="dim">书上原话:「${esc(e.quote)}」《${esc(e.src)}》</span></div>`;
+    const roadBlock = x => !x.ev.length ? '' :
+      `<div class="hprel"><b>${esc(x.name)}</b> <span class="hpb">${x.score}</span>${x.ev.map(ev).join('')}</div>`;
+    $('mg-out').innerHTML =
+      `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(r.verdict)}</div>` +
+      `<div class="note ypline">六路强度:${r.roads.map(x => esc(x.name.slice(0, x.name.indexOf('('))) + ' ' + x.score).join(' · ')}</div></div>` +
+      `<div class="ypbox"><h4>凭 什 么 这 么 排</h4>${r.roads.map(roadBlock).join('') || '<div class="hpv">六路都没立起来的凭据——这副盘吃饭的路在大运流年上。</div>'}</div>` +
+      `<div class="ypbox"><h4>钱 从 哪 条 路 来</h4>` +
+      r.money.map(m => `<div class="hprel"><b>${esc(m.path)}</b><div class="hpv">${esc(m.plain)}</div>` +
+        (m.quote ? `<div class="note ypflat">原话:「${esc(m.quote)}」《${esc(m.src)}》</div>` : '') +
+        (m.more || []).map(p => `<div class="hpv ypline">另:${esc(p.plain)}<br><span class="dim">「${esc(p.quote)}」</span></div>`).join('') +
+        (m.note ? `<div class="note ypflat">${esc(m.note)}</div>` : '') + `</div>`).join('') + `</div>` +
+      (r.zhi.length ? `<div class="ypbox"><h4>直 断(两书无争,照说不打折)</h4>` +
+        r.zhi.map(z => `<div class="hpv ypline">· ${esc(z.plain)}<br><span class="dim">「${esc(z.quote)}」《${esc(z.src)}》</span></div>`).join('') + `</div>` : '') +
+      (r.pang.length ? `<div class="ypbox"><h4>旁 注(两书打架或触发自拟,不计分不下断)</h4>` +
+        r.pang.map(n => `<div class="hprel"><b>${esc(n.key)}</b><div class="hpv">${esc(n.say)}</div>` +
+          n.yh.map(q => `<div class="note ypflat">渊海一方:「${esc(q.quote)}」</div>`).join('') +
+          n.dt.map(q => `<div class="note ypflat">滴天髓一方:「${esc(q.quote)}」</div>`).join('') + `</div>`).join('') + `</div>` : '');
+    $('mg-honest').textContent = r.honest;
+    $('btn-mg-ai').classList.remove('hidden');
+  }
+  async function mgAI() {
+    if (!mgChart) return;
+    const key = getKey();
+    if (!key) { mgErr('要东玄讲透,先在「问卦」那页的「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
+    mgErr('');
+    $('mg-ai').textContent = '';
+    try {
+      await llmStream([{ role: 'user', content: Mingge.material(mgChart) }], t => { $('mg-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
+      dxTijian($('mg-ai'), $('mg-ai').textContent);
+    } catch (e) { mgErr('讲透失败:' + aiErrHint(e, $('ai-provider').value)); }
+  }
+  if ($('btn-mg-go')) {
+    $('btn-mg-go').addEventListener('click', () => {
+      const c = dxBirthChart('q');
+      if (!c) { mgErr(dxWhyNoChart()); return; }
+      mgErr(c.genderKnown ? '' : '性别没填:六路照排(不吃大运),但「伴侣与人脉」那条只按男命口径摆——女命那套要填了性别才给。');
+      mgChart = c;
+      mgRender(Mingge.read(c));
+    });
+    $('btn-mg-ai').addEventListener('click', mgAI);
+  }
+
   // ═══════════════════ 生辰档案:增删改查,一处管全应用 ═══════════════════
   // 这个板块**一个断法都不许自己算**(§四)——它只管存取。
   // 「这份档案准不准」那一行取自 Dingshi.stability,不自己另判。
@@ -5380,11 +5447,11 @@
 
   const VIEWS = {
     ask: ['sec-quick', 'sec-today', 'sec-querent', 'sec-fenke', 'sec-q', 'sec-cast', 'sec-mh', 'sec-mhres', 'sec-xlr', 'sec-xlrres', 'sec-qm', 'sec-qmres', 'sec-gua', 'sec-read', 'sec-pan', 'sec-ai', 'sec-report'],
-    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
+    boards: ['board-menu', 'sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'],
     jiri: ['sec-jiri'],
     hist: ['sec-hist'],
   };
-  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
+  const BOARD_IDS = ['sec-vs', 'sec-wenji', 'sec-dingshi', 'sec-hepan', 'sec-mingge', 'sec-dangan', 'sec-yanpan', 'sec-dawen', 'sec-zhuanyun', 'sec-xinyuan', 'sec-wj', 'sec-yinyuan', 'sec-dili'];
   const ALL_VIEW_IDS = [...new Set([].concat(...Object.values(VIEWS)))];
   let curView = 'ask', curBoard = null;
   function unfoldSec(id) {

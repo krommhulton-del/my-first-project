@@ -58,6 +58,7 @@ html = html
   .replace('<script src="tijian.js"></script>', '<script>\n' + read('tijian.js') + '\n</script>')
   .replace('<script src="yanpan.js"></script>', '<script>\n' + read('yanpan.js') + '\n</script>')
   .replace('<script src="hepan.js"></script>', '<script>\n' + read('hepan.js') + '\n</script>')
+  .replace('<script src="mingge.js"></script>', '<script>\n' + read('mingge.js') + '\n</script>')
   // 桌面单文件版无 Service Worker 与 manifest(file:// 下不适用)
   .replace(/\n  \/\/ —— PWA[\s\S]*?\.catch\(\(\) => \{\}\);\n  \}\n/, '\n')
   .replace('<link rel="manifest" href="manifest.webmanifest">\n', '')

@@ -1103,6 +1103,40 @@ await t('双人合盘:两份档案合一盘,四种关系分开算,不许替人�
   await page.evaluate(() => { localStorage.removeItem('dongxuan_profiles_v1'); localStorage.removeItem('dongxuan_profile_cur'); });
 });
 
+await t('命格取向:六路挂原话、说真话不带道德词、两书打架并排摆(v0.90)', async () => {
+  // 缘起:用户点名「必须说真话」,策划书画的线是「结论一个字不软,道德词一个字不带」。
+  // 这条端到端守三件事:板块能出结论、原话挂在界面上、道德词一个不许漏到界面。
+  await page.evaluate(() => {
+    localStorage.setItem('dongxuan_birth', '1990-05-20');
+    localStorage.setItem('dongxuan_birth_hour', '09:30');
+    localStorage.setItem('dongxuan_gender', '男');
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(400);
+  await page.evaluate(() => window.dxOpenBoard('sec-mingge'));
+  await page.waitForTimeout(200);
+  await page.click('#btn-mg-go');
+  await page.waitForTimeout(500);
+  const out = await page.locator('#mg-out').innerText();
+  ok(/第 一 句/.test(out), '第一句区要在');
+  ok(/六路强度/.test(out), '六路强度要摆出来');
+  ok(/钱 从 哪 条 路 来/.test(out), '钱路那一层要在');
+  ok(/书上原话|原话/.test(out), '界面上要挂得出原话');
+  ok(/《渊海子平》|《三命通会》|《滴天髓阐微/.test(out), '出处书名要在');
+  // 诚实那段话必须在第一屏
+  const honest = await page.locator('#mg-honest').innerText();
+  ok(/自拟/.test(honest) && /零回测/.test(honest), '第一屏要写明排序分自拟、零回测:' + honest.slice(0, 50));
+  // 道德词禁表:引文剥掉后一个不许有(引文原样保留是规矩,不算违规)
+  const noQuote = out.replace(/「[^」]*」/g, '');
+  for (const w of ['水性杨花', '不检点', '不贞', '娼']) ok(!noQuote.includes(w), `界面白话带道德词:${w}`);
+  // 说人话
+  {
+    const r = Tijian.check(noQuote, { zone: '断语' });
+    const bad = r.hits.filter(h => ['空话', '说教', '花钱消灾'].includes(h.kind));
+    ok(!bad.length, '命格取向输出不干净:' + bad.map(h => h.kind + ':' + h.snippet).join('、'));
+  }
+});
+
 await t('生辰档案:新建/改/复制/删,性别必填,切换全应用通用(v0.84)', async () => {
   await page.evaluate(() => {
     localStorage.removeItem('dongxuan_profiles_v1');
