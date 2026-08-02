@@ -177,14 +177,18 @@
       if ((ZHI.indexOf(a) + 6) % 12 === ZHI.indexOf(b)) neiChong.push(`${a}${b}相冲:${GONG[ks[i]]}与${GONG[ks[j]]}互撼,此两处人生课题多动荡,逢冲之年应期尤验`);
     }
     return {
-      birth, gender: gender || '男',
+      // gender 原先在这里 `|| '男'` 顶上——**那是本项目最里层的一处默认男**,
+      // 上游即便改好了,这里照样会把空性别变成男命。v0.83 一并拔掉:
+      // 性别未知就据实标成未知,大运那一路自己会停(见 computeDayun),喜忌照常算。
+      birth, gender: (gender === '男' || gender === '女') ? gender : '',
+      genderKnown: (gender === '男' || gender === '女'),
       pillars, dayGan, dayWx: GAN_WX[dayGan],
       ziNote: lateZi ? '晚子时(23点后)出生,依主流子时换日法,日柱按次日排' : null,
       strength, yong, geju, cong, tiaohou: tiaoHou(cal.monthZhi, dayGan), neiChong,
       kong, taiYuan: taiYuan(monthGZ), daysIntoJie: days, siLing,
       rel: strength.rel, wuxing: strength.pow, wuxingCount: countWuxing(pillars),
       lunarText: Lunar.format(lunar), calYear: cal.year, calMonth: cal.month, monthZhi: cal.monthZhi,
-      dayun: computeDayun(pillars, yearGZ[0], gender || '男', birth),
+      dayun: computeDayun(pillars, yearGZ[0], gender, birth),
     };
   }
 
@@ -480,7 +484,20 @@
   function invKe(el) { for (const a of Object.keys(KE)) if (KE[a] === el) return a; }
 
   // 大运:阳年男/阴年女顺行,阴年男/阳年女逆行;自月柱起排,起运岁由节气距离约算
+  //
+  // **性别不填就不许排大运**(v0.83)。缘起:上游原先在拿不到性别时按「男」顶上,
+  // 而 `gender === '男'` 对空值恒为 false,于是空性别被**当成女命**排,一声不吭。
+  // 实测 368 副盘:性别一换,大运顺逆 **100% 翻转**、第一步干支 100% 不同;
+  // 逐年主事型 32.0% 对不上、人生节点 34.9% 对不上——填错等于看的是另一个人的一生。
+  // 时辰不知道情有可原(v0.77 因此选择「照算但把话说清」),性别没人不知道,
+  // 所以这一层的处置是**不排**,而不是「排了再解释」。
+  // 留神:**喜忌不看性别**(实测改变 0.0%),所以只有大运这一路停,
+  // 日运/月运/择日「对你」层/地利这些只吃喜忌的照常算——不许一竿子打翻。
   function computeDayun(pillars, yearGan, gender, birth) {
+    if (gender !== '男' && gender !== '女') {
+      return { unknown: true, forward: null, startAge: null, startDays: null, list: [],
+        startText: '性别没填,大运方向定不了(古法阳男阴女顺行、阴男阳女逆行)' };
+    }
     const forward = (GAN_YY[yearGan] === 1) === (gender === '男');
     const mgIdx = GAN.indexOf(pillars.month.gan), mzIdx = ZHI.indexOf(pillars.month.zhi);
     const sa = estimateStartAge(birth, forward);

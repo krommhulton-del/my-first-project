@@ -659,6 +659,7 @@
   .yptab thead th { color: var(--dim); font-weight: normal; }
   .yptab tr.on td { color: var(--cinnabar); }
   .ypbig { font-family: var(--disp); font-size: 1.5rem; color: var(--ink); letter-spacing: .04em; }
+  .agein { width: 96px; }
   .ypyin { max-width: 150px; }
   .ypmsg { margin: 0; align-self: center; }
   .ypheadline { margin-bottom: 10px; }
@@ -752,7 +753,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.82</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.83</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -795,12 +796,12 @@
   <section id="sec-querent">
     <h2>问 卦 人</h2>
     <div class="qrow">
-      <select id="q-gender" title="问卦人性别,选填;问婚恋、看人时影响断法口径">
-        <option value="">性别·选填</option>
+      <select id="q-gender" title="性别。看命盘必填——古法男女的大运方向是反的,填错等于看的是别人的命;只起卦不排盘的话可以不填">
+        <option value="">性别·排盘必填</option>
         <option value="男">我是男</option>
         <option value="女">我是女</option>
       </select>
-      <select id="q-age" title="问卦人年龄段,选填;断应期与人生阶段更准"><option value="">年龄·选填</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+      <input type="number" id="q-age" class="agein" min="0" max="120" step="1" placeholder="年龄" title="填具体岁数,不填也行。填了生日的话这里会自动算出来——区间(如「26-30」)不够用:年龄闸门是按具体岁数判的,给区间等于让程序替你挑一个数">
       <select id="q-marital" title="眼下单身还是有伴。只影响姻缘那一类:命盘算得出哪一年感情上动,算不出动了以后是聚是散——那要看你眼下的处境"><option value="">感情·选填</option><option value="单身">眼下单身</option><option value="有伴">眼下有伴</option></select>
       <span class="note" style="margin:0;align-self:center">选上断得更准:性别定看哪条线,年龄定人生阶段,感情状态定姻缘那一类往哪边说(命盘只算得出哪一年动,算不出是聚是散)。填一次全程通用。</span>
     </div>
@@ -828,7 +829,7 @@
       <summary><span class="qwk">为谁问</span><span class="qwhint" id="qh-q"></span><span class="qwedit">改</span></summary>
       <div class="qwbody">
         <select id="qg-q" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-        <select id="qa-q" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+        <input type="number" id="qa-q" class="agein" min="0" max="120" step="1" placeholder="他/她的年龄" title="替别人问,填那人的具体岁数">
         <span class="qwtip">不填就按顶上「问卦人」那一栏的口径断;替别人问才需要在这里单独填那个人的。</span>
       </div>
     </details>
@@ -1035,7 +1036,7 @@
       <summary><span class="qwk">为谁问</span><span class="qwhint" id="qh-dw"></span><span class="qwedit">改</span></summary>
       <div class="qwbody">
         <select id="qg-dw" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-        <select id="qa-dw" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+        <input type="number" id="qa-dw" class="agein" min="0" max="120" step="1" placeholder="他/她的年龄" title="替别人问,填那人的具体岁数">
         <span class="qwtip">不填就按顶上「问卦人」那一栏的口径断;替别人问才需要在这里单独填那个人的。</span>
       </div>
     </details>
@@ -1066,7 +1067,7 @@
       <summary><span class="qwk">为谁问</span><span class="qwhint" id="qh-zy"></span><span class="qwedit">改</span></summary>
       <div class="qwbody">
         <select id="qg-zy" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-        <select id="qa-zy" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+        <input type="number" id="qa-zy" class="agein" min="0" max="120" step="1" placeholder="他/她的年龄" title="替别人问,填那人的具体岁数">
         <span class="qwtip">不填就按顶上「问卦人」那一栏的口径断;替别人问才需要在这里单独填那个人的。</span>
       </div>
     </details>
@@ -1306,7 +1307,7 @@
       <summary><span class="qwk">为谁问</span><span class="qwhint" id="qh-yl"></span><span class="qwedit">改</span></summary>
       <div class="qwbody">
         <select id="qg-yl" title="替别人问,就选那人的性别"><option value="">同「问卦人」</option><option value="男">男</option><option value="女">女</option></select>
-        <select id="qa-yl" title="替别人问,就选那人的年龄段"><option value="">同「问卦人」</option><option value="secret">不想透露</option><option>18以下</option><option>18-25</option><option>26-30</option><option>31-35</option><option>36-40</option><option>41-45</option><option>46-50</option><option>51-60</option><option>60以上</option></select>
+        <input type="number" id="qa-yl" class="agein" min="0" max="120" step="1" placeholder="他/她的年龄" title="替别人问,填那人的具体岁数">
         <span class="qwtip">不填就按顶上「问卦人」那一栏的口径断;替别人问才需要在这里单独填那个人的。</span>
       </div>
     </details>
@@ -1421,7 +1422,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.82 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.83 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1487,11 +1488,36 @@
     const local = ctx && $('qg-' + ctx) ? $('qg-' + ctx).value : '';
     return local || $('q-gender').value;
   }
-  function qAge(ctx) {
-    const lv = ctx && $('qa-' + ctx) ? $('qa-' + ctx).value : '';
-    return lv || $('q-age').value || null;
+  // 年龄:**折法只此一处**(§四)。v0.83 由「年龄段」改成具体岁数——
+  // 缘起:`dashi.js` 的年龄闸门(AGE_GATE)是按具体岁数判的(姻缘 16 岁起、子女 20 岁起),
+  // 喂一个「26-30」进去,程序内部还得自己挑一个数,**那个挑法是隐式的**,
+  // 等于替用户做了个他不知道的假设——与 v0.75 修时辰折法是同一类问题。
+  // 取值优先级:替人问填的 > 自己手填的 > 按生日算出来的。
+  function dxAgeFromBirth() {
+    let v = '';
+    try { v = localStorage.getItem(BKEY) || ''; } catch (e) {}
+    if (!v && $('jr-birth')) v = $('jr-birth').value || '';
+    if (!v) return null;
+    const [y, m, d] = v.split('-').map(Number);
+    if (!y) return null;
+    const now = new Date();
+    let a = now.getFullYear() - y;
+    if (now.getMonth() + 1 < m || (now.getMonth() + 1 === m && now.getDate() < d)) a--;
+    return (a >= 0 && a <= 130) ? a : null;
   }
-  function ageLabel(a) { return a === 'secret' ? '' : (a ? (a.includes('以') ? a : a + '岁') : ''); }
+  function qAge(ctx) {
+    const lv = ctx && $('qa-' + ctx) ? String($('qa-' + ctx).value || '').trim() : '';
+    if (lv) return lv;
+    const own = String(($('q-age') && $('q-age').value) || '').trim();
+    if (own) return own;
+    const auto = dxAgeFromBirth();
+    return auto == null ? null : String(auto);
+  }
+  // 旧存档里可能还留着「26-30」「18以下」这种老值,照旧显示得出来,不至于变成空白
+  function ageLabel(a) {
+    if (!a || a === 'secret') return '';
+    return /[\u4ee5\-~]/.test(String(a)) ? String(a) : String(a) + '\u5c81';
+  }
   function querentBrief(ctx) {
     const g = gender(ctx), a = qAge(ctx);
     if (!g && !a) return '';
@@ -1507,7 +1533,7 @@
     let s = `\n【问卦人:${querentBrief(ctx)}】此为所问之事的当事人(可能是替人问卦),一切口径以此人为准。`;
     if (g) s += `凡涉婚恋对方、看人画像、称谓,按此性别推断(男问姻缘以妻财为对方,女以官鬼为对方;画像按对应性别标准换算)。`;
     if (a === 'secret') s += `年龄未透露:不以年龄设限,但凡给出婚嫁、生育、置业等人生阶段结论时,注明所依据的假设,不武断。`;
-    else if (a) s += `断应期与人生阶段以此年龄段(${ageLabel(a)})起算:婚嫁、生育、置业、事业转折等结论必须落在该年龄段之后的合理区间,称谓与建议贴合此年纪的处境,不许给出与年龄相悖的说法。`;
+    else if (a) s += `断应期与人生阶段以${ageLabel(a)}起算:婚嫁、生育、置业、事业转折等结论必须落在这个岁数之后的合理区间,称谓与建议贴合这个年纪的处境,不许给出与年龄相悖的说法。`;
     return s;
   }
   // 各入口「为谁问」提示:空则提醒,有则显示当前口径
@@ -2857,8 +2883,27 @@
       const pl = localStorage.getItem(PLKEY) || '';
       if (pl) { const p = Dili.find(pl); if (p) lon = p[2]; }
     } catch (e) {}
-    try { return Bazi.chart(dt, gender(ctx || 'q') || '男', lon); } catch (e) { return null; }
+    // 性别缺失时**不许自作主张**。缘起(v0.83):这一行原先写 `gender(...) || '男'`,
+    // 于是没填性别的人拿到的是一副按男命排的盘,而且程序一声不吭。实测 368 副盘:
+    //   · 性别一换,**大运顺逆 100% 翻转**、第一步大运干支 100% 不同(阳男阴女顺、阴男阳女逆);
+    //   · 逐年主事型 32.0% 对不上、人生节点年份 34.9% 对不上。
+    // 也就是说填错性别看到的基本是另一个人的一生。时辰不知道情有可原(v0.77 因此选择「照算但把话说清」),
+    // 性别没人不知道——所以这一层的处置不是「说清」,是**拒绝出盘**。
+    // 性别照实传下去,**不许在这里顶一个「男」**;bazi 那头会据实标 genderKnown 并把大运停掉。
+    try { return Bazi.chart(dt, gender(ctx || 'q'), lon); } catch (e) { return null; }
   }
+  // 排不出盘时,说清到底差什么;别笼统说「先填生日」
+  function dxWhyNoChart() { return '先填出生日期——没有生日就排不出盘。'; }
+  // **只有吃大运的板块才需要这一道**(年表、问机、验盘簿、定时辰、地利的「时」层)。
+  // 只吃喜忌的(日运月运、旺你牌、择日「对你」层)照常算——喜忌不看性别,实测改变 0.0%。
+  function dxNeedGender(c) {
+    if (!c) return dxWhyNoChart();
+    if (c.genderKnown) return '';
+    return '还差性别。古法男女的大运方向是反的(阳男阴女顺行、阴男阳女逆行)——实测性别一换,'
+      + '大运顺逆 100% 翻转、往后每一年的断法跟着全改。填错等于看的是别人的命,所以这一层不填不算。'
+      + '在顶栏「问卦」那页选一下就行。';
+  }
+  window.dxWhyNoChart = dxWhyNoChart; window.dxNeedGender = dxNeedGender;
   let xyPlan = null, xyConvo = null, xyBusy = false, xyBazi = null, xyDaysTxt = '';
   const XY_PLAN = {
     note: '一站答四问:成不成、什么时候、怎么做最旺、什么最凶;末了给转运做法。',
@@ -3405,7 +3450,7 @@
   }
   $('btn-dl-rec').addEventListener('click', () => {
     const c = dlChart();
-    if (!c) { dlStatus('先填生日——喜用神从八字来。', true); return; }
+    if (!c) { dlStatus('地利这一层要先有你的盘:' + dxWhyNoChart(), true); return; }
     const from = $('dl-from').value.trim();
     if (!from) { dlStatus('再填现居地(方位以它为原点)。', true); return; }
     const nowYZ = Najia.ganZhi(new Date()).year[1];
@@ -3435,7 +3480,7 @@
   });
   $('btn-dl-judge').addEventListener('click', () => {
     const c = dlChart();
-    if (!c) { dlStatus('先填生日——喜用神从八字来。', true); return; }
+    if (!c) { dlStatus('地利这一层要先有你的盘:' + dxWhyNoChart(), true); return; }
     const from = $('dl-from').value.trim(), to = $('dl-to').value.trim();
     if (!from || !to) { dlStatus('现居地和目标地都要填。', true); return; }
     const r = Dili.judge(c, from, to, Najia.ganZhi(new Date()).year[1], { age: dlAge() });
@@ -3802,8 +3847,20 @@
   $('btn-duo-single').addEventListener('click', () => $('duo-offer').classList.add('hidden'));
   if (localStorage.getItem(GKEY)) $('q-gender').value = localStorage.getItem(GKEY);
   $('q-gender').addEventListener('change', () => { localStorage.setItem(GKEY, $('q-gender').value); updateQwho(); });
-  if (localStorage.getItem(AKEY)) $('q-age').value = localStorage.getItem(AKEY);
-  $('q-age').addEventListener('change', () => { localStorage.setItem(AKEY, $('q-age').value); updateQwho(); });
+  {
+    // 老存档里可能是「26-30」这种,数字框放不下,直接丢掉——重填一次比留个错值强
+    let av = localStorage.getItem(AKEY) || '';
+    if (/[^0-9]/.test(av)) { av = ''; try { localStorage.removeItem(AKEY); } catch (e) {} }
+    if (av) $('q-age').value = av;
+    else { const auto = dxAgeFromBirth(); if (auto != null) $('q-age').placeholder = auto + '\u5c81(\u6309\u751f\u65e5)'; }
+  }
+  const qAgeSave = () => {
+    const v = String($('q-age').value || '').trim();
+    if (v && (!/^\d+$/.test(v) || +v > 130)) { $('q-age').value = ''; return; }
+    localStorage.setItem(AKEY, v); updateQwho();
+  };
+  $('q-age').addEventListener('change', qAgeSave);
+  $('q-age').addEventListener('input', qAgeSave);
   if ($('q-marital')) {
     if (localStorage.getItem(MRKEY)) $('q-marital').value = localStorage.getItem(MRKEY);
     $('q-marital').addEventListener('change', () => {
@@ -3814,6 +3871,7 @@
   for (const ctx of ['q', 'dw', 'zy', 'yl']) {
     $('qg-' + ctx).addEventListener('change', updateQwho);
     $('qa-' + ctx).addEventListener('change', updateQwho);
+    $('qa-' + ctx).addEventListener('input', updateQwho);   // 数字框改成 input 也要跟着刷
   }
   updateQwho();
   $('btn-copy').addEventListener('click', async () => {
@@ -4273,7 +4331,7 @@
       const hm2 = dxParseHour(hv);
       const time = `${String(hm2.h).padStart(2, '0')}:${String(hm2.mi).padStart(2, '0')}`;
       const rec = { id: 'p' + date.replace(/-/g, '') + '_' + list.length + '_' + name.length, name, date, time,
-        gender: (() => { try { return localStorage.getItem(GKEY) || '男'; } catch (e) { return '男'; } })(),
+        gender: (() => { try { return localStorage.getItem(GKEY) || ''; } catch (e) { return ''; } })(),
         place: (() => { try { return localStorage.getItem(PLKEY) || ''; } catch (e) { return ''; } })() };
       list.push(rec); 
       try { localStorage.setItem(PROFKEY, JSON.stringify(list)); localStorage.setItem(PROFCUR, rec.id); } catch (e) {}
@@ -4500,7 +4558,8 @@
   function ypSeal() {
     ypErr('');
     const c = ypChart();
-    if (!c) { ypErr('先在「问卦」那页填生日——没有盘就无从封起。'); return; }
+    if (!c) { ypErr('封不了:' + dxWhyNoChart()); return; }
+    { const need = dxNeedGender(c); if (need) { ypErr('封不了:' + need); return; } }
     ypWho = Yanpan.fingerprint(c);
     const y = parseInt($('yp-year').value, 10);
     const nowY = ypToday().getFullYear();
@@ -4532,7 +4591,13 @@
   function ypRender() {
     const c = ypChart();
     if (!c) {
-      $('yp-score').innerHTML = '<div class="note">先在「问卦」那页填生日,这本簿子才立得起来。</div>';
+      $('yp-score').innerHTML = '<div class="note">这本簿子还立不起来——' + esc(dxWhyNoChart()) + '</div>';
+      $('yp-pending').innerHTML = $('yp-opened').innerHTML = $('yp-ledger').innerHTML = '';
+      return;
+    }
+    const need = dxNeedGender(c);
+    if (need) {
+      $('yp-score').innerHTML = '<div class="ypwarn">这本簿子还立不起来——' + esc(need) + '</div>';
       $('yp-pending').innerHTML = $('yp-opened').innerHTML = $('yp-ledger').innerHTML = '';
       return;
     }

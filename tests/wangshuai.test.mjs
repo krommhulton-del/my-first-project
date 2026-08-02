@@ -2,6 +2,7 @@
 // 缘起:旧法只累加「生扶分」,把 100−生扶 当克泄,克泄一方从未真正称过,
 // 于是「丙火时支坐禄」这种明明有根的盘掉进从格,喜忌整个翻转 180°。
 // 本套件把新法的每一条铁律都钉死:有根不从、月令最重、单调不倒挂、阴阳同五行同分。
+import { readFileSync } from 'node:fs';
 import Bazi from '../bazi.js';
 
 let pass = 0, fail = 0;
@@ -263,6 +264,61 @@ t('中和之局走调候/通关,不硬分强弱', () => {
     }
   }
   ok(found > 0, '未找到中和之局');
+});
+
+console.log('【性别】不填就不许排大运(v0.83 修的那个 100% 的洞)');
+// 缘起:`Bazi.chart` 里两处把空性别 `|| '男'` 顶上,而 `gender === '男'` 对空值恒 false,
+// 于是**空性别实际被当成女命排**,一声不吭。实测 368 副盘:性别一换,大运顺逆 100% 翻转。
+// 这套断言两头都钉:①空性别必须停大运 ②喜忌不许跟着停(它本来就不看性别)。
+t('性别一换,大运顺逆必翻——这是古法,先把它钉住', () => {
+  let n = 0;
+  for (let y = 1960; y <= 2005; y += 7) for (const m of [0, 5, 9]) {
+    const dt = new Date(y, m, 15, 10, 30);
+    const a = Bazi.chart(new Date(dt), '男', 116.4), b = Bazi.chart(new Date(dt), '女', 116.4);
+    ok(a.dayun.forward !== b.dayun.forward, `${y}-${m + 1} 男女大运方向居然相同`);
+    ok(a.dayun.list[0].gz !== b.dayun.list[0].gz, `${y}-${m + 1} 男女第一步大运居然相同`);
+    n++;
+  }
+  ok(n >= 15, '样本太少');
+});
+t('性别没填:大运停摆,并说明为什么', () => {
+  for (const g of ['', null, undefined, '未知', 'x']) {
+    const c = Bazi.chart(new Date(1990, 4, 20, 9, 30), g, 120.15);
+    eq(c.genderKnown, false, `性别「${g}」不该被当成已知`);
+    eq(c.gender, '', `性别「${g}」不该被顶成一个具体值`);
+    ok(c.dayun.unknown === true, `性别「${g}」居然排出了大运`);
+    eq(c.dayun.list.length, 0, `性别「${g}」的大运列表该是空的`);
+    eq(c.dayun.forward, null, '方向该是 null,不许悄悄给一个');
+    ok(/性别/.test(c.dayun.startText), '要说明为什么没有大运:' + c.dayun.startText);
+  }
+});
+t('**喜忌不看性别**,所以它不许跟着停', () => {
+  let n = 0;
+  for (let y = 1955; y <= 2010; y += 5) for (const m of [1, 6, 10]) {
+    const dt = new Date(y, m, 12, 14, 0);
+    const nil = Bazi.chart(new Date(dt), '', 116.4);
+    const man = Bazi.chart(new Date(dt), '男', 116.4);
+    const woman = Bazi.chart(new Date(dt), '女', 116.4);
+    eq(nil.yong.xiWx.join(), man.yong.xiWx.join(), `${y}-${m + 1} 不填性别的喜用与男命不一致`);
+    eq(man.yong.xiWx.join(), woman.yong.xiWx.join(), `${y}-${m + 1} 男女喜用居然不同——喜忌本不看性别`);
+    eq(nil.strength.band, man.strength.band, `${y}-${m + 1} 旺衰档不该随性别变`);
+    ok(nil.pillars.day.gz === man.pillars.day.gz, '四柱不该随性别变');
+    n++;
+  }
+  ok(n >= 30, '样本太少');
+});
+t('填了性别之后,大运照排,一步不少', () => {
+  for (const g of ['男', '女']) {
+    const c = Bazi.chart(new Date(1990, 4, 20, 9, 30), g, 120.15);
+    eq(c.genderKnown, true); eq(c.gender, g);
+    ok(!c.dayun.unknown, '填了性别还说不知道');
+    eq(c.dayun.list.length, 8, '大运应排八步');
+    ok(typeof c.dayun.forward === 'boolean', '方向该是明确的');
+  }
+});
+t('源码里不许再留「拿不到性别就当男」这种默认', () => {
+  const src = readFileSync(new URL('../bazi.js', import.meta.url), 'utf8');
+  ok(!/gender\s*\|\|\s*['\u2018\u201c]男/.test(src), "bazi.js 里还留着 gender || '男'");
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

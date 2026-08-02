@@ -238,22 +238,26 @@ await t('分科可改选非首选方法(搬家改选六爻)', async () => {
   ok(await page.locator('#sec-cast').isVisible(), '改选六爻后应切到六爻面板');
 });
 
-await t('性别年龄:选男26-30岁起卦,回报注明问卦人;持久化;可选不想透露', async () => {
+await t('性别年龄:年龄改成具体岁数(v0.83),回报注明问卦人并持久化', async () => {
+  // v0.83 把年龄段改成了具体岁数——缘起:dashi 的年龄闸门按具体岁数判,
+  // 喂「26-30」进去程序还得自己挑一个数,那个挑法是隐式的。这条测试跟着改断言。
   await page.click('.tabs button[data-m=liuyao]');
+  await page.evaluate(() => localStorage.removeItem('dongxuan_birth'));
   await page.selectOption('#q-gender', '男');
-  await page.selectOption('#q-age', '26-30');
+  await page.fill('#q-age', '28');
   await page.fill('#question', '性别年龄口径内测一问');
   await page.check('input[name=ly-mode][value=coin]');
   await page.click('#btn-auto');
-  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:男,26-30岁'), null, { timeout: 9000 });
-  ok((await page.inputValue('#report')).includes('问卦人:男,26-30岁'), '回报应注明性别与年龄段');
+  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:男,28岁'), null, { timeout: 9000 });
+  ok((await page.inputValue('#report')).includes('问卦人:男,28岁'), '回报应注明性别与具体岁数');
   await page.reload({ waitUntil: 'load' });
   ok((await page.inputValue('#q-gender')) === '男', '性别应持久化');
-  ok((await page.inputValue('#q-age')) === '26-30', '年龄段应持久化');
-  await page.selectOption('#q-age', 'secret');
-  ok((await page.textContent('#qh-q')).includes('不愿透露'), '不想透露应入口径提示');
+  ok((await page.inputValue('#q-age')) === '28', '岁数应持久化');
+  // 非数字、超范围一律不收——不许把脏值存进去
+  await page.fill('#q-age', '999');
+  ok((await page.inputValue('#q-age')) === '', '超范围的岁数应被拒');
   await page.selectOption('#q-gender', '');
-  await page.selectOption('#q-age', '');
+  await page.fill('#q-age', '');
 });
 
 await t('分占连断:月运选六爻,六卦连占(含验证卦)出合并回报与总览', async () => {
@@ -457,14 +461,14 @@ await t('为谁问:问题旁单独填性别年龄(替人问),盖过顶栏默认'
   await page.click('.tabs button[data-m=liuyao]');
   await page.evaluate(() => { document.getElementById('qwf-q').open = true; });
   await page.selectOption('#qg-q', '女');
-  await page.selectOption('#qa-q', '36-40');
-  ok((await page.textContent('#qh-q')).includes('女,36-40岁'), '提示应显示当前口径');
+  await page.fill('#qa-q', '38');
+  ok((await page.textContent('#qh-q')).includes('女,38岁'), '提示应显示当前口径');
   ok((await page.textContent('#qh-q')).includes('替人问'), '本问单独填了,那一行要标明是替人问的');
   await page.fill('#question', '替人问卦内测');
   await page.click('#btn-auto');
-  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:女,36-40岁'), null, { timeout: 9000 });
+  await page.waitForFunction(() => document.getElementById('report').value.includes('问卦人:女,38岁'), null, { timeout: 9000 });
   await page.selectOption('#qg-q', '');
-  await page.selectOption('#qa-q', '');
+  await page.fill('#qa-q', '');
   await page.evaluate(() => { document.getElementById('qwf-q').open = false; });
   ok((await page.locator('#qh-dw').count()) === 1 && (await page.locator('#qh-zy').count()) === 1, '拆阵与转运也应有为谁问');
 });
