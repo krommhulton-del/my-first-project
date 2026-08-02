@@ -233,7 +233,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v1.02</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v1.03</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -611,7 +611,10 @@
   }
 
   function renderYun(c, target) {
-    const y = Yunshi.all(c, target);
+    // 年运叙事要吃流月(「一年之内并不平均」那一段靠它选月),流月走 Dashi(§四:只取用不重造)
+    let months = null;
+    try { months = Dashi.monthsOf(c, target.getFullYear(), null); } catch (e) { months = null; }
+    const y = Yunshi.all(c, target, { months });
     aiContext = { c, target, y };
     $('yun-cards').innerHTML = ['day', 'month', 'year'].map(k => card(y[k])).join('');
   }
@@ -624,8 +627,9 @@
         <span class="ylv ${lvcls}" title="五档:大吉 / 吉 / 平顺 / 小凶 / 凶">${esc(cd.level)}</span>
         <span class="yarea">${esc(cd.area)}</span></div>
       <div class="ytext">${esc(cd.text)}</div>
+      ${cd.story ? `<div class="ytext" style="margin-top:.5em">${esc(cd.story)}</div>` : ''}
       ${cd.realSpan ? `<div class="yspan">${esc(cd.realSpan)}</div>` : ''}
-      ${cd.lines && cd.lines.length ? `<div class="ytext" style="opacity:.88;font-size:.92em">${cd.lines.map(l => '· ' + esc(l)).join('<br>')}</div>` : ''}
+      ${!cd.story && cd.lines && cd.lines.length ? `<div class="ytext" style="opacity:.88;font-size:.92em">${cd.lines.map(l => '· ' + esc(l)).join('<br>')}</div>` : ''}
       ${(cd.yi && cd.yi.length) || (cd.ji && cd.ji.length) ? `<div class="yact">` +
         (cd.yi && cd.yi.length ? `<div class="yl"><b>宜${esc(cd.when)}</b>${cd.yi.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '') +
         (cd.ji && cd.ji.length ? `<div class="yl bad"><b>忌${esc(cd.when)}</b>${cd.ji.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '') +

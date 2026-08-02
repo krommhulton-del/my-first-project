@@ -267,5 +267,47 @@ t('性别融进解读(v0.95,用户点名):男财日带姻缘线、女官日带�
   ok(fCai && !/男命/.test(fCai.text), '女命财星日不许套男命读法(不镜像)');
 });
 
+console.log('【七】年运叙事:一条因果链,不是三条并列观察(v1.03 深造期第二期)');
+t('年运叙事有五段:定性→机制→与大运的关系→哪几个月→做法;且与结论同向', () => {
+  // 缘起:用户「口语化的解读让人膈应,一看就知道很 AI」「原先的项目没有改进」。
+  // 病根:年运给的是三条并列观察 + 一段模板拼装,谁也不接谁,读者拿不到「所以呢」。
+  const Dashi = require('../dashi.js');
+  let n = 0;
+  for (let i = 0; i < 40; i++) {
+    const c = Bazi.chart(new Date(1960 + (i * 7) % 55, (i * 5) % 12, 1 + (i * 11) % 28, (i * 3) % 24, 30), i % 2 ? '男' : '女', { lon: 116.4 });
+    const yr = 2024 + (i % 6);
+    const card = Yunshi.nianYun(c, new Date(yr, 5, 1));
+    const st = Yunshi.yearStory(c, card, Dashi.monthsOf(c, yr, null));
+    n++;
+    ok(st && st.length > 80, '叙事太短:' + st);
+    ok(/之所以是这个定性,是因为/.test(st), '缺「机制」那一段(真因果那一步):' + st.slice(0, 60));
+    ok(/该做的是|该躲的是/.test(st), '缺做法那一段');
+    ok(/年\d+月\d+日|这一年/.test(st), '缺时间范围');
+    // 与结论同向:判顺的年份不许在做法里先劝守成(自测逮到过这处自相矛盾)
+    if ((card.score || 0) >= 0 && /该做的是:/.test(st)) {
+      const seg = st.split('该做的是:')[1].split('。')[0];
+      ok(!/^守成|^清旧账|^养精神/.test(seg), '判顺却先劝守成,与结论打架:' + seg);
+    }
+    // 不许出现装腔与术语
+    const rep = Tijian.check(st.replace(/「[^」]*」/g, ''), {});
+    const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
+    ok(!bad.length, `叙事体检不过:${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
+  }
+  ok(n >= 40, '样本太少');
+});
+t('叙事随盘变化,不是模板:40 副盘的机制那一句不许只有一两种', () => {
+  const Dashi = require('../dashi.js');
+  const kinds = new Set();
+  for (let i = 0; i < 40; i++) {
+    const c = Bazi.chart(new Date(1960 + (i * 7) % 55, (i * 5) % 12, 1 + (i * 11) % 28, (i * 3) % 24, 30), i % 2 ? '男' : '女', { lon: 116.4 });
+    const yr = 2024 + (i % 6);
+    const st = Yunshi.yearStory(c, Yunshi.nianYun(c, new Date(yr, 5, 1)), Dashi.monthsOf(c, yr, null));
+    const m = st.match(/是因为这一年当值的两股力([^;]{4,40})/);
+    if (m) kinds.add(m[1]);
+  }
+  ok(kinds.size >= 3, `机制那一句只有 ${kinds.size} 种说法——退回模板了`);
+  console.log(`      (40 盘,机制那一句 ${kinds.size} 种)`);
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

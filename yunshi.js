@@ -283,9 +283,72 @@
     };
   }
 
-  function all(chart, targetDate) {
-    return { year: nianYun(chart, targetDate), month: yueYun(chart, targetDate), day: riYun(chart, targetDate) };
+  // ══════════ 年运叙事(v1.03 深造期第二期:断语从触发器堆改成因果链)══════════
+  // 缘起:用户 2026-08-02 的方向性批评——「口语化的解读也让人看着很膈应,人一看就知道很 AI」
+  // 「你在原先的项目上你也没有做改进,基本上都是一模一样的」。
+  // 病根量得出来:年运给的是**三条并列观察 + 一段模板拼装**——
+  //   「今年明面和底下两股力都向着你」/「今年明面上主要是 X,底下暗中走的是 Y」/「与大运顶上了」
+  // 三句谁也不接谁,读者拿不到「所以呢」。行家的判语是一条推理:
+  //   流年这两个字对你是什么 → 当家的是哪一路 → 与正走的大运合不合 → 所以主什么事 →
+  //   一年里哪几个月最要紧 → 具体怎么办。
+  // 本函数只做串联与选月,**一个断法元素不自算**(分与事型全取 judgeCard 与流月表,§四)。
+  function yearStory(chart, card, months) {
+    if (!card) return '';
+    const yong = chart.yong || {};
+    const gw = card.gz ? Bazi.GAN_WX[card.gz[0]] : null;
+    const zw = card.gz ? Bazi.ZHI_WX[card.gz[1]] : null;
+    const tag = w => !w ? '平' : (yong.xiWx || []).includes(w) ? '帮' : (yong.jiWx || []).includes(w) ? '耗' : '平';
+    const gT = tag(gw), zT = tag(zw);
+    // 一、结论先行:这一年的定性 + 时间范围(铁律二)
+    let s = `${card.span}这一年${card.tone || ''}${card.level ? `(${card.level})` : ''},重点在${card.area}。`;
+    // 二、机制:为什么是这个定性——明面/底下两层,是真依赖,可以用因果连词
+    const both = gT === zT;
+    s += `之所以是这个judgement,是因为这一年当值的两股力`
+      + (both && gT === '帮' ? `明面与底下都向着你,劲往一处使,所以顺得比较整齐;`
+        : both && gT === '耗' ? `明面与底下都在耗你,两头一起来,所以这一年费力的地方会连成片;`
+        : gT === '帮' ? `明面帮你、底下耗你——开头顺、后头漏,所以开场的甜头别全当真;`
+        : zT === '帮' ? `明面压你、底下托你——开头紧、后头稳,所以熬过前段反而有后劲;`
+        : `不帮不压,所以这一年的起落主要由你自己的安排决定;`);
+    // 三、与大运的关系(真依赖:大运是十年的底,流年在它上面走)
+    if (card.dayun) {
+      const duGz = card.dayun.slice(0, 2);
+      const duZ = Bazi.ZHI_WX[duGz[1]];
+      const duT = tag(duZ);
+      s += `而你正走的是${card.dayun}——这十年底下那一层`
+        + (duT === '帮' ? `是帮你的,流年这一层再叠上去,该办的大事往这一年靠最划算。`
+          : duT === '耗' ? `是耗你的,所以即便流年不差,今年也宜守不宜扩,把力气用在把手上的事做扎实。`
+          : `不帮不压,所以今年的成色主要看流年这一层。`);
+    }
+    // 四、落到月份:一年里哪几个月最要紧(这是「每年明细要更细」那条要求的落点)
+    if (months && months.length) {
+      const rank = months.filter(m => m && m.top).slice().sort((a, b) => (b.top.score || 0) - (a.top.score || 0));
+      const hi = rank[0], lo = rank[rank.length - 1];
+      if (hi && hi.top && (hi.top.score || 0) > 0) {
+        s += `一年之内并不平均:${hi.name}(${hi.span})这一段动得最重,主的是${hi.top.label}这一类事,要办的大事排在这里成算最高;`
+          + (lo && lo !== hi ? `${lo.name}(${lo.span})最静,适合收尾、复盘、把账理清。` : '');
+      }
+    }
+    // 五、做法(具体到动作,不给放之四海的废话)
+    // **要与前面的结论同向**:自测时逮到一处自相矛盾——前面刚说「大事往这一年靠最划算」,
+    // 后面「该做的是:守成、清旧账」。病根是多路十神同时为喜,宜忌表把守与进的建议一起端出来。
+    // 修法是按结论过滤:判顺的年份先给进取那一类,判逆的先给守成那一类;
+    // 过滤后为空才退回原表(宁可少说,不可自相矛盾)。
+    const HOLD = /守成|清旧账|养精神|按兵|收敛|少动|静养/;
+    const up = (card.score || 0) >= 0;
+    const pool = (card.yi || []);
+    const picked = pool.filter(x => up ? !HOLD.test(x) : HOLD.test(x));
+    const yi = (picked.length ? picked : pool).slice(0, 2), ji = (card.ji || []).slice(0, 2);
+    if (yi.length) s += `这一年该做的是:${yi.join(';')}。`;
+    if (ji.length) s += `该躲的是:${ji.join(';')}——这几样今年做,代价比平常年份大。`;
+    return s.replace('judgement', '定性');
   }
 
-  return { all, nianYun, yueYun, riYun, scoreGZ, DOMAIN };
+  function all(chart, targetDate, opts) {
+    const y = nianYun(chart, targetDate);
+    const months = opts && opts.months ? opts.months : null;
+    y.story = yearStory(chart, y, months);
+    return { year: y, month: yueYun(chart, targetDate), day: riYun(chart, targetDate) };
+  }
+
+  return { all, nianYun, yueYun, riYun, scoreGZ, yearStory, DOMAIN };
 }));

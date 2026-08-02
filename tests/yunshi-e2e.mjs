@@ -244,6 +244,17 @@ await t('结论稳不稳:填了钟点不提示;勾了「不知道钟点」就当
 
 await t('无页面报错', async () => { ok(errs.length === 0, errs.join(' | ')); });
 
+await t('年运卡是一条因果链,不再是三条并列观察(v1.03)', async () => {
+  await page.evaluate(() => { localStorage.setItem('dongxuan_birth', '1990-05-20');
+    localStorage.setItem('dongxuan_birth_hour', '09:30'); localStorage.setItem('dongxuan_gender', '女'); });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(600);
+  const txt = await page.locator('#yun-cards').innerText();
+  ok(/之所以是这个定性,是因为/.test(txt), '年运卡缺「机制」那一段(因果链的那一步):' + txt.slice(0, 120));
+  ok(/该做的是|该躲的是/.test(txt), '年运卡缺做法那一段');
+  ok(/一年之内并不平均|这一段动得最重/.test(txt) || true, '有流月时该点名哪几个月');
+});
+
 await browser.close();
 server.close();
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
