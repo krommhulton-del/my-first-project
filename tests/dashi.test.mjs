@@ -418,5 +418,55 @@ t('报得密这件事必须当面说,且两路都不许给吉凶方向', () => {
   ok(!hits.length, '这两段话不干净:' + hits.map(h => h.kind + ':' + h.snippet).join('、'));
 });
 
+console.log('【逐年细账的因果链(v1.04,深造期第二期第二块)】');
+t('逐年叙事有五段:结论→机制→并行的第二类→哪几个月→做法;姻缘那一类方向照旧留白', () => {
+  // 缘起:逐年那一层原先摆的是并列的三条理由,谁也不接谁,也不说哪一类压过哪一类。
+  // 样本要够宽:固定那几副盘的前 8 年里未必有以姻缘为主的年份,而「方向留白」这条规矩
+  // 正要靠姻缘年才验得到。加宽而不是把断言放松(v1.01 的成例)。
+  let n = 0, held = 0;
+  const wide = charts.concat(Array.from({ length: 12 }, (_, i) =>
+    Bazi.chart(new Date(1962 + (i * 5) % 50, (i * 7) % 12, 1 + (i * 11) % 28, (i * 3) % 24, 30), i % 2 ? '男' : '女', { lon: 116.4 })));
+  for (const c of wide) {
+    const tl = Dashi.timeline(c, { nowYear: 2026 });
+    for (const r of (tl.yearly || []).slice(0, 12)) {
+      const st = Dashi.yearStory(c, r);
+      if (!st) continue;
+      n++;
+      ok(/年主.+这一类事/.test(st), '缺结论那一句:' + st.slice(0, 40));
+      ok(/之所以落在这一类,是因为/.test(st), '缺机制那一段(真因果那一步):' + st.slice(0, 60));
+      ok(/分量 \d+\.\d/.test(st), '分量要给到一位小数,不许漏浮点尾巴:' + st.slice(0, 50));
+      ok(!/\d\.\d{3,}/.test(st), '浮点尾巴漏出来了:' + st.slice(0, 80));
+      // 姻缘那一类:只报动不动,不报聚散(v0.77 铁律)
+      const topLab = (r.cats || []).slice().sort((a, b) => b.score - a.score)[0];
+      if (topLab && topLab.key === 'yinyuan') {
+        held++;
+        ok(/不报是聚是散/.test(st), '姻缘那一类竟报了方向:' + st.slice(0, 90));
+        ok(!/方向是顺的|方向是逆的/.test(st.split('之所以')[0]), '姻缘那一类不许给吉凶方向');
+      }
+      const rep = Tijian.check(st.replace(/「[^」]*」/g, ''), {});
+      const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
+      ok(!bad.length, `逐年叙事体检不过:${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
+    }
+  }
+  ok(n >= 20, '出得来叙事的年份太少:' + n);
+  ok(held > 0, '样本里没有一年以姻缘为主——这一条留白规矩没被验到');
+  console.log(`      (${n} 个年份出了叙事,其中 ${held} 年以姻缘为主、方向照规矩留白)`);
+});
+t('叙事不是模板:结论那一句随年份变,机制那一段不许只有一两种', () => {
+  const tops = new Set(), whys = new Set();
+  for (const c of charts) {
+    const tl = Dashi.timeline(c, { nowYear: 2026 });
+    for (const r of (tl.yearly || []).slice(0, 10)) {
+      const st = Dashi.yearStory(c, r);
+      if (!st) continue;
+      const a = st.match(/年主(.{2,6})这一类事/); if (a) tops.add(a[1]);
+      const b = st.match(/是因为(.{6,30})/); if (b) whys.add(b[1]);
+    }
+  }
+  ok(tops.size >= 4, `主事型只有 ${tops.size} 种——排序器或叙事失灵`);
+  ok(whys.size >= 8, `机制那一段只有 ${whys.size} 种说法——退回模板了`);
+  console.log(`      (主事型 ${tops.size} 种、机制 ${whys.size} 种)`);
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

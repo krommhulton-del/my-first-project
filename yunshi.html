@@ -233,7 +233,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v1.03</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v1.04</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -580,7 +580,14 @@
       }).join('') || '<span class="ycat">无凸出信号 · 按部就班之年</span>';
       const hot = (r.hot || []).length
         ? `<div class="yhot"><b>应期落月</b>${r.hot.map(h => `<span>${h.idx}月(${esc(h.gz)})</span>`).join('')}<i>这几个月是这一年该事最集中的当口</i></div>` : '';
-      const why = r.top ? `<div class="ywhy">${r.top.reasons.slice(0, 3).map(esc).join(';')}${r.kong ? ';此年落空亡' : ''}</div>` : '';
+      // v1.04:逐年那一层原先摆的是**并列的三条理由**,谁也不接谁。改成一条因果链
+      // (结论→机制→并行的第二类→哪几个月→做法);串联走 Dashi.yearStory(§四:只取用不重造)。
+      // 叙事出得来就用叙事,出不来(信号太弱)才退回原来的三条理由——宁可少说,不留空白。
+      let story = '';
+      try { story = Dashi.yearStory(c, r) || ''; } catch (e) { story = ''; }
+      const why = story
+        ? `<div class="ywhy">${esc(story)}${r.kong ? '(此年落空亡)' : ''}</div>`
+        : (r.top ? `<div class="ywhy">${r.top.reasons.slice(0, 3).map(esc).join(';')}${r.kong ? ';此年落空亡' : ''}</div>` : '');
       const mons = (r.months || []).map(m => {
         const t = m.top;
         const d = t ? t.dirSum : 0, cl = !t ? '' : (Math.abs(d) < 0.6 ? '' : (d > 0 ? 'good' : 'bad'));

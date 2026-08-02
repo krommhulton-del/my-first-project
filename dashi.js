@@ -609,6 +609,47 @@
 ${tl.maritalNote}`;
   }
 
-  return { timeline, yearEvidence, material, CATS, ganZhiOfYear, monthsOf, hotMonths, ZHI_MONTH,
+  // ══════════ 逐年细账的因果链叙事(v1.04,深造期第二期第二块)══════════
+  // 缘起:年表的逐年那一层给的是**并列的 cats 堆**——一年之内几类事各自摆一条理由,
+  // 谁也不接谁,也不说哪一类压过哪一类、哪几个月最集中。用户点名过两件事:
+  // 「每年明细要更细」与「口语化的解读一看就知道很 AI」。
+  // 改法与年运那一块同一套:**结论 → 机制 → 排第二的那一类 → 哪几个月 → 做法**。
+  // 本函数只做串联与选月,**一个断法元素不自算**(分、方向、理由、流月全取自既有结构,§四)。
+  function yearStory(chart, row) {
+    if (!row || !row.cats || !row.cats.length) return '';
+    const cs = row.cats.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+    const top = cs[0], second = cs[1];
+    if (!top || (top.score || 0) < 1) return '';
+    const dir = (top.dirSum || 0) > 0 ? '顺' : (top.dirSum || 0) < 0 ? '逆' : '平';
+    const held = top.held || top.key === 'yinyuan';
+    // 一、结论(铁律二):主哪一类、动多重、方向;姻缘那一类方向留白(v0.77 铁律)
+    let s = `${row.year}年主${top.label}这一类事(分量 ${(+top.score).toFixed(1)}${second && (second.score || 0) >= 1 ? `,其次是${second.label} ${(+second.score).toFixed(1)}` : ''})。`;
+    s += held
+      ? '这一类程序只报「哪一年动、动多重」,不报是聚是散——那由你当时是单身还是有伴决定,不是盘定的。'
+      : dir === '顺' ? '方向是顺的:这一年在这件事上出手,成算高于平常年份。'
+      : dir === '逆' ? '方向是逆的:这一年在这件事上要守,硬推的代价比平常年份大。'
+      : '方向不偏不倚:成不成主要看你自己怎么安排。';
+    // 二、机制:为什么是这一类(取第一条理由,那是分数最重的那条依据)
+    const why = (top.reasons || [])[0];
+    if (why) s += `之所以落在这一类,是因为${why.replace(/^今年/, '')}。`;
+    // 三、第二类:不只看第一(评审点名过「只报第一名」的毛病)
+    if (second && (second.score || 0) >= 1.5) {
+      const w2 = (second.reasons || [])[0];
+      s += `同一年里还有一条并行的线——${second.label}${w2 ? `(${w2.replace(/^今年/, '')})` : ''},两件事会互相占用时间,排期时先保${top.label}。`;
+    }
+    // 四、落到月份:一年里哪几个月最集中
+    const ms = (row.months || []).filter(m => m && m.top);
+    if (ms.length) {
+      const hi = ms.slice().sort((a, b) => (b.top.score || 0) - (a.top.score || 0))[0];
+      if (hi && (hi.top.score || 0) > 0) s += `一年之内并不平均:${hi.name}(${hi.span})动得最重,主的是${hi.top.label};要办的事往这一段排。`;
+    }
+    // 五、做法(具体到动作)
+    const tips = [];
+    for (const c of cs) for (const t of (c.tips || [])) if (t && t.tip) tips.push(t.tip);
+    if (tips.length) s += `具体做法:${tips.slice(0, 2).join(';')}。`;
+    return s;
+  }
+
+  return { timeline, yearEvidence, material, yearStory, CATS, ganZhiOfYear, monthsOf, hotMonths, ZHI_MONTH,
     romanceTracks, NEAR_TH, FAR_TH };
 }));
