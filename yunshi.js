@@ -163,6 +163,9 @@
         lines.push('这一年与你正走的那步大运合得上——大势顺水推舟,借力使力');
       }
     }
+    // 时辰这一层只有日运用得上(月运年运谈不到时辰)
+    const hl = (opts && opts.hours) ? hourLine(chart, gan) : null;
+    if (hl) lines.push(hl.text);
     const score = +s.toFixed(1);
     const L = levelOf(score);
     const cls = SHISHEN_CLASS[shen];
@@ -175,8 +178,16 @@
       // 改成:直接说这一段整体如何、主哪一摊事。干支留在卡片角落作凭据。
       // 另:日/月/年三种尺度得说不同的话——今年流日与流年撞同一组字时,
       // 原先两张卡一字不差,读者会觉得程序在敷衍。所以每种尺度各配一句「这话该怎么落到这个跨度上」。
-      text: `${{ 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段'}整体${L.tone}。${domainText}` +
-        (SCALE[one] ? SCALE[one][score >= 0 ? 'good' : 'bad'] : ''),
+      hour: hl,
+      // 铁律二:先答案后凭据。第一句就得是「今天该干什么、什么时候干」,
+      // 不是「今天整体如何」——后者只有五种说法,天天撞车(v0.86 量出 90% 撞车率)。
+      // 没有拔尖时段的日子,也要把「哪几段避开」写进头一句——
+      // 那同样是落到时间上的具体话,不能因为没好时辰就退回一句空泛的「今天整体如何」。
+      text: (hl
+        ? `${{ 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段'}主${dom.area}这一摊,${hl.text}`
+        : `${{ 日: '今天', 月: '这个月', 年: '今年' }[one] || '这段'}主${dom.area}这一摊。`)
+        + `整体${L.tone}。${domainText}`
+        + (SCALE[one] ? SCALE[one][score >= 0 ? 'good' : 'bad'] : ''),
       domainText, area2: dom.area,
       yi: yiList, ji: jiList, when: P4,   // 具体事宜:照着做的事,与照着躲的事
     };
@@ -228,7 +239,28 @@
   function riYun(chart, targetDate) {
     const cal = Najia.ganZhi(targetDate);
     const span = `${targetDate.getFullYear()}-${two(targetDate.getMonth() + 1)}-${two(targetDate.getDate())}`;
-    return judgeCard(chart, cal.day[0], cal.day[1], '日运', span, { gz: cal.day });
+    return judgeCard(chart, cal.day[0], cal.day[1], '日运', span, { gz: cal.day, hours: true });
+  }
+  // 今天该在哪几个时辰办事、哪个时辰避开。
+  // **不自己另算**——逐时辰的分与标记全取自 `Bazi.jiShi`(§四:时辰吉凶只此一处),
+  // 这里只把它折成一句人话。
+  // 缘起(v0.86):量出日运断语的毛病——同一人连续 60 天只有 20 种说法(**90% 的天数在撞车**),
+  // 同一天 12 副盘只有 5 种(**区分度 41.7%**),而且**「落到时间」的处数是 0.00**。
+  // 病根:开头那一句只有五种可能(明面帮/明面压 × 底下帮/底下压 + 不偏不倚),
+  // 正好对上「同一天只有 5 种」——而人第一眼看的就是那一句。
+  // 时辰这一层本来就算好了,却只在吉日板块渲染,从没进过日运的话里。
+  function hourLine(chart, dayGan) {
+    let hs = [];
+    try { hs = Bazi.jiShi(chart, dayGan) || []; } catch (e) { return null; }
+    if (!hs.length) return null;
+    const good = hs.filter(h => h.score >= 1).sort((a, b) => b.score - a.score).slice(0, 3);
+    const bad = hs.filter(h => h.score <= -1).sort((a, b) => a.score - b.score).slice(0, 2);
+    const nm = h => `${h.zhi}时(${h.span})`;
+    return {
+      good, bad,
+      text: (good.length ? `办事挑${good.map(nm).join('、')}` : '今天没有特别拔尖的时段,平时段办平事')
+        + (bad.length ? `;${bad.map(nm).join('、')}这几段避开硬碰` : ';没有非避不可的时段') + '。',
+    };
   }
 
   function all(chart, targetDate) {

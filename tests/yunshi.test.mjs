@@ -1,6 +1,8 @@
 // 内测:八字排盘与运势推断(node tests/yunshi.test.mjs)
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 const require = createRequire(import.meta.url);
+const Tijian = createRequire(import.meta.url)('../tijian.js');
 const Bazi = require('../bazi.js');
 const Yunshi = require('../yunshi.js');
 
@@ -147,6 +149,74 @@ console.log('【禁术语】运势卡写给人看的部分,不许出现干支十
     for (const k of ['day', 'month', 'year']) ok(!/的天地是/.test(y[k].text), k + ' 仍是同义反复:' + y[k].text);
   });
 }
+
+console.log('【日运】不许含糊、不许像流水账(v0.86,用户 08-02 报)');
+// 缘起:用户说「运势日运之类的不能含糊,不能搞的好像流水帐一样」。先量,量出三个数:
+//   · 同一人连续 60 天,断语**从来不落到时间上**(「落到时间」的处数 0.00);
+//   · 同一天 12 副盘只有 5 种说法(区分度 41.7%)——正好等于开头那句的五种可能;
+//   · 平均 64 字、数字 1.00 个。
+// 病根:开头那一句只有五种(明面帮/压 × 底下帮/压 + 不偏不倚),而人第一眼看的就是它;
+// 而**时辰吉凶本来就算好了,却只在吉日板块渲染,从没进过日运的话里**。
+// 修法:接 Bazi.jiShi(§四 只取用不重造),并让第一句就是「主哪一摊 + 该挑哪几个时辰」(铁律二)。
+t('日运必须落到时辰上——这是那次量出来 0.00 的那一项', () => {
+  const cs = [];
+  for (let y = 1980; y <= 2000; y += 4) for (const g of ['男', '女']) cs.push(Bazi.chart(new Date(y, 5, 15, 10, 30), g, 116.4));
+  let n = 0, withHour = 0, tim = 0;
+  for (const c of cs) for (let d = 0; d < 10; d++) {
+    const r = Yunshi.riYun(c, new Date(2026, 7, 2 + d));
+    n++;
+    if (r.hour) withHour++;
+    if (/时\(\d+-\d+点\)/.test(r.text) || /没有.*拔尖|没有非避不可/.test(r.text)) tim++;
+  }
+  eq(withHour, n, '每一条日运都该带时辰这一层');
+  ok(tim / n > 0.95, `只有 ${(tim / n * 100).toFixed(1)}% 的日运把时辰写进了断语`);
+});
+t('月运年运不谈时辰——那个尺度上没有时辰这回事', () => {
+  const c = Bazi.chart(new Date(1990, 4, 20, 9, 30), '男', 120.15);
+  ok(!Yunshi.yueYun(c, new Date(2026, 7, 2)).hour, '月运不该有时辰层');
+  ok(!Yunshi.nianYun(c, new Date(2026, 7, 2)).hour, '年运不该有时辰层');
+});
+t('第一句就是具体答案,不是「今天整体如何」(铁律二)', () => {
+  const c = Bazi.chart(new Date(1990, 4, 20, 9, 30), '男', 120.15);
+  for (let d = 0; d < 12; d++) {
+    const t0 = Yunshi.riYun(c, new Date(2026, 7, 2 + d)).text;
+    const first = t0.split('。')[0];
+    ok(/主.+这一摊/.test(first), '第一句要说清今天主哪一摊事:' + first);
+    ok(!/^今天整体/.test(t0), '不许拿「今天整体如何」开头——那句只有五种说法:' + first);
+  }
+});
+t('具体度必须比改之前高一大截(拿体检员的机械打分核)', () => {
+  const cs = [];
+  for (let y = 1980; y <= 2000; y += 4) for (const g of ['男', '女']) cs.push(Bazi.chart(new Date(y, 5, 15, 10, 30), g, 116.4));
+  let n = 0, num = 0, act = 0, tim = 0;
+  for (const c of cs) for (let d = 0; d < 10; d++) {
+    const t0 = Yunshi.riYun(c, new Date(2026, 7, 2 + d)).text;
+    const r = Tijian.check(t0, { zone: '断语', minChars: 0 });
+    n++;
+    if (r.stats) { num += r.stats.nums || 0; act += r.stats.acts || 0; tim += r.stats.times || 0; }
+  }
+  // 改之前实测:数字 1.00、动作 3.48、时间 0.00。这里钉的是「不许退回去」。
+  ok(num / n >= 5, `数字密度掉回 ${(num / n).toFixed(2)},改前是 1.00、改后应 ≥5`);
+  ok(act / n >= 4.5, `可照做的动作掉回 ${(act / n).toFixed(2)}`);
+  ok(tim / n >= 2.5, `落到时间的处数掉回 ${(tim / n).toFixed(2)},改前是 0.00`);
+});
+t('时辰这一层取自 Bazi.jiShi,不自己另算(§四)', () => {
+  const src = readFileSync(new URL('../yunshi.js', import.meta.url), 'utf8');
+  ok(/Bazi\.jiShi/.test(src), '时辰吉凶要走 Bazi.jiShi');
+  ok(!/function\s+jiShi/.test(src), 'yunshi.js 里不许自己再实现一份时辰吉凶');
+});
+t('加了时辰之后,断语仍然干净(体检员扫)', () => {
+  const cs = [];
+  for (let y = 1985; y <= 2000; y += 5) for (const g of ['男', '女']) cs.push(Bazi.chart(new Date(y, 2, 9, 14, 0), g, 116.4));
+  const bad = [];
+  for (const c of cs) for (let d = 0; d < 8; d++) {
+    const t0 = Yunshi.riYun(c, new Date(2026, 7, 2 + d)).text;
+    const h = Tijian.check(t0, { zone: '断语', minChars: 0 }).hits
+      .filter(x => ['术语', '说教', '空话', '花钱消灾'].includes(x.kind));
+    if (h.length) bad.push(t0.slice(0, 30) + ' ← ' + h.map(x => x.kind + ':' + x.snippet).join('/'));
+  }
+  ok(!bad.length, bad.slice(0, 4).join('\n      '));
+});
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);
