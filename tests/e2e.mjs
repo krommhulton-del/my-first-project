@@ -1103,6 +1103,37 @@ await t('双人合盘:两份档案合一盘,四种关系分开算,不许替人�
   await page.evaluate(() => { localStorage.removeItem('dongxuan_profiles_v1'); localStorage.removeItem('dongxuan_profile_cur'); });
 });
 
+await t('改运·运的行当:诊断+六条杠杆、标证据强度、写明不是疗效、无花钱消灾(v0.91)', async () => {
+  // 缘起:用户点名的「运的行当」。策划书的验收:六条全取自已有模块、
+  // 「不是疗效」那段话必须出现在界面、不许出现任何花钱的东西。
+  await page.evaluate(() => {
+    localStorage.setItem('dongxuan_birth', '1990-05-20');
+    localStorage.setItem('dongxuan_birth_hour', '09:30');
+    localStorage.setItem('dongxuan_gender', '男');
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(400);
+  await page.evaluate(() => window.dxOpenBoard('sec-zhuanyun'));
+  await page.waitForTimeout(200);
+  await page.evaluate(() => { const h = document.querySelector('#sec-zhuanyun .foldh'); if (h && document.querySelector('#sec-zhuanyun .foldbody').classList.contains('hidden')) h.click(); });
+  await page.waitForTimeout(200);
+  await page.click('#btn-zy-gy');
+  await page.waitForTimeout(600);
+  const out = await page.locator('#zy-gy-out').innerText();
+  ok(/诊断/.test(out), '诊断段要在');
+  for (const k of ['时 ·', '地 ·', '色 ·', '业 ·', '宅 ·', '人 ·']) ok(out.includes(k), `六条杠杆少了「${k}」`);
+  ok((out.match(/证据强度/g) || []).length >= 6, '每条杠杆都要标证据强度');
+  const honest = await page.locator('#zy-gy-honest').innerText();
+  ok(/依据,不是疗效/.test(honest), '「不是疗效」那段话必须在界面第一屏:' + honest.slice(0, 50));
+  ok(!/开光|法物|摆件|水晶|貔貅|付费/.test(out), '出现了花钱消灾之物');
+  ok(/起一卦/.test(out), '宅那条要指到起卦的正路');
+  {
+    const r = Tijian.check(out, { zone: '断语' });
+    const bad = r.hits.filter(h => ['空话', '说教', '花钱消灾'].includes(h.kind));
+    ok(!bad.length, '运的行当输出不干净:' + bad.map(h => h.kind + ':' + h.snippet).join('、'));
+  }
+});
+
 await t('命格取向:六路挂原话、说真话不带道德词、两书打架并排摆(v0.90)', async () => {
   // 缘起:用户点名「必须说真话」,策划书画的线是「结论一个字不软,道德词一个字不带」。
   // 这条端到端守三件事:板块能出结论、原话挂在界面上、道德词一个不许漏到界面。

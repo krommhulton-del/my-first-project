@@ -776,7 +776,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.90</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v0.91</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1043,7 +1043,7 @@
       <button class="bcard" data-b="sec-yanpan"><span class="bg">验</span><span><span class="bt">验 盘 簿 · 这程序对你到底准不准</span><span class="bd">先让它把对某一年的判断封起来(你看不见),你再写下那年实际发生了什么,然后开封计分——连它错在哪几件都摆出来</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-yinyuan"><span class="bg">缘</span><span><span class="bt">姻 缘 · 恋爱专用</span><span class="bd">问正缘:何时、多高、多有钱;或给个人,直判是不是TA</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-dawen"><span class="bg">问</span><span><span class="bt">大问拆阵</span><span class="bd">一句大问,拆成一套卦阵逐个起,汇总深断</span></span><span class="bx">›</span></button>
-      <button class="bcard" data-b="sec-zhuanyun"><span class="bg">运</span><span><span class="bt">转 运</span><span class="bd">近来不顺?先诊断根源,再给能落地的做法</span></span><span class="bx">›</span></button>
+      <button class="bcard" data-b="sec-zhuanyun"><span class="bg">运</span><span><span class="bt">转 运 · 运 的 行 当</span><span class="bd">一个诊断+六条可动的杠杆(时、地、色、业、宅、人),每条标证据强度;再用卦阵找不顺的根源</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-xinyuan"><span class="bg">愿</span><span><span class="bt">心 愿</span><span class="bd">想办件事:成不成、什么时候、怎么做最旺</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-wj"><span class="bg">镜</span><span><span class="bt">未来镜</span><span class="bd">起三卦,把断出的未来写成一篇故事</span></span><span class="bx">›</span></button>
       <button class="bcard" data-b="sec-vs"><span class="bg">较</span><span><span class="bt">A 还是 B · 两个选择直接比</span><span class="bd">两个地方、两个日子、两条路,逐层打分并排摆,最后告诉你选哪个、差多少</span></span><span class="bx">›</span></button>
@@ -1088,6 +1088,17 @@
   <section id="sec-zhuanyun" class="fold">
     <h2 class="foldh">转 运(近来不顺?先诊断,再给做法)<span class="foldtri">▸</span></h2>
     <div class="foldbody hidden">
+    <div class="ypbox">
+      <h4>运 的 行 当(按你的盘,程序算死)</h4>
+      <div class="ypwarn" id="zy-gy-honest"></div>
+      <div class="note">十年大运与流年里<b>可以动的那几样</b>:哪几年动、往哪去、穿用什么、吃哪路饭、住处怎么查、身边多走动谁。
+        每条标的是<b>证据强度</b>,不是疗效;不推荐任何花钱的东西。</div>
+      <div class="qwrow">
+        <button type="button" class="ghost" id="btn-zy-gy">排我的六条杠杆</button>
+      </div>
+      <div class="err" id="zy-gy-err"></div>
+      <div id="zy-gy-out"></div>
+    </div>
     <div class="note">这里不看吉凶定数,只办两件实事:<b>近来不顺的根子在哪</b>,以及<b>接下来怎么做</b>。先诊断(现状、根源、什么最旺你),再给做法(宜忌、方位时机、补救步骤)——每一条都落到当天能做的事上。运有起落,事在人为。</div>
     <details class="qwfold" id="qwf-zy">
       <summary><span class="qwk">为谁问</span><span class="qwhint" id="qh-zy"></span><span class="qwedit">改</span></summary>
@@ -1497,7 +1508,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v0.90 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v0.91 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1539,6 +1550,7 @@
 <script src="yanpan.js"></script>
 <script src="hepan.js"></script>
 <script src="mingge.js"></script>
+<script src="gaiyun.js"></script>
 <script src="tijian.js"></script>
 <script>
 (function () {
@@ -4766,6 +4778,27 @@
       mgRender(Mingge.read(c));
     });
     $('btn-mg-ai').addEventListener('click', mgAI);
+  }
+
+  // ═══════════════════ 改运·运的行当(v0.91 板块 D):引擎 gaiyun.js,一个断法不自算 ═══════════════════
+  const zyGyErr = m => { $('zy-gy-err').textContent = m || ''; };
+  function zyGyRender(p) {
+    $('zy-gy-honest').textContent = p.honest;
+    $('zy-gy-out').innerHTML =
+      `<div class="hprel"><b>诊断</b><div class="hpv">${p.zhen.body.map(esc).join('<br>')}</div>` +
+      (p.zhen.dayunLine ? `<div class="hpv ypline">${esc(p.zhen.dayunLine)}</div>` : '') + `</div>` +
+      p.levers.map(l =>
+        `<div class="hprel"><b>${esc(l.name)}</b><div class="note ypflat">证据强度:${esc(l.strength)}(取自 ${esc(l.from)})</div>` +
+        l.items.map(it => `<div class="hpv ypline">· ${esc(it.do_)}</div>`).join('') + `</div>`).join('');
+  }
+  if ($('btn-zy-gy')) {
+    $('btn-zy-gy').addEventListener('click', () => {
+      const c = dxBirthChart('zy');
+      if (!c) { zyGyErr(dxWhyNoChart()); return; }
+      zyGyErr('');
+      try { zyGyRender(Gaiyun.plan(c, { age: qAge('zy'), now: new Date() })); }
+      catch (e) { zyGyErr('排不出来:' + e.message); }
+    });
   }
 
   // ═══════════════════ 生辰档案:增删改查,一处管全应用 ═══════════════════
