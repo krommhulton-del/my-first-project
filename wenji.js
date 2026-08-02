@@ -250,7 +250,8 @@
         }
         return {
           idx: m.idx, name: m.name, gz: m.gz, span: `${rg.start.getMonth() + 1}月${rg.start.getDate()}日～${rg.end.getMonth() + 1}月${rg.end.getDate()}日`,
-          score: +s.score.toFixed(1), reasons: s.reasons.slice(0, 3), days,
+          score: +s.score.toFixed(1), reasons: s.reasons.slice(0, 3),
+          reasonsTech: (s.techs || s.reasons).slice(0, 3), days,
           portrait: po,
         };
       });
@@ -258,8 +259,9 @@
         year: r.year, age: r.age, gz: r.gz, dayunGz: r.dayunGz,
         score: +y.score.toFixed(1), dir: y.dir,
         reasons: (y.cat ? y.cat.reasons : []).slice(0, 3),
+        reasonsTech: (y.cat ? (y.cat.techs || y.cat.reasons) : []).slice(0, 3),
         tips: (y.cat && y.cat.tips ? y.cat.tips.slice().sort((a, b) => b.w - a.w).map(x => x.tip) : []).slice(0, 2),
-        flags: r.flags || [],
+        flags: r.flags || [], flagsTech: r.flagsTech || r.flags || [],
         months: monthOut,
       };
     });
@@ -309,9 +311,9 @@
   function material(chart, res) {
     if (res.empty) return `【问机】所问:${res.question}(归为${res.topic.label})。未来${res.span}年内,程序未扫到该事型的凸出窗口——照实说没有明显当口,别硬编一个。`;
     const w = res.windows.map(y =>
-      `${y.year}年(${y.age}岁,${y.gz}${y.dayunGz ? ',走' + y.dayunGz + '运' : ''})分${y.score}:${y.reasons.join(';')}\n` +
+      `${y.year}年(${y.age}岁,${y.gz}${y.dayunGz ? ',走' + y.dayunGz + '运' : ''})分${y.score}:${(y.reasonsTech || y.reasons).join(';')}\n` +
       y.months.map(m =>
-        `   └ ${m.name}(${m.gz},${m.span})分${m.score}:${m.reasons.join(';')}\n` +
+        `   └ ${m.name}(${m.gz},${m.span})分${m.score}:${(m.reasonsTech || m.reasons).join(';')}\n` +
         `      最合的日子:${m.days.map(d => `${d.m}月${d.d}日(${d.gz},黄历${d.almLevel}、日运${d.riLevel})`).join('、') || '(此月无双层都过关之日)'}\n` +
         `      画像:${m.portrait.lines.join(';')}`
       ).join('\n')

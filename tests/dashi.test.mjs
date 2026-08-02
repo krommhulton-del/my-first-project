@@ -269,5 +269,67 @@ t('喂给模型的材料里,姻缘口径写死了「不许自己补吉凶」', (
   ok(known.includes('有伴') && known.includes('不是按命盘推的'), '按处境断时须标明来源');
 });
 
+console.log('【八】年表这一栏得说人话(铁律八)');
+// 缘起(v0.80):拿断语体检员回头扫**程序自己**的成稿,量出年表依据 4466 条渲染字段里
+// 1206 条带术语(节点依据一项就 35.4%)——而 .dwhy(运势页)与 .jwhy(吉日页)是直接摆给客人看的。
+// v0.65 修过一轮运势三卡的术语,**年表这一栏当时整个漏了**;用户为「看不懂」说过两次。
+// 修法是把一条证据存两份:reasons 白话给客人、techs 原文喂模型。
+// 这条测试两头都钉:①客人那一列一个术语不许有 ②模型那一份不许被顺手一起洗掉
+//   ——只钉①的话,把两份都删成白话也能变绿,那等于把模型的原料也砍了。
+t('客人看得到的每一处年表字段,一个推演名目都不许有', () => {
+  let total = 0;
+  const bad = [];
+  const scan = (where, s) => {
+    if (!s) return;
+    total++;
+    const hits = Tijian.check(String(s), { zone: '断语', minChars: 0 }).hits
+      .filter(h => ['术语', '说教', '空话', '花钱消灾', '模棱'].includes(h.kind));
+    if (hits.length) bad.push(`${where}「${String(s).slice(0, 30)}」← ${hits.map(h => h.kind + ':' + h.snippet).join('/')}`);
+  };
+  for (const c of charts) {
+    const tl = Dashi.timeline(c, { nowYear: 2026 });
+    for (const n of tl.nodes) {
+      n.top.reasons.forEach(r => scan('节点依据', r));
+      (n.top.tips || []).forEach(x => scan('节点做法', x.tip));
+      n.flags.forEach(f => scan('节点旁注', f));
+      scan('节点断语', n.text);
+    }
+    for (const r of (tl.nextTen || [])) {
+      (r.cats || []).forEach(x => { x.reasons.forEach(y => scan('逐年依据', y)); (x.tips || []).forEach(y => scan('逐年做法', y.tip)); });
+      for (const m of (r.months || [])) if (m.top) {
+        m.top.reasons.forEach(y => scan('流月依据', y));
+        (m.top.tips || []).forEach(y => scan('流月做法', y.tip));
+        m.flags.forEach(f => scan('流月旁注', f));
+      }
+    }
+    // 运势页那一行渲染的是 shenPlain,不是 shen
+    tl.steps.forEach(x => scan('大运分段(界面)', `这十年当值的是${x.shenPlain},整体${x.dir}`));
+    tl.turns.forEach(x => scan('转折带', x.note));
+    scan('童限', tl.childhood);
+  }
+  ok(total > 500, `扫到的字段太少(${total}),测试自己可能失效了`);
+  ok(!bad.length, `${bad.length}/${total} 条不干净:\n      ` + bad.slice(0, 8).join('\n      '));
+});
+t('喂模型的那一份仍留着推演原文——不许连模型的原料一起洗掉', () => {
+  const c = charts[0];
+  const m = Dashi.material(c, Dashi.timeline(c, { nowYear: 2026 }));
+  for (const w of ['流年', '日支', '大运']) ok(m.includes(w), `材料里缺了「${w}」,推演原料被洗没了`);
+  const shen = ['正官', '七杀', '正财', '偏财', '正印', '偏印', '食神', '伤官', '比肩', '劫财'];
+  ok(shen.filter(x => m.includes(x)).length >= 3, '材料里至少该留着几味十神,否则模型没原料可讲');
+});
+t('白话与原文是一一对应的两列,不许一多一少', () => {
+  for (const c of charts) {
+    for (let y = 2020; y < 2032; y++) {
+      const ev = Dashi.yearEvidence(c, Dashi.ganZhiOfYear(y), null, {});
+      eq(ev.flags.length, ev.flagsTech.length, `${y}年 旁注两列不等长`);
+      for (const k of Object.keys(ev.cats)) {
+        // 姻缘那一类会在末尾追加一条「方向留白」的话,只加在白话这一列
+        const d = ev.cats[k].reasons.length - ev.cats[k].techs.length;
+        ok(d === 0 || (k === 'yinyuan' && d === 1), `${y}年 ${k} 两列差 ${d} 条`);
+      }
+    }
+  }
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

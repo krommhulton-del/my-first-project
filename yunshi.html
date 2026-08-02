@@ -233,7 +233,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.79</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v0.80</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -550,7 +550,7 @@
       const on = nowY >= st.fromYear && nowY <= st.toYear;
       return `<div class="dsrow${on ? ' now' : ''}"><span class="dsgz">${esc(st.gz)}</span>` +
         `<span class="dsyr">${st.fromYear}-${st.toYear}(${Math.floor(st.fromAge)}-${Math.floor(st.toAge)}岁)</span>` +
-        `<span class="dstx">走${esc(st.shen)},整体${esc(st.dir)}${on ? ' · 当前这一步' : ''}</span></div>`;
+        `<span class="dstx">这十年当值的是${esc(st.shenPlain || st.shen)},整体${esc(st.dir)}${on ? ' · 当前这一步' : ''}</span></div>`;
     }).join('');
     const nodeHtml = n => {
       const d = n.top.dirSum;

@@ -31,6 +31,26 @@
     if (SHENG[ot] === me) return sameYY ? '偏印' : '正印';   // 生我
     return '';
   }
+  // 十神的大白话对照(铁律八:术语只在推演时用,写给客人看的一律翻成这一列)。
+  // **这张表只此一份**(§四 一个口径一处算):dashi 的年表依据、yunshi 的运势卡、
+  // 将来任何要把十神说给客人听的地方,一律从这里取,不许各写各的。
+  // 缘起:v0.65 修过一轮运势三卡的术语,但**年表的「依据」那一栏漏了**——
+  // v0.80 拿断语体检员扫程序自己的成稿,量出年表依据 536 条里 190 条带术语(35.4%),
+  // 而那一栏在运势页与吉日页都是直接渲染给客人看的。用户为这件事说过两次「看不懂」。
+  const SHEN_PLAIN = {
+    比肩: '跟你同路的人(同辈、同行、合伙的)',
+    劫财: '跟你抢的人(同辈里分你东西的那种)',
+    食神: '你拿得出手的本事(手艺、口才、作品)',
+    伤官: '你身上那股锋芒(会出彩,也容易顶撞人)',
+    正财: '正路来的钱(工资、正经买卖)',
+    偏财: '外快与机会财(副业、人情场上的钱)',
+    正官: '名分与规矩(职级、管你的人、正式手续)',
+    七杀: '压着你的那股力(硬仗、期限、说一不二的人)',
+    正印: '照应你的人与文书(长辈、靠山、证件合同)',
+    偏印: '偏门的本事与心思(想得多、饭碗易生变)',
+  };
+  const plainShen = n => SHEN_PLAIN[n] || n;
+
   // 十神归五类(用于运势领域归类)
   const SHISHEN_CLASS = {
     比肩: '比劫', 劫财: '比劫', 食神: '食伤', 伤官: '食伤',
@@ -556,5 +576,6 @@
 
   return { chart, shiShen, hourPillar, GAN_WX, ZHI_WX, SHISHEN_CLASS, SHENG, KE, CANGGAN, GAN, ZHI,
     kongOf, flowMarks, tianZhongShaYears, jiShi, HOUR_SPAN, trueSolarDate, eotMinutes, tiaoHou, TIANYI, WENCHANG, YANGREN, TAOHUA, YIMA, HUAGAI, HONGLUAN, sanheIdx,
+    SHEN_PLAIN, plainShen,
     nayin, changSheng, taiYuan, siLingOf, SILING, daysIntoJie, relations, judgeStrength, judgeCong, wuxingPower, rootsOf, countWuxing, pickYongShen };
 }));
