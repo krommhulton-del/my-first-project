@@ -407,7 +407,8 @@
 
   function read(chart, opts) {
     if (!chart) return null;
-    const age = opts && opts.age != null && isFinite(+opts.age) ? +opts.age : null;
+    opts = opts || {};
+    const age = opts.age != null && isFinite(+opts.age) ? +opts.age : null;
     const cb = combos(chart), pl = palaces(chart), kn = kin(chart), hl = health(chart);
     const dy = dayunRead(chart, age);
     const sp = shenPower(chart);
@@ -430,6 +431,8 @@
     return {
       verdict, story, combos: cb, palaces: pl, kin: kn, personality: personality(chart),
       health: hl, dayun: dy, shen: sp, honest: HONEST,
+      // 通盘那一层要年表的大运分段与大年,拿不到就没有(不硬造)
+      whole: opts.parts ? whole(chart, opts.parts, opts) : null,
     };
   }
 
@@ -437,6 +440,11 @@
     const r = read(chart, opts);
     if (!r) return '';
     let s = '【命盘细读·程序按古法算死(勿另立结论)】\n第一句:' + r.verdict + '\n骨架:' + r.story + '\n';
+    if (r.whole) {
+      // 通盘那一条线是**给模型的骨架**:它规定了讲的次序(底 → 大运分段 → 大年 → 眼下),
+      // 不是又一堆零件。模型照这条线展开,别再回到并列清单。
+      s += '【通盘这一条线(按这个次序讲,别打散成清单)】\n' + r.whole.lead + '\n' + r.whole.story + '\n';
+    }
     if (r.combos.length) {
       s += '【十神组合(每条挂原话)】\n';
       for (const c of r.combos) s += `— [${c.tone}] ${c.title}(行内名目:${c.key}):${c.plain}(推演:${c.tech};原话「${c.quote}」《${c.src}》)\n`;
@@ -456,5 +464,164 @@
     return s;
   }
 
-  return { read, material, combos, palaces, kin, personality, health, dayunRead, shenPower, HONEST, PALACE, WX_BODY };
+  // ══════════════════════════════════════════════════════════════════
+  //  通盘(v1.15):把散着的几块串成一条能读的线
+  // ══════════════════════════════════════════════════════════════════
+  // 缘起:用户 2026-08-03「排盘问题解决就去解读,生辰矫正八字星盘需要大换血」。
+  // **先量后改**:拿一副盘把用户一眼看到的文本块数出来——6 块,而其中**只有 17%**
+  // 提到「跟别处的关系」。也就是说命盘细读、命格取向、年表、运势各说各的,
+  // 读者拿得到零件,拿不到一条贯穿的线。行家看盘不是这样的:他先定这副盘靠什么成事,
+  // 再看大运把这条线送到哪几段顺、哪几段逆,再落到具体年份,最后说眼下。
+  //
+  // 本层**一个断法都不自算**(§四):喜忌取 chart.yong、大运顺逆取 Dashi 的 steps.tag/dir、
+  // 大年取 Dashi 的 nodes、主导那条力取本模块的 shenPower、吃哪碗饭取 Mingge。
+  // 它只做一件事——**把这些按真实依赖串起来**:
+  //   用神 → 哪几步大运是顺的(真依赖:tag 就是拿喜忌判的)
+  //   → 大运阶段 → 那几个大年落在顺段还是逆段(真依赖:年表分数本就受大运影响)
+  //   → 眼下这一步 → 该做什么。
+  // 连词只连真依赖(v0.99 的教训:硬塞「因为」比并列短句更糟)。
+  function whole(chart, parts, opts) {
+    if (!chart) return null;
+    const P = parts || {};
+    const steps = (P.steps || []).filter(s => s && s.fromYear);
+    const nodes = (P.nodes || []).filter(n => n && n.year);
+    // 年表给的 steps 不带「眼下是哪一步」(那是 dashi 自己不需要的字段),
+    // 头一版照抄 dayunRead 的写法去找 s.now,于是**「眼下」整段永远不出现**——
+    // 这一层最该说的话反而是空的。改成按当年年份自己定位。
+    const nowYear = (P.nowYear || (opts && opts.nowYear)) || new Date().getFullYear();
+    const sp = shenPower(chart);
+    const topShen = Object.keys(sp).sort((a, b) => sp[b] - sp[a])[0];
+    const SHEN_HOW = {
+      印星: '靠积累与背书成事——学历、资历、有人带、有牌照,这类东西在你身上比在别人身上更管用',
+      比劫: '靠人多势众成事——同辈、合伙、团队,单打独斗打不开局面,拉得起队伍就顺',
+      食伤: '靠拿得出手的本事成事——手艺、表达、作品,别人认的是你做出来的东西,不是你的位置',
+      财星: '靠算账与经营成事——找得到需求、算得清成本,钱这条线上你比多数人敏感',
+      官杀: '靠位置与规矩成事——在有编制、有层级、有考核的地方,你比在散摊子上更立得住',
+    };
+    // 一、大运脉络:按**干支两层**分档再并段。
+    // 头一版只看一个 dir,结果六步连着并成「60 年顺」——那种话等于没说。
+    // 分档依《三命通会》「盖大运重地支」:底下那一层(支)分量更重,面上那一层(干)次之。
+    const LV = { 大顺: 3, 底顺: 2, 面顺: 1, 逆: 0 };
+    const lvOf = st => (st.zhiTag === '喜' && st.tag === '喜') ? '大顺'
+      : (st.zhiTag === '喜') ? '底顺'
+      : (st.tag === '喜') ? '面顺' : '逆';
+    // 「明面/底下」是本项目已向用户解释过的定名(§十一),不算术语;「干支」是行内名目,不上稿(铁律八)
+    const LV_SAY = {
+      大顺: '明面与底下两层都走在旺你的那几行上——这是一辈子里最该使劲的时候,大事往这里排',
+      底顺: '底下那一层顺、明面那一层拧:实惠是有的,过程不好看,别被脸面上的不顺劝退',
+      面顺: '明面机会不少、底下不接力:看着热闹,落到实处费劲,宜挑着做不宜全接',
+      逆: '明面与底下两层都在耗你:这段的正经用法是把底子做厚——补资质、还旧账、收摊子,不铺新的',
+    };
+    const phases = [];
+    for (const st of steps) {
+      const lv = lvOf(st);
+      const last = phases[phases.length - 1];
+      if (last && last.lv === lv) { last.toYear = st.toYear; last.toAge = st.toAge; last.gzs.push(st.gz); }
+      else phases.push({ lv, dir: lv === '逆' ? '不得力' : lv === '大顺' ? '得力' : '半', fromYear: st.fromYear, toYear: st.toYear, fromAge: st.fromAge, toAge: st.toAge, gzs: [st.gz] });
+    }
+    for (const p of phases) {
+      p.years = `${p.fromYear}–${p.toYear}`;
+      p.ages = `${Math.round(p.fromAge)}–${Math.round(p.toAge)} 岁`;
+      // 带上这一段各步的十神——一段并了四步却只报头一步的十神,等于把 40 年说成一句话,
+      // 读者拿不到段内的变化。逐步报出来,段内的次序本身就是内容。
+      const inSeg = steps.filter(x => x.fromYear >= p.fromYear && x.toYear <= p.toYear);
+      const shens = [];
+      for (const x of inSeg) { const s = x.shenPlain || ''; if (s && shens[shens.length - 1] !== s) shens.push(s); }
+      p.shen = shens[0] || '';
+      p.say = `${p.years}(${p.ages},走${p.gzs.join('、')})——${LV_SAY[p.lv]}` +
+        (shens.length > 1 ? `。这一段里当家的力依次是:${shens.map(s => `「${s}」`).join('→')}`
+          : p.shen ? `。这一段当家的是「${p.shen}」这条力` : '');
+    }
+    const best = phases.slice().sort((a, b) => (LV[b.lv] - LV[a.lv]) || ((b.toYear - b.fromYear) - (a.toYear - a.fromYear)))[0] || null;
+    const nowStep = steps.find(s => nowYear >= s.fromYear && nowYear <= s.toYear) || null;
+    const nowPhase = nowStep ? phases.find(p => nowStep.fromYear >= p.fromYear && nowStep.toYear <= p.toYear) : null;
+    // 二、大年挂到它所在的那一段上——同样一个大年,落在顺段和逆段读法不一样
+    // 二、大年:**取最重的、不取最早的**;同一类只留分最高的一个(头一版六条全是「家境父母」,
+    // 因为按年份先后取了童年那几条,读起来像复读)。成年以后的优先。
+    // **过去与将来分开取、分开说**:头一版按分数一路取下来,给一个 36 岁的人报出
+    // 「2010 年该出手的投入放这一年」——对已经过去的年份发号施令,是明摆着的错。
+    // 将来的给做法,过去的改成回头对账(那正是本项目唯一现成的反馈回路,§十一)。
+    const phaseOf = y => phases.find(p => y >= p.fromYear && y <= p.toYear) || null;
+    const byForce = (a, b) => Math.abs(((b.top || {}).score) || 0) - Math.abs(((a.top || {}).score) || 0);
+    const dedupe = () => { const seen = new Set(); return nd => { const k = (nd.top && nd.top.key) || nd.year; if (seen.has(k)) return false; seen.add(k); return true; }; };
+    const adult = nodes.filter(nd => (nd.age == null || nd.age >= 16));
+    const future = adult.filter(nd => nd.year >= nowYear).sort(byForce).filter(dedupe()).slice(0, 4);
+    const past = adult.filter(nd => nd.year < nowYear).sort(byForce).filter(dedupe()).slice(0, 2);
+    const picked = future.concat(past).sort((a, b) => a.year - b.year);
+    const marks = picked.map(nd => {
+      const ph = phaseOf(nd.year);
+      const lab = (nd.top && nd.top.label) || '这一年';
+      const lv = ph ? ph.lv : null;
+      // 同一段里的几个大年,若都套同一句尾巴,读起来就是复读(头一版 AI 腔 52 的病根)。
+      // 改成**按事型给具体动作**,再叠这一段的力度——这样每一条真的在说不同的事。
+      const key = (nd.top && nd.top.key) || '';
+      const ACT = {
+        shiye: ['正面争取:该报的岗位、该谈的晋升摆到台面上', '争是要争,但先把手里的活做出成绩再开口', '别主动挑事,守住现有位置,风头过了再谈'],
+        caiyun: ['该出手的投入放这一年,回本周期按乐观算', '进项有,但先落袋再谈扩大,别拿账面数字做决定', '这一年收着花,大额投入往后挪'],
+        // 姻缘这一类**只报动、不报是聚是散**(v0.77 起的铁律:方向归处境不归卦),
+        // 所以三档给的都是「怎么应对这一年的动」,一句都不许暗含聚或散。
+        // 头一版写的「该定的关系定下来」正是暗含了聚,当场作废。
+        yinyuan: ['感情这一头这一年动得最重,把时间和话都留出来', '感情上多说少猜,把话讲开比自己揣摩强', '感情这一头这一年容易起波,别在情绪上做决定'],
+        zinv: ['家里要添人或添事,提前把钱和时间腾出来', '孩子与长辈的事这一年占时间,排期先给他们', '家里人的事这一年容易起摩擦,少替人做主'],
+        jiankang: ['体检该做的项目一次做全,趁有精力把旧毛病处理掉', '别熬,作息这一年是本钱', '身体这头别硬扛,该查就查、该停就停'],
+        wenshu: ['考试、证书、合同这类事排在这一年最顺', '文书上的事逐字看清再签', '合同与手续这一年容易出岔,一律留底'],
+        guanfei: ['该走的手续走全,别留把柄', '有纠纷早了结,拖到后面代价更大', '这一年沾了纠纷别硬碰,找人从中说和'],
+        biandong: ['要搬要动就这一年,越往后越费劲', '动可以动,但先把落脚处定下来再走', '不宜大动,小调整可以'],
+        // 年表的第九类「家境父母」(jiajing)有意不列:实测 800 副盘 2298 个这一类的节点,
+        // **16 岁以上的一个都没有**——它本就是童限那一段的事,而这一层从 16 岁起看。
+        // 头一版列了它,是一条永不触发的死条(§十二);删的理由是年龄闸门,不是年表没有这一类。
+      };
+      const bank = ACT[key] || ['这一类的事这一年最集中,提前排时间', '这一类的事这一年要留余地', '这一类的事这一年宜缓不宜急'];
+      const pick = lv === '大顺' ? bank[0] : (lv === '底顺' || lv === '面顺') ? bank[1] : bank[2];
+      const force = lv === '大顺' ? '这一年落在你最得力的那一段里,同样的事在此时办成算最高'
+        : lv === '底顺' ? '那一段实惠在底下,场面上未必好看'
+        : lv === '面顺' ? '那一段面上热闹底下不接力,挑着接'
+        : lv === '逆' ? '偏偏落在耗你的那一段里,同样的动静更容易变成消耗'
+        : '那几年大运不偏不倚,分量就是它本身';
+      return { year: nd.year, age: nd.age, label: lab, key, lv, pick, force, past: nd.year < nowYear };
+    });
+    // 同一段里的第二条起不再重复段位说明——那句话上一条已经讲过了,再讲就是复读
+    let prevLv = null;
+    for (const m of marks) {
+      m.say = m.past
+        ? `${m.year} 年(${m.age} 岁)这一年程序判的是${m.label}最重——这一年已经过去,拿它对一对:那年这一头是不是真动了。对得上,后面几年的话才信得过`
+        : `${m.year} 年(${m.age} 岁)最重的是${m.label}——${m.pick}` + (m.lv !== prevLv ? `。${m.force}` : '');
+      // 姻缘那一类恒带留白声明(v0.77):只报动、不报是聚是散
+      if (m.key === 'yinyuan') m.say += '。这一类只报哪一年动、动多重,不报是聚是散——那取决于你进这一年时的处境,不是盘定的';
+      if (!m.past) prevLv = m.lv;
+    }
+    // 三、串成一段:每一句都接着上一句的结论
+    const xi = chart.yong.xiWx.join('、'), ji = chart.yong.jiWx.join('、');
+    // 「最吃得开的那一段」若在几十年后、或早已走过,必须当面说清——
+    // 头一版对一个 36 岁的人报「最吃得开的是 67–77 岁那一段」却一个字不解释,
+    // 读者只会当成好消息收下。远近与已过未过,是这句话的一半。
+    let bestWhen = '';
+    if (best) {
+      if (best.toYear < nowYear) bestWhen = `,那一段已经走过了(${nowYear - best.toYear} 年前收的尾)——往后要在不如它的条件下办事,所以下面每一段该怎么用,比它更要紧`;
+      else if (best.fromYear > nowYear + 10) bestWhen = `,还在 ${best.fromYear - nowYear} 年之后——这不是眼下能指望的东西,中间这些年按各自那一段的用法走`;
+      else if (best.fromYear > nowYear) bestWhen = `,还有 ${best.fromYear - nowYear} 年到`;
+      else bestWhen = `,你正在这一段里`;
+    }
+    const lead = `这副盘的主线是:${SHEN_HOW[topShen] || '靠自身条件成事'}` +
+      (best ? `;而这条线最吃得开的是${best.years}(${best.ages})那一段${bestWhen}。` : '。');
+    let story = `先把底定下来:你本人五行属${chart.dayWx},整体力量${Bazi.plainBand(chart.strength.band)},` +
+      `旺你的是${xi},耗你的是${ji}。这两组五行是后面一切的尺子——大运顺不顺,看的就是它走到哪一行。\n\n` +
+      `顺着这把尺子往下看,一辈子的大运分成这么几段:\n` + phases.map(p => '· ' + p.say).join('\n');
+    if (marks.length) story += `\n\n再把大事落到年份上。同一个年份放在不同的段里读法不一样;已经过去的那几年不给做法,留着让你对账:\n`
+      + marks.map(m => '· ' + m.say).join('\n');
+    if (nowStep) {
+      const lv = nowPhase ? nowPhase.lv : lvOf(nowStep);
+      story += `\n\n眼下:你正走${nowStep.gz}运(${nowStep.fromYear}–${nowStep.toYear}),这一步属「${lv}」。` +
+        (lv === '大顺' ? `这是全局里最该使劲的档,该办的大事——签长约、换赛道、置产、要孩子——排在这几年比排在后面划算。`
+          : lv === '底顺' ? `实惠在底下,面上会有阻力:该谈的照谈,但别指望过程漂亮,拿到手的东西才算数。`
+          : lv === '面顺' ? `机会会自己找上门,可底下不接力——挑一两件做透,比样样都接强。`
+          : `这几年的正确用法是把底子做厚:补资质、还旧账、把摊子收拢,别在这时候铺新的大摊子。`);
+    }
+    return { lead, topShen, phases, marks, now: nowStep, nowPhase, story,
+      honest: '这一层不新算任何东西:旺你耗你的那几行取自命盘、十年一步的顺逆与大年取自年表,' +
+        '本层只负责按真实的先后与因果把它们串起来。串法是本项目自拟的,零回测——' +
+        '它让你看得懂来龙去脉,不等于它更准。' };
+  }
+
+  return { read, material, combos, palaces, kin, personality, health, dayunRead, shenPower, whole, HONEST, PALACE, WX_BODY };
 }));

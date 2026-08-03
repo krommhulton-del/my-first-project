@@ -522,7 +522,7 @@
       if (src) { n.months = src.months; n.hot = src.hot; }
     }
     return {
-      birthYear, startYear, startText: dayun.startText, forward: dayun.forward,
+      birthYear, nowYear, startYear, startText: dayun.startText, forward: dayun.forward,
       steps, turns, nodes: trimmed, allNodes: nodes, yearly, nextTen, pastYears,
       marital: opts.marital || '',
       maritalNote: (opts.marital === '单身' || opts.marital === '有伴') ? YY_KNOWN_NOTE(opts.marital) : YY_HELD_NOTE,

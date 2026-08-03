@@ -201,5 +201,135 @@ t('答案之锚:同一副盘反复读五十次,逐字节一致', () => {
   for (let i = 0; i < 50; i++) ok(JSON.stringify(Mingpan.read(c, { age: 40 })) === first, '第' + i + '次不一致');
 });
 
+// ══════════════════════════════════════════════════════════════════
+//  通盘(v1.15)
+// ══════════════════════════════════════════════════════════════════
+// 缘起:用户 2026-08-03「排盘问题解决就去解读,生辰矫正八字星盘需要大换血」。
+// 量出来的病:用户一眼看到六块独立文本,其中只有 17% 提到「跟别处的关系」——
+// 零件齐了,线没有。这一层负责串线,而串线最容易犯的错有四种,四条测试各盯一种:
+//   ①「眼下」那一段静默消失(头一版照抄 dayunRead 去找 steps.now,而年表的 steps 没有这个字段);
+//   ②对已经过去的年份发号施令(给 36 岁的人报「2010 年该出手的投入放这一年」);
+//   ③姻缘那一类漏出聚散方向(v0.77 起的铁律);
+//   ④并成一句话的大段(「1997–2056 这 60 年顺」等于没说)。
+const Dashi = require(join(ROOT, 'dashi.js'));
+const wholeOf = (y, mo, d, h, g, nowYear) => {
+  const c = chartOf(y, mo, d, h, g);
+  const tl = Dashi.timeline(c, { nowYear });
+  return { c, tl, w: Mingpan.whole(c, tl, { nowYear }) };
+};
+const WSAMPLE = [];
+for (let i = 0; i < 240; i++) {
+  const y = 1945 + (i % 78), mo = 1 + (i % 12), d = 1 + ((i * 11) % 28), h = (i * 7) % 24;
+  const s = wholeOf(y, mo, d, h, i % 2 ? '男' : '女', 2026);
+  if (s.w && s.w.phases.length) WSAMPLE.push(s);
+}
+
+t('通盘:四档大运分段全触发得到,没有死条', () => {
+  const lv = new Set();
+  for (const { w } of WSAMPLE) for (const p of w.phases) lv.add(p.lv);
+  for (const k of ['大顺', '底顺', '面顺', '逆']) ok(lv.has(k), `「${k}」这一档永不触发,是死条:实际只见到 ${[...lv].join('/')}`);
+});
+t('通盘:事型做法表逐条都触发得到,且不含年龄闸门挡死的那一类(死条穷举)', () => {
+  const used = new Set();
+  for (const { w } of WSAMPLE) for (const m of w.marks) used.add(m.key);
+  const declared = [...SRC.matchAll(/^\s{8}(\w+): \['/gm)].map(x => x[1]);
+  ok(declared.length >= 8, '做法表没抽到,正则该改了:' + declared.length);
+  for (const k of declared) {
+    ok(Object.keys(Dashi.CATS).includes(k), `做法表里的「${k}」不是年表的事型`);
+    ok(used.has(k), `做法表里的「${k}」在 ${WSAMPLE.length} 副盘里一次都没触发,是死条`);
+  }
+  // 「家境父母」有意不列:它的节点全在童限,而这一层从 16 岁起看——
+  // 这条断言把「有意不做」和「忘了做」分开,免得日后有人当漏项补回来。
+  ok(Object.keys(Dashi.CATS).includes('jiajing'), '年表应有家境父母这一类');
+  ok(!declared.includes('jiajing'), '家境父母不该进做法表(它的节点全在 16 岁以下)');
+  ok(!used.has('jiajing'), '家境父母不该出现在大年里(年龄闸门 16 岁)');
+});
+t('通盘:「眼下」那一段必须出现(年表的 steps 不带 now,照抄会静默丢掉整段)', () => {
+  let has = 0, tot = 0;
+  for (const { w } of WSAMPLE) {
+    const inRange = w.phases.some(p => 2026 >= p.fromYear && 2026 <= p.toYear);
+    if (!inRange) continue;
+    tot++;
+    if (w.now && /眼下:/.test(w.story)) has++;
+  }
+  ok(tot > 20, '样本不够:' + tot);
+  ok(has === tot, `${tot} 副盘里有 ${tot - has} 副落在大运区间内却没有「眼下」那一段`);
+});
+t('通盘:已经过去的年份不许给做法,只许拿来对账', () => {
+  let past = 0;
+  for (const { w } of WSAMPLE) for (const m of w.marks) {
+    if (m.year >= 2026) { ok(!m.past, `${m.year} 不该标成过去`); continue; }
+    past++;
+    ok(m.past, `${m.year} 年在 2026 之前却没标成过去`);
+    ok(/已经过去|对一对/.test(m.say), `对过去的年份发号施令:${m.say}`);
+    ok(!/放这一年|排在这一年|就这一年|定下来/.test(m.say), `对过去的年份给了做法:${m.say}`);
+  }
+  ok(past > 50, '过去那一路样本太少:' + past);
+});
+t('通盘:姻缘那一类只报动、不报是聚是散(v0.77 铁律)', () => {
+  let n = 0;
+  for (const { w } of WSAMPLE) for (const m of w.marks) {
+    if (m.key !== 'yinyuan') continue;
+    n++;
+    if (m.past) continue;
+    ok(/不报是聚是散/.test(m.say), `姻缘那一条没带留白声明:${m.say}`);
+    ok(!/该定的关系|定下来|分开|散了|必有波折|感情大吉/.test(m.say), `姻缘漏出了方向:${m.say}`);
+  }
+  ok(n > 10, '姻缘样本太少:' + n);
+});
+t('通盘:并了多步的大运段必须报出段内各步当家的力(不许把几十年说成一句话)', () => {
+  let multi = 0;
+  for (const { w } of WSAMPLE) for (const p of w.phases) {
+    if (p.gzs.length < 2) continue;
+    multi++;
+    ok(/依次是|当家的是/.test(p.say), `并了 ${p.gzs.length} 步却没报段内变化:${p.say}`);
+  }
+  ok(multi > 30, '多步段样本太少:' + multi);
+});
+t('通盘:最得力那一段的远近必须当面说清(已走过 / 还有几年 / 正在其中)', () => {
+  const kinds = new Set();
+  for (const { w } of WSAMPLE) {
+    ok(/已经走过|年之后|还有|正在这一段/.test(w.lead), `没说清最得力那一段的远近:${w.lead}`);
+    kinds.add(/已经走过/.test(w.lead) ? '过' : /年之后/.test(w.lead) ? '远' : /还有/.test(w.lead) ? '近' : '在');
+  }
+  ok(kinds.size >= 3, '远近那几档没都触发到:' + [...kinds].join('/'));
+});
+t('通盘:话过体检员(禁术语/空话/说教/装腔),AI 腔不许回流', () => {
+  const seen = new Set(); const scores = [];
+  for (const { w } of WSAMPLE.slice(0, 60)) {
+    // honest 也要扫:头一版漏了它,「喜忌」这个术语一路漏到界面上,是 e2e 逮住的(铁律八)
+    for (const s of [w.lead, w.honest, ...w.phases.map(p => p.say), ...w.marks.map(m => m.say)]) {
+      const f = Tijian.aiFlavor(s); if (f.n) scores.push(f.index);
+      if (seen.has(s)) continue; seen.add(s);
+      const rep = Tijian.check(String(s).replace(/「[^」]*」/g, ''), {});
+      const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
+      ok(!bad.length, `体检不过:${s.slice(0, 40)}… → ${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
+    }
+  }
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  // 门槛是方向盘不是靶子(v1.06):只拦真回流,不逐分去追
+  ok(avg <= 45, `AI 腔均值 ${avg.toFixed(1)} 偏高,回到清单体了`);
+  console.log(`      (${seen.size} 条不重样,AI 腔均值 ${avg.toFixed(1)})`);
+});
+t('§四 通盘一个断法都不自算:喜忌/大运/大年全从外面吃进来', () => {
+  const body = SRC.slice(SRC.indexOf('function whole('));
+  ok(!/judgeStrength|pickYongShen|wuxingPower|shenShaOf|yearEvidence/.test(body), '通盘里不许出现断法函数');
+  ok(/chart\.yong/.test(body) && /P\.steps/.test(body) && /P\.nodes/.test(body), '通盘必须从 chart.yong 与年表的 steps/nodes 取料');
+  ok(/串法是本项目自拟的,零回测/.test(SRC), 'HONEST 要写明串法自拟零回测');
+});
+t('通盘:材料里带这条线,且注明按次序讲', () => {
+  const { c, tl } = wholeOf(1990, 6, 15, 10, '男', 2026);
+  const m = Mingpan.material(c, { age: 36, parts: tl, nowYear: 2026 });
+  ok(/通盘这一条线/.test(m), '材料缺通盘那一条线');
+  ok(/别打散成清单/.test(m), '材料没要求按次序讲');
+  const m0 = Mingpan.material(c, { age: 36 });
+  ok(!/通盘这一条线/.test(m0), '没喂年表就不该有通盘那一层(不许硬造)');
+});
+t('答案之锚:通盘同一副盘反复算二十次,逐字节一致', () => {
+  const { c, tl } = wholeOf(1986, 9, 3, 15, '男', 2026);
+  const first = JSON.stringify(Mingpan.whole(c, tl, { nowYear: 2026 }));
+  for (let i = 0; i < 20; i++) ok(JSON.stringify(Mingpan.whole(c, tl, { nowYear: 2026 })) === first, '第' + i + '次不一致');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

@@ -1197,8 +1197,13 @@ await t('命盘细读:十神组合+宫位+六亲+性格+健康+大运,无 Key �
   await page.click('#btn-mp-go');
   await page.waitForTimeout(600);
   const out = await page.locator('#mp-out').innerText();
-  for (const h of ['第 一 句', '四 柱 宫 位', '六 亲', '性 格', '健 康 倾 向', '大 运 逐 步'])
+  for (const h of ['第 一 句', '通 盘', '四 柱 宫 位', '六 亲', '性 格', '健 康 倾 向', '大 运 逐 步'])
     ok(out.includes(h), '缺这一层:' + h);
+  // v1.15 通盘:一条线读下来(底 → 十年一步的几段 → 大年 → 眼下),摆在最前
+  ok(/这副盘的主线是/.test(out), '通盘要先给主线');
+  ok(/一辈子的大运分成这么几段/.test(out), '通盘要把一生分段');
+  ok(/眼下:/.test(out), '通盘缺「眼下」那一段(年表的 steps 不带 now,照抄会静默丢掉)');
+  ok(out.indexOf('通 盘') < out.indexOf('四 柱 宫 位'), '通盘要摆在零件前面');
   ok(/原话:「.+」《.+》/.test(out), '组合与六亲要把古书原话摆出来');
   ok(/父母|兄弟|配偶|子女/.test(out), '六亲四路要在');
   ok(/岁起/.test(out), '大运要落到岁数');

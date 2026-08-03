@@ -786,7 +786,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.14</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.15</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1580,7 +1580,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v1.14 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.15 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -5168,13 +5168,19 @@
   }
 
   // ═══════════════════ 命盘细读(v1.00 板块 B′):引擎 mingpan.js,断法全在引擎里算死 ═══════════════════
-  let mpChart = null;
+  let mpChart = null, mpParts = null;
   const mpErr = m => { $('mp-err').textContent = m || ''; };
   function mpRender(r) {
     const tone = t => t === '吉' ? 'good' : t === '凶' ? 'bad' : 'dim';
+    const wh = r.whole;
     $('mp-out').innerHTML =
       `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(r.verdict)}</div>` +
       `<div class="hpv ypline">${esc(r.story)}</div></div>` +
+      // 通盘(v1.15):把散着的几块串成一条线,摆在最前——读者先要的是来龙去脉,不是零件
+      (wh ? `<div class="ypbox"><h4>通 盘(一条线读下来)</h4><div class="hpv key">${esc(wh.lead)}</div>` +
+        wh.story.split('\n').filter(x => x.trim()).map(x =>
+          `<div class="hpv${/^·/.test(x.trim()) ? ' ypline' : ''}">${esc(x.trim())}</div>`).join('') +
+        `<div class="note ypflat">${esc(wh.honest)}</div></div>` : '') +
       (r.combos.length ? `<div class="ypbox"><h4>十 神 组 合(条条挂原话,凶的照说)</h4>` +
         r.combos.map(c => `<div class="hprel"><b>${esc(c.title)}</b> <span class="dat ${tone(c.tone)}">${esc(c.tone)}</span>` +
           `<div class="hpv">${esc(c.plain)}</div>` +
@@ -5203,7 +5209,7 @@
     mpErr(''); $('mp-ai').textContent = '';
     try {
       const a = parseFloat(qAge('q'));
-      await llmStream([{ role: 'user', content: Mingpan.material(mpChart, { age: isFinite(a) ? a : null }) }],
+      await llmStream([{ role: 'user', content: Mingpan.material(mpChart, { age: isFinite(a) ? a : null, parts: mpParts }) }],
         t => { $('mp-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);
       dxTijian($('mp-ai'), $('mp-ai').textContent);
     } catch (e) { mpErr('讲透失败:' + aiErrHint(e, $('ai-provider').value)); }
@@ -5215,7 +5221,9 @@
       mpErr(c.genderKnown ? '' : '性别没填:组合、宫位、六亲、性格、健康照给,但大运那一层排不出(性别一换顺逆全反),配偶星那一层也不硬断。');
       mpChart = c;
       const a = parseFloat(qAge('q'));
-      mpRender(Mingpan.read(c, { age: isFinite(a) ? a : null }));
+      // 通盘那一层要年表的大运分段与大年(§四:一个断法都不在 mingpan 里重算)
+      mpParts = c.dayun.unknown ? null : Dashi.timeline(c, { nowYear: new Date().getFullYear(), marital: dxMarital() });
+      mpRender(Mingpan.read(c, { age: isFinite(a) ? a : null, parts: mpParts }));
     });
     $('btn-mp-ai').addEventListener('click', mpAI);
   }
