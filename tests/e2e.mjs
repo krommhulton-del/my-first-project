@@ -1160,6 +1160,14 @@ await t('星盘细读与时空盘:第一句+因果链、庙旺上界面、年运
   ok(/因此|所以|两者|叠加/.test(deep), '缺收束的推论连词,退回标签堆了');
   ok(/入庙|旺|陷|落/.test(deep), '庙旺陷落要上界面');
   ok(/命主星/.test(deep), '有上升就该报命主星');
+  // v1.16 通盘:本命这一档把四层一起算,并把串起来的那条线摆在最前
+  ok(/通 盘/.test(deep), '本命这一档要给通盘那条线');
+  ok(/这副盘的主线是/.test(deep), '通盘要先给主线');
+  ok(/往后十二个月/.test(deep), '通盘要把年运接进来(四层此前互不引用,正是要治的病)');
+  ok(deep.indexOf('通 盘') < deep.indexOf('本 命 盘'), '通盘要摆在零件前面');
+  // 明细不许在本命这一档一次倒出来(那是倾泻不是解读),各有各的模式
+  ok(!/应 期 窗 口/.test(deep), '本命这一档不该倒出年运明细');
+  ok(!/逐 日 细 账/.test(deep), '本命这一档不该倒出月运明细');
   await page.selectOption('#xz-mode', 'trans');
   await page.click('#btn-xz-go');
   await page.waitForTimeout(1200);

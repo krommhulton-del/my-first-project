@@ -499,11 +499,13 @@
       ruler = { key: rk, name: rp.name, sign: rp.sign, house: hs, dig: rd ? rd.st : null,
         plain: `命主星(上升${c.asc.sign}的主星)是${rp.name},在${rp.sign}${hs ? `第${hs}宫(${HOUSE_PLAIN[hs - 1]})` : ''}` +
           (rd ? `,且${rd.st}` : '') + '。' +
+          // 落宫在上一句已经点名了,三个分支里**不许再点一遍**——
+          // v1.16 把这句话提到通盘第一句之后,同一个宫名一句里出现两次的老毛病才现形。
           (rd && (rd.st === '入庙' || rd.st === '旺')
-            ? `命主星有力:整盘的推进力可靠,${hs ? `重心落在${HOUSE_PLAIN[hs - 1]}这一块,主动往这个方向使力最顺` : '主动争取的成功率高于被动等待'}`
+            ? `命主星有力:整盘的推进力可靠,${hs ? '主动往上面那一块使力最顺' : '主动争取的成功率高于被动等待'}`
             : rd && (rd.st === '陷' || rd.st === '落')
-              ? `命主星失位:这是全盘头一条要说的——起步与自我推进先天费劲,成事多靠外部结构(团队、制度、期限)托一把;${hs ? `吃力最明显的场合在${HOUSE_PLAIN[hs - 1]}` : '单打独斗最吃亏'}`
-              : `命主星无庙旺可论(天王海王不在传统庙旺表内),按落宫看:重心在${hs ? HOUSE_PLAIN[hs - 1] : '需要出生时间才能定'}`) };
+              ? `命主星失位:这是全盘头一条要说的——起步与自我推进先天费劲,成事多靠外部结构(团队、制度、期限)托一把;${hs ? '吃力最明显的就是上面那一块' : '单打独斗最吃亏'}`
+              : `命主星无庙旺可论(天王海王不在传统庙旺表内),它的分量只能按落宫定${hs ? ',也就是上面那一宫' : ',而落宫要有出生钟点才定得了'}`) };
     }
     // 五、最紧的硬相位(终身课题)
     const hard = asps.filter(x => x.asp === '刑' || x.asp === '冲')[0] || null;
@@ -806,6 +808,155 @@
     '流派之别不是对错之别)。落座、庙旺、相位、行运的一切「说法」是通行占星口径,零回测,' +
     '与中式那一套永不互相计分。窗口是窗口,不是保票。';
 
+  // ══════════════════════════════════════════════════════════════════
+  //  通盘(v1.16):把本命 / 年运 / 月运 / 返照串成一条线
+  // ══════════════════════════════════════════════════════════════════
+  // 缘起:用户 2026-08-03「排盘问题解决就去解读,生辰矫正八字星盘需要大换血」。
+  // **先量后改**:拿一副盘数用户一眼看到的独立文本块——40 块,而四层之间
+  // **一条互相引用都没有**(年运 10 个窗口提到本命细读结论的 0 条、月运 18 条 0 条、返照 0 条)。
+  //
+  // 这在星盘上比在八字上更要命:**一个行运到底意味着什么,全看它打在本命盘的哪个点上**。
+  // 土星压一颗入庙的、又恰是命主星的太阳,与压一颗落陷的边缘星,是两回事;
+  // 而这两个事实引擎**本来都算出来了**(digs 有庙旺、ruler 有命主星、pat 有图形相位的压力点),
+  // 只是从来没有接到一起。这一层做的就是这件接合,**一个天文量都不自算**(§四):
+  //   本命的主线 → 今年哪几条行运正好打在主线上 → 这三十几天的哪几日落在那些窗口里
+  //   → 返照盘的重心与主线合不合。
+  // 组合规则(什么算「主线」、行运怎么排序)是本项目自拟的、零回测,honest 里写明。
+  const stripNatal = s => String(s || '').replace(/^本命/, '');
+  function wholeRead(natal, parts) {
+    if (!natal) return null;
+    const P = parts || {};
+    const deep = P.deep || null, tr = P.tr || null, mr = P.mr || null, sr = P.sr || null;
+    if (!deep) return null;
+
+    // 一、主线:这副盘最要紧的那一条,按证据强弱定序(强的在前,写明为什么是这个次序)
+    //   ①图形相位的压力点——它是多颗星共同指向的一处,证据面最宽;
+    //   ②最紧的硬相位——两颗星的事,但角度最准;
+    //   ③命主星失位——单颗星,但位置特殊。
+    // 三者都没有就照实说没有,不硬指一个(宁可少说)。
+    const spine = [];
+    const apexPat = (deep.pat || []).find(p => p.apex);
+    if (apexPat) spine.push({ kind: '压力点', who: [apexPat.apex], weight: 3,
+      why: `${apexPat.kind}的压力全汇到${apexPat.apex}`, detail: apexPat.plain, manage: true });
+    if (deep.hard) spine.push({ kind: '终身课题', who: [deep.hard.a, deep.hard.b], weight: 2,
+      why: `${deep.hard.a}${deep.hard.asp}${deep.hard.b},相差仅${deep.hard.orb}°`, detail: deep.hard.plain, manage: true });
+    if (deep.ruler && (deep.ruler.dig === '陷' || deep.ruler.dig === '落')) spine.push({ kind: '命主星失位', who: [deep.ruler.name], weight: 2,
+      why: `命主星${deep.ruler.name}${deep.ruler.dig}`, detail: deep.ruler.plain, manage: true });
+    else if (deep.ruler) spine.push({ kind: '命主星', who: [deep.ruler.name], weight: 1,
+      why: `${deep.ruler.name}(不失位,不是要管的毛病,但它一被动到就是整个人的节奏)`, detail: deep.ruler.plain, manage: false });
+    const spineNames = new Set(spine.flatMap(s => s.who));
+    const digOfName = n => (deep.digs || []).find(d => d.name === n) || null;
+    // 四轴另立一档:上升与天顶不是「毛病」,进不了上面那条主线,
+    // 但通行做法把打到四轴的行运看得很重(它们是整张盘的方位基准),故单列不混。
+    // 没填钟点时排不出四轴,行运里本就不会出现这两个目标,这一档自动为空。
+    const ANGLES = new Set(['上升点', '天顶']);
+
+    // 二、今年的行运:逐条判它打在什么样的点上——这正是此前整个缺掉的那一步
+    const wins = (tr && tr.wins) ? tr.wins.slice() : [];
+    // 同一个本命点被打中好几次时,「这个点是什么样的点」只说一次——
+    // 说第二遍就是复读(v1.15 大年那一层栽过同样的跤)。
+    const toldPoint = new Set();
+    const joined = wins.map(w => {
+      const t = stripNatal(w.target);
+      const onSpine = spineNames.has(t), onAngle = ANGLES.has(t);
+      const dg = digOfName(t);
+      const isApex = !!(apexPat && apexPat.apex === t);
+      const isRuler = !!(w.isRuler || (deep.ruler && deep.ruler.name === t));
+      return { ...w, natalPoint: t, onSpine, onAngle, isApex, isRuler, dig: dg ? dg.st : null, digObj: dg,
+        rank: (isApex ? 100 : 0) + (onSpine ? 40 : 0) + (onAngle ? 30 : 0) + (isRuler ? 20 : 0) + (w.weight || 0) };
+    }).sort((a, b) => b.rank - a.rank);
+    for (const w of joined) {
+      const t = w.natalPoint, dg = w.digObj;
+      if (toldPoint.has(t)) { w.joinSay = `同样打在${t}上(这一点前面已经说过)`; continue; }
+      toldPoint.add(t);
+      const bits = [];
+      if (w.isApex) bits.push(`${t}正是全盘压力汇集的那一点——动到它等于动到整盘最容易反复出问题的地方,这一条排在所有窗口前面`);
+      else if (deep.hard && (deep.hard.a === t || deep.hard.b === t)) bits.push(`${t}是你那条终身课题的一头,这股力会把那道老张力重新拉紧`);
+      // 命主星那一句**不在这里说**:transits 自己已经把它接在 plain 末尾了(见上面 isRuler 那一处),
+      // 这里再说一遍就是同一句话印两遍。排序照旧吃 isRuler。
+      if (w.onAngle) bits.push(`${t}是整张盘的方位基准,通行做法把打到这里的行运看得重——这类时段常伴随看得见的外部变化(搬家、换岗、身份变动)`);
+      if (dg && (dg.st === '入庙' || dg.st === '旺')) bits.push(`${t}在你盘里${dg.st},本来就是可靠的一处——压力落在硬地方上,难受但不至于塌`);
+      else if (dg && (dg.st === '陷' || dg.st === '落')) bits.push(`${t}在你盘里${dg.st},本就是费劲的一处——同样的行运打在这儿反应会更大,要提前留出余地`);
+      // 一个窗口可能**仅仅因为打中命主星**就进了主线这一档,而命主星那句话
+      // transits 自己已经说过、这里不再重复(见上)——于是 bits 会是空的。
+      // 空着等于不解释它凭什么排在前面,所以退回报出「它是靠哪一条进的主线」。
+      if (!bits.length) {
+        const via = spine.filter(s => s.who.includes(t)).map(s => s.kind);
+        if (via.length) bits.push(`${t}进主线这一档,靠的是它同时是这副盘的${via.join('与')}`);
+        else if (w.dig) bits.push(`${t}在你盘里${w.dig}`);
+      }
+      w.joinSay = bits.join(';');
+    }
+    const key = joined.filter(w => w.onSpine);
+    const ang = joined.filter(w => !w.onSpine && w.onAngle);
+    const side = joined.filter(w => !w.onSpine && !w.onAngle);
+
+    // 三、这三十几天:哪几日落在上面那些窗口里(日子与窗口是两个尺度,此前各说各的)
+    const inWin = [];
+    if (mr && mr.evs) for (const e of mr.evs) {
+      const hit = joined.find(w => w.from <= e.date && e.date <= w.to && w.natalPoint === stripNatal(e.target));
+      if (hit) inWin.push({ ...e, win: hit });
+    }
+
+    // 四、返照盘的重心与主线合不合
+    let srSay = '';
+    if (sr && sr.ascHouse) {
+      const focus = HOUSE_PLAIN[sr.ascHouse - 1];
+      srSay = `太阳返照盘(${sr.date} 起算这一年)把重心放在${focus}这一块。` +
+        (key.length
+          ? `而今年压在主线上的那几个窗口说的是另一回事——两者不冲突时按返照的重心排年度计划,冲突时先办主线那几个窗口,因为它们有明确的起讫日子。`
+          : `今年没有行运压在主线上,这一年就按返照的这个重心走,不必到处找大事。`);
+    }
+
+    // 五、串成一段
+    // 主线那一句:`detail` 是各层自己写好的完整说法,**它通常已经把 why 包在里头**
+    // ——头一版 why 与 detail 都印,于是「压力全汇到火星」原样说了两遍。
+    // 有 detail 就只用 detail(它更完整),没有才退回 why。
+    const spineSay = spine.length
+      ? `这副盘的主线是${spine[0].kind}:${spine[0].detail || spine[0].why}`
+      : '这副盘没有图形相位、没有特别紧的硬相位、命主星也不失位——没有单一的主线,读法是按各领域分头看,不必硬找一个总纲。';
+    let story = spineSay;
+    const rest = spine.slice(1);
+    const manage = rest.filter(s => s.manage), watch = rest.filter(s => !s.manage);
+    if (manage.length) story += `\n\n主线之外还有 ${manage.length} 条要长期管的:` + manage.map(s => `${s.kind}(${s.why})`).join('、') + '。';
+    if (watch.length) story += `\n\n另外${manage.length ? '' : '主线之外'}还有一处不是毛病但要留意:` + watch.map(s => `${s.kind}是${s.why}`).join('、') + '。';
+    if (rest.length) story += '下面的行运凡打在这几处,分量都要按主线算。';
+    if (tr) {
+      story += `\n\n往后十二个月,行运一共扫出 ${joined.length} 个窗口。`;
+      if (key.length) {
+        story += `其中 ${key.length} 个正好打在上面那几条主线上,这几个才是今年真正要留意的:\n`
+          + key.slice(0, 4).map(w => `· ${w.from}~${w.to}(应期${w.exact.join('、')})${w.mover}${w.asp}${w.target}——${w.joinSay || '打在主线上'}。落到实处:${w.plain}`).join('\n');
+      } else {
+        story += `一个都没打在主线上——这不是坏消息,意思是今年那几条老张力不会被外力重新拉紧,是把底子做厚、把旧账清掉的年份。`;
+      }
+      if (ang.length) story += `\n\n另有 ${ang.length} 个窗口打在四轴上(不算主线,但通行做法看得重):\n`
+        + ang.slice(0, 3).map(w => `· ${w.from}~${w.to}(应期${w.exact.join('、')})${w.mover}${w.asp}${w.target}——${w.joinSay}。落到实处:${w.plain}`).join('\n');
+      if (side.length) story += `\n\n剩下 ${side.length} 个窗口既没打在主线上也没打在四轴上,是分领域的事,按各自的领域安排即可,不必当成年度大事`
+        + (key.length ? '' : `:\n` + side.slice(0, 3).map(w => `· ${w.from}~${w.to} ${w.domain}:${w.plain}`).join('\n')) + (key.length ? '。' : '');
+    }
+    // 眼前这几天与上面的窗口对得上时,**必须说清那个窗口是哪一档**——
+    // 头一版只报窗口名,而分领域那一档在正文里是折起来不显示的,
+    // 读者被指去看一个他根本看不到的东西。
+    const tierOf = w => w.onSpine ? '主线' : w.onAngle ? '四轴' : '分领域';
+    if (inWin.length) story += `\n\n再落到眼前这三十几天:${inWin.slice(0, 3).map(e =>
+      `${e.date} 这天的过境落在「${e.win.mover}${e.win.asp}${e.win.target}」那个窗口里(${tierOf(e.win)}那一档)——同一件事的小节奏,可以拿它当那个窗口的落地日`).join(';')}。`;
+    else if (mr && mr.best) story += `\n\n眼前这三十几天与上面那几个窗口不重合,按月运自己的节奏走就行:最好用的一天是 ${mr.best.date},最该避开的是 ${mr.worst ? mr.worst.date : '无'}。`;
+    if (srSay) story += `\n\n${srSay}`;
+    // 没填钟点时,上升与天顶排不出来:四轴那一档整个没有,命主星也定不了。
+    // 这两样一少,主线就只剩相位那一路——**必须当面说清少了什么**,
+    // 不然读者看到的是一份「看起来完整」的解读(铁律六:没照到的地方要写明)。
+    const thin = !natal.asc;
+    if (thin) story += `\n\n少一样东西要说清:你没填出生钟点,上升与天顶排不出来。` +
+      `于是命主星定不了、打在四轴上的那一档整个没有,上面这条线只用了相位这一路。` +
+      `钟点问准之后这一层会厚不少——这不是算不出来,是缺料。`;
+
+    return { spine, spineSay, key, ang, side, joined, inWin, srSay, story, thin,
+      honest: '这一层不新算任何位置:本命的庙旺与图形相位、行运窗口与应期、月运的日子、返照的时刻,' +
+        '全部取自上面各层已经算好的结果,本层只负责把它们按「行运打在本命哪个点上」接起来。' +
+        '**接法(什么算主线、窗口怎么排序)是本项目自拟的,零回测**——它让你看得懂轻重,不等于它更准。' +
+        '位置与日子可核可验,一切「说法」照旧是通行占星口径,没有回测撑腰。' };
+  }
+
   function material(c, syn, names, extra) {
     let s = '【西洋星盘·程序排定(位置已算死,勿另改)】\n';
     const one = (cc, label) => {
@@ -829,6 +980,12 @@
       s += '【细读(程序已按通行占星口径算死,勿另立结论)】\n第一句:' + dp.verdict + '\n来路:' + dp.story + '\n';
       if (dp.ruler) s += dp.ruler.plain + '\n';
       if (dp.moonCaveat) s += dp.moonCaveat + '\n';
+    }
+    if (extra && extra.whole) {
+      // 通盘这一条线是**给模型的骨架**:它规定了讲的次序(主线 → 今年打在主线上的窗口
+      // → 眼前这几天 → 返照的重心),也规定了轻重。模型照这条线展开,别再退回逐条罗列。
+      s += '【通盘这一条线(按这个次序讲,别打散成逐条罗列)】\n' + extra.whole.story + '\n' +
+        '注:哪几个窗口算「打在主线上」程序已经判好,勿另排轻重;没打在主线上的不许说成年度大事。\n';
     }
     if (extra && extra.trans) {
       s += `【年运·行运窗口(位置与日子程序算死;说法零回测)】\n第一句:${extra.trans.verdict}\n`;
@@ -857,6 +1014,6 @@
   }
 
   return { chart, aspectsOf, synastry, material, ascendant, moonPos, geo, jdOf, SIGNS, PLANET_CN, PLAIN, ASPECTS, HONEST, KEYS,
-    deepRead, transits, monthRun, solarReturn, lunations, dignity, RULER, EXALT, SIGN_CHAR, HOUSE_PLAIN, lonAt, birthMoment, TZ_OUT,
+    deepRead, transits, monthRun, solarReturn, lunations, dignity, wholeRead, RULER, EXALT, SIGN_CHAR, HOUSE_PLAIN, lonAt, birthMoment, TZ_OUT,
     nodeLon, pluGeo, placidusCusps, houseOfCusps, fundArgs, sunApparentLon, deltaT, CN_DST, cnDstMin };
 }));

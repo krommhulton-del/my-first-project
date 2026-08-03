@@ -535,5 +535,157 @@ t('宫位跟着 Placidus 走:同一副盘 Placidus 与整宫的宫位该有差�
   ok(diff >= 1, 'Placidus 与整宫逐星宫位完全一致——多半没真换分宫制');
 });
 
+// ══════════════════════════════════════════════════════════════════
+//  通盘(v1.16):四层串成一条线
+// ══════════════════════════════════════════════════════════════════
+// 缘起:用户 2026-08-03「排盘问题解决就去解读,生辰矫正八字星盘需要大换血」。
+// **先量后改**量出来的病:一副盘给用户 40 块独立文本,而四层之间
+// **一条互相引用都没有**——年运 10 个窗口提到本命细读结论的 0 条、月运 18 条 0 条、返照 0 条。
+// 这在星盘上尤其要命:**一个行运意味着什么,全看它打在本命盘的哪个点上**,
+// 而庙旺、图形相位的压力点、命主星这些引擎本来都算出来了,只是从来没接到一起。
+// 这套测试守五件事:
+//   ①接合真的发生了(打在主线上的窗口必须报出「打在什么样的点上」);
+//   ②三档分类不是死条(主线 / 四轴 / 分领域,以及「今年一个都没打在主线上」那一档);
+//   ③同一个本命点被打中多次时不复读;
+//   ④没填钟点时少了什么要当面说清(四轴与命主星都没了);
+//   ⑤§四 一个天文量都不自算,措辞过体检员。
+console.log('\n【十六】通盘(v1.16):四层串成一条线');
+const NOW = new Date(Date.UTC(2026, 7, 3));
+const wholeOf = (y, mo, d, h, hourKnown) => {
+  const c = Astro.chart(Astro.birthMoment(y, mo, d, hourKnown ? h : 12, 15, 480), { lat: 39.9, lon: 116.4, hourKnown });
+  const deep = Astro.deepRead(c);
+  const tr = Astro.transits(c, NOW, 12);
+  const mr = Astro.monthRun(c, NOW);
+  const sr = Astro.solarReturn(c, 2026, { lat: 39.9, lon: 116.4, hourKnown });
+  return { c, deep, tr, mr, sr, w: Astro.wholeRead(c, { deep, tr, mr, sr }) };
+};
+const WS = [], WS_NOHR = [];
+for (let i = 0; i < 60; i++) {
+  const y = 1950 + (i % 76), mo = 1 + (i % 12), d = 1 + ((i * 11) % 28), h = (i * 7) % 24;
+  WS.push(wholeOf(y, mo, d, h, true));
+  if (i < 24) WS_NOHR.push(wholeOf(y, mo, d, h, false));
+}
+
+t('接合真的发生了:打在主线上的窗口必须说出「打在什么样的点上」', () => {
+  let n = 0;
+  for (const { w } of WS) for (const k of w.key) {
+    n++;
+    ok(k.joinSay && k.joinSay.length > 8, `主线窗口没给接合说明:${k.mover}${k.asp}${k.target}`);
+    ok(k.natalPoint && !/^本命/.test(k.natalPoint), `本命点没剥前缀:${k.natalPoint}`);
+  }
+  ok(n > 40, '主线窗口样本太少:' + n);
+});
+t('三档分类全触发得到,「今年一个都没打在主线上」也不是死条', () => {
+  let key = 0, ang = 0, side = 0, none = 0;
+  for (const { w } of WS) { key += w.key.length; ang += w.ang.length; side += w.side.length; if (!w.key.length) none++; }
+  ok(key > 0, '主线那一档是死条');
+  ok(ang > 0, '四轴那一档是死条(v1.16 头一版忘了把 ang 放进返回值,120 副盘量出来全是 0)');
+  ok(side > 0, '分领域那一档是死条');
+  ok(none > 0 && none < WS.length, `「今年没有窗口打在主线上」这一档要触发得到又不能恒真:${none}/${WS.length}`);
+});
+t('主线四种来路都触发得到(压力点 / 终身课题 / 命主星失位 / 命主星)', () => {
+  const kinds = new Set();
+  for (const { w } of WS) for (const s of w.spine) kinds.add(s.kind);
+  for (const k of ['压力点', '终身课题', '命主星失位', '命主星']) ok(kinds.has(k), `主线来路「${k}」是死条:实得 ${[...kinds].join('/')}`);
+});
+t('同一个本命点被打中多次时不复读——第二条起要注明前面已说过', () => {
+  let dup = 0;
+  for (const { w } of WS) {
+    const seen = new Set();
+    for (const x of w.joined) {
+      if (seen.has(x.natalPoint)) { dup++; ok(/前面已经说过/.test(x.joinSay), `同一点第二次没标注复述:${x.natalPoint} → ${x.joinSay}`); }
+      seen.add(x.natalPoint);
+    }
+  }
+  ok(dup > 10, '重复打同一点的样本太少,这条没验到:' + dup);
+});
+t('命主星那一句不许说两遍(transits 自己已经接在 plain 末尾了)', () => {
+  for (const { w } of WS) for (const x of w.joined) {
+    if (!x.isRuler) continue;
+    ok(!/是你的命主星/.test(x.joinSay || ''), `命主星说了两遍:${x.joinSay}`);
+  }
+});
+t('主线第一句不许自我复读(why 与 detail 说同一件事)', () => {
+  for (const { w } of WS) {
+    if (!w.spine.length) continue;
+    const s = w.spineSay;
+    // 拿六字窗口找重复片段:同一句话原样出现两次就是复读
+    for (let i = 0; i + 6 <= s.length; i++) {
+      const frag = s.slice(i, i + 6);
+      if (/[,。;:——()]/.test(frag)) continue;
+      ok(s.indexOf(frag) === s.lastIndexOf(frag), `主线第一句里「${frag}」出现两次:${s.slice(0, 80)}`);
+    }
+  }
+});
+t('没填钟点:四轴与命主星都没了,必须当面说清少了什么', () => {
+  let thin = 0;
+  for (const { w } of WS_NOHR) {
+    ok(w.thin, '没填钟点却没标 thin');
+    thin++;
+    ok(/没填出生钟点/.test(w.story), '没说少了钟点');
+    ok(/四轴/.test(w.story), '没说四轴那一档整个没有');
+    ok(!w.ang.length, '没钟点却排出了四轴窗口');
+    ok(!w.spine.some(s => /命主星/.test(s.kind)), '没钟点却定了命主星');
+  }
+  ok(thin >= 20, '样本太少:' + thin);
+  // 填了钟点的反过来:不许挂那段话
+  for (const { w } of WS.slice(0, 10)) ok(!w.thin && !/没填出生钟点/.test(w.story), '填了钟点还在说缺钟点');
+});
+t('月运指向的窗口必须注明是哪一档(不能指向页面上看不到的东西)', () => {
+  let n = 0;
+  for (const { w } of WS) {
+    if (!w.inWin.length) continue;
+    const seg = w.story.split('\n\n').find(x => /再落到眼前这三十几天/.test(x));
+    if (!seg) continue;
+    n++;
+    ok(/(主线|四轴|分领域)那一档/.test(seg), `月运指向的窗口没注明档位:${seg.slice(0, 90)}`);
+  }
+  ok(n > 20, '样本太少:' + n);
+});
+t('§四 通盘一个天文量都不自算,只做接合', () => {
+  const SRC = readFileSync(join(ROOT, 'astro.js'), 'utf8');
+  const body = SRC.slice(SRC.indexOf('function wholeRead('), SRC.indexOf('function material('));
+  ok(!/vsop|VSOP|moonPos\(|pluGeo\(|ascendant\(|placidusCusps\(|jdOf\(|aspectsOf\(/.test(body),
+    '通盘里不许出现任何星历或排盘调用');
+  ok(/P\.deep|parts/.test(body) && /P\.tr|tr\.wins/.test(body), '通盘必须从传进来的各层取料');
+  ok(/接法(.|\n)*自拟(.|\n)*零回测/.test(SRC.slice(SRC.indexOf('function wholeRead('))), 'honest 要写明接法自拟零回测');
+});
+t('通盘的话过体检员,AI 腔不许回流', () => {
+  const seen = new Set(); const scores = [];
+  for (const { w } of WS.slice(0, 30)) {
+    for (const s of [w.spineSay, w.srSay, w.honest, ...w.key.map(x => x.joinSay), ...w.ang.map(x => x.joinSay)]) {
+      if (!s || s.length < 20) continue;
+      const f = Tijian.aiFlavor(s); if (f.n) scores.push(f.index);
+      if (seen.has(s)) continue; seen.add(s);
+      const rep = Tijian.check(String(s).replace(/「[^」]*」/g, ''), {});
+      const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
+      ok(!bad.length, `体检不过:${s.slice(0, 40)}… → ${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
+    }
+  }
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  ok(avg <= 45, `AI 腔均值 ${avg.toFixed(1)} 偏高,回到清单体了`);   // 门槛是方向盘不是靶子(v1.06)
+  console.log(`      (${seen.size} 条不重样,AI 腔均值 ${avg.toFixed(1)})`);
+});
+t('缺料时照实退让:只有本命就只给主线,没有本命细读就整层不给', () => {
+  const { c, deep } = WS[0];
+  const only = Astro.wholeRead(c, { deep });
+  ok(only && only.spine.length, '只有本命时该给主线');
+  ok(!/往后十二个月/.test(only.story), '没喂年运却报了年运');
+  ok(Astro.wholeRead(c, {}) === null, '没有本命细读就该整层不给(不硬造)');
+  ok(Astro.wholeRead(null, { deep }) === null, '没有盘该返回 null');
+});
+t('答案之锚:同一副盘反复串二十次,逐字节一致', () => {
+  const { c, deep, tr, mr, sr } = WS[0];
+  const first = JSON.stringify(Astro.wholeRead(c, { deep, tr, mr, sr }));
+  for (let i = 0; i < 20; i++) ok(JSON.stringify(Astro.wholeRead(c, { deep, tr, mr, sr })) === first, '第' + i + '次不一致');
+});
+t('材料里带这条线,并写明勿另排轻重', () => {
+  const { c, deep, tr, mr, sr, w } = WS[0];
+  const m = Astro.material(c, null, null, { deep, trans: tr, month: mr, sr, whole: w });
+  ok(/通盘这一条线/.test(m), '材料缺通盘那一条线');
+  ok(/勿另排轻重/.test(m), '材料没写明轻重已判好');
+  ok(!/通盘这一条线/.test(Astro.material(c, null, null, { deep })), '没串就不该有这一层');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

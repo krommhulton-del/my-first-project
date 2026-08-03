@@ -786,7 +786,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.15</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.16</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1580,7 +1580,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v1.15 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.16 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -4945,6 +4945,16 @@
       return `<div class="hpv ypline">· ${esc(p.name)} 落${esc(p.sign)} ${p.deg}°${p.retro ? '(逆行)' : ''}${cc.houses && cc.houses[k] ? `,第 ${cc.houses[k]} 宫` : ''}${d ? ` <span class="dat">${esc(d.st)}</span>` : ''}<br><span class="dim">${esc(p.plain)}${d ? ' · ' + esc(d.plain) : ''}</span></div>`;
     }).join('');
     let h = '';
+    const view = (extra && extra.view) || (extra && extra.deep ? 'natal' : '');
+    // v1.16 通盘:本命这一档四层一起算,但**只把串起来的那条线摆上页**——
+    // 四层的明细各有各的模式,一次全倒出来就成了倾泻,不是解读。
+    if (extra && extra.whole) {
+      const wh = extra.whole;
+      h += `<div class="ypbox"><h4>通 盘(一条线读下来)</h4>` +
+        wh.story.split('\n').filter(x => x.trim()).map(x =>
+          `<div class="hpv${/^·/.test(x.trim()) ? ' ypline' : ''}">${esc(x.trim())}</div>`).join('') +
+        `<div class="note ypflat">${esc(wh.honest)}</div></div>`;
+    }
     if (extra && extra.deep) {
       const dp = extra.deep;
       h += `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(dp.verdict)}</div>` +
@@ -4953,7 +4963,7 @@
         (dp.ruler ? `<div class="hpv ypline">· ${esc(dp.ruler.plain)}</div>` : '') +
         dp.pat.slice(1).map(p => `<div class="hpv ypline">· ${esc(p.plain)}</div>`).join('') + `</div>`;
     }
-    if (extra && extra.trans) {
+    if (extra && extra.trans && view === 'trans') {
       const tr = extra.trans;
       h += `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(tr.verdict)}</div>` +
         `<div class="note ypline">时空盘的意思:把此刻起往后十二个月的天空,逐日叠在你本命盘上——窗口与应期的日子是程序逐日扫出来的,说法是通行占星口径,零回测。</div></div>` +
@@ -4963,14 +4973,14 @@
           `${w.passes > 1 ? `(来回 ${w.passes} 次,精确应期 ${w.exact.map(esc).join('、')})` : `(精确应期 ${esc(w.exact[0])})`}<br><span class="dim">${esc(w.plain)}</span></div>`).join('')
           : `<div class="hpv">${esc(tr.verdict)}</div>`) + `</div>`;
     }
-    if (extra && extra.month) {
+    if (extra && extra.month && view === 'month') {
       const mo = extra.month;
       h += `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(mo.verdict)}</div></div>` +
         `<div class="ypbox"><h4>朔 望(起头与见分晓)</h4>` + mo.luns.map(l => `<div class="hpv ypline">· ${esc(l.plain)}</div>`).join('') + `</div>` +
         `<div class="ypbox"><h4>逐 日 细 账(快星应期)</h4>` +
         mo.evs.map(e => `<div class="hpv ypline">· <b>${esc(e.date)}</b> ${esc(e.mover)}${esc(e.asp)}${esc(e.target)}<br><span class="dim">${esc(e.plain)}</span></div>`).join('') + `</div>`;
     }
-    if (extra && extra.sr) {
+    if (extra && extra.sr && view === 'sr') {
       const sr = extra.sr;
       h += `<div class="ypbox"><h4>第 一 句</h4><div class="hpv">${esc(sr.verdict)}</div></div>` +
         `<div class="ypbox"><h4>返 照 盘 与 本 命 盘 的 相 位(次一层,参考)</h4>` +
@@ -5027,19 +5037,26 @@
         const c = Astro.chart(bd.date, { lat: geo.lat, lon: geo.lon, hourKnown: bd.hourKnown });
         const now = new Date();
         if (mode === 'natal') {
-          const extra = { deep: Astro.deepRead(c) };
+          // v1.16:本命这一档把四层一起算出来再串成一条线。
+          // 此前四层各占一个模式,用户永远看不到它们并排——这正是「一条互相引用都没有」的结构原因。
+          // 四层合计约 54ms,当场算得起(§四:wholeRead 一个天文量都不自算,只做接合)。
+          const deep = Astro.deepRead(c);
+          const tr = Astro.transits(c, now, 12);
+          const mr = Astro.monthRun(c, now);
+          const sr = Astro.solarReturn(c, now.getFullYear(), { lat: geo.lat, lon: geo.lon, hourKnown: bd.hourKnown });
+          const extra = { view: 'natal', deep, trans: tr, month: mr, sr, whole: Astro.wholeRead(c, { deep, tr, mr, sr }) };
           xzData = { c, syn: null, names: null, extra };
           xzRender(c, null, null, extra); xzWheel(c);
         } else if (mode === 'trans') {
-          const extra = { trans: Astro.transits(c, now, 12) };
+          const extra = { view: 'trans', trans: Astro.transits(c, now, 12) };
           xzData = { c, syn: null, names: null, extra };
           xzRender(c, null, null, extra); xzWheel(c, Astro.chart(now));   // 本命盘外圈 + 此刻的天空内圈
         } else if (mode === 'month') {
-          const extra = { month: Astro.monthRun(c, now) };
+          const extra = { view: 'month', month: Astro.monthRun(c, now) };
           xzData = { c, syn: null, names: null, extra };
           xzRender(c, null, null, extra); xzWheel(c, Astro.chart(now));
         } else if (mode === 'sr') {
-          const extra = { sr: Astro.solarReturn(c, now.getFullYear(), { lat: geo.lat, lon: geo.lon, hourKnown: bd.hourKnown }) };
+          const extra = { view: 'sr', sr: Astro.solarReturn(c, now.getFullYear(), { lat: geo.lat, lon: geo.lon, hourKnown: bd.hourKnown }) };
           xzData = { c, syn: null, names: null, extra };
           xzRender(c, null, null, extra); xzWheel(c, extra.sr.chart);
         }
