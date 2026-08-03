@@ -12,7 +12,7 @@
    "band": 53,
    "cong": 4,
    "outcome": 284,
-   "yong": 24,
+   "yong": 16,
    "siling": 12
   }
  },
@@ -1058,7 +1058,7 @@
     "band": null,
     "cong": null,
     "outcome": "凶",
-    "yong": "火",
+    "yong": null,
     "siling": null
    }
   },
@@ -2016,7 +2016,7 @@
     "band": "旺",
     "cong": null,
     "outcome": "凶",
-    "yong": "木",
+    "yong": null,
     "siling": null
    }
   },
@@ -5537,7 +5537,7 @@
     "band": "旺",
     "cong": null,
     "outcome": "先吉后凶或吉凶互见",
-    "yong": "金",
+    "yong": "火",
     "siling": null
    }
   },
@@ -6321,7 +6321,7 @@
     "band": null,
     "cong": null,
     "outcome": "吉",
-    "yong": "金",
+    "yong": null,
     "siling": null
    }
   },
@@ -7762,7 +7762,7 @@
     "band": null,
     "cong": null,
     "outcome": null,
-    "yong": "金",
+    "yong": null,
     "siling": null
    }
   },
@@ -8639,7 +8639,7 @@
     "band": null,
     "cong": null,
     "outcome": null,
-    "yong": "金",
+    "yong": null,
     "siling": null
    }
   },
@@ -8790,7 +8790,7 @@
     "band": null,
     "cong": null,
     "outcome": null,
-    "yong": "木",
+    "yong": null,
     "siling": null
    }
   },
@@ -9627,7 +9627,7 @@
     "band": "旺",
     "cong": null,
     "outcome": "吉",
-    "yong": "火",
+    "yong": null,
     "siling": null
    }
   },
@@ -10204,7 +10204,7 @@
     "band": null,
     "cong": null,
     "outcome": "吉",
-    "yong": "土",
+    "yong": null,
     "siling": null
    }
   },

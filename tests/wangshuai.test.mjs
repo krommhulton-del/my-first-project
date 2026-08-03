@@ -18,6 +18,9 @@ function make(y, m, d, h, days = 15) {
   return Bazi.judgeStrength(pillars, d[0], days);
 }
 // 直接按四柱造一副完整判读(专测断法,不劳历法;历法另有 backtest 套件把关)
+// v1.07 起走真路:从格改判收进了 pickYongShen(§四 取用只此一份),这里原先手搓的
+// 「从强→[me]/从弱→[KE[me]]」迷你改判是它进不去 pickYongShen 年代的遗物,已删——
+// 测试造的盘与 chart() 排的盘,取用必须是同一段代码。
 function mkChart(four, days = 15) {
   const gz = four.match(/.{2}/g);
   const pillars = {};
@@ -25,12 +28,9 @@ function mkChart(four, days = 15) {
   const dayGan = pillars.day.gan;
   const strength = Bazi.judgeStrength(pillars, dayGan, days);
   const cong = Bazi.judgeCong(strength, pillars, dayGan);
-  const th = Bazi.tiaoHou(pillars.month.zhi);
-  let yong = Bazi.pickYongShen(dayGan, strength, th);
-  const me = Bazi.GAN_WX[dayGan];
-  if (cong && cong.type === '从强') yong = { xiWx: [me], jiWx: [], xiName: '从强' };
-  else if (cong && cong.type === '从弱') yong = { xiWx: [Bazi.KE[me]], jiWx: [me], xiName: '从弱' };
-  return { pillars, dayGan, dayWx: me, strength, cong, geju: cong ? cong.name : null, yong };
+  const th = Bazi.tiaoHou(pillars.month.zhi, dayGan);
+  const yong = Bazi.pickYongShen(dayGan, strength, th, cong);
+  return { pillars, dayGan, dayWx: Bazi.GAN_WX[dayGan], strength, cong, geju: cong ? cong.name : null, yong };
 }
 
 console.log('【一】排盘补全项(纳音/长生/空亡/胎元/司令/刑冲合害)');
@@ -216,13 +216,24 @@ t('v0.54 那三副实盘:根照旧认得出;从不从按新定义分成两类,�
     }
   }
 });
-t('假从只作标注,不翻喜忌(宁可少断,不可反断)', () => {
+// v1.07 按原文改写:这条测试原来钉的是「假从只作标注,不翻喜忌」——那是 v0.54 起的旧口径。
+// 命例回对(dtsy-220「用土以从之也,格成从杀」判成假从而喜忌不翻,书判永远对不上)把账翻了出来:
+// 《滴天髓阐微·假从章》「假从者…只得投从于人也」「财之势旺,则从财;官之势旺,则从官」,
+// 原注明说「虽是假从,亦可取富贵」——**原文的假从仍然是从**,v0.76 早记过两边含义相反这笔账。
+// 旧口径与新口径的冲突照实写在这里,不偷偷抹掉:旧测试认为「宁可少断,不可反断」,
+// 新口径认为「照原文断,注明从得不纯」。取新弃旧的裁决依据是命例(16 例 9→13)与假从章明文。
+t('假从照原文按从论:喜忌翻向财官食伤,且 xiName 写明从得不纯(v1.07)', () => {
   const d0 = new Date(1950, 0, 1);
   let jia = 0;
   for (let i = 0; i < 3000; i++) {
     const d = new Date(d0.getTime() + i * 7 * 86400000); d.setHours((i % 12) * 2 + 1);
     const c = Bazi.chart(new Date(d), '男');
-    if (c.cong && c.cong.type === '假从') { jia++; ok(c.yong.xiWx.includes(c.dayWx) || c.yong.neutral, '假从不该翻喜忌'); }
+    if (c.cong && c.cong.type === '假从') {
+      jia++;
+      ok(!c.yong.xiWx.includes(c.dayWx), '假从按从论,比劫不该再在喜集里');
+      ok(c.yong.jiWx.includes(c.dayWx), '假从按从论,比劫应在忌集里');
+      ok(/假从/.test(c.yong.xiName) && /不纯/.test(c.yong.xiName), 'xiName 必须写明是假从、从得不纯');
+    }
   }
   ok(jia > 0, '样本里应当有假从之例');
 });
@@ -487,6 +498,73 @@ t('从势细目按原文取:财官食伤中独旺者为所从;三者均停取财
   ok(du > 0, '「独旺」那一档没触发过');
   ok(jun > 0, '「三者均停取财」那一档没触发过——是死条');
   console.log(`      (3000 盘从弱:独旺 ${du} 例、均停取财 ${jun} 例)`);
+});
+
+console.log('【十五】v1.07 用神口径四开关(命例回对定的,量表 tools/yong-measure.mjs)');
+// 缘起:洗净标签后的 16 命例基线 9/16,四个病根各配一开关,量完一起落为默认(9→13)。
+// 每个开关都拿**书上的命例**正反两头钉:该动的动了、不该动的一根汗毛没碰。
+t('出口闸:本气食伤泄旺则不作从强/从气(「只换一申字…用金明矣」)', () => {
+  // dtsy-032:四戊满局带一个申(本气庚金食神)——书不按从断,用金泄秀
+  const c = mkChart('戊申戊午戊戌戊午');
+  ok(!c.cong || !['从强', '从气'].includes(c.cong.type), '有本气食伤出口,不该判从强/从气,实得 ' + (c.cong && c.cong.type));
+  ok(c.yong.xiWx.includes('金'), '书判「用金明矣」,金该在喜集:' + c.yong.xiWx);
+  // 反面一:丙午×4——午中己土伤官只是**中气**,不算出口,原书的从旺样板必须守住
+  const c2 = mkChart('丙午甲午丙午甲午');
+  ok(c2.cong && c2.cong.type === '从强', '中气食伤不破从强,原书样板不许丢:' + (c2.cong && c2.cong.type));
+  // 反面二:手抄从气例——食伤水在金水气势对**之内**,顺流不破局
+  const c3 = mkChart('癸酉癸亥庚申丁亥');
+  ok(c3.cong && c3.cong.type === '从气', '食伤在气势对之内不破从气:' + (c3.cong && c3.cong.type));
+});
+t('中和之局恒取调候(「春初木嫩…用火以攻之」,火 18.9 分也得进喜集)', () => {
+  // dtsy-217:甲生立春后四日(司令按判语明写回填 days=4),中和局,调候火按旧门槛 <12 永远进不来
+  const c = mkChart('丙寅庚寅甲申乙丑', 4);
+  ok(c.strength.band === '中和', '这一例该是中和局,实得 ' + c.strength.band);
+  ok(c.yong.xiWx.includes('火'), '中和恒取调候,火该在喜集:' + c.yong.xiWx);
+  ok(c.yong.neutral, '中和路的标记不许丢');
+});
+t('制杀路:偏弱+官杀独重+身杀两停 → 食伤入喜(「不太过者宜克也」)', () => {
+  // dtsy-434:戊生寅月木旺土虚,坐戌通根,书判「足以用金制杀」
+  const c = mkChart('癸未甲寅戊戌庚申');
+  ok(c.strength.band === '偏弱', '这一例该是偏弱,实得 ' + c.strength.band);
+  ok(c.yong.xiWx.includes('金'), '书判「用金制杀」,金该在喜集:' + c.yong.xiWx);
+  ok(/制杀/.test(c.yong.xiName), 'xiName 要写明制杀那一味是怎么来的');
+  ok(c.yong.xiWx.includes('土') && c.yong.xiWx.includes('火'), '只补不换:印比照旧是喜');
+  // 反面:身弱(不够两停)不给制杀——杀重身轻是凶,mingpan v1.00 早钉过
+  let shenRuo = 0;
+  for (let i = 0; i < 3000; i++) {
+    const cc = Bazi.chart(new Date(1940 + (i * 7) % 86, (i * 5) % 12, 1 + (i * 11) % 28, (i * 3) % 24, 30), i % 2 ? '男' : '女', { lon: 116.4 });
+    if (cc.strength.band === '身弱' && /制杀/.test(cc.yong.xiName || '')) shenRuo++;
+  }
+  eq(shenRuo, 0, '身弱盘不许走制杀路(太过者不宜克)');
+});
+t('jiName 按 jiWx 实际剩的算,喜忌两头不许同时挂名(v1.07 修的显示错)', () => {
+  const NAME2WX = (me) => {
+    const yin = Object.keys(Bazi.SHENG).find(k => Bazi.SHENG[k] === me);
+    const guan = Object.keys(Bazi.KE).find(k => Bazi.KE[k] === me);
+    return { '比劫': me, '印': yin, '食伤': Bazi.SHENG[me], '财': Bazi.KE[me], '官杀': guan };
+  };
+  for (let i = 0; i < 2000; i++) {
+    const c = Bazi.chart(new Date(1945 + (i * 11) % 80, (i * 7) % 12, 1 + (i * 13) % 28, (i * 5) % 24, 30), i % 2 ? '男' : '女', { lon: 116.4 });
+    if (c.cong || c.yong.neutral) continue;   // 从格与中和另有各自的名目
+    const map = NAME2WX(c.dayWx);
+    for (const nm of c.yong.jiName.split('·')) {
+      const wx = map[nm];
+      ok(wx && c.yong.jiWx.includes(wx), `jiName 提到「${nm}」但 ${wx} 不在 jiWx 里(${c.pillars.day.gz}:喜${c.yong.xiWx} 忌${c.yong.jiWx} 名「${c.yong.jiName}」)`);
+      ok(!c.yong.xiWx.includes(wx), `「${nm}」喜忌两头挂名(${c.pillars.day.gz})`);
+    }
+  }
+});
+t('命例库用神标签保持洗净后的样子(8 个假标签不许回魂,两处修正不许倒退)', () => {
+  const D = JSON.parse(readFileSync(new URL('../data/mingli-cases.json', import.meta.url), 'utf8'));
+  const by = Object.fromEntries(D.cases.map(c => [c.id, c.labels.yong || null]));
+  // 洗掉的 8 个:两案皆废式/俗论引述/明写不用/章首理论随窗带入(逐例缘由见 docs/命例复现-01-基线.md v1.07)
+  for (const id of ['dtsy-048', 'dtsy-093', 'dtsy-294', 'dtsy-362', 'dtsy-403', 'dtsy-410', 'dtsy-449', 'dtsy-476']) {
+    eq(by[id], null, id + ' 是查实的假标签,不许回魂');
+  }
+  eq(by['dtsy-259'], '火', '259 原文明写「以火为用,以木为喜」,不是金');
+  eq(by['dtsy-209'], '水', '209「中得用水」是真判语(俗论只管它那一小节),不许误伤');
+  const n = D.cases.filter(c => c.labels.yong).length;
+  eq(n, 16, '洗净后的用神标签数');
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

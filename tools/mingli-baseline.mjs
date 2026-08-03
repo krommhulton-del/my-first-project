@@ -64,15 +64,17 @@ console.log(`【从格】${cn} 例:方向复现 ${chit}/${cn} = ${(chit / cn * 1
 for (const m of cmiss.slice(0, 8)) console.log('  ✗', m);
 
 // ── 用神五行 ──
+// v1.07 起把 cong 一并传进去:此前工具吃不到从格改判(那段逻辑原在 chart() 里),
+// 从杀命例在这里永远错——量出来的是口径分家,不是断法差。现在与排盘走同一段代码。
 let yn = 0, yhit = 0; const ymiss = [];
 for (const c of DATA.cases) {
   if (!c.labels.yong) continue;
   yn++;
-  const { pillars, st } = mk(c);
+  const { pillars, st, cong } = mk(c);
   const th = Bazi.tiaoHou(pillars.month.zhi, pillars.day.gan);
-  const y = Bazi.pickYongShen(pillars.day.gan, st, th);
+  const y = Bazi.pickYongShen(pillars.day.gan, st, th, cong);
   if (y && y.xiWx && y.xiWx.includes(c.labels.yong)) yhit++;
-  else ymiss.push(`${c.id} ${c.four} 书用「${c.labels.yong}」程序喜「${y && y.xiWx ? y.xiWx.join('') : '?'}」`);
+  else ymiss.push(`${c.id} ${c.four} 书用「${c.labels.yong}」程序喜「${y && y.xiWx ? y.xiWx.join('') : '?'}」(${st.band}${cong ? '·' + cong.type : ''})`);
 }
 console.log(`【用神】${yn} 例书里明写用某行:落在程序喜用集合内 ${yhit}/${yn} = ${(yhit / yn * 100).toFixed(1)}%`);
 for (const m of ymiss.slice(0, 8)) console.log('  ✗', m);

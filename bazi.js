@@ -159,23 +159,11 @@
     const siLing = siLingOf(monthGZ[1], days);
     const strength = judgeStrength(pillars, dayGan, days, lonDeg && typeof lonDeg === 'object' ? lonDeg : null);
     const cong = judgeCong(strength, pillars, dayGan);
-    let yong = pickYongShen(dayGan, strength, tiaoHou(cal.monthZhi, dayGan));
-    let geju = cong ? cong.name : null;
-    if (cong && cong.type === '从强') {
-      const me = GAN_WX[dayGan], yin = invSheng(me);
-      yong = { strong: true, xiWx: [me, yin], jiWx: [KE[me], invKe(me), SHENG[me]].filter((v, i, a) => a.indexOf(v) === i), xiName: '比劫·印(从其强势)', jiName: '克泄耗(逆势为忌)' };
-    } else if (cong && cong.type === '从弱') {
-      const me = GAN_WX[dayGan];
-      yong = { strong: false, xiWx: [KE[me], SHENG[me], invKe(me)], jiWx: [me, invSheng(me)],
-        xiName: '财官食伤(从其弱势)' + (cong.shiName ? ';' + cong.shiName : ''), jiName: '比劫·印(逆势为忌)' };
-    } else if (cong && cong.type === '从气') {
-      // 原文把用法也写死了:「气势在木火,要行木火运;气势在金水,要行金水运,反此必凶」——
-      // 喜的就是那两行,其余三行一律为忌,不再按扶抑分强弱。
-      yong = { strong: strength.strong, xiWx: cong.qiWx.slice(),
-        jiWx: ['木', '火', '土', '金', '水'].filter(w => !cong.qiWx.includes(w)),
-        xiName: `${cong.qiWx.join('')}(顺其气势,原文「气势在${cong.qiWx.join('')},要行${cong.qiWx.join('')}运」)`,
-        jiName: '其余三行(逆其气势,原文「反此必凶」)' };
-    }
+    // 从格改判在 pickYongShen 里(v1.07 从这里移入):取用只此一份,
+    // 命例基线工具与排盘走同一段代码——此前工具直接调 pickYongShen 而吃不到从格改判,
+    // 从杀命例(书判「用土以从之也,格成从杀」)在基线里永远错,量出来的是口径分家不是断法差。
+    const yong = pickYongShen(dayGan, strength, tiaoHou(cal.monthZhi, dayGan), cong);
+    const geju = cong ? cong.name : null;
     // 命局内支冲:宫位互冲入注(年=根基长辈,月=门户事业,日=自身婚姻,时=子女晚景)
     const GONG = { year: '根基宫(长辈)', month: '门户宫(事业)', day: '婚姻宫(自身)', hour: '子女宫(晚景)' };
     const neiChong = [];
@@ -491,8 +479,15 @@
   //   所以「离门槛多远」跟「是不是从格」一样重要——实测 6000 副盘,判真从的里头
   //   有 11.9%(从弱)与 13.6%(从强)离门槛不足 1 分,那种盘的喜忌本质上是掷硬币掷出来的。
   //   本函数只负责把这个距离算出来;要不要因此改口,由上层决定(见 Dingshi.stability)。
-  function judgeCong(st, pillars, dayGan) {
+  // v1.07 命例回对定下的口径开关(量表见 tools/yong-measure.mjs,数据见 docs/命例复现-01-基线.md):
+  // 四个开关一起量的(用神 16 例 9→13,手抄从格 11/15 不动、旺衰 41/53 不动、真从 5.77%→5.55%),
+  // 默认值是量出来的,谁也不许只为让某一例变绿而单独拨它。
+  // 出口闸:食伤带**本气根**则不作从强/从气(从气只拦气势对之外的)——《滴天髓阐微》成对命例
+  // 「此与前造只换一申字…用金明矣」;只认本气与 v1.01 从格之根同口径。6000 盘血域 0.23%。
+  const SHI_OUTLET_DEFAULT = true;
+  function judgeCong(st, pillars, dayGan, opts) {
     const me = GAN_WX[dayGan], yin = invSheng(me);
+    const useOutlet = (opts && opts.shiOutlet !== undefined) ? opts.shiOutlet : SHI_OUTLET_DEFAULT;
     const noRoot = st.congHasRoot === undefined ? !st.hasRoot : !st.congHasRoot;
     if (noRoot && st.yinPower <= 8 && st.tong <= 20) {
       // 从势细目(《滴天髓阐微·从象章》:「视其财官食伤之中,何其独旺,则从旺者之势。
@@ -509,8 +504,17 @@
         margin: +Math.min(20 - st.tong, 8 - st.yinPower).toFixed(1) };
     }
     if ((st.detail.财 + st.detail.官杀) <= 3 && st.tong >= 70 && ['当令', '得月令之生'].includes(st.deLing)) {
-      return { type: '从强', name: '从强格(满局生扶、财官几无,顺其强势)',
-        margin: +Math.min(st.tong - 70, 3 - (st.detail.财 + st.detail.官杀)).toFixed(1) };
+      // 出口闸(v1.07,命例回对加的):**食伤带本气根,旺气有处可泄,不作从强。**
+      // 缘起是《滴天髓阐微》的成对命例 dtsy-031/032:「此与前造只换一申字…用金明矣」——
+      // 四戊满局,添一个申(本气庚金食神)书就不按从强断了,改用金泄秀。
+      // 只认**本气**与 v1.01 从格之根同一口径:丙午甲午丙午甲午(午中己土伤官只是中气)照旧从强,
+      // 原文自己也说从旺「如局中印轻,行伤食亦佳」——中气余气的食伤不破从,本气的才算出口。
+      const shiWx = SHENG[me];
+      const shiOutlet = ['year', 'month', 'day', 'hour'].some(k => GAN_WX[CANGGAN[pillars[k].zhi][0]] === shiWx);
+      if (!(useOutlet && shiOutlet)) {
+        return { type: '从强', name: '从强格(满局生扶、财官几无,顺其强势)',
+          margin: +Math.min(st.tong - 70, 3 - (st.detail.财 + st.detail.官杀)).toFixed(1) };
+      }
     }
     // 从气格(v1.01 新增,《滴天髓阐微·从象章》原文:
     // 「从气者,不论财官、印绶、食伤之类,如气势在木火,要行木火运,气势在金水,要行金水运,反此必凶」)
@@ -527,8 +531,17 @@
       .map(pr => ({ wx: pr, v: (st.pow[pr[0]] || 0) + (st.pow[pr[1]] || 0) }))
       .sort((x, y) => y.v - x.v)[0];
     if (bestPair && bestPair.v >= 84 && bestPair.wx.includes(me)) {
-      return { type: '从气', name: `从气格(全局气势在${bestPair.wx.join('')},顺其气势而行)`,
-        qiWx: bestPair.wx.slice(), margin: +(bestPair.v - 84).toFixed(1) };
+      // 出口闸对从气同样有效(v1.07):**本气食伤落在气势那一对之外**,旺气有处可泄,不作从气。
+      // dtsy-032 教的:四戊满局被出口闸挡下从强后,顺势落进从气·火土——可书断的正是「用金明矣」,
+      // 那个申(本气庚金)在火土气势之外,是泄旺的出口,不是气势的一员。
+      // 手抄从气命例「癸酉癸亥庚申丁亥」不受影响:食伤水就在金水那一对**之内**,顺流不破局。
+      const shiWx2 = SHENG[me];
+      const shiOutlet2 = useOutlet && !bestPair.wx.includes(shiWx2) &&
+        ['year', 'month', 'day', 'hour'].some(k => GAN_WX[CANGGAN[pillars[k].zhi][0]] === shiWx2);
+      if (!shiOutlet2) {
+        return { type: '从气', name: `从气格(全局气势在${bestPair.wx.join('')},顺其气势而行)`,
+          qiWx: bestPair.wx.slice(), margin: +(bestPair.v - 84).toFixed(1) };
+      }
     }
     if (noRoot && st.tong <= 30) {
       return { type: '假从', name: '假从(无根而印比尚存一线,不作真从论,仍以扶抑为主)',
@@ -549,15 +562,55 @@
   //  身弱/偏弱 → 喜生扶(印比),忌克泄耗;
   //  中和(45-55) → 扶抑无甚可扶,古法「中和之命取调候、取通关」:
   //                先看寒暖(冬取火夏取水),无调候可取则补五行中最弱的一方,不硬分强弱。
-  function pickYongShen(dayGan, st, th) {
+  // v1.07 的另三个口径开关(与 SHI_OUTLET_DEFAULT 同一批,量完定的默认;各自的血域照实记):
+  // 假从改判(血域 8.38%,是四个里唯一的**整体翻向**):《滴天髓阐微·假从章》「假从者…只得投从于人也」
+  // 「财之势旺,则从财;官之势旺,则从官」,原注「虽是假从,亦可取富贵」——原文的假从**仍然是从**,
+  // 而我们 v0.54 起的假从只标注不翻,与原文含义相反(v0.76 记了这笔账,这一版把账清了)。
+  const JIACONG_FOLLOW_DEFAULT = true;
+  // 中和调候门(血域 13.07%,只增不换):999 即「中和之局恒取调候」。这一支的规程本来就写着
+  // 「中和之命取调候、取通关」,旧门槛 <12 却让「通关补缺」压过了调候——命例 dtsy-217
+  // 「春初木嫩…用火以攻之」的火有 18.9 分,按旧门槛永远进不了喜集。恒取是把规程与代码对齐。
+  // (v0.76「调候只在确实缺那味药时才入喜忌」那句管的是强弱两路,强弱路的门槛照旧是 12,没动。)
+  const TIAO_GATE_ZHONGHE_DEFAULT = 999;
+  // 制杀路(血域 6.57%,只增不换):偏弱 + 官杀为异党最重 + 身/杀 ≥ 0.6(两停下限,口径同 mingpan v1.00)
+  // → 食伤入喜。命例 dtsy-434「喜其坐戌通根,足以用金制杀…所谓不太过者宜克也」。
+  const SHA_LIANGTING_DEFAULT = true;
+  function pickYongShen(dayGan, st, th, cong, opts) {
     const me = GAN_WX[dayGan];
     const yin = invSheng(me), shi = SHENG[me], cai = KE[me], guan = invKe(me);
+    const oJia = (opts && opts.jiaCongFollow !== undefined) ? opts.jiaCongFollow : JIACONG_FOLLOW_DEFAULT;
+    const oGate = (opts && opts.tiaoGateZhonghe !== undefined) ? opts.tiaoGateZhonghe : TIAO_GATE_ZHONGHE_DEFAULT;
+    const oSha = (opts && opts.shaLiangTing !== undefined) ? opts.shaLiangTing : SHA_LIANGTING_DEFAULT;
+    // 从格改判(v1.07 从 chart() 移入,逻辑逐字未动):真从的喜忌不走扶抑。
+    if (cong && cong.type === '从强') {
+      return { strong: true, xiWx: [me, yin], jiWx: [KE[me], invKe(me), SHENG[me]].filter((v, i, a) => a.indexOf(v) === i), xiName: '比劫·印(从其强势)', jiName: '克泄耗(逆势为忌)' };
+    }
+    if (cong && cong.type === '从弱') {
+      return { strong: false, xiWx: [KE[me], SHENG[me], invKe(me)], jiWx: [me, invSheng(me)],
+        xiName: '财官食伤(从其弱势)' + (cong.shiName ? ';' + cong.shiName : ''), jiName: '比劫·印(逆势为忌)' };
+    }
+    // 假从改判(v1.07 口径开关):《滴天髓阐微·假从章》的假从**仍然是从**——
+    // 「假从者…只得投从于人也」「财之势旺,则从财,官之势旺,则从官」,原注明说「虽是假从,亦可取富贵」;
+    // 而我们 v0.54 起的「假从」只作标注不翻喜忌,与原文含义相反(v0.76 记过这笔账)。
+    // 开关拨上后按从弱方向翻,xiName 里写明从得不纯、行运要顺(原文:「只要行运安顿,假行真运,亦可取富贵」)。
+    if (oJia && cong && cong.type === '假从') {
+      return { strong: false, xiWx: [KE[me], SHENG[me], invKe(me)], jiWx: [me, invSheng(me)],
+        xiName: '财官食伤(假从——根浅无依,照原文仍按从论,但从得不纯,顺逆全看行运)', jiName: '比劫·印(逆势为忌)' };
+    }
+    if (cong && cong.type === '从气') {
+      // 原文把用法也写死了:「气势在木火,要行木火运;气势在金水,要行金水运,反此必凶」——
+      // 喜的就是那两行,其余三行一律为忌,不再按扶抑分强弱。
+      return { strong: st.strong, xiWx: cong.qiWx.slice(),
+        jiWx: ['木', '火', '土', '金', '水'].filter(w => !cong.qiWx.includes(w)),
+        xiName: `${cong.qiWx.join('')}(顺其气势,原文「气势在${cong.qiWx.join('')},要行${cong.qiWx.join('')}运」)`,
+        jiName: '其余三行(逆其气势,原文「反此必凶」)' };
+    }
     const help = [me, yin], drain = [shi, cai, guan];
     const band = st.band || (st.strong ? '身旺' : '身弱');
     if (band === '中和') {
       // 中和之局:调候优先;无调候则取局中最弱的五行为药(通关补缺)
       const weakest = Object.keys(st.pow).sort((x, y) => st.pow[x] - st.pow[y])[0];
-      const needTiao = th && st.pow[th.need] < 12;   // 调候只在确实缺那味药时才取
+      const needTiao = th && st.pow[th.need] < oGate;   // 调候只在确实缺那味药时才取(门槛见 TIAO_GATE_ZHONGHE_DEFAULT)
       const xi = needTiao ? [th.need, weakest].filter((v, i, a) => a.indexOf(v) === i) : [weakest];
       const strongest = Object.keys(st.pow).sort((x, y) => st.pow[y] - st.pow[x])[0];
       return {
@@ -574,10 +627,30 @@
     let tiaoNote = '';
     const lackTiao = th && st.pow[th.need] < 12 && !(strong && th.need === me);
     if (lackTiao && !xi.includes(th.need)) { xi.push(th.need); tiaoNote = `;局中${th.need}仅${st.pow[th.need]}分,寒暖失衡,另调候急取${th.need}`; }
+    // 制杀路(v1.07 口径开关):弱盘官杀独重而身有根基可抗(身杀两停,口径同 mingpan v1.00:身/杀 ≥ 0.6)时
+    // 食伤入喜——《滴天髓阐微》命例「喜其坐戌通根,足以用金制杀…所谓不太过者宜克也」。只补不换:印比照旧是喜。
+    // 三个条件全从「身杀两停」一处道理出(不许各自另立门槛):
+    //   ①档位必须是偏弱——身弱是「太过(弱)」,原文「不太过者宜克」的反面,mingpan v1.00 也早钉过
+    //     「食神制杀要身杀两停,不够两停另走杀重身轻(凶)」;
+    //   ②官杀是异党里最重的一股(病在杀)——注意**不能**用「占异党半壁」量这个:
+    //     真的制杀盘里食伤(药)本身就占着异党一大块,拿药的分量去摊薄病的占比,恰好把命例自己挡在外面;
+    //   ③身/杀 ≥ 0.6——两停的下限,口径同 mingpan v1.00。
+    let shaNote = '';
+    if (oSha && band === '偏弱') {
+      const dGuan = st.detail.官杀 || 0, dCai = st.detail.财 || 0, dShi2 = st.detail.食伤 || 0;
+      if (dGuan >= dCai && dGuan >= dShi2 && dGuan > 0 && st.tong / dGuan >= 0.6 && !xi.includes(shi)) {
+        xi.push(shi); shaNote = `;官杀独重而身有根基可抗,${shi}(食伤)制杀入喜——「不太过者宜克也」`;
+      }
+    }
+    // jiName 按 jiWx 实际剩下的算(v1.07 修):此前是写死的整串——调候或制杀把某一味推进喜集之后,
+    // 忌那一行的**字面**还留着它,喜忌两头同时挂名,读的人当场看出自相矛盾。集合本来就对(jiWx 有过滤),
+    // 错的只是给人看的那行字。
+    const CLS = w => w === me ? '比劫' : w === yin ? '印' : w === shi ? '食伤' : w === cai ? '财' : '官杀';
+    const jiF = ji.filter(w => !xi.includes(w));
     return {
-      strong, band, xiWx: xi, jiWx: ji.filter(w => !xi.includes(w)),
-      xiName: (strong ? '食伤·财·官杀(耗泄)' : '比劫·印(生扶)') + tiaoNote,
-      jiName: strong ? '比劫·印' : '财·官杀·食伤',
+      strong, band, xiWx: xi, jiWx: jiF,
+      xiName: (strong ? '食伤·财·官杀(耗泄)' : '比劫·印(生扶)') + tiaoNote + shaNote,
+      jiName: jiF.map(CLS).join('·'),
     };
   }
   function invKe(el) { for (const a of Object.keys(KE)) if (KE[a] === el) return a; }
