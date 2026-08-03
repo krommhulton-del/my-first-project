@@ -77,7 +77,8 @@ await fr.locator('#btn-go').waitFor({ timeout: 8000 });
 const frDark = await page.frameLocator('#dx-yunshi-frame').locator('body').evaluate(
   b => ({ theme: b.ownerDocument.documentElement.dataset.theme, bg: getComputedStyle(b).backgroundColor }));
 ok('浮层内运势页同为夜间', frDark.theme === 'dark', JSON.stringify(frDark));
-ok('运势页底色是影院黑不是白纸', /20, 20, 20/.test(frDark.bg), frDark.bg);
+// v1.09:影院黑换成暖墨咖(#171210 = rgb(23,18,16)),用户点名「不要黑色」——底仍是深色,色温转暖
+ok('运势页夜间底色是暖墨不是白纸也不是纯黑灰', /23, 18, 16/.test(frDark.bg), frDark.bg);
 
 // 4.5) 新板块的引擎也得真进单文件里(漏登记 build-single 清单是老毛病)
 await page.click('#dx-yunshi-back');

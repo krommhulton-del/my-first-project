@@ -262,7 +262,12 @@ t('四个法门的初断文字穷举一遍,一个术语都不许有(铁律八)',
     '小六壬的诗诀不该进初断');
 });
 
-t('v0.72 换新配色:靠明度分层,不再是一片米黄糊在一起', () => {
+// ⬇ v1.09 按用户 2026-08-03 原话改写:「还有色调 不要蓝绿黑色灰色」。
+// v0.72 那次的教训**保住**:分层靠明度差,那是量出来的真病根;这次换的只是色相——
+// 冷灰画布→暖米、汝窑青(蓝绿,被点名否掉)→沉香金、夜间纯黑→暖墨咖、语义色整套入暖色族。
+// 旧断言「汝窑青应偏青绿」「画布饱和度 <0.06(近中性)」钉的正是被否掉的方向,照 v1.01 成例
+// 改写不偷抹:明度分层照钉,色相断言反转成「必须暖、不许蓝绿」。
+t('v1.09 暖色系:仍靠明度分层;画布带暖色相;结构色沉香金不许再是蓝绿;夜间不是纯黑', () => {
   // 缘起:用户 2026-08 原话——「这个色调可以再换一下,已经没有新鲜感了…苹果的审美就特别特别好」。
   // 量出来的病根不是色相选错,是**三层底色全是同一个米黄、彼此只差几个百分点**,于是什么都不分层。
   // 新做法(苹果那套):画布近中性浅灰、卡片纯白,靠明度差分层;暖意只留在强调色上。
@@ -273,17 +278,37 @@ t('v0.72 换新配色:靠明度分层,不再是一片米黄糊在一起', () => 
   ok(paper && panel && panel2, '取不到三层底色');
   // 卡片必须明显亮于画布(这是「浮起来」的物理来源)
   ok(lum(panel) - lum(paper) > 0.02, `卡片与画布明度差只有 ${(lum(panel) - lum(paper)).toFixed(3)},分不出层`);
-  // 三层不许再是同一个暖色相:画布的饱和度要低(近中性)
-  const sat = h => { const n = parseInt(h.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-    const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx ? (mx - mn) / mx : 0; };
-  ok(sat(paper) < 0.06, `画布还是偏色的(饱和度 ${sat(paper).toFixed(3)}),该用近中性灰`);
-  // 结构色换成汝窑青,不再是古铜金
-  ok(CSS.includes('--celadon'), '缺汝窑青');
-  const cel = hex('celadon');
-  ok(cel, '取不到汝窑青');
-  const n = parseInt(cel.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  ok(g > r, `汝窑青应偏青绿,实得 #${cel.slice(1)}(R${r} G${g} B${b})`);
-  // 苹果那条缓动曲线与毛玻璃
+  // 画布必须**暖**:R ≥ G ≥ B(暖米/宣纸一路),且淡淡一层就够(饱和度有上限,免得又糊成米黄)
+  const rgb = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const sat = h => { const [r, g, b] = rgb(h); const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx ? (mx - mn) / mx : 0; };
+  {
+    const [r, g, b] = rgb(paper);
+    ok(r >= g && g >= b, `画布该是暖色相(R≥G≥B),实得 #${paper.slice(1)}`);
+    ok(sat(paper) > 0.02 && sat(paper) < 0.12, `画布暖得要淡(0.02–0.12),实得饱和度 ${sat(paper).toFixed(3)}`);
+  }
+  // 结构色是沉香金(暖),蓝绿被用户点名否掉——R > G > B 才算暖金
+  ok(CSS.includes('--sandal'), '缺沉香金 --sandal');
+  const cel = hex('sandal');
+  ok(cel, '取不到沉香金');
+  { const [r, g, b] = rgb(cel);
+    ok(r > g && g > b, `沉香金该是暖色(R>G>B),实得 #${cel.slice(1)}`); }
+  // 旧名 --celadon/--gold 必须还在且只是别名(类名不许说谎,别名要认账)
+  ok(/--celadon:\s*var\(--sandal\)/.test(CSS), '--celadon 该是 --sandal 的别名');
+  // 语义色整族入暖:吉/凶/警三色都不许偏蓝偏绿(B 分量不许最大;G 不许显著压过 R)
+  for (const v of ['jade', 'slate', 'ochre']) {
+    const h = hex(v); ok(h, '取不到 --' + v);
+    const [r, g, b] = rgb(h);
+    ok(b < Math.max(r, g), `--${v} 偏蓝了:#${h.slice(1)}`);
+    ok(g <= r * 1.15, `--${v} 偏绿了:#${h.slice(1)}`);
+  }
+  // 夜间画布:不许纯黑,也不许冷灰——要暖(R≥G≥B 且非零)
+  const darkBlock = CSS.slice(CSS.indexOf('html[data-theme="dark"]'));
+  const dm = darkBlock.match(/--paper:\s*(#[0-9a-fA-F]{6})/);
+  ok(dm, '取不到夜间画布');
+  { const [r, g, b] = rgb(dm[1]);
+    ok(r > 0 && r >= g && g >= b, `夜间画布该是暖墨不是纯黑/冷灰:${dm[1]}`);
+    ok(r < 60, `夜间画布还得够深:${dm[1]}`); }
+  // 苹果那条缓动曲线与毛玻璃(craft 层照旧)
   ok(/--ease:\s*cubic-bezier/.test(CSS), '缺统一的缓动曲线');
   ok(/backdrop-filter:\s*saturate\([^)]*\)\s*blur/.test(CSS), '底栏该用毛玻璃(saturate+blur)');
 });

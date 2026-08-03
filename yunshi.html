@@ -29,11 +29,12 @@
     color-scheme: light;
   }
   html[data-theme="dark"] {
-    /* 夜间:与卜卦主页面同一套影院黑,浮层内嵌时不刺眼 */
-    --paper: #141414; --panel: #1e1d1b; --panel2: #292724; --ink: #e8e4db;
-    --dim: #989185; --line: #383530; --cinnabar: #e0563f; --gold: #c9a45c; --gold-fill: #c9a45c;
+    /* 夜间 v1.09:纯黑灰底被用户点名否掉(「不要蓝绿黑色灰色」),换与主页面同一套暖墨咖分层。
+       --wx-* 五行色不动:木青水黑是五行**本色**(数据语义),不是主题色,换了反而是错。 */
+    --paper: #171210; --panel: #211a14; --panel2: #2c241c; --ink: #ece4d6;
+    --dim: #a08e78; --line: #423729; --cinnabar: #e0563f; --gold: #c9a45c; --gold-fill: #c9a45c;
     --wx-mu: #6fbe83; --wx-huo: #e0563f; --wx-tu: #d3ad63; --wx-jin: #cfc4a0; --wx-shui: #7fb3d1;
-    --btn-hover: #33302b; --primary-ink: #141414; --primary-hover: #ef6a52;
+    --btn-hover: #362c22; --primary-ink: #171210; --primary-hover: #ef6a52;
     color-scheme: dark;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -233,7 +234,7 @@
 <div class="wrap">
   <header>
     <h1>东玄运势</h1>
-    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v1.08</span></p>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v1.09</span></p>
     <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
   </header>
 
@@ -926,7 +927,7 @@ ${curDashi ? Dashi.material(c, curDashi) + '\n' : ''}${curSanmei ? Sanmei.materi
     const tb = $('btn-theme');
     if (tb) tb.textContent = t === 'dark' ? '☀ 日间' : '◐ 夜间';
     const meta = document.querySelector('meta[name=theme-color]');
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#141414' : '#f4eee1');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#171210' : '#f4eee1');
   };
   try { curTheme = localStorage.getItem(TKEY) === 'dark' ? 'dark' : 'light'; } catch (e) {}
   if (document.documentElement.dataset.theme === 'dark') curTheme = 'dark';

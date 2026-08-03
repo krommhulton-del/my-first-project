@@ -38,26 +38,33 @@
        于是什么都不分层、整片发闷——这才是「没有新鲜感」的真正来源,不是色相选错了。
        现在改成:画布用近乎中性的浅灰,卡片用纯白,靠**明度差**分层(苹果的办法),
        暖意只留在强调色上。这样内容浮得起来,留白也才有意义。 */
-    --paper: #f5f5f7; --paper2: #ebebef; --panel: #ffffff; --panel2: #f5f5f7;
-    --grad-top: #eeeef1; --hover: #ebebef; --seg: #ebebef;
-    /* ——— 墨:三级文字,对比度按 APCA 拉开 ——— */
-    --ink: #1d1d1f; --ink2: #4a4a4f; --ink3: #86868b; --dim: #86868b;
+    /* ——— v1.09 换暖色系(用户 2026-08-03 点名:「不要蓝绿黑色灰色」)———
+       v0.72 的骨架保住:**靠明度差分层**(那是当年量出来的真病根,不是色相);
+       换的只是色相——冷灰画布换成暖米宣纸、汝窑青(蓝绿)换成沉香金、
+       语义色整套搬进暖色族(吉=暖金、凶=紫檀绛、警=火橙、平=驼)。 */
+    --paper: #f6f1e7; --paper2: #ede5d6; --panel: #ffffff; --panel2: #f6f1e7;
+    --grad-top: #f0e9db; --hover: #ede5d6; --seg: #ede5d6;
+    /* ——— 墨:三级文字,对比度照旧拉开,色相转暖(褐墨,不是冷灰) ——— */
+    --ink: #2b241d; --ink2: #57493a; --ink3: #8b7d6b; --dim: #8b7d6b;
     /* ——— 线:分隔线要看得见但不抢戏 ——— */
-    --line: #d2d2d7; --hair: rgba(0, 0, 0, .08); --rule: rgba(78, 124, 116, .28);
-    --gold-hair: rgba(78, 124, 116, .28);   /* 旧名,等同 --rule */
+    --line: #d9cdb9; --hair: rgba(84, 60, 30, .10); --rule: rgba(143, 106, 62, .28);
+    --gold-hair: rgba(143, 106, 62, .28);   /* 旧名,等同 --rule */
     /* ——— 身份色:朱砂只给品牌与一屏唯一的主行动 ——— */
     --cinnabar: #c8402c; --cinnabar-ink: #fff; --accent-soft: #fdecea;
-    /* ——— 结构色改用汝窑青:细线、小标题、装饰点缀 ———
-       这是这一版换新的关键。古铜金用久了发旧发沉;汝窑青同样是本土颜色(青瓷一脉),
-       但明度高、彩度低,配中性灰底特别透气,和朱砂也不打架。 */
-    --celadon: #4e7c74; --celadon-soft: #e8f0ee; --celadon-lite: #7aa79f;
-    --gold: #4e7c74; --gold-fill: #7aa79f;  /* 旧名,已改指汝窑青 */
-    /* ——— 语义色:专断吉凶,与身份色分开 ——— */
-    --jade: #1d7a4d;  --jade-soft: #e6f4ec;   /* 吉 */
-    --slate: #35618f; --slate-soft: #e8eff7;  /* 凶 */
-    --ochre: #a86a12; --ochre-soft: #fdf1dd;  /* 警 */
-    --mute: #6e6e73;  --mute-soft: #eeeef1;   /* 平 */
-    --blue: #35618f;
+    /* ——— 结构色 v1.09 改沉香金(--sandal):细线、小标题、装饰点缀。
+       汝窑青被用户点名否掉(蓝绿);沉香金同为本土颜色(檀木沉香一脉),
+       明度中、彩度低,配暖米底温润,和朱砂同族不打架。
+       --celadon/--gold 是旧名,一律别名指向沉香金——类名不许说谎(v0.70 的教训),
+       别名要在注释里当面认账。 */
+    --sandal: #8f6a3e; --sandal-soft: #f5ecdc; --sandal-lite: #b6946a;
+    --celadon: var(--sandal); --celadon-soft: var(--sandal-soft); --celadon-lite: var(--sandal-lite);
+    --gold: var(--sandal); --gold-fill: var(--sandal-lite);
+    /* ——— 语义色:专断吉凶,与身份色分开;整套暖色族 ——— */
+    --jade: #93650a;  --jade-soft: #f8efd8;   /* 吉=暖金(金者吉也) */
+    --slate: #7d4260; --slate-soft: #f6e9f0;  /* 凶=紫檀绛(沉、重,不用蓝) */
+    --ochre: #bb5410; --ochre-soft: #fdeadb;  /* 警=火橙 */
+    --mute: #857463;  --mute-soft: #efe8dc;   /* 平=驼(暖调中性,不是冷灰) */
+    --blue: #7d4260;  /* 旧名,已改指紫檀绛——蓝整族被否 */
     /* ——— 层次:苹果靠极轻的阴影 + 清晰的分隔线,不靠重投影 ——— */
     --shadow: 0 1px 2px rgba(0, 0, 0, .04);
     --shadow-pop: 0 4px 16px rgba(0, 0, 0, .08), 0 16px 48px rgba(0, 0, 0, .10);
@@ -72,23 +79,25 @@
     color-scheme: light;
   }
   html[data-theme="dark"] {
-    /* 夜间:苹果的深色分层——纯黑画布 + 逐级抬升的灰,不用棕黑 */
-    --paper: #000000; --paper2: #0a0a0b; --panel: #1c1c1e; --panel2: #2c2c2e;
-    --grad-top: #000000; --hover: #3a3a3c; --seg: #2c2c2e;
-    --ink: #f5f5f7; --ink2: #c7c7cc; --ink3: #98989d; --dim: #98989d;
-    --line: #38383a; --hair: rgba(255, 255, 255, .1); --rule: rgba(138, 190, 180, .3);
-    --gold-hair: rgba(138, 190, 180, .3);
-    --cinnabar: #ff5f45; --cinnabar-ink: #1a0d0a; --accent-soft: rgba(255, 95, 69, .16);
-    --celadon: #8abeb4; --celadon-soft: rgba(138, 190, 180, .14); --celadon-lite: #6fa79d;
-    --gold: #8abeb4; --gold-fill: #6fa79d;
-    --jade: #32d17a;  --jade-soft: rgba(50, 209, 122, .15);
-    --slate: #6fa8e8; --slate-soft: rgba(111, 168, 232, .15);
-    --ochre: #ffb340; --ochre-soft: rgba(255, 179, 64, .15);
-    --mute: #98989d;  --mute-soft: rgba(152, 152, 157, .14);
-    --blue: #6fa8e8;
+    /* 夜间 v1.09:纯黑画布被用户点名否掉——换**暖墨咖**分层,逐级抬升的是暖褐,不是灰。
+       分层逻辑一个没动(明度差还在),只是整个夜里带了灯下暖光的色温。 */
+    --paper: #171210; --paper2: #201913; --panel: #251d16; --panel2: #302620;
+    --grad-top: #171210; --hover: #3a2f26; --seg: #302620;
+    --ink: #f2e9dc; --ink2: #cfc1ad; --ink3: #a08e78; --dim: #a08e78;
+    --line: #443728; --hair: rgba(255, 235, 205, .10); --rule: rgba(200, 164, 108, .3);
+    --gold-hair: rgba(200, 164, 108, .3);
+    --cinnabar: #ff6247; --cinnabar-ink: #1f0e08; --accent-soft: rgba(255, 98, 71, .16);
+    --sandal: #d2a86b; --sandal-soft: rgba(210, 168, 107, .14); --sandal-lite: #b28d5c;
+    --celadon: var(--sandal); --celadon-soft: var(--sandal-soft); --celadon-lite: var(--sandal-lite);
+    --gold: var(--sandal); --gold-fill: var(--sandal-lite);
+    --jade: #e6b446;  --jade-soft: rgba(230, 180, 70, .15);
+    --slate: #d38ab4; --slate-soft: rgba(211, 138, 180, .15);
+    --ochre: #ff9440; --ochre-soft: rgba(255, 148, 64, .15);
+    --mute: #a08e78;  --mute-soft: rgba(160, 142, 120, .14);
+    --blue: #d38ab4;
     --shadow: 0 1px 2px rgba(0, 0, 0, .5);
     --shadow-pop: 0 4px 20px rgba(0, 0, 0, .6), 0 20px 56px rgba(0, 0, 0, .5);
-    --blurbg: rgba(28, 28, 30, .74);
+    --blurbg: rgba(37, 29, 22, .74);
     color-scheme: dark;
   }
   /* 语义色的通用挂件:凡断吉凶处一律用这四个类,不许直接写颜色 */
@@ -726,7 +735,7 @@
   #jr-detail .jsum { margin-top: 6px; color: var(--cinnabar); }
   .jact { display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; margin-top: 5px; font-size: .92em; }
   .jact b { font-weight: normal; min-width: 3.4em; }
-  .jact.ok b { color: var(--wx-mu, #3f7d4e); } .jact.no b { color: var(--cinnabar); }
+  .jact.ok b { color: var(--jade); } .jact.no b { color: var(--cinnabar); }  /* v1.09:宜=吉金(绿被否;--wx-mu 本就没定义,一直在走绿色兜底) */
   .jact span { background: var(--seg); border-radius: 6px; padding: 1px 8px; line-height: 1.75; }
   .jnode { margin-top: 7px; padding-top: 6px; border-top: 1px dashed var(--line); line-height: 1.75; }
   .jnode .jwhy { display: block; color: var(--dim); font-size: .88em; margin-top: 3px; }
@@ -777,7 +786,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.08</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.09</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1566,7 +1575,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v1.08 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.09 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -2612,9 +2621,9 @@
     cv.width = W * S; cv.height = (H || 4000) * S;
     const x = cv.getContext('2d'); x.scale(S, S);
     const dark = document.documentElement.dataset.theme === 'dark';
-    const C = dark
-      ? { bg: '#0e0e10', card: '#1c1c1e', ink: '#f5f5f7', ink2: '#c7c7cc', ink3: '#8e8e93', cel: '#8abeb4', red: '#ff5f45', line: '#38383a' }
-      : { bg: '#f5f5f7', card: '#ffffff', ink: '#1d1d1f', ink2: '#4a4a4f', ink3: '#86868b', cel: '#4e7c74', red: '#c8402c', line: '#e3e3e8' };
+    const C = dark   // v1.09 卦签图与主题同批换暖(蓝绿黑灰被否;这里是画进图片的字面色,主题变量够不着)
+      ? { bg: '#171210', card: '#251d16', ink: '#f2e9dc', ink2: '#cfc1ad', ink3: '#a08e78', cel: '#d2a86b', red: '#ff6247', line: '#443728' }
+      : { bg: '#f6f1e7', card: '#ffffff', ink: '#2b241d', ink2: '#57493a', ink3: '#8b7d6b', cel: '#8f6a3e', red: '#c8402c', line: '#d9cdb9' };
     const KAI = '"Kaiti SC","STKaiti",KaiTi,"Songti SC",serif';
     const SANS = '-apple-system,"PingFang SC","Noto Sans SC",sans-serif';
     const M = 56;
@@ -2652,8 +2661,8 @@
     x.fillStyle = C.ink; x.font = `600 40px ${KAI}`;
     x.fillText(o.guaName || '', W / 2, y); y += 76;
     // 结论
-    x.fillStyle = o.chengCls === 'ji' ? (dark ? '#32d17a' : '#1d7a4d')
-      : o.chengCls === 'xiong' ? (dark ? '#6fa8e8' : '#35618f') : C.ink3;
+    x.fillStyle = o.chengCls === 'ji' ? (dark ? '#e6b446' : '#93650a')
+      : o.chengCls === 'xiong' ? (dark ? '#d38ab4' : '#7d4260') : C.ink3;
     x.font = `600 46px ${SANS}`;
     x.fillText(o.say || '', W / 2, y); y += 52;
     x.fillStyle = C.ink3; x.font = `26px ${SANS}`;
@@ -4865,7 +4874,9 @@
     if (c2) put(c2, R * 0.52, '·');
     // 相位线(两人:交叉相位;单人:盘内)
     const asps = c2 ? Astro.aspectsOf(c.planets, c2.planets) : Astro.aspectsOf(c.planets);
-    const okc = css.getPropertyValue('--good') || '#4e7c74', badc = css.getPropertyValue('--bad') || '#8a5a3b';
+    // v1.09 修:此前取的是根本不存在的 --good/--bad,恒走汝窑青兜底——相位线颜色其实从没吃过主题。
+    // 现在取真语义色(顺=吉金、拧=紫檀绛),与全站同一套暖色。
+    const okc = css.getPropertyValue('--jade').trim() || '#93650a', badc = css.getPropertyValue('--slate').trim() || '#7d4260';
     for (const asp of asps.slice(0, 14)) {
       const pa = (c2 ? c : c).planets, pb = (c2 || c).planets;
       const la = Object.values(pa).find(x => x.name === asp.a), lb = Object.values(pb).find(x => x.name === asp.b);
