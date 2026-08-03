@@ -190,9 +190,14 @@ t('神煞表没有凭记忆扩表——起例查不到原文就不许加', () =>
   // 条目名带括号注(「桃花(咸池)」),按括号前那截认
   const key = s => s.replace(/[(（].*$/, '').replace(/\s*\/\s*/g, '');
   const byName = new Map(ss.items.map(x => [key(x.name), x]));
+  // v1.10:干系四表(天乙/太极/天德/月德)另立一节——它们按日干或月支起,不走 shenShaOf 的支表,
+  // 引文出自殆知阁补录的书(五行精纪/钦定协纪辨方书/三命通会-殆知阁本),按各自的 book 字段核。
+  const ganxi = new Map((ss.干系 || []).map(x => [key(x.name), x]));
   const noSrc = new Set(ss.不收的.flatMap(x => [key(x.name), ...x.name.split(/\s*\/\s*/).map(key)]));
   for (const x of ss.不收的) ok(x.为什么 && x.为什么.length > 20, `「${x.name}」说不收,可没写清为什么`);
   const smtx = strip(readFileSync(join(ROOT, 'data', 'classics', '三命通会.txt'), 'utf8'));
+  const bookTx = {};
+  const bookOf = b => bookTx[b] || (bookTx[b] = strip(readFileSync(join(ROOT, 'data', 'classics', b + '.txt'), 'utf8')));
   let n = 0, pend = [];
   for (const name of ['将星', '华盖', '桃花', '驿马', '劫煞', '亡神', '灾煞', '六厄', '孤辰',
                       '寡宿', '破碎', '德秀', '金舆', '天乙贵人', '天德', '月德', '太极贵', '文昌']) {
@@ -200,6 +205,17 @@ t('神煞表没有凭记忆扩表——起例查不到原文就不许加', () =>
     const has = new RegExp('//[^\\n]*' + name).test(bazi)
       || new RegExp('[\\s{,]' + name + ' *:').test(bazi);
     if (!has) continue;
+    const gx = ganxi.get(name);
+    if (gx) {
+      // ①′ 干系那条路:引文在**它自己标的那本书**里逐字可搜;有双证的双证也要核
+      ok(gx.book && gx.quote, `「${name}」干系条目缺 book 或 quote`);
+      ok(bookOf(gx.book).includes(strip(gx.quote)),
+        `「${name}」的引文在《${gx.book}》里搜不到:「${gx.quote}」——不许凭记忆写`);
+      if (gx.双证) ok(bookOf(gx.双证.book).includes(strip(gx.双证.quote)),
+        `「${name}」的双证引文在《${gx.双证.book}》里搜不到`);
+      n++;
+      continue;
+    }
     const rec = byName.get(name);
     if (!rec) {
       // ② 没收的那条路:必须**点名**挂在「不收的」名下并写清为什么。
@@ -218,7 +234,10 @@ t('神煞表没有凭记忆扩表——起例查不到原文就不许加', () =>
       `「${name}」的起例引文在《三命通会》里搜不到:「${rec.quote}」——不许凭记忆写`);
     n++;
   }
-  ok(n >= 8, `神煞表核到的条数只有 ${n},太少了,是不是判在不在的那个式子写漏了`);
+  // v1.10:天乙/太极/天德/月德收进干系后,挂着待核的只剩文昌(古籍双源给的是另一张表,
+  // 程序表走今人通行口径,分歧照实挂在「不收的」)。
+  ok(n >= 12, `神煞表核到的条数只有 ${n},太少了,是不是判在不在的那个式子写漏了`);
+  ok(pend.includes('文昌'), '文昌该在待核清单里(今表库内无出处,古表双源同名不同物)');
   console.log(`      (核了 ${n} 张神煞表的起例出处;另有 ${pend.length} 张挂着出处待核:${pend.join('、')})`);
 });
 t('凡自称依某体例的模块,都注明了「出处待核」', () => {

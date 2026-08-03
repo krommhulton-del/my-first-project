@@ -52,11 +52,16 @@ t('每一条都写明了出自哪一章、以及起例是什么', () => {
     ok(x.quote && x.quoteS, `${x.name} 缺原文(繁/简两份都要)`);
   }
 });
-t('说不收的那几样,理由必须写清楚', () => {
-  ok(SS['不收的'].length >= 4, '不收的清单太短');
+t('说不收的那几样理由写清;v1.10 销账的四表移进了干系并带逐字引文', () => {
+  // v1.10 改口径:殆知阁语料库到手,天乙/太极/天德/月德从「不收的」升进「干系」(各带 book+quote,
+  // honesty 测试逐条对原书核);不收的清单里剩 文昌(古表双源同名不同物,今表待核)与
+  // 讨债还债(两份星宗转录都 0 命中)+ 羊刃戊午的销账记录。
   for (const x of SS['不收的']) ok(x['为什么'] && x['为什么'].length > 15, `${x.name} 没写为什么不收`);
   const names = SS['不收的'].map(x => x.name).join('|');
-  for (const k of ['天乙贵人', '天德', '羊刃']) ok(names.includes(k), `「${k}」该在不收的清单里`);
+  for (const k of ['文昌', '讨债还债']) ok(names.includes(k), `「${k}」该在不收的清单里`);
+  const gx = (SS['干系'] || []).map(x => x.name);
+  for (const k of ['天乙贵人', '太极贵', '天德', '月德']) ok(gx.includes(k), `「${k}」v1.10 该在干系里(带出处收进来)`);
+  for (const x of SS['干系']) { ok(x.book && x.quote && x.table, `干系「${x.name}」缺 book/quote/table`); ok(x.say, `干系「${x.name}」缺白话断语`); }
 });
 
 console.log('【二】外部对照:**程序原有的三张表,头一次拿原文逐格核**');
@@ -75,7 +80,13 @@ t('桃花、驿马、华盖 —— 与《三命通会》原文逐格吻合', () 
 t('羊刃里那条无出处的,必须标出来——不许假装它有出处', () => {
   ok(Bazi.YANGREN_SRC, '要有一张出处表');
   for (const g of ['甲', '丙', '庚', '壬']) ok(/三命通会/.test(Bazi.YANGREN_SRC[g]), `${g} 的刃该挂上出处`);
-  ok(/待核/.test(Bazi.YANGREN_SRC['戊']), '戊的刃这本书没写,必须标「出处待核」');
+  // v1.10 销账:戊刃从「待核」升为双源可核——《神峰通考》「如戊日刃在午」+ 殆知阁本《三命通会》
+  // 「戊以午为刃」,两句都要在库内逐字搜得到(不许光改标签不见原文)。
+  ok(/神峰通考/.test(Bazi.YANGREN_SRC['戊']) && !/待核/.test(Bazi.YANGREN_SRC['戊']), '戊的刃 v1.10 起有双源,不该再挂待核:' + Bazi.YANGREN_SRC['戊']);
+  const sfB = readFileSync(join(ROOT, 'data', 'classics', '神峰通考.txt'), 'utf8').replace(/[\s　]+/g, '');
+  const smB = readFileSync(join(ROOT, 'data', 'classics', '三命通会-殆知阁本.txt'), 'utf8').replace(/[\s　]+/g, '');
+  ok(sfB.includes('如戊日刃在午'), '神峰通考里搜不到「如戊日刃在午」');
+  ok(smB.includes('戊以午为刃'), '殆知阁本三命通会里搜不到「戊以午为刃」');
   const src = readFileSync(join(ROOT, 'bazi.js'), 'utf8');
   ok(/戊己的刃没写|戊己的刃/.test(src), 'bazi.js 里要写明这一条为什么没出处');
 });
@@ -169,7 +180,9 @@ t('加了九条之后,断语没被冲成噪音', () => {
     n++; tot += m.length; mx = Math.max(mx, m.length);
   }
   ok(tot / n < 4, `每个流支平均 ${(tot / n).toFixed(2)} 条标记,太吵了`);
-  ok(mx <= 8, `单个流支最多 ${mx} 条标记,太吵了`);
+  // v1.10 干系三条(太极/天德/月德)进旁注后,极端叠加的上限从 8 升到 9——
+  // 阈随表容量走,不是放松:平均数那道 <4 的闸一分没动,吵不吵看的是平均不是极端。
+  ok(mx <= 9, `单个流支最多 ${mx} 条标记,太吵了`);
 });
 
 console.log('【六】说人话:白话断语一个推演名目都不许有');
