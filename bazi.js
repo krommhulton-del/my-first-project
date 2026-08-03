@@ -134,9 +134,17 @@
   // 主排盘:birth 为 Date(设备本地时刻,视为出生地时间;传 lon 则先校真太阳时)
   // 晚子时(23点后)依当今主流「子时换日法」:日柱与五鼠遁均按次日排。
   function chart(birth, gender, lonDeg) {
+    // 第三个参数两种形态:**数字**就是经度,**对象**是选项(hua 那些开关),
+    // 而对象里也可以带 `lon`。v1.17 之前只认数字那一种,于是**凡是传对象的调用点,
+    // 经度校正被一声不吭地丢掉**——实测 600 副盘:时柱差 34.7%、旺你的五行差 20.2%、旺衰档差 16.5%。
+    // 真正咬人的地方在 dingshi:粗筛那一路传数字、精校分段那一路传对象,
+    // 同一个板块的两层排在两套时间上(§四 口径分家)。
+    const opts = (lonDeg && typeof lonDeg === 'object') ? lonDeg : null;
+    const lonNum = typeof lonDeg === 'number' ? lonDeg
+      : (opts && typeof opts.lon === 'number' ? opts.lon : undefined);
     // 夏令时回拨与均时差是钟表时刻本身的事实,与是否填出生地无关(未填出生地按国标经线 120°E 计),
     // 只有经度差要靠出生地——不填就少这一项,不能连夏令时都不拨,否则 1986-91 年生人时柱整整错一个时辰。
-    birth = trueSolarDate(birth, lonDeg);
+    birth = trueSolarDate(birth, lonNum);
     const cal = Najia.ganZhi(birth);          // 年(立春界)、月(节气界)、日
     const lunar = Lunar.fromDate(birth);      // 取时辰序号
     const hourIdx = lunar.hourNum - 1;         // 子=0
@@ -169,7 +177,7 @@
     }
     const days = daysIntoJie(birth);                  // 节入后第几天(定人元司令)
     const siLing = siLingOf(monthGZ[1], days);
-    const strength = judgeStrength(pillars, dayGan, days, lonDeg && typeof lonDeg === 'object' ? lonDeg : null);
+    const strength = judgeStrength(pillars, dayGan, days, opts);
     const cong = judgeCong(strength, pillars, dayGan);
     // 从格改判在 pickYongShen 里(v1.07 从这里移入):取用只此一份,
     // 命例基线工具与排盘走同一段代码——此前工具直接调 pickYongShen 而吃不到从格改判,

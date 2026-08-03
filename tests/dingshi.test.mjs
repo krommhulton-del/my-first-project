@@ -392,5 +392,104 @@ t('精校的话过体检员,并把「自拟零回测」写在明处', () => {
   ok(/零回测/.test(mat), '材料里要带上诚实声明');
 });
 
+// ══════════════════════════════════════════════════════════════════
+//  这几段的差别改变了什么(v1.17)
+// ══════════════════════════════════════════════════════════════════
+// 缘起:用户 2026-08-03「排盘问题解决就去解读,生辰矫正八字星盘需要大换血」。
+// **先量后改**:界面上「还站得住的区间」是十行参数堆,
+// **十行里说了「这个差别意味着什么」的 0 行**,而那 25 段里藏着 4 组不同的喜用、
+// 其中两组正好相反(金土 vs 木水火)——参数的形式正好把「你的盘可能在叫你往相反方向走」盖住了。
+// 这一层只做集合运算:跨全部存活区间**不变的**挑出来(现在就能用),**变的**单列(定不下来)。
+// 五条测试守:①不自算断法 ②不变/变分得对 ③翻盘判据沿用旧口径不另立
+// ④两档(一套结论 / 多套结论)都不是死条 ⑤措辞过体检员。
+console.log('\n【差别改变了什么(v1.17)】');
+const stakeOf = (y, mo, d, lon, lat, events) => {
+  const r = Dingshi.rectify({ birth: new Date(y, mo - 1, d), gender: '男', lon, lat, Astro, events: events || [] });
+  return { r, st: Dingshi.stakes(r) };
+};
+const STK = [];
+for (let i = 0; i < 24; i++) {
+  const lon = [116.4, 121.5, 104.1, 87.6][i % 4], lat = [39.9, 31.2, 30.6, 43.8][i % 4];
+  const s = stakeOf(1950 + (i * 3) % 70, 1 + (i % 12), 1 + (i * 7) % 28, lon, lat, []);
+  if (s.st) STK.push(s);
+}
+t('「不变的」必须真的每段都一样,「变的」必须真的有两种以上', () => {
+  for (const { r, st } of STK) {
+    const A = r.alive;
+    for (const f of st.fixed) {
+      if (f.label === '旺你的那几行') ok(new Set(A.map(s => s.xi)).size === 1, '列进不变却真的在变:旺你的那几行');
+      if (f.label === '底子厚薄') ok(new Set(A.map(s => s.band)).size === 1, '列进不变却真的在变:底子厚薄');
+    }
+    for (const v of st.varies) {
+      if (v.label === '旺你的那几行') ok(new Set(A.map(s => s.xi)).size > 1, '列进变却其实不变:旺你的那几行');
+      if (v.label === '底子厚薄') ok(new Set(A.map(s => s.band)).size > 1, '列进变却其实不变:底子厚薄');
+    }
+    ok(st.fixed.length + st.varies.length >= 3, '不变与变加起来太少,漏项了');
+  }
+});
+t('并组与占比自洽:各组分钟数加起来 = 存活总分钟,占比不超 100', () => {
+  for (const { r, st } of STK) {
+    const sum = st.groups.reduce((a, g) => a + g.mins, 0);
+    const alive = r.alive.reduce((a, s) => a + (s.narrowMins || s.mins), 0);
+    eq(sum, alive, '各组分钟数之和对不上存活总分钟');
+    ok(st.groups.every(g => g.pct >= 0 && g.pct <= 100), '占比越界');
+    ok(st.groups.every(g => g.segs.length > 0), '空组');
+  }
+});
+t('翻盘判据沿用旧口径(毫无交集才叫翻盘),不另立一套', () => {
+  for (const { st } of STK) {
+    for (const f of st.flips) {
+      const a = f.a.split(/[、,,]/).filter(Boolean), b = f.b.split(/[、,,]/).filter(Boolean);
+      ok(!a.some(x => b.includes(x)), `报了翻盘却有交集:${f.a} vs ${f.b}`);
+    }
+    // 反过来:真有毫无交集的两组,就必须报出来
+    for (let i = 0; i < st.groups.length; i++) for (let j = i + 1; j < st.groups.length; j++) {
+      const a = st.groups[i], b = st.groups[j];
+      if (!a.wx.some(x => b.wx.includes(x))) ok(st.flipped, `有毫无交集的两组却没报翻盘:${a.xi} vs ${b.xi}`);
+    }
+  }
+  ok(STK.some(x => x.st.flipped), '「翻盘」这一档一次都没触发,是死条');
+  ok(STK.some(x => !x.st.flipped), '「不翻盘」这一档一次都没触发,恒真了');
+});
+t('一套结论 / 多套结论 两档都不是死条,且措辞跟着分档变', () => {
+  const one = STK.filter(x => x.st.groups.length === 1), many = STK.filter(x => x.st.groups.length > 1);
+  ok(one.length || many.length, '一个样本都没有');
+  for (const { st } of one) ok(/给的是同一套结论/.test(st.story), '只有一套结论时该明说不耽误用');
+  for (const { st } of many) ok(/套结论/.test(st.story) && /把钟点问准/.test(st.story), '多套结论时该给下一步');
+  ok(many.length, '「多套结论」这一档没触发到');
+});
+t('§四 一个断法都不自算:只读各段已排好的盘做集合运算', () => {
+  const SRC = readFileSync(join(ROOT, 'dingshi.js'), 'utf8');
+  const body = SRC.slice(SRC.indexOf('function stakes('), SRC.indexOf('function fineMaterial('));
+  ok(!/judgeStrength|pickYongShen|wuxingPower|judgeCong|yearEv\(|Dashi\./.test(body), 'stakes 里不许出现断法调用');
+  ok(/Bazi\.plainBand/.test(body), '旺衰翻白话必须走 bazi 那一份(§四)');
+  ok(/不新算任何东西/.test(SRC.slice(SRC.indexOf('function stakes('))), 'honest 要写明不自算');
+});
+t('措辞过体检员(禁术语/空话/说教/装腔)', () => {
+  const seen = new Set();
+  for (const { st } of STK) {
+    for (const s of [st.story, st.honest, ...st.groups.map(g => g.say), ...st.fixed.map(f => f.say), ...st.varies.map(v => v.say)]) {
+      if (!s || seen.has(s)) continue; seen.add(s);
+      const rep = Tijian.check(String(s).replace(/「[^」]*」/g, ''), {});
+      const bad = rep.hits.filter(h => ['空话', '说教', '花钱消灾', '术语', '装腔'].includes(h.kind));
+      ok(!bad.length, `体检不过:${s.slice(0, 40)}… → ${bad.map(h => h.kind + ':' + h.snippet).join(';')}`);
+    }
+  }
+  console.log(`      (扫了 ${seen.size} 条不重样的话)`);
+});
+t('材料里带这一段,并写明它是重点', () => {
+  const { r } = STK[0];
+  const m = Dingshi.fineMaterial(r, '测试');
+  ok(/差别改变了什么/.test(m), '材料缺这一段');
+  ok(/这是本页的重点/.test(m), '材料没写明它是重点');
+  ok(/不许和稀泥/.test(m), '材料没禁和稀泥');
+});
+t('答案之锚:同一份结果反复算二十次,逐字节一致', () => {
+  const { r } = STK[0];
+  const first = JSON.stringify(Dingshi.stakes(r).story);
+  for (let i = 0; i < 20; i++) ok(JSON.stringify(Dingshi.stakes(r).story) === first, '第' + i + '次不一致');
+  ok(Dingshi.stakes(null) === null, '没结果该返回 null(不硬造)');
+});
+
 console.log(`\n结果:${pass} 通过,${fail} 失败`);
 process.exit(fail ? 1 : 0);

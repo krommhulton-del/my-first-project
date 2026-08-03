@@ -630,21 +630,125 @@
       `不许拿相貌性格这类说辞硬定时辰,不许出现干支十神喜忌这些名目,不许说「仅供参考」「因人而异」这类空话。`;
   }
 
+  // ══════════════════════════════════════════════════════════════════
+  //  这几段的差别到底改变了什么(v1.17)
+  // ══════════════════════════════════════════════════════════════════
+  // 缘起:用户 2026-08-03「排盘问题解决就去解读,生辰矫正八字星盘需要大换血」。
+  // **先量后改**:界面上「还站得住的区间」给的是十行参数堆——
+  //   「00:32–01:43(72 分钟,子时戊子)底子薄、旺你的是金、土 · 命宫丁亥 · 上升双鱼」
+  // **十行里说了「这个差别意味着什么」的:0 行**。而这 25 段里藏着 **4 组不同的喜用**,
+  // 其中两组正好相反(金土 vs 木水火)——也就是说这一页正在用参数的形式,
+  // 掩盖「你的盘可能在叫你往相反方向走」这件事。
+  //
+  // 修法照用户那句话办:「你直接从这个八字里面看出来不就行了吗」——
+  // **把跨全部存活区间不变的东西挑出来**(那些不管几点生都已经定了,现在就能用),
+  // 与**随区间变的东西**分开报。这一层**一个断法都不自算**(§四):
+  // 只读各段已经排好的 chart,做集合运算。
+  const WX5 = ['木', '火', '土', '金', '水'];
+  function stakes(r) {
+    if (!r || !r.alive || !r.alive.length) return null;
+    const A = r.alive;
+    const gz = (s, k) => s.chart && s.chart.pillars && s.chart.pillars[k] ? s.chart.pillars[k].gz : '';
+    const uniq = f => [...new Set(A.map(f))];
+    // 一、跨全部存活区间不变的 = 不管几点生都已经定了
+    const fixed = [], varies = [];
+    const push = (arr, label, vals, say) => arr.push({ label, vals, say });
+    const yearGZ = uniq(s => gz(s, 'year')), monthGZ = uniq(s => gz(s, 'month')), dayGZ = uniq(s => gz(s, 'day'));
+    const dayWx = uniq(s => s.chart && s.chart.dayWx);
+    const bands = uniq(s => s.band), xis = uniq(s => s.xi), congs = uniq(s => s.cong || '不从');
+    // 日主那一行要说清它与「哪一天生的」的关系:两者可以一个变一个不变
+    // (庚戌与辛亥是两天,可日主同属金)——不写明这一层,与下一行读起来像自相矛盾。
+    const crossDay = dayGZ.length > 1;
+    (dayWx.length === 1 ? push.bind(null, fixed) : push.bind(null, varies))(
+      '你本人属哪一行', dayWx,
+      dayWx.length === 1
+        ? `你本人属${dayWx[0]}` + (crossDay ? '——虽然下面那条说「哪一天生的」有两种可能,但两种算下来都属这一行,所以这一条是稳的' : '——这一条钟点动不了它')
+        : `随钟点变,有 ${dayWx.length} 种:${dayWx.join('/')}——跨了日界,连「你本人属哪一行」都还没定`);
+    (yearGZ.length === 1 && monthGZ.length === 1 && !crossDay ? push.bind(null, fixed) : push.bind(null, varies))(
+      '出生年月日那三格', [yearGZ.join('/'), monthGZ.join('/'), dayGZ.join('/')].join(' '),
+      !crossDay ? '这三格由生日定,钟点改不了——凡是只吃这三格的判断,现在就能用'
+        : '你这个钟点正好压在日界上(按真太阳时算,后半夜那几分钟还算前一天):连「哪一天生的」都有两种可能,这是最该先问准的一条');
+    (bands.length === 1 ? push.bind(null, fixed) : push.bind(null, varies))(
+      '底子厚薄', bands.map(b => Bazi.plainBand(b)), bands.length === 1 ? `一律是「${Bazi.plainBand(bands[0])}」` : `有 ${bands.length} 种说法:${bands.map(b => Bazi.plainBand(b)).join(' / ')}`);
+    (xis.length === 1 ? push.bind(null, fixed) : push.bind(null, varies))(
+      '旺你的那几行', xis, xis.length === 1 ? `一律是${xis[0]}` : `有 ${xis.length} 种说法:${xis.join(' / ')}`);
+    if (congs.length > 1) push(varies, '走的是哪一档', congs, `有 ${congs.length} 种:${congs.join(' / ')}`);
+
+    // 二、按「旺你的那几行」并组——这一项一变,下游全变(挑行业、挑方位、挑颜色、挑年份)
+    const byXi = new Map();
+    for (const s of A) {
+      const k = s.xi;
+      if (!byXi.has(k)) byXi.set(k, { xi: k, wx: String(k).split(/[、,,]/).filter(Boolean), mins: 0, segs: [], spans: [], bands: new Set() });
+      const g = byXi.get(k);
+      g.mins += (s.narrowMins || s.mins); g.segs.push(s); g.spans.push(s.narrowSpan || s.span); g.bands.add(s.band);
+    }
+    const groups = [...byXi.values()].sort((a, b) => b.mins - a.mins);
+    const total = groups.reduce((a, g) => a + g.mins, 0) || 1;
+    for (const g of groups) {
+      g.pct = Math.round(100 * g.mins / total);
+      g.bandSay = [...g.bands].map(b => Bazi.plainBand(b)).join('/');
+      const st = g.segs[0];
+      const dy = st.chart && st.chart.dayun;
+      g.startAge = dy && dy.list && dy.list.length ? Math.round(dy.list[0].fromAge) : null;
+      g.say = `${g.spans.slice(0, 3).join('、')}${g.spans.length > 3 ? ` 等 ${g.spans.length} 段` : ''}` +
+        `(合 ${g.mins} 分钟,占${g.pct}%):旺你的是${g.xi},底子${g.bandSay}` +
+        (g.startAge != null ? `,${g.startAge} 岁起运` : '');
+    }
+    // 三、**两组喜用毫无交集 = 翻盘**(v0.77 定的判据,这里照用,不另立)
+    const flips = [];
+    for (let i = 0; i < groups.length; i++) for (let j = i + 1; j < groups.length; j++) {
+      const a = groups[i], b = groups[j];
+      if (!a.wx.some(x => b.wx.includes(x))) flips.push({ a: a.xi, b: b.xi, aMins: a.mins, bMins: b.mins });
+    }
+
+    // 四、串成话:先说定了什么(现在就能用),再说定不下来的是什么(以及它压着哪些决定)
+    let story = '';
+    if (fixed.length) story += `先说不管你几点生都已经定了的——这些现在就能用:\n`
+      + fixed.map(x => `· ${x.label}:${x.say}`).join('\n');
+    if (varies.length) story += `${fixed.length ? '\n\n' : ''}再说钟点没定就定不下来的:\n`
+      + varies.map(x => `· ${x.label}:${x.say}`).join('\n');
+    if (groups.length === 1) {
+      story += `\n\n好消息是:剩下这些区间虽然分不开,但它们**给的是同一套结论**——旺你的都是${groups[0].xi}。`
+        + `钟点问不准也不耽误用,挑方向、挑年份照这一套走就是。`;
+    } else {
+      story += `\n\n这些区间分成 ${groups.length} 套结论:\n` + groups.map(g => '· ' + g.say).join('\n');
+      if (flips.length) {
+        const f = flips[0];
+        story += `\n\n**其中至少两套是正好相反的**:一套说旺你的是${f.a},另一套说是${f.b},两边一个字都不重合。`
+          + `这不是差一点,是反着走——挑行业、挑方位、挑穿用的颜色、挑哪几年动大事,四处全反。`
+          + `所以在钟点问准之前,凡是靠「旺你的是哪几行」的话,一句都别当准;`
+          + `只吃出生年月日那三格的判断不受影响,照用。`;
+      } else {
+        story += `\n\n这几套结论互相有重合的部分——重合的那几行大致可信,不重合的先别下注。`;
+      }
+      story += `\n\n把钟点问准最省事的两条路:一是出生证或出生医学记录上的时间(最硬),`
+        + `二是问当时在场的人「天亮没有、吃过哪一顿饭」,能把范围缩到两三个时辰,再回来跑一遍。`;
+    }
+    return { fixed, varies, groups, flips, flipped: flips.length > 0, story,
+      honest: '这一层不新算任何东西:每一段的盘是上面已经排好的,这里只做一件事——' +
+        '把各段一一比对,挑出「哪些结论各段都一样」和「哪些各段不一样」。' +
+        '「毫无交集就叫翻盘」这个判据沿用本程序原有的口径,不另立一套。' };
+  }
+
   // 精校的材料:与 solve 那份分开,写法要求一样钉死(§五 程序算死、AI 只解释)
   function fineMaterial(r, birthText) {
     const seg = s => `${s.narrowSpan || s.span}(${s.narrowMins || s.mins}分,${s.hourName}${s.hourGZ}` +
       `,底子${Bazi.plainBand(s.band)}、旺${s.xi}${s.mingGong ? `、命宫${s.mingGong}` : ''}${s.ascSign ? `、上升${s.ascSign}` : ''})`;
+    const st = stakes(r);
     return `【生时精校(程序算死,勿另立结论)】\n生辰:${birthText || ''}\n\n` +
       `[结论]${r.first}\n[还剩几段]${r.alive.length} 段:\n${r.alive.slice(0, 8).map(s => '· ' + seg(s)).join('\n') || '(无)'}\n\n` +
+      (st ? `[这几段的差别改变了什么——按这个次序讲,这是本页的重点]\n${st.story}\n\n` : '') +
       `[慢星过四轴命中]\n${r.bHits.slice(0, 10).map(h => '· ' + h.plain).join('\n') || '(这一路没用上)'}\n\n` +
       `[换大运年份]\n${r.cHits.map(h => '· ' + h.plain).join('\n') || '(没给转折年份)'}\n\n` +
       `[是谁把边界卡在这]\n${r.bounds.map(x => '· ' + x).join('\n')}\n\n[下一步]${r.next}\n\n` +
       `【写法要求】第一句就说死:落在哪个区间、多少分钟宽,还是几段分不开、还是打架。` +
       `**区间宽度必须报出来**,不许把「还剩 3 段」说成「就是某时辰」。` +
+      `**重点在「差别改变了什么」那一段**:先讲不管几点生都已经定了、现在就能用的那几条,` +
+      `再讲定不下来的那几条各压着什么决定;有相反的两套结论就点名说反,不许和稀泥。` +
       `末尾照实带一句:区间边界是算出来的,拿事件卡区间那套规则是本项目自拟的、零回测。` +
       `不许出现干支十神喜忌这些名目,不许说「仅供参考」「因人而异」。`;
   }
 
   return { solve, parseRange, chartAt, fingerprint, yearScore, yearEv, agreementOf, typeAgreeOf, CATS, stability, HOURS, VAGUE, FOLK, FOLK_NOTE, material,
-    rectify, fineSegments, angleWindows, dayunWindows, fineMaterial, CHANNELS, HONEST_FINE, hhmm };
+    rectify, fineSegments, angleWindows, dayunWindows, fineMaterial, stakes, CHANNELS, HONEST_FINE, hhmm };
 }));

@@ -786,7 +786,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.16</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.17</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1580,7 +1580,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v1.16 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.17 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -4404,9 +4404,17 @@
       `${s.mingGong ? ' · 命宫' + esc(s.mingGong) : ''}${s.ascSign ? ' · 上升' + esc(s.ascSign) : ''}` +
       `${s.voteWhy && s.voteWhy.length ? '<br>对上:' + esc(s.voteWhy.join(';')) : ''}</span></div>`;
     const bh = f.bHits.filter(h => h.vote).slice(0, 8);
+    // v1.17:此前这一页只摆参数(「底子薄、旺你的是金土 · 命宫丁亥」),
+    // 十行里说了「这个差别意味着什么」的 0 行——而那几段里可能藏着两套正好相反的结论。
+    // 这一段把「已经定了的」与「定不下来的」分开摆,是本页最该先读的东西,故顶在最前。
+    const st = (typeof Dingshi.stakes === 'function') ? Dingshi.stakes(f) : null;
+    const stakesCard = st ? `<div class="wjcard"><h4>这 几 段 的 差 别,改 变 了 什 么</h4>` +
+      st.story.split('\n').filter(x => x.trim()).map(x =>
+        `<div class="hpv${/^·/.test(x.trim()) ? ' ypline' : ''}">${esc(x.trim())}</div>`).join('') +
+      `<div class="note ypflat">${esc(st.honest)}</div></div>` : '';
     return `<div class="wjcard"><h4>精 校 · 落 到 分 钟</h4>` +
       `<div class="hpv"><b class="key">${esc(f.first)}</b></div>` +
-      `<div class="hpv mt2">${esc(f.next)}</div></div>` +
+      `<div class="hpv mt2">${esc(f.next)}</div></div>` + stakesCard +
       `<div class="wjcard"><h4>还 站 得 住 的 区 间</h4>${f.alive.slice(0, 10).map(seg).join('')}` +
       `${f.alive.length > 10 ? `<div class="why">…另有 ${f.alive.length - 10} 段,先补线索再看</div>` : ''}` +
       `<div class="why mt2">这一天按「断出来会不会变」被切成 ${f.segs.length} 段——生时那一格、旺你的五行、走的是哪一档、命宫、上升星座,任一处换了就是新的一段。</div></div>` +
