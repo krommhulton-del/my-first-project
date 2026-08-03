@@ -786,7 +786,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.13</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.14</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1288,8 +1288,10 @@
     </details>
 
     <div class="dsev">
-      <div class="evh">已经确凿发生过的事,<b>至少三件</b>,每件都要标是好事还是坏事——回推比的就是吉凶方向,标不出好坏的那件不算数。
-        年份写公历;记不准年份的宁可不填,填错一件比少填一件更坏。</div>
+      <div class="evh">已经确凿发生过的事,<b>至少两件</b>,每件只要<b>哪一年 + 哪一类</b>。
+        <b class="v-warn">好坏不用你判</b>——弟弟出生了到底旺你还是克你,那正是命盘该告诉你的,让你先判就把话说反了;
+        搬家这种更是事实清楚、好坏说不清。程序看的是「那个时辰的年表,把这一类排在那一年的第几位」。
+        标了好坏也不浪费,会另算一栏给你看,但不参与排名。年份写公历;记不准年份的宁可不填,填错一件比少填一件更坏。</div>
       <div id="ds-rows"></div>
       <div class="btnrow">
         <button type="button" class="ghost" id="btn-ds-add">再加一件</button>
@@ -1578,7 +1580,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v1.13 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.14 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -4307,7 +4309,7 @@
     d.className = 'dsrow';
     d.innerHTML = `<input type="number" class="dsy" placeholder="年份" min="1900" max="2100">` +
       `<select class="dst">${DSH_CATS.map(c => `<option value="${c[0]}">${c[1]}</option>`).join('')}</select>` +
-      `<select class="dsg"><option value="">好事还是坏事</option><option value="1">好事</option><option value="0">坏事</option></select>` +
+      `<select class="dsg"><option value="">好坏说不清(不用填)</option><option value="1">回头看是好事</option><option value="0">回头看是坏事</option></select>` +
       `<input type="text" class="dsw" placeholder="什么事(可不填)" maxlength="24">` +
       `<button type="button" class="dsx">删</button>`;
     $('ds-rows').appendChild(d);

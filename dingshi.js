@@ -104,8 +104,36 @@
     return { rate: total > 0 ? hit / total : null, hit: +hit.toFixed(1), total: +total.toFixed(1), detail };
   }
 
+  // ——— 按「事型」回推(v1.15 起的主路)———
+  // **缘起是用户点破的一个设计错误**:此前只认「吉凶方向」,要用户先标每件事是好是坏。
+  // 可很多事当事人根本判不了——「弟弟出生了」到底旺我还是克我,那正是命盘该告诉我的,
+  // 反过来让用户先判,是把推断方向搞反了;搬迁更是事实清楚、好坏模糊,硬标就是逼人猜。
+  // 而且方向不表态(|dir|<0.6)的年份会被整件丢掉,填了等于白填。
+  //
+  // 改成拿**事型**对:你只报「哪一年发生了哪一类事」(这是你知道的事实),
+  // 程序看那个时辰的年表里,这一类在那一年排第几。排得越靠前,这个时辰越解释得通。
+  // **先量后改**(蒙特卡洛,随机真时辰,事实由真盘取):
+  //   同一年跨十二时辰「最重的那一类会变」占 82.5%(吉凶方向会变只占 64.4%)——区分度更高;
+  //   真时辰排第一 38.3%(碰运气 8.3%)、进前三 70.0%(碰运气 25%)。
+  // 照旧只证明求解器能反解自己这套模型,不证明模型合乎现实(真实语料仍然没有)。
+  const CATS = ['yinyuan', 'shiye', 'caiyun', 'wenshu', 'biandong', 'zinv', 'jiankang', 'guanfei'];
+  function typeAgreeOf(chart, events) {
+    const use = events.filter(e => e && e.year && e.type && CATS.includes(e.type));
+    if (!use.length) return { rate: null, detail: [] };
+    let sum = 0; const detail = [];
+    for (const e of use) {
+      const sc = CATS.map(t => [t, yearEv(chart, e.year, t).score]).sort((a, b) => b[1] - a[1]);
+      const rank = sc.findIndex(x => x[0] === e.type) + 1;
+      const v = (CATS.length - rank) / (CATS.length - 1);
+      sum += v;
+      detail.push({ ...e, rank, of: CATS.length, val: +v.toFixed(2),
+        verdict: rank === 1 ? '这个时辰把这一类排在头一位' : rank <= 3 ? `排第 ${rank}(前三)` : `排第 ${rank},靠后` });
+    }
+    return { rate: sum / use.length, n: use.length, detail };
+  }
+
   // ——— 主函数 ———
-  // events: [{year, type}]  type 取 dashi 的事型 key
+  // events: [{year, type, good?}]  type 取 dashi 的事型 key;good 现在是**可选**的
   function solve(opts) {
     const { birth, gender, lon } = opts;
     const range = typeof opts.range === 'string' ? parseRange(opts.range)
@@ -144,30 +172,37 @@
     // 姻缘类不算「可用」:它的吉凶方向已撤下,拿它回推等于拿噪声定时辰
     const usable = events.filter(e => e.good !== undefined && e.good !== null && e.type !== 'yinyuan');
     const yyDropped = events.filter(e => e.type === 'yinyuan' && e.good !== undefined && e.good !== null).length;
-    if (usable.length >= 3) {
+    // v1.15:主路改成事型排名,吉凶方向降为**并列参考**(标了才算,不标不影响)。
+    // 起判门槛也跟着松:事型这一路只要**两件**就能算(不必凑三件带好坏的)。
+    const typed = events.filter(e => e && e.year && e.type);
+    if (typed.length >= 2) {
       for (const c of cands) {
+        const ta = typeAgreeOf(c.chart, typed);
+        c.typeAgree = ta.rate; c.typeHits = ta.detail;
         const a = agreementOf(c.chart, usable);
         c.agree = a.rate; c.agreeHit = a.hit; c.agreeTotal = a.total; c.hits = a.detail;
       }
-      const scored = cands.filter(c => c.agree !== null);
-      ranked = scored.slice().sort((a, b) => b.agree - a.agree || b.agreeTotal - a.agreeTotal);
-      if (!ranked.length) { reason = '这些年份在各时辰下都不表态(方向分都太弱),换几件方向鲜明的事再试。'; }
+      const scored = cands.filter(c => c.typeAgree !== null);
+      // 主排序看事型;打平了才拿吉凶方向断后(方向是可选信号,不许它反客为主)
+      ranked = scored.slice().sort((a, b) => b.typeAgree - a.typeAgree || ((b.agree || 0) - (a.agree || 0)));
+      if (!ranked.length) { reason = '这些年份在各时辰下都排不出名次,换几件年份记得准的事再试。'; }
       else {
         const top = ranked[0];
         const distinct = ranked.filter(x => x.fp !== top.fp);
-        const gap = distinct.length ? top.agree - distinct[0].agree : 1;
+        const gap = distinct.length ? top.typeAgree - distinct[0].typeAgree : 1;
         if (gap < 0.15) {
           reason = `头名与第一个「断法不同」的时辰只差 ${(gap * 100).toFixed(0)} 个百分点,分不开——就这几件事而言,这些时辰解释力相当,定不了就是定不了。`;
-        } else if (top.agree < 0.6) {
-          reason = `就算头名,方向吻合度也只有 ${(top.agree * 100).toFixed(0)}%——多数事没被解释对。要么事记错了,要么这几个时辰都不对,要么是断法本身还不够。照实说:定不了。`;
+        } else if (top.typeAgree < 0.6) {
+          reason = `就算头名,你报的那几类事在它的年表里也多数排得靠后(平均 ${(top.typeAgree * 100).toFixed(0)} 分)——要么年份记错了,要么这几个时辰都不对,要么是断法本身还不够。照实说:定不了。`;
         } else {
           canDecide = true;
-          reason = `头名方向吻合 ${(top.agree * 100).toFixed(0)}%,比第一个断法不同的时辰高 ${(gap * 100).toFixed(0)} 个百分点,可以定。`;
+          reason = `头名把你报的那几类事平均排到 ${(top.typeAgree * 100).toFixed(0)} 分,比第一个断法不同的时辰高 ${(gap * 100).toFixed(0)} 个百分点,可以定。`
+            + (usable.length >= 3 && top.agree != null ? `(另外你标了好坏的那 ${usable.length} 件,它的吉凶方向吻合 ${(top.agree * 100).toFixed(0)}%——这一项只作参考,不参与排名。)` : '');
         }
       }
     } else {
-      reason = `能用来判方向的事只有 ${usable.length} 件(要标明是好事还是坏事才算数),不足三件,无法回推——本次只给「哪些时辰断得一样」这一半答案。`
-        + (yyDropped ? `你给的 ${yyDropped} 件姻缘类没算进去:那一类的吉凶方向本程序已经撤下(回测量出来命盘对「结婚还是离婚」零区分度),拿它回推等于拿噪声定时辰。补几件事业、财运、健康类的事就能算。` : '');
+      reason = `能用来回推的事只有 ${typed.length} 件(每件要有年份和类别),不足两件,无法回推——本次只给「哪些时辰断得一样」这一半答案。`
+        + '**好坏不用你判**:只报哪一年发生了哪一类事就行,程序看那个时辰的年表把这一类排在第几。';
     }
 
     // 四、差异面板:各时辰到底差在哪
@@ -464,10 +499,12 @@
     // (同断法归一组、头名要与**第一个断法不同**的组拉开 gap≥0.15、且头名 ≥0.6)之后,
     // 蒙特卡洛 53 例里**一次都不敢收窄**——那不是程序无能,是三四件同类事本来就分不开。
     // 照 v0.61 定下的规矩:**分不开就说分不开**,不许把「大家都对得上」说成「就是这一段」。
-    const usable = events.filter(e => e.good !== undefined && e.good !== null && e.type && e.type !== 'yinyuan');
+    // v1.15:与 solve 一起改走**事型**——不再要用户判好坏(很多事当事人根本判不了),
+    // 门槛也从三件降到两件。好坏若填了只作参考,不参与排名。
+    const usable = events.filter(e => e && e.year && e.type);
     let aBest = null, aGap = null, aDecided = false;
-    if (usable.length >= 3) {
-      for (const s of segs) { const a = agreementOf(s.chart, usable); s.agree = a.rate; s.agreeDetail = a.detail; }
+    if (usable.length >= 2) {
+      for (const s of segs) { const a = typeAgreeOf(s.chart, usable); s.agree = a.rate; s.agreeDetail = a.detail; }
       const scored = segs.filter(s => s.agree !== null);
       if (scored.length) {
         const rk = scored.slice().sort((x, y) => y.agree - x.agree);
@@ -522,7 +559,7 @@
       s.cBest = cHits.length ? Math.max(...mins.map(cCover)) : 0;
       s.votes = (s.aPass ? 1 : 0) + s.cBest;
       s.voteWhy = [];
-      if (s.aPass) s.voteWhy.push('已发生的事(中式方向)对得上,且与断法不同的那一档拉开了差距');
+      if (s.aPass) s.voteWhy.push('你报的那几类事,这一段的年表把它们排得最靠前,且与断法不同的那一档拉开了差距');
       if (s.cBest) s.voteWhy.push(`换大运的年份对上 ${s.cBest} 个`);
       // 段内收窄:只有换大运那一路是连续量,能在段内再切;慢星不参与
       if (s.cBest) {
@@ -541,8 +578,8 @@
     const width = `${totalMins} 分钟`;
     // 谁卡的边
     const bounds = [];
-    if (usable.length >= 3) bounds.push(`已发生的事(${usable.length} 件)把范围压到生时那一格这一级(两小时)`);
-    else bounds.push(`能判方向的事只有 ${usable.length} 件(要三件才算数),这一路没使上劲`);
+    if (usable.length >= 2) bounds.push(`已发生的事(${usable.length} 件,按事型比对)把范围压到生时那一格这一级(两小时)`);
+    else bounds.push(`能用来回推的事只有 ${usable.length} 件(要两件才算数,只需年份与类别),这一路没使上劲`);
     if (bHits.length) bounds.push(`慢星过四轴算了 ${bHits.length} 条窗口,但**一票不投**:自测里拿它收窄,每次都敢收到约 50 分钟,而真时刻只有 18.9% 落在里头(碰运气是 3.0%)——八成会把真答案排除掉。窗口摆给你看,不拿它定生辰`);
     else if (!hasGeo) bounds.push('没有出生地经纬度,上升那一层排不出来——补上能多一层对照(但它照旧不参与定生辰)');
     else bounds.push('没给事件年份,慢星那一路无从下手');
@@ -554,14 +591,14 @@
     const first = !anyEvidence
       ? `这一天按「断出来会不会变」切成 ${segs.length} 段,**眼下一段也排除不掉**(合计 ${width})。`
         + (usable.length < 3
-          ? `能拿来定生辰的只有「已发生的事」那一路,而它要三件以上标了好坏的事才启动——你现在给了 ${usable.length} 件,线索还不够。`
+          ? `能拿来定生辰的只有「已发生的事」那一路,它要两件以上——每件只报「哪一年 + 哪一类」就行,**好坏不用你判**。你现在给了 ${usable.length} 件,线索还不够。`
           : `能拿来定生辰的只有「已发生的事」那一路,它算过了,但在你给的这些事上拉不开高下——**分不开就是分不开,不替你挑一个。**`)
         + `下面把每一段各是什么摆出来,你自己对照;要再往下走见「下一步」。`
       : alive.length === 1
         ? `生时落在 ${alive[0].narrowSpan || alive[0].span}${voteNote},共 ${alive[0].narrowMins || alive[0].mins} 分钟宽,按时辰算是${alive[0].hourName}。`
         : `还剩 ${alive.length} 段并列${voteNote},合计 ${width}:${alive.slice(0, 4).map(s => (s.narrowSpan || s.span)).join('、')}${alive.length > 4 ? ' 等' : ''}。这几段证据一样多,分不出高下——分不开就是分不开。`;
     const next = usable.length < 3
-      ? `下一步最管用的:补齐三件以上标了好坏的事——现在只有 ${usable.length} 件,能定生辰的那一路还没启动。`
+      ? `下一步最管用的:再报几件事——每件只要「哪一年 + 哪一类」(结婚、换工作、进钱、搬家、生孩子、生病、考学、官司…),**好坏不用你判**。现在只有 ${usable.length} 件,不足两件。`
       : (!aDecided && aBest != null)
         ? `下一步最管用的:换几件**类别更杂**的事(事业、财运、健康、文书、官非各来一件)。现在头名吻合 ${(aBest * 100).toFixed(0)}%,`
           + `但与断法不同的那一档只差 ${((aGap || 0) * 100).toFixed(0)} 个百分点——要拉开 15 个点才敢开口,同一类事再多也拉不开。`
@@ -608,6 +645,6 @@
       `不许出现干支十神喜忌这些名目,不许说「仅供参考」「因人而异」。`;
   }
 
-  return { solve, parseRange, chartAt, fingerprint, yearScore, yearEv, agreementOf, stability, HOURS, VAGUE, FOLK, FOLK_NOTE, material,
+  return { solve, parseRange, chartAt, fingerprint, yearScore, yearEv, agreementOf, typeAgreeOf, CATS, stability, HOURS, VAGUE, FOLK, FOLK_NOTE, material,
     rectify, fineSegments, angleWindows, dayunWindows, fineMaterial, CHANNELS, HONEST_FINE, hhmm };
 }));

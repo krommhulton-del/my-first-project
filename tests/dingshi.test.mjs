@@ -354,17 +354,18 @@ t('票数、区间宽度、下一步:三样都不许含糊(铁律二、三)', ()
   ok(withEv.segs.every(s => !s.bBest), '慢星不许参与计票');
   ok(withEv.bounds.some(b => /18\.9%|一票不投/.test(b)), '必须当面说明慢星为什么不计票:' + withEv.bounds.join(' | '));
   // 「敢收窄」这条路不是死条:证据够杂时仍触发得到(自测约 1%,且开口那次真时刻在内)
+  // v1.15:A 路改走事型,合成事实也跟着改——**用户报的是「那年发生了哪一类」**,
+  // 所以从真盘取那一年排第一的那一类当作事实(好坏一概不给,正是新设计的用法)。
   let decided = 0;
   for (let i = 0; i < 40; i++) {
     const y = 1960 + (i * 7) % 50, mo = (i * 5) % 12, d = 1 + (i * 11) % 28, tm = (i * 137) % 1440;
     const truth = Bazi.chart(new Date(y, mo, d, Math.floor(tm / 60), tm % 60), '男', { lon: 116.4 });
     const evs = [];
-    for (let yy = y + 20; yy < y + 60 && evs.length < 5; yy++) for (const T of ['shiye', 'caiyun', 'jiankang', 'wenshu', 'guanfei', 'biandong']) {
-      if (evs.length >= 5) break;
-      const e = Dingshi.yearEv(truth, yy, T);
-      if (Math.abs(e.dir) >= 1.5 && !evs.some(x => x.year === yy)) evs.push({ year: yy, type: T, good: e.dir > 0 });
+    for (let yy = y + 24; yy < y + 52 && evs.length < 4; yy += 5) {
+      const sc = Dingshi.CATS.map(T => [T, Dingshi.yearEv(truth, yy, T).score]).sort((a, b) => b[1] - a[1]);
+      if (sc[0][1] > 0.5) evs.push({ year: yy, type: sc[0][0] });     // 只报年份与类别
     }
-    if (evs.length < 5) continue;
+    if (evs.length < 4) continue;
     const r = Dingshi.rectify({ birth: new Date(y, mo, d), gender: '男', lon: 116.4, lat: 39.9, Astro, events: evs });
     if (r.aDecided) decided++;
   }
