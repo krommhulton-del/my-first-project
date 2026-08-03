@@ -16,6 +16,7 @@ import Bazi from '../bazi.js';
 import Dashi from '../dashi.js';
 import Dingshi from '../dingshi.js';
 import Tijian from '../tijian.js';
+import Astro from '../astro.js';
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 let pass = 0, fail = 0;
@@ -275,6 +276,91 @@ t('旺衰五档的白话对照只此一份,且五档一个不缺', () => {
     const src = readFileSync(join(ROOT, f), 'utf8');
     ok(!/身旺\s*:\s*['\u2018\u201c]/.test(src), `${f} 里疑似另写了一张 band 白话表`);
   }
+});
+
+
+console.log('【六】v1.11 精校:分钟级断点 + 多路证据(用户点名「最专业最精确」)');
+// 缘起:用户 2026-08-03「深入的做这个生辰矫正,我要做最专业最精确的」。
+// 先量出天花板:中式最细就是时柱(2 小时);上升星座边界与时辰**不重合**,两者交错把一天
+// 切成约 24 段;上升度数连续(0.25°/分钟)才是唯一能到分钟的刻度。下面逐条钉住这些事实。
+t('命宫按《三命通会》(殆知阁本)原文起,拿书自带的算例逐字核', () => {
+  // 原文算例:「假令甲子年三月生人,得戌时生…即命坐卯宫是也…甲巳之年丙作首,乃丁夘宫也」
+  const r = Bazi.mingGong('辰', '戌', '甲');     // 三月=辰月、戌时、甲年
+  eq(r.zhi, '卯', '书里明写命坐卯宫');
+  eq(r.gz, '丁卯', '书里明写乃丁夘宫也(干按五虎遁)');
+  // 起法的两条不变量:同月里十二时辰给出十二个不同的宫(一一对应,不许塌成几个)
+  const set = new Set('子丑寅卯辰巳午未申酉戌亥'.split('').map(z => Bazi.mingGong('辰', z, '甲').zhi));
+  eq(set.size, 12, '同一月十二时辰该给十二个不同命宫');
+  // 引文必须在库里逐字搜得到(§十二:搜得到才准挂)
+  const book = readFileSync(new URL('../data/classics/三命通会-殆知阁本.txt', import.meta.url), 'utf8').replace(/[\s\u3000]+/g, '');
+  ok(book.includes(r.quote), '命宫起例引文在殆知阁本里搜不到——不许凭记忆写');
+  ok(Bazi.chart(new Date(1990, 5, 15, 10, 30), '男', { lon: 116.4 }).mingGong, '排盘要带上命宫');
+});
+t('断点扫描:一天切成的段数合乎实测(中式独走约 13 段;加上升约 24 段)', () => {
+  const birth = new Date(1990, 5, 15);
+  const cn = Dingshi.fineSegments({ birth, gender: '男', lon: 116.4 }, null);
+  ok(cn.length >= 12 && cn.length <= 16, `中式独走该在 12–16 段(时柱 12 段为底),实得 ${cn.length}`);
+  const both = Dingshi.fineSegments({ birth, gender: '男', lon: 116.4, lat: 39.9 }, Astro);
+  ok(both.length > cn.length, `接上上升该切得更细:${cn.length} → ${both.length}`);
+  // 段必须首尾相接、盖满一天、不重叠(区间算术错了会静默给出错的宽度)
+  eq(both[0].from, 0, '第一段该从 00:00 起');
+  eq(both[both.length - 1].to, 1439, '末段该到 23:59');
+  for (let i = 1; i < both.length; i++) eq(both[i].from, both[i - 1].to + 1, `第 ${i} 段与上一段没接上`);
+  // 段内断法必须真的一致(指纹相同),否则「段」这个概念就是假的
+  for (const s of both.slice(0, 6)) {
+    const a = Bazi.chart(new Date(1990, 5, 15, Math.floor(s.from / 60), s.from % 60), '男', { lon: 116.4 });
+    const b = Bazi.chart(new Date(1990, 5, 15, Math.floor(s.to / 60), s.to % 60), '男', { lon: 116.4 });
+    eq(a.pillars.hour.gz, b.pillars.hour.gz, `段 ${s.span} 首尾时柱不同,分段错了`);
+    eq(a.yong.xiWx.join(''), b.yong.xiWx.join(''), `段 ${s.span} 首尾喜忌不同,分段错了`);
+  }
+});
+t('木星不计票——这是量出来的:它一年三十度,任何年份都能对上', () => {
+  const ev = [{ year: 2015 }, { year: 2019 }, { year: 2021 }];
+  const hits = Dingshi.angleWindows(new Date(1990, 5, 15), 39.9, 116.4, ev, Astro);
+  const wide = k => { const set = new Set(); for (const h of hits) if (h.mover === k) for (let m = h.from; m <= h.to; m++) set.add(m); return set.size; };
+  const jup = wide('木星'), sat = wide('土星'), plu = wide('冥王星');
+  ok(jup > sat * 2, `木星窗口该远宽于土星(实测约 3 倍),实得 木${jup} 土${sat}`);
+  ok(plu < jup, `冥王星窗口该窄得多,实得 冥${plu} 木${jup}`);
+  ok(hits.filter(h => h.mover === '木星').every(h => !h.vote), '木星那些条必须标成不计票');
+  ok(hits.filter(h => h.mover === '土星').every(h => h.vote), '土星那些条该计票');
+});
+t('盖满全天的线索不算证据(通则,C 路实测撞上过)', () => {
+  const r = Dingshi.rectify({ birth: new Date(1990, 5, 15), gender: '男', lon: 116.4, lat: 39.9, Astro,
+    events: [{ year: 2015, type: 'shiye', good: false }], turnYears: [2017] });
+  // 起运岁全天只挪约 0.3 岁,2017 这个换运年在任何时刻都成立 → 必须被剔除并当面说明
+  ok(r.cDropped.length >= 1, '这一路该被判定为切不动并剔除');
+  ok(r.bounds.some(b => /盖满全天|切不动/.test(b)), '剔除的理由必须写在「谁卡的边」里:' + r.bounds.join(' | '));
+  ok(!r.cHits.length, '被剔除的线索不许还留在计票里');
+});
+t('票数、区间宽度、下一步:三样都不许含糊(铁律二、三)', () => {
+  const base = { birth: new Date(1990, 5, 15), gender: '男', lon: 116.4, lat: 39.9, Astro };
+  const ev = [{ year: 2015, type: 'shiye', good: false }, { year: 2019, type: 'caiyun', good: true }, { year: 2021, type: 'shiye', good: true }];
+  const none = Dingshi.rectify({ ...base });
+  ok(!none.anyEvidence, '零线索时不该有证据票');
+  eq(none.alive.length, none.segs.length, '零线索时每一段都该还站得住(不许偷偷挑一个)');
+  ok(/线索还不够|一条也没能/.test(none.first), '零线索要照实说线索不够:' + none.first);
+  const withEv = Dingshi.rectify({ ...base, events: ev });
+  ok(withEv.totalMins < 1440, `有线索该真的收窄,实得 ${withEv.totalMins} 分钟`);
+  ok(withEv.alive.every(s => s.votes === withEv.maxVotes), '存活段的票数该都等于最高票');
+  ok(/分钟/.test(withEv.first), '第一句必须报出区间宽度:' + withEv.first);
+  ok(withEv.next && withEv.next.length > 10, '必须给「下一步该补什么」');
+  // 没有经纬度 → 西洋那一路整个用不上,必须当面说,不许假装还能精确
+  const noGeo = Dingshi.rectify({ birth: base.birth, gender: '男', lon: 116.4, events: ev, Astro });
+  ok(!noGeo.hasGeo && noGeo.bounds.some(b => /出生地/.test(b)), '缺经纬度要点名说是哪一路用不上');
+  ok(noGeo.segs.length < withEv.segs.length, '缺经纬度时段数该更少(上升那一路没切)');
+});
+t('精校的话过体检员,并把「自拟零回测」写在明处', () => {
+  const r = Dingshi.rectify({ birth: new Date(1990, 5, 15), gender: '男', lon: 116.4, lat: 39.9, Astro,
+    events: [{ year: 2015, type: 'shiye', good: false }, { year: 2019, type: 'caiyun', good: true }, { year: 2021, type: 'shiye', good: true }] });
+  ok(/自拟/.test(r.honest) && /零回测/.test(r.honest), '第一屏必须写明组合规则自拟、零回测');
+  for (const txt of [r.first, r.next].concat(r.bounds)) {
+    const t2 = Tijian.check(txt, {});
+    ok(!t2.hits.some(h => h.cat === '术语'), '给客人的话里有行内名目:' + txt);
+    ok(!t2.hits.some(h => h.cat === '空话' || h.cat === '装腔'), '话里有空话或装腔:' + txt);
+  }
+  const mat = Dingshi.fineMaterial(r, '1990-06-15 男 北京');
+  ok(/区间宽度必须报出来/.test(mat), '材料里要钉死「宽度必须报」');
+  ok(/零回测/.test(mat), '材料里要带上诚实声明');
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

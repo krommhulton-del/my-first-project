@@ -1531,6 +1531,11 @@ await t('定时辰板块:分组、回推、能不能定、写回档案', async (
   ok((await page.locator('#ds-out .dsgrp').count()) >= 1, '应给出「断得一样的时辰」分组');
   ok(/可以定|定不了/.test(txt), '必须表态能不能定:' + txt.slice(0, 60));
   ok(txt.includes('差 异 面 板'), '应有差异面板');
+  // v1.11 精校:第一屏就是分钟级区间,且宽度、切段数、诚实声明都要在
+  ok(/精 校/.test(txt), '精校那一屏该在:' + txt.slice(0, 80));
+  ok(/分钟/.test(txt), '精校必须报出区间宽度(分钟)');
+  ok(/切成 \d+ 段/.test(txt), '要说清这一天被切成几段');
+  ok(/自拟/.test(txt) && /零回测/.test(txt), '精校的诚实声明必须在界面上');
   {
     const r = Tijian.check(txt, { zone: '断语' });
     const k = r.hits.filter(h => h.kind === '空话');

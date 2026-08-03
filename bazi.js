@@ -181,7 +181,7 @@
       pillars, dayGan, dayWx: GAN_WX[dayGan],
       ziNote: lateZi ? '晚子时(23点后)出生,依主流子时换日法,日柱按次日排' : null,
       strength, yong, geju, cong, tiaohou: tiaoHou(cal.monthZhi, dayGan), neiChong,
-      kong, taiYuan: taiYuan(monthGZ), daysIntoJie: days, siLing,
+      kong, taiYuan: taiYuan(monthGZ), mingGong: mingGong(cal.monthZhi, pillars.hour.zhi, yearGZ[0]), daysIntoJie: days, siLing,
       rel: strength.rel, wuxing: strength.pow, wuxingCount: countWuxing(pillars),
       lunarText: Lunar.format(lunar), calYear: cal.year, calMonth: cal.month, monthZhi: cal.monthZhi,
       dayun: computeDayun(pillars, yearGZ[0], gender, birth),
@@ -242,6 +242,35 @@
   // 胎元:月干进一位、月支进三位
   function taiYuan(monthGZ) {
     return GAN[(GAN.indexOf(monthGZ[0]) + 1) % 10] + ZHI[(ZHI.indexOf(monthGZ[1]) + 3) % 12];
+  }
+
+  // 命宫(v1.11 补;挂了很久的「各派算法不一、宁缺勿错」这一条,v1.10 拉入殆知阁本《三命通会》
+  // 之后有了逐字正文,按它做、挂它的名)。原文起例:
+  //   「先将所生之月从子上起正月,亥上二月,戌三,酉四,申五,未六,午七,巳八,辰九,夘十,
+  //     寅十一,丑十二,逆行十二位;次将所生之时加于所生之月,顺行十二位,逢卯即安命宫。」
+  // 原文自带算例(测试拿它当外部标准逐字核):
+  //   「假令甲子年三月生人,得戌时生——却将正月加子,二月在亥,三月在戌为止;
+  //     又将戌时加在戌上…卯上卯,逢卯便是,即命坐卯宫是也。
+  //     仍随甲子年起,亦如起月之法,甲巳之年丙作首,乃丁夘宫也。」
+  // 落成公式:月位 M=(13-月数)%12(子=0 起,正月在子逆行);时支序 H;
+  //   自 M 位起,月位与时支同步顺行,**时支行到卯**时所在之位即命宫 → (M+3-H) mod 12。
+  //   拿算例验:三月 M=戌(10)、戌时 H=10 → (10+3-10)%12=3=卯 ✓;
+  //   干按五虎遁(甲己之年丙作首):甲子年寅上起丙,卯即丁 → 丁卯宫 ✓ 干支两头都对上。
+  // **月取节气月**(正月=寅月):本书全篇子平口径以月建论月,与排盘其余各处同源。
+  // 断语层照旧空着——起法有出处,「命宫落某支主什么」各派说法不一,不硬造(§三)。
+  function mingGong(monthZhi, hourZhi, yearGan) {
+    const mIdx = ((ZHI.indexOf(monthZhi) - 2 + 12) % 12) + 1;      // 寅=正月=1
+    const H = ZHI.indexOf(hourZhi);
+    if (mIdx < 1 || H < 0) return null;
+    const M = (13 - mIdx) % 12;                                     // 正月在子,逆行
+    const zi = ((M + 3 - H) % 12 + 12) % 12;
+    const zhi = ZHI[zi];
+    // 五虎遁:甲己丙作首、乙庚戊、丙辛庚、丁壬壬、戊癸甲(寅月起)
+    const head = [2, 4, 6, 8, 0][GAN.indexOf(yearGan) % 5];
+    const gan = GAN[(head + ((zi - 2 + 12) % 12)) % 10];
+    return { zhi, gan, gz: gan + zhi, wx: ZHI_WX[zhi],
+      src: '《三命通会》(殆知阁本)命宫章',
+      quote: '先将所生之月从子上起正月亥上二月戌三酉四申五未六午七巳八辰九夘十寅十一丑十二逆行十二位次将所生之时加于所生之月顺行十二位逢卯即安命宫' };
   }
 
   // 干支关系表
@@ -895,5 +924,5 @@
     JIANGXING, JIESHA, WANGSHEN, ZAISHA, LIUE, GUCHEN, GUASU, DEXIU, SHENSHA_SAY, fangIdx, posuiOf, shenShaOf, YANGREN_SRC,
     TAIJI, TIANDE, YUEDE,
     SHEN_PLAIN, plainShen, BAND_PLAIN, plainBand, DELING_PLAIN, plainDeLing, CONG_PLAIN, plainGe,
-    nayin, changSheng, taiYuan, siLingOf, SILING, daysIntoJie, relations, judgeStrength, judgeCong, wuxingPower, rootsOf, countWuxing, pickYongShen };
+    nayin, changSheng, taiYuan, mingGong, siLingOf, SILING, daysIntoJie, relations, judgeStrength, judgeCong, wuxingPower, rootsOf, countWuxing, pickYongShen };
 }));

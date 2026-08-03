@@ -786,7 +786,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.10</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.11</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1295,6 +1295,9 @@
         <button type="button" class="ghost" id="btn-ds-add">再加一件</button>
         <button type="button" class="ghost" id="btn-ds-demo">填个示例看看怎么用</button>
       </div>
+      <div class="evh mt2">再填一样,精校那一层用得上:<b>哪一年整个轨道变了</b>(换工作换城市换身份那种,不是一件具体的事)。
+        多个年份用逗号隔开,不知道就空着。</div>
+      <input type="text" id="ds-turn" class="wjin" placeholder="轨道转折年,例:2016,2021">
     </div>
 
     <div class="btnrow">
@@ -1575,7 +1578,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v1.10 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.11 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -4363,27 +4366,58 @@
     const birth = new Date(y, m - 1, d, 12);
     if (isNaN(birth)) { dshErr('生日解析不了,检查一下日期。'); return; }
     dshSaveBirth();
-    let lon, lonNote = '';
+    let lon, lat, lonNote = '';
     const pl = ($('ds-place').value || '').trim();
     if (pl) {
       let p = null;
       try { p = Dili.find(pl); } catch (e) {}
-      if (p) lon = p[2];
+      if (p) { lat = p[1]; lon = p[2]; }
       else lonNote = `出生地「${pl}」我库里没有,这次按东八区中央经线(东经120度)折的真太阳时——换个市名能更准一点。`;
     }
+    const events = dshEvents();
     let r;
     try {
       r = Dingshi.solve({
         birth, gender: gd, lon, range,
         rangeLabel: range.length === 12 ? '完全不知道(十二时辰全排)' : range.map(i => Dingshi.HOURS[i].name).join('、'),
-        events: dshEvents(),
+        events,
       });
     } catch (e) { dshErr('回推出错:' + e.message); return; }
-    dshRes = { res: r, birthText: `${bv} ${gd}${pl ? ' ' + pl : ''}` };
+    // 精校(v1.11):分钟级断点 + 多路证据。经纬度缺了照样能跑,只是西洋那一路(唯一到分钟的)用不上。
+    let fine = null;
+    try {
+      fine = Dingshi.rectify({ birth, gender: gd, lon, lat, events,
+        turnYears: String($('ds-turn') && $('ds-turn').value || '').split(/[,,、\s]+/).map(x => parseInt(x, 10)).filter(x => x > 1800 && x < 2200),
+        Astro: (typeof Astro !== 'undefined' ? Astro : null) });
+    } catch (e) { fine = null; }
+    dshRes = { res: r, fine, birthText: `${bv} ${gd}${pl ? ' ' + pl : ''}` };
     $('btn-ds-ai').classList.remove('hidden');
-    dshRender(r, lonNote);
+    dshRender(r, lonNote, fine);
   }
-  function dshRender(r, lonNote) {
+  // 精校那一屏:第一句就是区间与宽度(铁律二),票面摊开,谁卡的边写清楚
+  function dshFine(f) {
+    if (!f) return '';
+    const seg = s => `<div class="hpv ypline">· <b>${esc(s.narrowSpan || s.span)}</b>(${s.narrowMins || s.mins} 分钟,${esc(s.hourName)}${esc(s.hourGZ)})` +
+      `<br><span class="dim">底子${esc(Bazi.plainBand(s.band))}、旺你的是${esc(s.xi)}` +
+      `${s.mingGong ? ' · 命宫' + esc(s.mingGong) : ''}${s.ascSign ? ' · 上升' + esc(s.ascSign) : ''}` +
+      `${s.voteWhy && s.voteWhy.length ? '<br>对上:' + esc(s.voteWhy.join(';')) : ''}</span></div>`;
+    const bh = f.bHits.filter(h => h.vote).slice(0, 8);
+    return `<div class="wjcard"><h4>精 校 · 落 到 分 钟</h4>` +
+      `<div class="hpv"><b class="key">${esc(f.first)}</b></div>` +
+      `<div class="hpv mt2">${esc(f.next)}</div></div>` +
+      `<div class="wjcard"><h4>还 站 得 住 的 区 间</h4>${f.alive.slice(0, 10).map(seg).join('')}` +
+      `${f.alive.length > 10 ? `<div class="why">…另有 ${f.alive.length - 10} 段,先补线索再看</div>` : ''}` +
+      `<div class="why mt2">这一天按「断出来会不会变」被切成 ${f.segs.length} 段——生时那一格、旺你的五行、走的是哪一档、命宫、上升星座,任一处换了就是新的一段。</div></div>` +
+      (bh.length ? `<div class="wjcard"><h4>慢 星 走 到 四 轴(把区间切到分钟的那一路)</h4>` +
+        bh.map(h => `<div class="hpv ypline">· ${esc(h.plain)}</div>`).join('') +
+        `<div class="why mt2">上升点每 4 分钟走 1°,所以「哪一年被打中」能反过来卡出生的分钟。木星走得太快(一年三十度,任何年份都能对上),算出来摆着但不计票。</div></div>` : '') +
+      (f.cHits.length ? `<div class="wjcard"><h4>换 大 运 的 年 份</h4>` +
+        f.cHits.map(h => `<div class="hpv ypline">· ${esc(h.plain)}</div>`).join('') + `</div>` : '') +
+      `<div class="wjcard"><h4>是 谁 把 边 界 卡 在 这</h4>` +
+      f.bounds.map(b => `<div class="hpv ypline">· ${esc(b)}</div>`).join('') +
+      `<div class="note mt2">${esc(f.honest)}</div></div>`;
+  }
+  function dshRender(r, lonNote, fine) {
     const topFp = (r.canDecide && r.ranked.length) ? r.ranked[0].fp : null;
     const head = `<div class="wjhead">${esc(r.advice)}</div>`;
     const groups = `<div class="wjcard"><h4>断 得 一 样 的 时 辰</h4>` +
@@ -4433,9 +4467,16 @@
       `口径说死:名次只说明「哪个时辰更能解释你给的这几件事」,不是铁口。这套回推做过严格模拟自测——真时辰所在那一档排第一约七成、进前三约九成;` +
       `程序自称「可以定」的那些次里,自测没有错过。但模拟只证明求解器能反解出这套断法本身,不证明这套断法合乎现实:事件层至今没有外部回测数据,` +
       `谁也别拿它当准信。事记错一件,结论就可能整个变;定不了的时候我就说定不了。</div>`;
-    $('ds-out').innerHTML = head + groups + rank + verdict + dif + foot;
+    $('ds-out').innerHTML = head + dshFine(fine) + groups + rank + verdict + dif + foot;
     const pick = $('ds-pick');
-    pick.innerHTML = r.cands.slice().sort((a, b) => a.idx - b.idx)
+    // v1.11:精校收到一段之内时,存档可以直接存**钟点**(HRKEY 本就认 HH:MM),
+    // 那才是分钟级精度的落点——存成时辰等于把刚算出来的精度又扔掉。
+    const fineOpt = (fine && fine.anyEvidence && fine.alive.length === 1)
+      ? (() => { const s = fine.alive[0], mid = Math.floor(((s.narrowFrom != null ? s.narrowFrom : s.from) + (s.narrowTo != null ? s.narrowTo : s.to)) / 2);
+          const hm = `${String(Math.floor(mid / 60)).padStart(2, '0')}:${String(mid % 60).padStart(2, '0')}`;
+          return `<option value="${hm}">按精校存钟点 ${hm}(区间 ${esc(s.narrowSpan || s.span)} 的中点)</option>`; })()
+      : '';
+    pick.innerHTML = fineOpt + r.cands.slice().sort((a, b) => a.idx - b.idx)
       .map(c => `<option value="${c.idx}">${esc(c.name)}(${esc(c.span)},${esc(c.gz)})</option>`).join('');
     // 定得了就默认头名;定不了就别替人乱选——保持他档案里原有的时辰
     let keep = '';
@@ -4449,14 +4490,19 @@
     const v = $('ds-pick').value;
     if (v === '') return;
     dxWriteHour(v);
-    $('ds-saved').textContent = `已按${Dingshi.HOURS[+v].name}存档,吉日、问机、运势各处都改用这个时辰了。`;
+    // v1.11:精校那一项存的是钟点(HH:MM),不是时辰序号——两种格式 HRKEY 都认(v0.75 起)
+    $('ds-saved').textContent = /^\d{1,2}:\d{2}$/.test(v)
+      ? `已按钟点 ${v} 存档(精校区间的中点),吉日、问机、运势各处都改用它了。`
+      : `已按${Dingshi.HOURS[+v].name}存档,吉日、问机、运势各处都改用这个时辰了。`;
   }
   async function dshAI() {
     if (!dshRes) return;
     const key = getKey();
     if (!key) { dshErr('要东玄把这段讲透,先在「问卦」那页的「AI 深断」里存一个 API Key(只存在你本机浏览器)。'); return; }
     dshErr('');
-    const mat = Dingshi.material(dshRes.res, dshRes.birthText);
+    // 精校有结果就把它一并喂进去(它比时辰级那份精确,模型该先讲它)
+    const mat = (dshRes.fine ? Dingshi.fineMaterial(dshRes.fine, dshRes.birthText) + '\n\n' : '')
+      + Dingshi.material(dshRes.res, dshRes.birthText);
     $('ds-ai').textContent = '';
     try {
       await llmStream([{ role: 'user', content: mat }], t => { $('ds-ai').textContent += t; }, DONGXUAN_SYSTEM + '\n' + ANTI_JARGON);

@@ -273,6 +273,287 @@
   const FOLK_NOTE = '以上除最后一条外,都是民间说法,无从验证、各地讲法还不一样,只能当线索,不作依据。' +
     '真要把生时校准,还是拿已经发生过的事去回推——那是唯一能被推翻、也因此才算数的办法。';
 
+  // ══════════════════════════════════════════════════════════════════════════
+  //  精校(v1.11):把「十二时辰选一个」升级成「分钟级区间」
+  // ══════════════════════════════════════════════════════════════════════════
+  // 缘起:用户 2026-08-03「深入的做这个生辰矫正,我要做最专业最精确的生辰矫正功能」。
+  //
+  // **先量后改**,量出来的天花板是这样的(1990-06-15 北京,逐分钟扫一天):
+  //   时柱 12 次跳变(2 小时一格,这是中式的粒度天花板)· 喜忌 8 次 · 旺衰 6 次 · 从格 4 次
+  //   **上升星座 12 次,但它的边界与时辰边界不重合**——两者交错,一天被切成约 24 段
+  //   **上升度数连续,每分钟走 0.25°** ← 全项目唯一的分钟级刻度
+  // 结论:靠中式一家,精度锁死在 2 小时;把西洋的上升接进来,才谈得上「精确」。
+  //
+  // 四路证据,各自的出处与强度写在 CHANNELS 里,**不合成一个总分**——
+  // 每一路各给一组「可能的分钟区间」,最后取**交集**;交集空了就照实说几路打架。
+  //   A 事件方向回推(中式,既有;分辨率 = 时柱段,2 小时)
+  //   B 慢星过四轴(西洋,新;分辨率到分钟——这是精度的来源)
+  //   C 起运换运年(中式,新;连续量,能在一个时辰**内部**再切)
+  //   D 命宫 / 上升星座(展示与旁注,**不计分**——落宫主什么各派不一,不硬造)
+  //
+  // **诚实分级(§三)**:分段的边界是排盘层,可核可验;
+  //   「拿事件去卡区间」这套组合规则是本项目自拟的、**零回测**,与合盘同档。
+  //   西洋以行运校时是行内通行做法,同样没有公开的回测支撑。第一屏必须写着。
+  const HONEST_FINE = '精校这一层分两截:**区间边界是算出来的**(生时那一格什么时候换格、上升什么时候换星座、' +
+    '命宫什么时候换宫、换大运的年份怎么挪,都可核可验);**拿事件去卡区间那套规则是本项目自拟的,零回测**——' +
+    '行内以行运校时是通行做法,但同样没有公开回测撑腰。所以它给的是「哪几段还站得住」,' +
+    '不是「你就生在这一分钟」。区间越窄不等于越真,只等于你给的线索越多。';
+
+  const CHANNELS = {
+    A: { name: '已发生的事(中式年表方向)', 分辨率: '生时那一格(2 小时)', 出处: '本程序年表事型证据链;方向由喜忌定,喜忌由时柱定', 强度: '唯一能自证可推翻的一路,但只到 2 小时' },
+    B: { name: '慢星走到四轴(西洋行运)', 分辨率: '分钟', 出处: '通行占星行运口径;位置层可核(DE421 对照)', 强度: '精度最高的一路;判语零回测' },
+    C: { name: '换大运的年份', 分辨率: '时辰内可再切', 出处: '三日为年折除法(《三命通会》论大运)', 强度: '全天只差约四个月,单用嫌粗,配合别路收边' },
+    D: { name: '命宫 / 上升星座', 分辨率: '换宫换座处', 出处: '命宫依《三命通会》(殆知阁本)命宫章;上升依 Placidus 排盘', 强度: '**不计分**,只作对照——落宫主什么各派不一' },
+  };
+
+  // ——— 上升点逐分钟表:Astro.ascendant 是纯三角,便宜;不必调整盘的 Astro.chart ———
+  function ascTable(birth, lat, lon, Astro) {
+    const y = birth.getFullYear(), mo = birth.getMonth() + 1, d = birth.getDate();
+    const out = new Array(1440);
+    for (let m = 0; m < 1440; m++) {
+      const jd = Astro.jdOf(Astro.birthMoment(y, mo, d, Math.floor(m / 60), m % 60));
+      out[m] = Astro.ascendant(jd, lon, lat);
+    }
+    return out;
+  }
+
+  // ——— 断点扫描:这些量都是「分钟」的阶梯函数,用二分找边界,不硬扫 1440 次 ———
+  // 指纹 = 时柱 + 旺衰 + 喜忌 + 从格 + 命宫 +(有经纬度时)上升星座
+  function fineSegments(opts, Astro) {
+    const { birth, gender, lon, lat } = opts;
+    const y = birth.getFullYear(), mo = birth.getMonth(), d = birth.getDate();
+    const hasGeo = lat != null && lon != null && Astro;
+    const asc = hasGeo ? ascTable(birth, lat, lon, Astro) : null;
+    const cache = new Map();
+    const at = m => {
+      if (cache.has(m)) return cache.get(m);
+      const c = Bazi.chart(new Date(y, mo, d, Math.floor(m / 60), m % 60), gender, lon != null ? { lon } : undefined);
+      const v = {
+        chart: c,
+        fp: [c.pillars.hour.gz, c.strength.band, c.yong.xiWx.slice().sort().join(''),
+          c.cong ? c.cong.type : '-', c.mingGong ? c.mingGong.gz : '-',
+          asc ? Astro.SIGNS[Math.floor(asc[m].asc / 30)] : '-'].join('|'),
+      };
+      cache.set(m, v);
+      return v;
+    };
+    // 粗扫 8 分钟一步,变了再二分到分钟
+    const segs = [];
+    let start = 0, cur = at(0);
+    for (let m = 8; m <= 1439; m += 8) {
+      const mm = Math.min(m, 1439), nx = at(mm);
+      if (nx.fp === cur.fp) continue;
+      let lo = mm - 8, hi = mm;                       // (lo 同旧, hi 已不同]
+      while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (at(mid).fp === cur.fp) lo = mid; else hi = mid; }
+      segs.push({ from: start, to: hi - 1, ...cur });
+      start = hi; cur = at(hi);
+    }
+    segs.push({ from: start, to: 1439, ...cur });
+    return segs.map(s => {
+      const c = s.chart;
+      return {
+        from: s.from, to: s.to, mins: s.to - s.from + 1, fp: s.fp, chart: c,
+        span: `${hhmm(s.from)}–${hhmm(s.to)}`,
+        hourGZ: c.pillars.hour.gz, hourName: HOURS[ZHI.indexOf(c.pillars.hour.zhi)] ? HOURS[ZHI.indexOf(c.pillars.hour.zhi)].name : c.pillars.hour.zhi + '时',
+        band: c.strength.band, xi: c.yong.xiWx.join('、'),
+        cong: c.cong ? c.cong.type : null, mingGong: c.mingGong ? c.mingGong.gz : null,
+        ascSign: asc ? Astro.SIGNS[Math.floor(asc[s.from].asc / 30)] : null,
+        ascFrom: asc ? +asc[s.from].asc.toFixed(2) : null, ascTo: asc ? +asc[s.to].asc.toFixed(2) : null,
+      };
+    });
+  }
+  const ZHI = '子丑寅卯辰巳午未申酉戌亥';
+  const hhmm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+
+  // ——— B 路:慢星走到四轴,**解析反解**成分钟区间 ———
+  // 道理:行运星 λ(t) 在事件那一年扫过一段黄经;它与上升成某个相位,要求 ASC ≡ λ − 相位角。
+  // 于是「这一年被打中」等价于「ASC 落在某一段」,而 ASC 是分钟的单调函数——反查即得分钟区间。
+  // 不必逐分钟跑行运(那要几十秒),两次取黄经就够。
+  // **木星不计票,只作旁注——这是量出来的,不是拍的。**
+  // 实测(1990-06-15 北京,三个事件年):木星一年走约 30°,配三个相位后,单它一颗
+  // 就在全天铺出约 1050 分钟的窗口——**任何年份它都能「解释」**,那不是证据是噪声。
+  // 而土星每年约 12°(单相位窗约 45 分钟)、天海冥每年 1–4°(窗 16–62 分钟三年合计),
+  // 才是真正能把区间切窄的刻度。木星照旧算出来摆着,但不进计票。
+  const B_MOVERS = [
+    { k: 'sat', name: '土星', w: 3, vote: true, say: '结构定形、责任加身的那种年份' },
+    { k: 'plu', name: '冥王星', w: 3, vote: true, say: '连根翻动、回不去原样的那种年份' },
+    { k: 'ura', name: '天王星', w: 2, vote: true, say: '突发变动、旧安排待不住的那种年份' },
+    { k: 'nep', name: '海王星', w: 2, vote: true, say: '边界模糊、判断力下降的那种年份' },
+    { k: 'jup', name: '木星', w: 0, vote: false, say: '机会扩张的那种年份(走得快,一年三十度,任何年份它都能对上——只摆着,不计票)' },
+  ];
+  const B_ASPS = [{ deg: 0, key: '合' }, { deg: 90, key: '刑' }, { deg: 180, key: '冲' }];
+  function angleWindows(birth, lat, lon, events, Astro) {
+    const asc = ascTable(birth, lat, lon, Astro);
+    // ASC 值 → 分钟集合(ASC 一天单调走完 360°,但速度随星座变,故按表反查)
+    const minutesForAscRange = (a0, a1) => {          // 含首尾,处理跨 0°
+      const inR = v => { const d = ((v - a0) % 360 + 360) % 360; return d <= ((a1 - a0) % 360 + 360) % 360; };
+      const out = [];
+      let s = null;
+      for (let m = 0; m < 1440; m++) {
+        if (inR(asc[m].asc)) { if (s === null) s = m; }
+        else if (s !== null) { out.push([s, m - 1]); s = null; }
+      }
+      if (s !== null) out.push([s, 1439]);
+      return out;
+    };
+    const hits = [];
+    for (const e of events) {
+      if (!e.year) continue;
+      const jd0 = Astro.jdOf(new Date(Date.UTC(e.year, 0, 1))), jd1 = Astro.jdOf(new Date(Date.UTC(e.year + 1, 0, 1)));
+      for (const mv of B_MOVERS) {
+        const l0 = Astro.lonAt(mv.k, jd0), l1 = Astro.lonAt(mv.k, jd1);
+        if (isNaN(l0) || isNaN(l1)) continue;         // 冥王出表照实跳过
+        // 这一年里行运星扫过的黄经段(含逆行往返:取最小包络)
+        let lo = Math.min(l0, l1), hi = Math.max(l0, l1);
+        if (hi - lo > 180) { const t = lo; lo = hi; hi = t + 360; }   // 跨 0°
+        for (const asp of B_ASPS) {
+          const a0 = ((lo - asp.deg) % 360 + 360) % 360, a1 = ((hi - asp.deg) % 360 + 360) % 360;
+          for (const [f, t] of minutesForAscRange(a0, a1)) {
+            hits.push({ year: e.year, what: e.what || '', mover: mv.name, w: mv.w, vote: mv.vote, asp: asp.key, from: f, to: t,
+              plain: `${e.year} 年${e.what ? '「' + e.what + '」' : ''}——${mv.name}${asp.key}上升:${mv.say}。要这一年被打中,生时得落在 ${hhmm(f)}–${hhmm(t)}` +
+                (mv.vote ? '' : '(此条不计票)') });
+          }
+        }
+      }
+    }
+    return hits;
+  }
+
+  // ——— C 路:换大运的年份 ———
+  // 起运岁由「到节气还有多久」折算(三日为年),是分钟的连续函数;全天只差约四个月,
+  // 单用嫌粗,但它能在**一个时辰内部**再切一刀,与 A 路正交。
+  function dayunWindows(birth, gender, lon, turnYears) {
+    if (!turnYears || !turnYears.length) return [];
+    const y = birth.getFullYear(), mo = birth.getMonth(), d = birth.getDate();
+    const hitAt = m => {
+      const c = Bazi.chart(new Date(y, mo, d, Math.floor(m / 60), m % 60), gender, lon != null ? { lon } : undefined);
+      const list = (c.dayun && c.dayun.list) || [];
+      if (!list.length) return null;
+      return turnYears.map(ty => list.some(s => Math.abs((y + s.fromAge) - ty) <= 0.5));
+    };
+    const out = [];
+    turnYears.forEach((ty, i) => {
+      let s = null;
+      for (let m = 0; m < 1440; m += 10) {            // 10 分钟一步足够:全天只挪约四个月
+        const h = hitAt(m);
+        const ok = h && h[i];
+        if (ok) { if (s === null) s = m; }
+        else if (s !== null) { out.push({ year: ty, from: s, to: m - 1, plain: `${ty} 年换大运——生时落在 ${hhmm(s)}–${hhmm(m - 1)} 才对得上` }); s = null; }
+      }
+      if (s !== null) out.push({ year: ty, from: s, to: 1439, plain: `${ty} 年换大运——生时落在 ${hhmm(s)}–${hhmm(1439)} 才对得上` });
+    });
+    return out;
+  }
+
+  // ——— 主函数:四路各给区间,取交集 ———
+  // opts: { birth, gender, lon, lat, events:[{year,type,good,what}], turnYears:[年], Astro }
+  function rectify(opts) {
+    const Astro = opts.Astro || (typeof root !== 'undefined' && root.Astro) || null;
+    const hasGeo = opts.lat != null && opts.lon != null && !!Astro;
+    const segs = fineSegments(opts, hasGeo ? Astro : null);
+    const events = (opts.events || []).filter(e => e && e.year);
+
+    // A 路:逐段拿既有的方向回推打分(段内断法一样,取段首那副盘即可)
+    const usable = events.filter(e => e.good !== undefined && e.good !== null && e.type && e.type !== 'yinyuan');
+    let aBest = null;
+    if (usable.length >= 3) {
+      for (const s of segs) { const a = agreementOf(s.chart, usable); s.agree = a.rate; s.agreeDetail = a.detail; }
+      const scored = segs.filter(s => s.agree !== null);
+      if (scored.length) {
+        aBest = Math.max(...scored.map(s => s.agree));
+        for (const s of segs) s.aPass = s.agree !== null && s.agree >= Math.max(0.6, aBest - 0.15);
+      }
+    }
+    // ——— 通则:**盖满全天的证据不算证据** ———
+    // 木星那一条是量出来的特例(一年三十度,任何年份都能对上);但同一个病会从别处再犯:
+    // C 路实测就撞上了——起运岁全天只挪约 0.3 岁,若用户报的换运年正落在那个区间里,
+    // 这一路会给**每一段**都 +1 票,看着热闹,实则一分区分度都没有。
+    // 所以统一加一道闸:某条线索若覆盖 ≥95% 的候选分钟,它就不参与计票,并当面说明为什么。
+    const NOSPLIT = 0.95;
+    const covered = list => { const set = new Set(); for (const h of list) for (let m = h.from; m <= h.to; m++) set.add(m); return set.size; };
+    const useful = list => list.length > 0 && covered(list) < 1440 * NOSPLIT;
+
+    // B 路(只数计票的那几颗;木星摆着不计票,理由见 B_MOVERS 抬头的实测)
+    const bHits = hasGeo && events.length ? angleWindows(opts.birth, opts.lat, opts.lon, events, Astro) : [];
+    const bByYear = {}, bDropped = [];
+    for (const h of bHits.filter(x => x.vote)) (bByYear[h.year] = bByYear[h.year] || []).push(h);
+    for (const yy of Object.keys(bByYear)) {
+      if (!useful(bByYear[yy])) { bDropped.push(`${yy} 年那几条慢星窗口几乎盖满全天,区分不出先后,不计票`); delete bByYear[yy]; }
+    }
+    const bCover = m => Object.keys(bByYear).filter(yy => bByYear[yy].some(h => m >= h.from && m <= h.to)).length;
+    const bYears = Object.keys(bByYear).length;
+    // C 路(同一道闸)
+    const cAll = dayunWindows(opts.birth, opts.gender, opts.lon, opts.turnYears);
+    const cByYear = {}, cDropped = [];
+    for (const h of cAll) (cByYear[h.year] = cByYear[h.year] || []).push(h);
+    const cHits = [];
+    for (const yy of Object.keys(cByYear)) {
+      if (useful(cByYear[yy])) cHits.push(...cByYear[yy]);
+      else cDropped.push(`${yy} 年这个换运年在全天任何时刻都成立(起运岁一天只挪约 0.3 岁),切不动,不计票`);
+    }
+    const cCover = m => cHits.filter(h => m >= h.from && m <= h.to).length;
+
+    // ——— 不做硬交集,改数「可数的证据票」———
+    // **这一改是量出来的**:去掉木星之后,三个事件年里没有任何一分钟能被慢星全部打中
+    // (实测 0 分钟全中、53 分钟中两个)。原因不是程序不准,是**真实人生里多数年份四轴上
+    // 本来就没有慢星**。硬按「每件事都得被解释」求交集,工具只会永远回答「打架」——
+    // 那是把模型的苛刻说成了用户记错。改成:每段数它对上几条证据,取票数最高的一档,
+    // 并把票面摊开给人看。**不合成百分比**——票是可数的条目,合成一个分数只会显得比实际精确。
+    for (const s of segs) {
+      const mins = rangeMins(s);
+      s.bBest = bYears ? Math.max(...mins.map(bCover)) : 0;
+      s.cBest = cHits.length ? Math.max(...mins.map(cCover)) : 0;
+      s.votes = (s.aPass ? 1 : 0) + s.bBest + s.cBest;
+      s.voteWhy = [];
+      if (s.aPass) s.voteWhy.push('已发生的事(中式方向)对得上');
+      if (s.bBest) s.voteWhy.push(`慢星走到四轴,对上 ${s.bBest} 个年份`);
+      if (s.cBest) s.voteWhy.push(`换大运的年份对上 ${s.cBest} 个`);
+      // 段内收窄:只留票数达到本段最高的那些分钟
+      if (s.votes > (s.aPass ? 1 : 0)) {
+        const best = s.bBest + s.cBest;
+        const good = mins.filter(m => bCover(m) + cCover(m) >= best);
+        if (good.length && good.length < mins.length) {
+          s.narrowFrom = good[0]; s.narrowTo = good[good.length - 1];
+          s.narrowSpan = `${hhmm(good[0])}–${hhmm(good[good.length - 1])}`; s.narrowMins = good.length;
+        }
+      }
+    }
+    const maxVotes = Math.max(0, ...segs.map(s => s.votes));
+    const anyEvidence = maxVotes > 0;
+    const alive = anyEvidence ? segs.filter(s => s.votes === maxVotes) : segs.slice();
+    const totalMins = alive.reduce((a, s) => a + (s.narrowMins != null ? s.narrowMins : s.mins), 0);
+    const width = `${totalMins} 分钟`;
+    // 谁卡的边
+    const bounds = [];
+    if (usable.length >= 3) bounds.push(`已发生的事(${usable.length} 件)把范围压到生时那一格这一级(两小时)`);
+    else bounds.push(`能判方向的事只有 ${usable.length} 件(要三件才算数),这一路没使上劲`);
+    if (bYears) bounds.push(`慢星过四轴用上了 ${bYears} 个年份,这是把区间切到分钟的那一路`);
+    else if (!hasGeo) bounds.push('没有出生地经纬度,西洋那一路(唯一能精确到分钟的)整个用不上——补上出生地就能收窄');
+    else bounds.push('没给事件年份,慢星那一路无从下手');
+    if (cHits.length) bounds.push('换大运的年份又切了一刀(这一路能在一个时辰内部再分)');
+    for (const x of bDropped.concat(cDropped)) bounds.push(x + '——盖满全天的线索区分不出任何东西,照实剔除,不拿它凑数');
+
+    // 票面必须当面报出来:说「还剩几段」而不报「各对上几条」,等于把没验到的当验到了
+    const voteNote = anyEvidence ? `(每段对上 ${maxVotes} 条证据,是本次的最高票)` : '';
+    const first = !anyEvidence
+      ? `你给的线索一条也没能把范围收窄:这一天分成 ${segs.length} 段,眼下每一段都还站得住(合计 ${width})。这不是算不出来,是线索还不够——见下面「下一步」。`
+      : alive.length === 1
+        ? `生时落在 ${alive[0].narrowSpan || alive[0].span}${voteNote},共 ${alive[0].narrowMins || alive[0].mins} 分钟宽,按时辰算是${alive[0].hourName}。`
+        : `还剩 ${alive.length} 段并列${voteNote},合计 ${width}:${alive.slice(0, 4).map(s => (s.narrowSpan || s.span)).join('、')}${alive.length > 4 ? ' 等' : ''}。这几段证据一样多,分不出高下——分不开就是分不开。`;
+    const next = !hasGeo ? '下一步最管用的:把出生地填上——上升点每 4 分钟走 1°,是全场唯一能精确到分钟的刻度,没有经纬度就排不出来。'
+      : !events.length ? '下一步最管用的:报几件确凿的大事(哪一年、是好是坏)。慢星走到上升那一年,人生轨道多半有明显动静,拿它反推最锋利。'
+      : usable.length < 3 ? `下一步最管用的:再补几件标了好坏的事(事业、财运、健康这几类方向最鲜明),凑够三件中式那一路才启动——现在只有 ${usable.length} 件。`
+      : alive.length > 1 ? '下一步最管用的:再报一两个「那一年整个轨道变了」的年份。慢星那一路每多一个年份就多切一刀,而它是唯一能切到分钟的。'
+      : '已经收到一段之内。再往下要靠精确到月的事发日期,那超出本程序现在能做的——照实说,不硬往下猜。';
+
+    return {
+      segs, alive, width, totalMins, bHits, cHits, bounds, channels: CHANNELS, honest: HONEST_FINE,
+      hasGeo, aBest, bYears, maxVotes, anyEvidence, bDropped, cDropped, first, next,
+      say: first + ' ' + next,
+    };
+  }
+  function rangeMins(s) { const out = []; for (let m = s.from; m <= s.to; m++) out.push(m); return out; }
+
   function material(res, birthText) {
     const g = res.groups.map(x => '· ' + x.note).join('\n');
     const r = res.ranked.length
@@ -289,5 +570,21 @@
       `不许拿相貌性格这类说辞硬定时辰,不许出现干支十神喜忌这些名目,不许说「仅供参考」「因人而异」这类空话。`;
   }
 
-  return { solve, parseRange, chartAt, fingerprint, yearScore, yearEv, agreementOf, stability, HOURS, VAGUE, FOLK, FOLK_NOTE, material };
+  // 精校的材料:与 solve 那份分开,写法要求一样钉死(§五 程序算死、AI 只解释)
+  function fineMaterial(r, birthText) {
+    const seg = s => `${s.narrowSpan || s.span}(${s.narrowMins || s.mins}分,${s.hourName}${s.hourGZ}` +
+      `,底子${Bazi.plainBand(s.band)}、旺${s.xi}${s.mingGong ? `、命宫${s.mingGong}` : ''}${s.ascSign ? `、上升${s.ascSign}` : ''})`;
+    return `【生时精校(程序算死,勿另立结论)】\n生辰:${birthText || ''}\n\n` +
+      `[结论]${r.first}\n[还剩几段]${r.alive.length} 段:\n${r.alive.slice(0, 8).map(s => '· ' + seg(s)).join('\n') || '(无)'}\n\n` +
+      `[慢星过四轴命中]\n${r.bHits.slice(0, 10).map(h => '· ' + h.plain).join('\n') || '(这一路没用上)'}\n\n` +
+      `[换大运年份]\n${r.cHits.map(h => '· ' + h.plain).join('\n') || '(没给转折年份)'}\n\n` +
+      `[是谁把边界卡在这]\n${r.bounds.map(x => '· ' + x).join('\n')}\n\n[下一步]${r.next}\n\n` +
+      `【写法要求】第一句就说死:落在哪个区间、多少分钟宽,还是几段分不开、还是打架。` +
+      `**区间宽度必须报出来**,不许把「还剩 3 段」说成「就是某时辰」。` +
+      `末尾照实带一句:区间边界是算出来的,拿事件卡区间那套规则是本项目自拟的、零回测。` +
+      `不许出现干支十神喜忌这些名目,不许说「仅供参考」「因人而异」。`;
+  }
+
+  return { solve, parseRange, chartAt, fingerprint, yearScore, yearEv, agreementOf, stability, HOURS, VAGUE, FOLK, FOLK_NOTE, material,
+    rectify, fineSegments, angleWindows, dayunWindows, fineMaterial, CHANNELS, HONEST_FINE, hhmm };
 }));
