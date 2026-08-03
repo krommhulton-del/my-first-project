@@ -67,7 +67,34 @@
   }
   const gz = i => GAN[i % 10] + ZHI[i % 12];
 
-  // 太阳视黄经(Meeus 低精度,误差约 0.01°,足定节气)
+  // ——— 节气用的太阳黄经:优先取权威那一份(v1.12)———
+  // 用户 2026-08-03:「排盘排不准就用人家权威的工具」。查下来这里确实不准:
+  // 下面这个 Meeus 低精度式**没有算 ΔT**(太阳每小时走 41″,69 秒就是约 1.2 分钟),
+  // 加上式子本身约 0.01° 的截断,与 VSOP87D(astro.js,已逐点对过 JPL DE421,残差 0.83″)
+  // 相比,1950–2050 的 1212 个节气**平均差 7.05 分钟、最大 22.8 分钟**
+  // (宪法原记「1.5–6 分钟」是早期抽样太少,照实更正)。
+  // 节气定月柱、立春定年柱,差这么多会让交节前后出生的人整根柱子排错。
+  // 修法:**同一件事只留一处权威口径**(§四)——有 astro.js 就用它的太阳,
+  // 取不到才退回下面这式。**懒查**:浏览器里 astro.js 可能后于本文件加载,不能在工厂期捕获。
+  // Meeus 这一份不删:它是独立实现,测试拿它与 VSOP 互核(两边一起错的概率极低),
+  // 这正是 v1.08「独立方法不独立」那个教训的防线。
+  let SUN_HI;
+  function hiSunFn() {
+    if (SUN_HI !== undefined) return SUN_HI;
+    let A = null;
+    try {
+      A = (typeof module === 'object' && module.exports) ? require('./astro.js')
+        : (typeof self !== 'undefined' ? self.Astro : null);
+    } catch (e) { A = null; }
+    SUN_HI = (A && A.sunApparentLon) ? (ms => A.sunApparentLon(new Date(ms))) : null;
+    return SUN_HI;
+  }
+  function sunLonForJie(dateUtcMs) {
+    const f = hiSunFn();
+    return f ? f(dateUtcMs) : sunLongitude(dateUtcMs);
+  }
+
+  // 太阳视黄经(Meeus 低精度,误差约 0.01°;**只作独立互核与兜底**,节气走 sunLonForJie)
   function sunLongitude(dateUtcMs) {
     const jd = dateUtcMs / 86400000 + 2440587.5;
     const T = (jd - 2451545.0) / 36525;
@@ -85,7 +112,7 @@
   // 完整干支(年柱、月建、日辰、旬空)。date 为 Date,按其本地历日与时刻计算。
   function ganZhi(date) {
     const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
-    const lam = sunLongitude(date.getTime());
+    const lam = sunLonForJie(date.getTime());
     const mi = Math.floor((((lam - 315) % 360) + 360) % 360 / 30); // 0=寅月 … 11=丑月
     const lunarYear = (m <= 2 && mi >= 10) ? y - 1 : y;            // 立春前属旧岁
     const yGan = ((lunarYear - 4) % 10 + 10) % 10, yZhi = ((lunarYear - 4) % 12 + 12) % 12;
@@ -400,6 +427,6 @@
     return { where: '既不上卦、首卦亦无', line: null, all: [], fu: null };
   }
 
-  return { ganZhi, zhuangGua, liuShen, dayIndex, sunLongitude, PALACE_MAP, GAN, ZHI, ZHI_WX,
+  return { ganZhi, zhuangGua, liuShen, dayIndex, sunLongitude, sunLonForJie, PALACE_MAP, GAN, ZHI, ZHI_WX,
     yaoPower, jinTui, yongShenOf, locateYong, bareLines, YONG_SHEN, MU_OF };
 }));

@@ -786,7 +786,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.11</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.12</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1578,7 +1578,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v1.11 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.12 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -4408,9 +4408,11 @@
       `<div class="wjcard"><h4>还 站 得 住 的 区 间</h4>${f.alive.slice(0, 10).map(seg).join('')}` +
       `${f.alive.length > 10 ? `<div class="why">…另有 ${f.alive.length - 10} 段,先补线索再看</div>` : ''}` +
       `<div class="why mt2">这一天按「断出来会不会变」被切成 ${f.segs.length} 段——生时那一格、旺你的五行、走的是哪一档、命宫、上升星座,任一处换了就是新的一段。</div></div>` +
-      (bh.length ? `<div class="wjcard"><h4>慢 星 走 到 四 轴(把区间切到分钟的那一路)</h4>` +
+      (bh.length ? `<div class="wjcard"><h4>慢 星 走 到 四 轴(只作对照,<b class="v-warn">不用来定生辰</b>)</h4>` +
         bh.map(h => `<div class="hpv ypline">· ${esc(h.plain)}</div>`).join('') +
-        `<div class="why mt2">上升点每 4 分钟走 1°,所以「哪一年被打中」能反过来卡出生的分钟。木星走得太快(一年三十度,任何年份都能对上),算出来摆着但不计票。</div></div>` : '') +
+        `<div class="why mt2">上升点每 4 分钟走 1°,所以「哪一年被打中」理论上能反过来卡出生的分钟——但自测量出来它靠不住:` +
+        `拿它收窄,每次都敢收到约 50 分钟,而真时刻只有 <b>18.9%</b> 落在里头(碰运气是 3.0%)。` +
+        `有一点信号,可八成会把真答案排除掉,所以这里只把窗口摆给你看,一票不投。</div></div>` : '') +
       (f.cHits.length ? `<div class="wjcard"><h4>换 大 运 的 年 份</h4>` +
         f.cHits.map(h => `<div class="hpv ypline">· ${esc(h.plain)}</div>`).join('') + `</div>` : '') +
       `<div class="wjcard"><h4>是 谁 把 边 界 卡 在 这</h4>` +

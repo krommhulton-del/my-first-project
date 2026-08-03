@@ -338,12 +338,37 @@ t('票数、区间宽度、下一步:三样都不许含糊(铁律二、三)', ()
   const none = Dingshi.rectify({ ...base });
   ok(!none.anyEvidence, '零线索时不该有证据票');
   eq(none.alive.length, none.segs.length, '零线索时每一段都该还站得住(不许偷偷挑一个)');
-  ok(/线索还不够|一条也没能/.test(none.first), '零线索要照实说线索不够:' + none.first);
+  ok(/线索还不够/.test(none.first), '零线索要照实说线索不够:' + none.first);
+  ok(/排除不掉|分不开/.test(none.first), '零线索要说清是「一段也排除不掉」:' + none.first);
+  // v1.12 改口径(用户:「宁可保留质量最好,也不要出错」):
+  // 慢星那一路降为旁注不计票——自测量出它每次都敢收到约 50 分钟,而真时刻只有 18.9% 在内
+  // (碰运气 3.0%),八成会把真答案排除掉;中式那一路改用 solve 的判据(拉不开差距就不开口)。
+  // 于是**多数情形不收窄**,这正是要的行为:宁可说分不开,不许说错。
   const withEv = Dingshi.rectify({ ...base, events: ev });
-  ok(withEv.totalMins < 1440, `有线索该真的收窄,实得 ${withEv.totalMins} 分钟`);
   ok(withEv.alive.every(s => s.votes === withEv.maxVotes), '存活段的票数该都等于最高票');
   ok(/分钟/.test(withEv.first), '第一句必须报出区间宽度:' + withEv.first);
   ok(withEv.next && withEv.next.length > 10, '必须给「下一步该补什么」');
+  ok(!withEv.anyEvidence || withEv.alive.length >= 1, '有票就该有存活段');
+  // 慢星窗口照算照摆,但一票不投(不许悄悄回来参与收窄)
+  ok(withEv.bHits.length > 0, '慢星窗口该照算出来给人看');
+  ok(withEv.segs.every(s => !s.bBest), '慢星不许参与计票');
+  ok(withEv.bounds.some(b => /18\.9%|一票不投/.test(b)), '必须当面说明慢星为什么不计票:' + withEv.bounds.join(' | '));
+  // 「敢收窄」这条路不是死条:证据够杂时仍触发得到(自测约 1%,且开口那次真时刻在内)
+  let decided = 0;
+  for (let i = 0; i < 40; i++) {
+    const y = 1960 + (i * 7) % 50, mo = (i * 5) % 12, d = 1 + (i * 11) % 28, tm = (i * 137) % 1440;
+    const truth = Bazi.chart(new Date(y, mo, d, Math.floor(tm / 60), tm % 60), '男', { lon: 116.4 });
+    const evs = [];
+    for (let yy = y + 20; yy < y + 60 && evs.length < 5; yy++) for (const T of ['shiye', 'caiyun', 'jiankang', 'wenshu', 'guanfei', 'biandong']) {
+      if (evs.length >= 5) break;
+      const e = Dingshi.yearEv(truth, yy, T);
+      if (Math.abs(e.dir) >= 1.5 && !evs.some(x => x.year === yy)) evs.push({ year: yy, type: T, good: e.dir > 0 });
+    }
+    if (evs.length < 5) continue;
+    const r = Dingshi.rectify({ birth: new Date(y, mo, d), gender: '男', lon: 116.4, lat: 39.9, Astro, events: evs });
+    if (r.aDecided) decided++;
+  }
+  ok(decided >= 1, '「敢收窄」这条路一次都没触发过——成死条了');
   // 没有经纬度 → 西洋那一路整个用不上,必须当面说,不许假装还能精确
   const noGeo = Dingshi.rectify({ birth: base.birth, gender: '男', lon: 116.4, events: ev, Astro });
   ok(!noGeo.hasGeo && noGeo.bounds.some(b => /出生地/.test(b)), '缺经纬度要点名说是哪一路用不上');
@@ -352,7 +377,10 @@ t('票数、区间宽度、下一步:三样都不许含糊(铁律二、三)', ()
 t('精校的话过体检员,并把「自拟零回测」写在明处', () => {
   const r = Dingshi.rectify({ birth: new Date(1990, 5, 15), gender: '男', lon: 116.4, lat: 39.9, Astro,
     events: [{ year: 2015, type: 'shiye', good: false }, { year: 2019, type: 'caiyun', good: true }, { year: 2021, type: 'shiye', good: true }] });
-  ok(/自拟/.test(r.honest) && /零回测/.test(r.honest), '第一屏必须写明组合规则自拟、零回测');
+  // v1.12:诚实声明改成把**实测数字**摆出来(比一句「零回测」更硬)
+  ok(/18\.9%/.test(r.honest) && /3\.0%/.test(r.honest), '第一屏必须把自测的命中率与随机基线一起写出来');
+  ok(/不拿它定生辰/.test(r.honest), '必须写明慢星那一路不用于定生辰');
+  ok(/两小时|生时那一格/.test(r.honest), '必须写明真正能定的那一路最细只到生时那一格');
   for (const txt of [r.first, r.next].concat(r.bounds)) {
     const t2 = Tijian.check(txt, {});
     ok(!t2.hits.some(h => h.cat === '术语'), '给客人的话里有行内名目:' + txt);

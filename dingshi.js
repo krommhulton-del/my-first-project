@@ -294,14 +294,19 @@
   // **诚实分级(§三)**:分段的边界是排盘层,可核可验;
   //   「拿事件去卡区间」这套组合规则是本项目自拟的、**零回测**,与合盘同档。
   //   西洋以行运校时是行内通行做法,同样没有公开的回测支撑。第一屏必须写着。
-  const HONEST_FINE = '精校这一层分两截:**区间边界是算出来的**(生时那一格什么时候换格、上升什么时候换星座、' +
-    '命宫什么时候换宫、换大运的年份怎么挪,都可核可验);**拿事件去卡区间那套规则是本项目自拟的,零回测**——' +
-    '行内以行运校时是通行做法,但同样没有公开回测撑腰。所以它给的是「哪几段还站得住」,' +
-    '不是「你就生在这一分钟」。区间越窄不等于越真,只等于你给的线索越多。';
+  const HONEST_FINE = '这一层分两截,分清楚了才不会被数字骗。' +
+    '**一、区间边界是算出来的**——生时那一格什么时候换格、上升什么时候换星座、命宫什么时候换宫、' +
+    '换大运的年份怎么挪,全都可核可验,这一半是硬的。' +
+    '**二、拿事件去定是哪一段,本程序做不到分钟级,并且照实告诉你为什么**:' +
+    '自测(随机生日、随机真出生时刻,事件的好坏由真盘定的理想情形)量出两个数——' +
+    '拿慢星过四轴去卡,每次都敢收窄到约 50 分钟,可真时刻只有 18.9% 落在里头(碰运气是 3.0%);' +
+    '它确实带一点信号,但八成会把真答案排除掉,所以本程序**不拿它定生辰**,只摆出来给你对照。' +
+    '真正用来定的只有「已发生的事」那一路,而它最细只到生时那一格(两小时),' +
+    '多数时候还拉不开差距——那时程序就说分不开,不替你挑一个。';
 
   const CHANNELS = {
     A: { name: '已发生的事(中式年表方向)', 分辨率: '生时那一格(2 小时)', 出处: '本程序年表事型证据链;方向由喜忌定,喜忌由时柱定', 强度: '唯一能自证可推翻的一路,但只到 2 小时' },
-    B: { name: '慢星走到四轴(西洋行运)', 分辨率: '分钟', 出处: '通行占星行运口径;位置层可核(DE421 对照)', 强度: '精度最高的一路;判语零回测' },
+    B: { name: '慢星走到四轴(西洋行运)', 分辨率: '分钟(但不用于定生辰)', 出处: '通行占星行运口径;位置层可核(对过 DE421)', 强度: '**不计票**——自测收窄到约 50 分钟时真时刻只有 18.9% 在内(碰运气 3.0%),八成会排除掉真答案' },
     C: { name: '换大运的年份', 分辨率: '时辰内可再切', 出处: '三日为年折除法(《三命通会》论大运)', 强度: '全天只差约四个月,单用嫌粗,配合别路收边' },
     D: { name: '命宫 / 上升星座', 分辨率: '换宫换座处', 出处: '命宫依《三命通会》(殆知阁本)命宫章;上升依 Placidus 排盘', 强度: '**不计分**,只作对照——落宫主什么各派不一' },
   };
@@ -453,15 +458,24 @@
     const segs = fineSegments(opts, hasGeo ? Astro : null);
     const events = (opts.events || []).filter(e => e && e.year);
 
-    // A 路:逐段拿既有的方向回推打分(段内断法一样,取段首那副盘即可)
+    // ——— A 路:判据与 solve 同源(v1.12 收紧)———
+    // **改严的缘由是量出来的**(用户 2026-08-03:「宁可保留质量最好,也不要出错」):
+    // 旧判据是「吻合度 ≥ 最高分减 0.15」,松到几乎每段都过。换成 solve 那套
+    // (同断法归一组、头名要与**第一个断法不同**的组拉开 gap≥0.15、且头名 ≥0.6)之后,
+    // 蒙特卡洛 53 例里**一次都不敢收窄**——那不是程序无能,是三四件同类事本来就分不开。
+    // 照 v0.61 定下的规矩:**分不开就说分不开**,不许把「大家都对得上」说成「就是这一段」。
     const usable = events.filter(e => e.good !== undefined && e.good !== null && e.type && e.type !== 'yinyuan');
-    let aBest = null;
+    let aBest = null, aGap = null, aDecided = false;
     if (usable.length >= 3) {
       for (const s of segs) { const a = agreementOf(s.chart, usable); s.agree = a.rate; s.agreeDetail = a.detail; }
       const scored = segs.filter(s => s.agree !== null);
       if (scored.length) {
-        aBest = Math.max(...scored.map(s => s.agree));
-        for (const s of segs) s.aPass = s.agree !== null && s.agree >= Math.max(0.6, aBest - 0.15);
+        const rk = scored.slice().sort((x, y) => y.agree - x.agree);
+        const top = rk[0], other = rk.find(x => x.fp !== top.fp);
+        aBest = top.agree;
+        aGap = other ? top.agree - other.agree : 1;
+        aDecided = aGap >= 0.15 && top.agree >= 0.6;
+        if (aDecided) for (const s of segs) s.aPass = s.fp === top.fp;
       }
     }
     // ——— 通则:**盖满全天的证据不算证据** ———
@@ -473,15 +487,18 @@
     const covered = list => { const set = new Set(); for (const h of list) for (let m = h.from; m <= h.to; m++) set.add(m); return set.size; };
     const useful = list => list.length > 0 && covered(list) < 1440 * NOSPLIT;
 
-    // B 路(只数计票的那几颗;木星摆着不计票,理由见 B_MOVERS 抬头的实测)
+    // ——— B 路(慢星过四轴):v1.12 起**整路降为旁注,不参与收窄** ———
+    // **这是量出来的,不是保守起见**。拿合成真值做蒙特卡洛(生日与真出生分钟随机,
+    // 事件的好坏由**真盘**判定——这是对求解器最有利的理想自洽情形):
+    //   带这一路时,程序每次都敢收窄到平均 50 分钟,**而真时刻只有 18.9% 落在给出的区间里**
+    //   (随机基线 3.0%——所以它确实带一点信号,比碰运气强六倍,但**八成会把真时刻排除掉**)。
+    // 一个把真答案排除掉八成的东西,不配拿来定生辰。它照旧算出来摆着(窗口是真的、
+    // 可核可验),但**一票不投**,并且当面把 18.9% 这个数写给用户看。
+    // 要让它够格计票,得有真实语料(真人的真事 + 档案级出生时刻)——本项目没有,照实挂着。
     const bHits = hasGeo && events.length ? angleWindows(opts.birth, opts.lat, opts.lon, events, Astro) : [];
     const bByYear = {}, bDropped = [];
-    for (const h of bHits.filter(x => x.vote)) (bByYear[h.year] = bByYear[h.year] || []).push(h);
-    for (const yy of Object.keys(bByYear)) {
-      if (!useful(bByYear[yy])) { bDropped.push(`${yy} 年那几条慢星窗口几乎盖满全天,区分不出先后,不计票`); delete bByYear[yy]; }
-    }
-    const bCover = m => Object.keys(bByYear).filter(yy => bByYear[yy].some(h => m >= h.from && m <= h.to)).length;
-    const bYears = Object.keys(bByYear).length;
+    const bCover = () => 0;                       // 不计票
+    const bYears = 0;
     // C 路(同一道闸)
     const cAll = dayunWindows(opts.birth, opts.gender, opts.lon, opts.turnYears);
     const cByYear = {}, cDropped = [];
@@ -501,17 +518,16 @@
     // 并把票面摊开给人看。**不合成百分比**——票是可数的条目,合成一个分数只会显得比实际精确。
     for (const s of segs) {
       const mins = rangeMins(s);
-      s.bBest = bYears ? Math.max(...mins.map(bCover)) : 0;
+      s.bBest = 0;                                  // 慢星那一路不计票(实测 18.9%,见 B_MOVERS 上方)
       s.cBest = cHits.length ? Math.max(...mins.map(cCover)) : 0;
-      s.votes = (s.aPass ? 1 : 0) + s.bBest + s.cBest;
+      s.votes = (s.aPass ? 1 : 0) + s.cBest;
       s.voteWhy = [];
-      if (s.aPass) s.voteWhy.push('已发生的事(中式方向)对得上');
-      if (s.bBest) s.voteWhy.push(`慢星走到四轴,对上 ${s.bBest} 个年份`);
+      if (s.aPass) s.voteWhy.push('已发生的事(中式方向)对得上,且与断法不同的那一档拉开了差距');
       if (s.cBest) s.voteWhy.push(`换大运的年份对上 ${s.cBest} 个`);
-      // 段内收窄:只留票数达到本段最高的那些分钟
-      if (s.votes > (s.aPass ? 1 : 0)) {
-        const best = s.bBest + s.cBest;
-        const good = mins.filter(m => bCover(m) + cCover(m) >= best);
+      // 段内收窄:只有换大运那一路是连续量,能在段内再切;慢星不参与
+      if (s.cBest) {
+        const best = s.cBest;
+        const good = mins.filter(m => cCover(m) >= best);
         if (good.length && good.length < mins.length) {
           s.narrowFrom = good[0]; s.narrowTo = good[good.length - 1];
           s.narrowSpan = `${hhmm(good[0])}–${hhmm(good[good.length - 1])}`; s.narrowMins = good.length;
@@ -527,28 +543,35 @@
     const bounds = [];
     if (usable.length >= 3) bounds.push(`已发生的事(${usable.length} 件)把范围压到生时那一格这一级(两小时)`);
     else bounds.push(`能判方向的事只有 ${usable.length} 件(要三件才算数),这一路没使上劲`);
-    if (bYears) bounds.push(`慢星过四轴用上了 ${bYears} 个年份,这是把区间切到分钟的那一路`);
-    else if (!hasGeo) bounds.push('没有出生地经纬度,西洋那一路(唯一能精确到分钟的)整个用不上——补上出生地就能收窄');
+    if (bHits.length) bounds.push(`慢星过四轴算了 ${bHits.length} 条窗口,但**一票不投**:自测里拿它收窄,每次都敢收到约 50 分钟,而真时刻只有 18.9% 落在里头(碰运气是 3.0%)——八成会把真答案排除掉。窗口摆给你看,不拿它定生辰`);
+    else if (!hasGeo) bounds.push('没有出生地经纬度,上升那一层排不出来——补上能多一层对照(但它照旧不参与定生辰)');
     else bounds.push('没给事件年份,慢星那一路无从下手');
     if (cHits.length) bounds.push('换大运的年份又切了一刀(这一路能在一个时辰内部再分)');
     for (const x of bDropped.concat(cDropped)) bounds.push(x + '——盖满全天的线索区分不出任何东西,照实剔除,不拿它凑数');
 
     // 票面必须当面报出来:说「还剩几段」而不报「各对上几条」,等于把没验到的当验到了
-    const voteNote = anyEvidence ? `(每段对上 ${maxVotes} 条证据,是本次的最高票)` : '';
+    const voteNote = anyEvidence ? `(对上 ${maxVotes} 条能计票的证据)` : '';
     const first = !anyEvidence
-      ? `你给的线索一条也没能把范围收窄:这一天分成 ${segs.length} 段,眼下每一段都还站得住(合计 ${width})。这不是算不出来,是线索还不够——见下面「下一步」。`
+      ? `这一天按「断出来会不会变」切成 ${segs.length} 段,**眼下一段也排除不掉**(合计 ${width})。`
+        + (usable.length < 3
+          ? `能拿来定生辰的只有「已发生的事」那一路,而它要三件以上标了好坏的事才启动——你现在给了 ${usable.length} 件,线索还不够。`
+          : `能拿来定生辰的只有「已发生的事」那一路,它算过了,但在你给的这些事上拉不开高下——**分不开就是分不开,不替你挑一个。**`)
+        + `下面把每一段各是什么摆出来,你自己对照;要再往下走见「下一步」。`
       : alive.length === 1
         ? `生时落在 ${alive[0].narrowSpan || alive[0].span}${voteNote},共 ${alive[0].narrowMins || alive[0].mins} 分钟宽,按时辰算是${alive[0].hourName}。`
         : `还剩 ${alive.length} 段并列${voteNote},合计 ${width}:${alive.slice(0, 4).map(s => (s.narrowSpan || s.span)).join('、')}${alive.length > 4 ? ' 等' : ''}。这几段证据一样多,分不出高下——分不开就是分不开。`;
-    const next = !hasGeo ? '下一步最管用的:把出生地填上——上升点每 4 分钟走 1°,是全场唯一能精确到分钟的刻度,没有经纬度就排不出来。'
-      : !events.length ? '下一步最管用的:报几件确凿的大事(哪一年、是好是坏)。慢星走到上升那一年,人生轨道多半有明显动静,拿它反推最锋利。'
-      : usable.length < 3 ? `下一步最管用的:再补几件标了好坏的事(事业、财运、健康这几类方向最鲜明),凑够三件中式那一路才启动——现在只有 ${usable.length} 件。`
-      : alive.length > 1 ? '下一步最管用的:再报一两个「那一年整个轨道变了」的年份。慢星那一路每多一个年份就多切一刀,而它是唯一能切到分钟的。'
-      : '已经收到一段之内。再往下要靠精确到月的事发日期,那超出本程序现在能做的——照实说,不硬往下猜。';
+    const next = usable.length < 3
+      ? `下一步最管用的:补齐三件以上标了好坏的事——现在只有 ${usable.length} 件,能定生辰的那一路还没启动。`
+      : (!aDecided && aBest != null)
+        ? `下一步最管用的:换几件**类别更杂**的事(事业、财运、健康、文书、官非各来一件)。现在头名吻合 ${(aBest * 100).toFixed(0)}%,`
+          + `但与断法不同的那一档只差 ${((aGap || 0) * 100).toFixed(0)} 个百分点——要拉开 15 个点才敢开口,同一类事再多也拉不开。`
+        : (!opts.turnYears || !opts.turnYears.length)
+          ? '下一步最管用的:报一两个「那一年整个轨道变了」的年份(换工作、换城市、换身份那种)。换大运的年份是连续量,能在一格内部再切一刀。'
+          : '再往下要靠精确到月的事发日期,那超出本程序现在能做的——照实说,不硬往下猜。';
 
     return {
       segs, alive, width, totalMins, bHits, cHits, bounds, channels: CHANNELS, honest: HONEST_FINE,
-      hasGeo, aBest, bYears, maxVotes, anyEvidence, bDropped, cDropped, first, next,
+      hasGeo, aBest, aGap, aDecided, bYears, maxVotes, anyEvidence, bDropped, cDropped, first, next,
       say: first + ' ' + next,
     };
   }

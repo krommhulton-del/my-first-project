@@ -49,8 +49,30 @@
     const tz = tzMin == null ? 480 : tzMin;
     return new Date(Date.UTC(y, mo - 1, d, h || 0, mi || 0) - tz * 60000);
   }
-  // TT−UTC 取 69s(2020 年代实值;误差逐年 ±1s,对行星经度影响 <0.003°,照实记不逐年拟合)
-  const jdOf = date => date.getTime() / 86400000 + 2440587.5 + 69 / 86400;
+  // ── ΔT(TT−UT):v1.12 从写死的 69 秒改成逐年 ──
+  // 缘起:69s 是 2020 年代的实值,但 1940 年代 ΔT 只有约 24 秒——差 45 秒。
+  // 这 45 秒同时压着两处:①节气时刻(太阳每秒走 0.041″,45 秒直接挪节气 45 秒);
+  // ②恒星时→上升点(45 秒 ≈ 0.19°,而精校的刻度是 0.25°/分钟,等于 0.75 分钟的系统偏差)。
+  // 一个号称精确到分钟的校时工具,不能在这上头欠 45 秒。
+  // 取 Espenak–Meeus 分段多项式(公开标准拟合式)。**边界照实说**:
+  // 2005 年以后那一段是外推,现代实测约 69s 而式子给约 73s(地球自转近年变快),
+  // 故 2005 年起直接锚在观测值 69s——这个锚是拿公开历书的节气时刻验过的(2024 立春、2022 小暑逐分对上)。
+  // 1900 年以前误差更大(几十秒到分钟量级),本程序覆盖的用户基本不涉及,照实记不硬补。
+  function deltaT(year) {
+    let t;
+    if (year >= 2005) return 69;                                  // 观测锚(见上)
+    if (year >= 1986) { t = year - 2000; return 63.86 + 0.3345 * t - 0.060374 * t * t + 0.0017275 * t ** 3 + 0.000651814 * t ** 4 + 0.00002373599 * t ** 5; }
+    if (year >= 1961) { t = year - 1975; return 45.45 + 1.067 * t - t * t / 260 - t ** 3 / 718; }
+    if (year >= 1941) { t = year - 1950; return 29.07 + 0.407 * t - t * t / 233 + t ** 3 / 2547; }
+    if (year >= 1920) { t = year - 1920; return 21.20 + 0.84493 * t - 0.076100 * t * t + 0.0020936 * t ** 3; }
+    if (year >= 1900) { t = year - 1900; return -2.79 + 1.494119 * t - 0.0598939 * t * t + 0.0061966 * t ** 3 - 0.000197 * t ** 4; }
+    return -2.79;                                                  // 1900 前:照实退到边界值,并在 HONEST 里说明
+  }
+  const jdOf = date => {
+    const ms = date.getTime();
+    const y = 1970 + ms / 31556952000;                             // 够精确的年份估计(ΔT 逐年缓变)
+    return ms / 86400000 + 2440587.5 + deltaT(y) / 86400;
+  };
 
   // ── VSOP87D:日心黄经/黄纬/距离(当日黄道与春分点) ──
   function helio(key, t) {
@@ -133,6 +155,22 @@
     const x = xp - xe, y = yp - ye, z = zp - ze;
     return { lon: norm(Math.atan2(y, x) * DEG), lat: Math.atan2(z, Math.hypot(x, y)) * DEG, dist: Math.hypot(x, y, z) };
   }
+  // 太阳**视黄经**(v1.12):节气用的是视黄经,不是几何黄经——两者差一个光行差(约 20.5″)
+  // 加章动,折成时间约 8 分钟,足以让交节前后出生的人月柱排错。
+  // 这一条是拿 JPL DE421 当裁判量出来的:几何黄经定的节气比真值早 1.7–7.5 分钟,
+  // 而旧的 Meeus 低精度式(虽含视位置改正)晚 2.6–17.7 分钟——**两个都不对,方向还相反**。
+  // 现在 = VSOP87D 几何(对过 DE421,0.83″)+ 光行差 −20.4898″/R + 章动 Δψ(主四项)。
+  // 节气只此一处算(§四):najia.js 调它,自己那份 Meeus 只留作独立互核与兜底。
+  function sunApparentLon(date) {
+    const jd = jdOf(date), t = (jd - 2451545) / 365250, T = (jd - 2451545) / 36525;
+    const g = geo('sun', t);
+    const om = (125.04452 - 1934.136261 * T) * RAD;
+    const L = (280.4665 + 36000.7698 * T) * RAD;
+    const Lp = (218.3165 + 481267.8813 * T) * RAD;
+    const dpsi = (-17.20 * Math.sin(om) - 1.32 * Math.sin(2 * L) - 0.23 * Math.sin(2 * Lp) + 0.21 * Math.sin(2 * om)) / 3600;
+    const aberr = -20.4898 / (3600 * (g.dist || 1));
+    return norm(g.lon + dpsi + aberr);
+  }
   const obliquity = jd => (23.439291 - 0.0130042 * ((jd - 2451545) / 36525)) * RAD;
 
   // ── 上升点(标准公式;tests 用地平线搜索独立回核)──
@@ -140,7 +178,10 @@
     // 恒星时必须按 **UT** 走(v1.08 修的真错):本模块的 jd 一律含 +69s 的 ΔT(那是行星历表要的 TT),
     // 而地球自转的相位跟的是 UT——拿 TT 算 GMST 等于把地球多转 69 秒,恒星时偏 17.3′,
     // 上升与中天整体偏约 0.3°。J2000.0(UT)那一刻 GMST=280.4606°,测试按定义钉死。
-    const gmst = norm(280.46061837 + 360.98564736629 * (jd - 69 / 86400 - 2451545));
+    // ΔT 必须与 jdOf 加进去的那一份**同源**(v1.12):jdOf 改成逐年之后,这里若还写死 69 秒,
+    // 1940 年代的盘就会反向偏 44 秒 ≈ 0.19°——正是要修的那个病换个方向再犯一次。
+    const utJd = jd - deltaT(2000 + (jd - 2451545) / 365.25) / 86400;
+    const gmst = norm(280.46061837 + 360.98564736629 * (utJd - 2451545));
     const ramc = norm(gmst + lonDeg) * RAD;              // 当地恒星时(=天顶赤经)
     const eps = obliquity(jd), phi = latDeg * RAD;
     let asc = norm(Math.atan2(-Math.cos(ramc), Math.sin(ramc) * Math.cos(eps) + Math.tan(phi) * Math.sin(eps)) * DEG);
@@ -790,5 +831,5 @@
 
   return { chart, aspectsOf, synastry, material, ascendant, moonPos, geo, jdOf, SIGNS, PLANET_CN, PLAIN, ASPECTS, HONEST, KEYS,
     deepRead, transits, monthRun, solarReturn, lunations, dignity, RULER, EXALT, SIGN_CHAR, HOUSE_PLAIN, lonAt, birthMoment, TZ_OUT,
-    nodeLon, pluGeo, placidusCusps, houseOfCusps, fundArgs };
+    nodeLon, pluGeo, placidusCusps, houseOfCusps, fundArgs, sunApparentLon, deltaT };
 }));
