@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f4eee1">
+<script>try{if(localStorage.getItem('dongxuan_theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}</script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="东玄运势">
+<link rel="manifest" href="yunshi.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>东玄运势 · 看人日月年运</title>
+<meta name="description" content="东玄运势:按生辰排八字,看今日/本月/今年运势,全大白话。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="东玄运势 · 看人日月年运">
+<meta property="og:description" content="报生辰排八字,看今日、本月、今年运势,四柱身强弱全大白话,可接 AI 细批。">
+<meta property="og:image" content="icon-512.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="东玄运势 · 看人日月年运">
+<meta name="twitter:description" content="报生辰排八字,看日月年运,全大白话。">
+<style>
+  :root {
+    --paper: #f4eee1; --panel: #faf6ec; --panel2: #ece4d0; --ink: #33291d;
+    --dim: #8b8070; --line: #d8cdb2; --cinnabar: #b03a2a; --gold: #8a6a2f; --gold-fill: #c9a45c;
+    --wx-mu: #3f7d4e; --wx-huo: #b03a2a; --wx-tu: #9a7b3a; --wx-jin: #9a8f6a; --wx-shui: #35617e;
+    --btn-hover: #ece2cb; --primary-ink: #fff; --primary-hover: #a93226;
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    /* 夜间 v1.09:纯黑灰底被用户点名否掉(「不要蓝绿黑色灰色」),换与主页面同一套暖墨咖分层。
+       --wx-* 五行色不动:木青水黑是五行**本色**(数据语义),不是主题色,换了反而是错。 */
+    --paper: #171210; --panel: #211a14; --panel2: #2c241c; --ink: #ece4d6;
+    --dim: #a08e78; --line: #423729; --cinnabar: #e0563f; --gold: #c9a45c; --gold-fill: #c9a45c;
+    --wx-mu: #6fbe83; --wx-huo: #e0563f; --wx-tu: #d3ad63; --wx-jin: #cfc4a0; --wx-shui: #7fb3d1;
+    --btn-hover: #362c22; --primary-ink: #171210; --primary-hover: #ef6a52;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--paper); color: var(--ink); min-height: 100vh;
+    font-family: "Kaiti SC", "STKaiti", KaiTi, "Noto Serif SC", "Songti SC", serif; line-height: 1.75;
+    padding: calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+             calc(60px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+    -webkit-tap-highlight-color: transparent; }
+  .wrap { max-width: 820px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 22px; }
+  header h1 { font-size: 1.9rem; letter-spacing: .3em; color: var(--gold); font-weight: 600; }
+  header p { color: var(--dim); font-size: .9rem; margin-top: 6px; }
+  header .seal { border: 2px solid var(--cinnabar); color: var(--cinnabar); border-radius: 4px; padding: 0 8px; font-size: .82rem; margin-left: 6px; }
+  header .nav { margin-top: 8px; font-size: .85rem; }
+  header .nav a { color: var(--gold); text-decoration: none; border-bottom: 1px dashed var(--gold); display: inline-block; margin: 2px 8px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
+  section h2 { font-size: 1.02rem; color: var(--gold); letter-spacing: .18em; margin-bottom: 14px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  label { color: var(--dim); font-size: .88rem; display: block; margin-bottom: 5px; }
+  .grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .fld { flex: 1 1 130px; }
+  input, select { width: 100%; background: var(--panel2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 10px 12px; font-size: 1rem; font-family: inherit; }
+  input:focus, select:focus { outline: none; border-color: var(--gold); }
+  .btnrow { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  button { background: var(--panel2); color: var(--ink); border: 1px solid var(--gold); border-radius: 6px;
+    padding: 11px 22px; font-size: 1rem; font-family: inherit; cursor: pointer; letter-spacing: .08em; min-height: 46px; }
+  button:hover { background: var(--btn-hover); }
+  button.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: var(--primary-ink); font-weight: 600; }
+  button.primary:hover { background: var(--primary-hover); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .formerr { color: var(--cinnabar); font-size: .9rem; margin-top: 8px; }
+  .note { color: var(--dim); font-size: .82rem; margin-top: 8px; line-height: 1.6; }
+  /* 断语体检员的结论条:只报不改 */
+  .tj-box { margin: 10px 0 2px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    background: var(--panel2); font-size: .84rem; line-height: 1.7; }
+  .tj-box.bad { border-color: rgba(197,90,17,.45); background: rgba(197,90,17,.08); }
+  .tj-h { font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .tj-score { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--dim); font-weight: 400; }
+  .tj-row { color: var(--dim); }
+  .tj-row b { color: var(--ink); font-weight: 600; margin-right: 6px; }
+  /* 结论稳不稳:时辰不确定时,先把「下面这些话靠不靠得住」摆在最前面 */
+  .stab { border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: .88rem; line-height: 1.7; }
+  .stab b { font-weight: 600; }
+  .stab.warn { background: rgba(197,90,17,.10); border: 1px solid rgba(197,90,17,.35); }
+  .stab.mid { background: rgba(120,120,128,.10); border: 1px solid rgba(120,120,128,.28); }
+  .stab.ok { background: rgba(78,124,116,.10); border: 1px solid rgba(78,124,116,.30); }
+  .stab .st-h { font-weight: 600; margin-bottom: 4px; }
+  /* 四柱 */
+  .pillars { display: flex; gap: 10px; justify-content: center; text-align: center; }
+  .pcol { flex: 1 1 0; background: var(--panel2); border-radius: 8px; padding: 10px 4px; }
+  .pcol .cap { color: var(--dim); font-size: .78rem; }
+  .pcol .gz { font-size: 1.6rem; letter-spacing: .05em; margin: 4px 0; }
+  .pcol .ss { color: var(--dim); font-size: .76rem; }
+  .mu { color: var(--wx-mu); } .huo { color: var(--wx-huo); } .tu { color: var(--wx-tu); } .jin { color: var(--wx-jin); } .shui { color: var(--wx-shui); }
+  .body-line { text-align: center; margin-top: 14px; font-size: 1.05rem; }
+  .body-line b { color: var(--cinnabar); font-weight: normal; }
+  .body-sub { text-align: center; color: var(--dim); font-size: .86rem; margin-top: 6px; }
+  /* 四柱藏干与排盘明细 */
+  .pcol .ss.top { margin-bottom: 2px; }
+  .pcol .cangwrap { display: flex; flex-direction: column; gap: 1px; margin: 4px 0 5px; }
+  .pcol .cg { font-size: .74rem; line-height: 1.45; }
+  .pcol .cg i { font-style: normal; color: var(--dim); margin-left: 3px; }
+  .pcol .kongmark { font-size: .62rem; vertical-align: super; color: var(--cinnabar); font-weight: normal; margin-left: 2px; }
+  .power-box { margin-top: 16px; background: var(--panel2); border-radius: 10px; padding: 12px 14px; }
+  .power-box .pwhead { text-align: center; font-size: .95rem; margin-bottom: 8px; }
+  .power-box .pwhead b { color: var(--cinnabar); font-weight: 600; }
+  .wxgrid { display: flex; flex-direction: column; gap: 3px; }
+  .wxrow { display: flex; align-items: center; gap: 8px; font-size: .82rem; }
+  .wxrow .wxn { width: 1.4em; text-align: center; }
+  .wxrow .wxbar { flex: 1; height: 9px; background: rgba(128,128,128,.16); border-radius: 5px; overflow: hidden; }
+  .wxrow .wxbar i { display: block; height: 100%; border-radius: 5px; }
+  .wxrow .wxv { width: 3em; text-align: right; color: var(--dim); }
+  .mub { background: var(--wx-mu); } .huob { background: var(--wx-huo); } .tub { background: var(--wx-tu); }
+  .jinb { background: var(--wx-jin); } .shuib { background: var(--wx-shui); }
+  .dsh { font-size: .95rem; color: var(--gold); letter-spacing: .1em; margin: 16px 0 8px; }
+  .ds-steps { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 4px; }
+  .dsrow { display: flex; align-items: baseline; gap: 8px; font-size: .86rem; padding: 4px 8px; border-radius: 7px; background: var(--panel2); }
+  .dsrow.now { border: 1.5px solid var(--cinnabar); }
+  .dsrow .dsgz { font-size: 1.02rem; letter-spacing: .05em; min-width: 2.6em; }
+  .dsrow .dsyr { color: var(--dim); min-width: 8.4em; }
+  .dsrow .dstx { flex: 1; }
+  .dsnode { background: var(--panel2); border-radius: 10px; padding: 11px 13px; margin-bottom: 9px; border-left: 4px solid var(--gold); }
+  .dsnode.good { border-left-color: var(--wx-mu); } .dsnode.bad { border-left-color: var(--cinnabar); }
+  .dsnode.big { border-left-width: 7px; }
+  .dsnode .dh { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+  .dsnode .dyr { font-size: 1.06rem; letter-spacing: .04em; }
+  .dsnode .dage { color: var(--dim); font-size: .82rem; }
+  .dsnode .dcat { border: 1.5px solid var(--gold); color: var(--gold); border-radius: 5px; padding: 0 8px; font-size: .82rem; }
+  .dsnode .dcat.good { border-color: var(--wx-mu); color: var(--wx-mu); }
+  .dsnode .dcat.bad { border-color: var(--cinnabar); color: var(--cinnabar); }
+  .dsnode .dtx { line-height: 1.8; }
+  .yrow { background: var(--panel2); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+  .yrow.now { border: 1.5px solid var(--cinnabar); }
+  .yrow .yh { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+  .yrow .yy { font-size: 1.04rem; letter-spacing: .04em; }
+  .yrow .ya { color: var(--dim); font-size: .82rem; margin-right: 4px; }
+  .ycat { border: 1px solid var(--line); border-radius: 6px; padding: 0 7px; font-size: .82rem; }
+  .ycat.good { border-color: var(--wx-mu); color: var(--wx-mu); }
+  .ycat.bad { border-color: var(--cinnabar); color: var(--cinnabar); }
+  .ycat i { font-style: normal; opacity: .6; margin-left: 4px; font-size: .9em; }
+  .ywhy { color: var(--dim); font-size: .83rem; line-height: 1.7; margin-top: 4px; }
+  .yhot { margin-top: 5px; font-size: .84rem; display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; }
+  .yhot b { color: var(--gold); font-weight: normal; }
+  .yhot span { background: rgba(128,128,128,.15); border-radius: 6px; padding: 1px 8px; }
+  .yhot i { font-style: normal; color: var(--dim); font-size: .92em; }
+  .ymons { margin-top: 6px; }
+  .ymons > summary { cursor: pointer; color: var(--gold); font-size: .84rem; padding: 4px 0; }
+  .ymon { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; font-size: .82rem; padding: 3px 6px; border-bottom: 1px dashed var(--line); }
+  .ymon:last-child { border-bottom: 0; }
+  .ymon .mn { min-width: 2.6em; color: var(--gold); }
+  .ymon .mg { min-width: 2.6em; }
+  .ymon .ms { min-width: 5.4em; color: var(--dim); }
+  .ymon .mt { min-width: 4.4em; }
+  .ymon .mw { flex: 1 1 100%; color: var(--dim); line-height: 1.6; }
+  .ymon.good .mt { color: var(--wx-mu); } .ymon.bad .mt { color: var(--cinnabar); }
+  @media (min-width: 620px) { .ymon .mw { flex: 1 1 auto; } }
+  .dspast { margin-bottom: 12px; }
+  .dspast > summary { cursor: pointer; color: var(--gold); font-size: .88rem; padding: 6px 2px; }
+  .dsnode .dwhy { color: var(--dim); font-size: .8rem; margin-top: 5px; border-top: 1px dashed var(--line); padding-top: 5px; line-height: 1.65; }
+  .paipan-box { margin-top: 10px; font-size: .84rem; }
+  .pprow { display: flex; gap: 10px; padding: 5px 2px; border-bottom: 1px dashed var(--line); }
+  .pprow:last-child { border-bottom: 0; }
+  /* 格局 */
+  #gj-head { text-align: center; margin: 14px 0 4px; font-size: 1.05rem; line-height: 1.8; }
+  #gj-head b { color: var(--cinnabar); font-weight: normal; }
+  .gj-take { text-align: center; color: var(--dim); font-size: .86rem; margin-bottom: 12px; }
+  .gj-grp { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-top: 9px; }
+  .gj-grp h4 { font-weight: normal; letter-spacing: .1em; margin-bottom: 6px; font-size: .92rem; }
+  .gj-grp.ok h4 { color: var(--wx-mu, #3f7d4e); }
+  .gj-grp.no h4 { color: var(--cinnabar); }
+  .gj-grp.save h4, .gj-grp.warn h4 { color: var(--gold); }
+  .gj-li { padding: 5px 0; border-bottom: 1px dashed var(--line); line-height: 1.75; font-size: .92rem; }
+  .gj-li:last-child { border-bottom: 0; }
+  .gj-li q { display: block; color: var(--dim); font-size: .84rem; font-style: normal; margin-top: 2px; }
+  .gj-li q::before { content: '书上原话:'; }
+  .pprow .ppk { flex: 0 0 5.2em; color: var(--gold); white-space: nowrap; }
+  .pprow .ppv { flex: 1; line-height: 1.7; }
+  @media (max-width: 520px) { .pcol .cg { font-size: .66rem; } .pprow .ppk { flex-basis: 4.4em; } }
+  /* 运势卡 */
+  .yscard { background: var(--panel2); border-radius: 10px; padding: 15px 16px; margin-bottom: 12px; border-left: 4px solid var(--gold); }
+  .sm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0 12px; }
+  .sm-cell { background: var(--panel2); border-radius: 10px; padding: 10px 8px; text-align: center; min-height: 84px;
+    display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+  .sm-cell.blank { background: transparent; }
+  .sm-cell.center { border: 1.5px solid var(--gold); }
+  .sm-cell.sub { border: 1px dashed var(--dim); background: transparent; }
+  .sm-cell .cap { color: var(--dim); font-size: .7rem; line-height: 1.4; }
+  .sm-cell .star { font-size: 1.08rem; letter-spacing: .1em; margin: 2px 0; }
+  .sm-cell .hint { color: var(--dim); font-size: .74rem; line-height: 1.5; }
+  @media (max-width: 560px) { .sm-cell { min-height: 70px; padding: 7px 4px; } .sm-cell .star { font-size: .95rem; } .sm-cell .hint { font-size: .66rem; } }
+  .yscard.good { border-left-color: var(--wx-mu); }
+  .yscard.bad { border-left-color: var(--cinnabar); }
+  .yscard .yh { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .yscard .ylabel { font-size: 1.15rem; color: var(--ink); letter-spacing: .1em; }
+  .yscard .ylv { border: 1.5px solid var(--cinnabar); color: var(--cinnabar); border-radius: 5px; padding: 1px 10px; font-size: .95rem; letter-spacing: .1em; }
+  .yscard .ylv.g { border-color: var(--wx-mu); color: var(--wx-mu); }
+  .yscard .yarea { color: var(--gold); font-size: .82rem; margin-left: auto; }
+  .yscard .ytext { line-height: 1.85; }
+  .yscard .yact { margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 7px; font-size: .88rem; }
+  .yscard .yl { display: flex; flex-wrap: wrap; gap: 5px; align-items: baseline; margin-bottom: 4px; }
+  .yscard .yl b { color: var(--wx-mu); font-weight: normal; min-width: 3.4em; }
+  .yscard .yl.bad b { color: var(--cinnabar); }
+  .yscard .yl span { background: rgba(128,128,128,.13); border-radius: 6px; padding: 1px 8px; line-height: 1.7; }
+  .yscard .yspan { color: var(--gold); font-size: .82rem; line-height: 1.6; margin-top: 6px;
+    border-left: 2px solid var(--gold); padding-left: 8px; }
+  .yscard .ymeta { color: var(--dim); font-size: .78rem; margin-top: 6px; border-top: 1px dashed var(--line); padding-top: 6px; }
+  .datepick { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .dayun-wrap { overflow-x: auto; }
+  table.dayun { width: 100%; border-collapse: collapse; font-size: .9rem; white-space: nowrap; }
+  table.dayun td, table.dayun th { padding: 6px 8px; text-align: center; border-bottom: 1px dashed var(--line); }
+  table.dayun th { color: var(--gold); font-weight: normal; }
+  table.dayun .now { color: var(--cinnabar); font-weight: bold; }
+  .aiout { background: var(--panel2); border: 1px solid var(--gold); border-radius: 8px; padding: 16px; margin-top: 14px; white-space: pre-wrap; line-height: 1.9; }
+  .cursor { color: var(--gold); animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  #ai-status { color: var(--dim); font-size: .9rem; margin-top: 10px; }
+  #ai-status.err { color: var(--cinnabar); }
+  .profbar { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-bottom: 12px;
+    background: var(--panel2); border-radius: 9px; padding: 8px 10px; }
+  .profbar label { margin: 0; color: var(--gold); font-size: .86rem; }
+  .profbar select { width: auto; flex: 1 1 150px; min-width: 130px; padding: 7px 9px; font-size: .92rem; }
+  .profbar input { width: auto; flex: 1 1 170px; min-width: 140px; padding: 7px 9px; font-size: .92rem; }
+  .profbar button { min-height: 36px; padding: 5px 13px; font-size: .9rem; letter-spacing: 0; }
+  .profbar .pmsg { color: var(--wx-mu); font-size: .84rem; }
+  .hidden { display: none !important; }
+  input[type=password] { font-family: inherit; }
+  footer { text-align: center; color: var(--dim); font-size: .8rem; margin-top: 28px; }
+  @media (max-width: 520px) {
+    header h1 { font-size: 1.5rem; }
+    .pcol .gz { font-size: 1.3rem; }
+    .pillars { gap: 6px; }
+    .yscard .yarea { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>东玄运势</h1>
+    <p>按生辰排八字 · 看日运月运年运 <span class="seal">内测 v1.17</span></p>
+    <div class="nav"><a href="index.html">← 去卜卦(东玄卜卦)</a> <a href="#" id="btn-share">分享给朋友 ⤴</a> <a href="#" id="btn-theme" title="日间/夜间切换">◐ 夜间</a></div>
+  </header>
+
+  <section id="sec-in">
+    <h2>报 生 辰</h2>
+    <div class="profbar">
+      <label for="prof-sel">档案</label>
+      <select id="prof-sel"><option value="">(未存档 · 手填)</option></select>
+      <input type="text" id="prof-name" placeholder="给这份生辰起个名,如:我 / 老妈 / 阿强" maxlength="12">
+      <button type="button" id="btn-prof-save">存档</button>
+      <button type="button" id="btn-prof-del">删除</button>
+      <span class="pmsg" id="prof-msg"></span>
+    </div>
+    <div class="grid">
+      <div class="fld"><label>出生日期(阳历/公历)</label><input type="date" id="bdate" min="1900-01-01" max="2100-12-31"></div>
+      <div class="fld"><label>出生时间(几点)</label><input type="time" id="btime" value="12:00">
+        <label style="font-weight:400;margin-top:6px"><input type="checkbox" id="bt-unknown"> 不知道确切钟点</label></div>
+      <div class="fld"><label>性别</label>
+        <select id="gender"><option value="男">男</option><option value="女">女</option></select>
+      </div>
+      <div class="fld"><label>出生地(市/省,选填)</label><input type="text" id="bplace" placeholder="如:成都(校真太阳时)"></div>
+      <div class="fld"><label>眼下感情状态</label>
+        <select id="marital"><option value="">不说</option><option value="单身">单身</option><option value="有伴">有伴</option></select></div>
+    </div>
+    <div class="note">「感情状态」只影响姻缘那一类的说法:命盘能算出哪一年感情上动得最重,<b>但动了以后是聚是散,命盘定不了</b>——
+      同一股力,单身的多半往结合走、有伴的多半使在摩擦上。不填就只报哪一年动,不报吉凶。</div>
+    <div class="note">用阳历(公历)生日。1986-91年出生的一律自动回拨<b>夏令时</b>,均时差也照校(不填出生地按国标东经120°算);填上出生地再补<b>经度差</b>,时柱才排得最准——新疆西藏等偏西之地能差两个时辰,务必填。</div>
+    <div class="formerr" id="in-err"></div>
+    <div class="btnrow"><button id="btn-go" class="primary">排盘看运</button></div>
+    <div class="note">档案只存在你自己这台设备的浏览器里,不上传、不外传;换设备要重填。</div>
+  </section>
+
+  <section id="sec-ming" class="hidden">
+    <h2>你 的 命 盘</h2>
+    <div id="stab-box"></div>
+    <div class="pillars" id="pillars"></div>
+    <div class="body-line" id="body-line"></div>
+    <div class="body-sub" id="body-sub"></div>
+    <div class="power-box" id="power-box"></div>
+    <div class="paipan-box" id="paipan-box"></div>
+  </section>
+
+  <section id="sec-geju" class="hidden">
+    <h2>格 局 · 这命的主线立不立得住</h2>
+    <div class="note">这一层照《子平真诠》的老法子断:先看你生在哪个月,定出这命的<b>主线</b>;
+      再看四柱把这条主线成全了、还是坏了;坏了有没有解药。<b>每一条都把书上的原话摆出来</b>,对不上你当场驳我。
+      这一层只讲本命的底子,<b>不改上面那套喜忌</b>——两套断法各说各的,都摊给你看。</div>
+    <div id="gj-head"></div>
+    <div class="gj-take" id="gj-take"></div>
+    <div id="gj-body"></div>
+    <div class="note" id="gj-foot"></div>
+  </section>
+
+  <section id="sec-sanmei" class="hidden">
+    <h2>人 体 星 図 · 算命学(陽占)</h2>
+    <div class="note">算命学(高尾義政《原典算命学大系》一脉)以三柱排星:五颗<b>主星</b>定性格本质(胸口那颗是中心星),三颗<b>従星</b>定初年/中年/晚年的能量势,三星点数合计定你一生「量」的大小。</div>
+    <div class="sm-grid" id="sm-grid"></div>
+    <div class="body-sub" id="sm-sub"></div>
+  </section>
+
+  <section id="sec-yun" class="hidden">
+    <div class="note" id="yun-howto"><b>先说清三件事,免得看拧了:</b>
+      ①下面每段话里的<b>「明面」</b>指这段时间摆在台面上、别人也看得见的作用(找上门的机会、压过来的事);
+      <b>「底下」</b>指同一段时间暗中起作用的部分(自己的心气、没挑明的关系、拖着的旧账)。两者常不一致,所以分开说。
+      ②<b>月和年都不是按日历算的</b>——「月」按节气分界(比公历月晚半个月上下),「年」从立春算到立春。每张卡上都写了真实起止日期。
+      ③等级共五档:<b>大吉 / 吉 / 平顺 / 小凶 / 凶</b>,卡片角落标了这段是第几档。</div>
+    <h2>运 势 · 大白话</h2>
+    <div id="yun-cards"></div>
+    <div class="datepick">
+      <div style="flex:2 1 170px"><label>看哪一天(日运随之改)</label><input type="date" id="qdate"></div>
+      <div style="flex:1 1 110px"><label>看哪一年</label><input type="number" id="qyear" min="1900" max="2100" step="1"></div>
+      <div style="flex:1 1 110px"><label>看哪个月</label>
+        <select id="qmonth"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select>
+      </div>
+      <button id="btn-qday" class="primary">看这一天/月/年</button>
+      <button id="btn-qtoday">回到今天</button>
+    </div>
+    <div class="note" id="qhint"></div>
+  </section>
+
+  <section id="sec-dayun" class="hidden">
+    <h2>大 运 · 十年一步</h2>
+    <div class="body-sub" id="dayun-dir" style="text-align:left;margin-bottom:8px"></div>
+    <div class="dayun-wrap"><table class="dayun"><thead><tr id="dayun-head"></tr></thead><tbody><tr id="dayun-body"></tr></tbody></table></div>
+  </section>
+
+  <section id="sec-dashi" class="hidden">
+    <h2>人 生 大 事 年 表</h2>
+    <div class="note" id="ds-intro"></div>
+    <div id="ds-steps" class="ds-steps"></div>
+    <h3 class="dsh">重要节点(按年份)</h3>
+    <div id="ds-nodes"></div>
+    <h3 class="dsh">近十年 · 逐年细账</h3>
+    <div class="dayun-wrap"><table class="dayun" id="ds-ten"></table></div>
+    <div id="ds-past"></div>
+    <div class="note">口径:节点报的是「窗口」不是「定数」——同样的信号,主动去办就成事,躲着不动就只剩折腾。每条都列了依据,对不上的你可以当场驳回。年柱以立春为界。</div>
+  </section>
+
+  <section id="sec-ai" class="hidden">
+    <h2>东玄深批 · AI 细看运势</h2>
+    <div class="btnrow">
+      <button id="btn-ai" class="primary">请东玄细批这一年/月/日</button>
+      <select id="ai-provider">
+        <option value="claude">Claude(Anthropic)</option>
+        <option value="deepseek">DeepSeek(深度求索)</option>
+      </select>
+      <select id="ai-model"></select>
+      <button id="btn-togglekey">设置 API Key</button>
+    </div>
+    <div id="keybox" class="hidden" style="margin-top:12px">
+      <label id="key-label"></label>
+      <input type="password" id="api-key" placeholder="" autocomplete="off">
+      <div class="btnrow"><button id="btn-savekey">保存</button><button id="btn-clearkey">清除</button></div>
+      <div class="note" id="key-note"></div>
+    </div>
+    <div id="ai-status"></div>
+    <div id="ai-out" class="aiout hidden"></div>
+  </section>
+
+  <footer>东玄运势 v0.2 内测 · 八字流年扶抑法 + 算命学陽占(原典算命学大系一脉) · 历法自实现(朔望/节气) · 排盘不联网</footer>
+</div>
+
+<script src="najia.js"></script>
+<script src="lunar.js"></script>
+<script src="bazi.js"></script>
+<script src="yunshi.js"></script>
+<script src="sanmei.js"></script>
+<script src="dashi.js"></script>
+<script src="geju.js"></script>
+<script src="dili.js"></script>
+<script src="dingshi.js"></script>
+<script src="tijian.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+
+  // 格局:程序按《子平真诠》算死,每条附原话。此处只呈现,不参与喜忌。
+  function renderGeju(c) {
+    if (typeof Geju === 'undefined') { $('sec-geju').classList.add('hidden'); return; }
+    const r = Geju.judge(c);
+    $('gj-head').innerHTML = `<b>${esc(Geju.plain(r))}</b>`;
+    $('gj-take').innerHTML = (r.ge.plain ? `<b style="color:var(--ink)">${esc(r.ge.plain)}</b><br>` : '') +
+      `(按你生在${esc(c.monthZhi)}月定的,书上叫${esc(r.ge.name)};${esc(r.ge.from)})`;
+    const box = (cls, title, list, empty) =>
+      `<div class="gj-grp ${cls}"><h4>${title}</h4>` +
+      (list.length
+        ? list.map(x => `<div class="gj-li">${esc(x.why)}<q>${esc(x.quote)}</q></div>`).join('')
+        : `<div class="gj-li" style="color:var(--dim)">${empty}</div>`) + `</div>`;
+    let html = '';
+    if (r.cheng.length) html += box('ok', '成 在 哪 里', r.cheng, '');
+    if (r.bai.length) html += box('no', '坏 在 哪 里', r.bai, '');
+    if (r.jiu.length) html += box('save', '有 没 有 解 药', r.jiu, '');
+    if (r.ji.length) html += box('warn', '夹 着 的 那 处 妨 碍', r.ji, '');
+    if (!html) html = box('', '成 败', [], '你这盘没照到这一格成败的条件——书上定的条件本就具体,照不到就是照不到,不硬凑。');
+    $('gj-body').innerHTML = html;
+    $('gj-foot').innerHTML = '口径:这一层照《子平真诠》直译,书上没写的一概不添。' +
+      Geju.notDone.map(x => '本模块<b>没做</b>:' + esc(x)).join(';') +
+      '。它与上面那套喜忌是两条路子——两边都摊给你看,不替你合成一个答案。';
+  }
+  const WX_CLS = { 木: 'mu', 火: 'huo', 土: 'tu', 金: 'jin', 水: 'shui' };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let curChart = null, aiBusy = false, aiContext = null, curSanmei = null;
+  const MKEY = 'dongxuan_marital';
+  let curMarital = '';
+  try { curMarital = localStorage.getItem(MKEY) || ''; } catch (e) {}
+
+  // 人体星図:主星五位 + 従星三期(镜像面对读者:左肩在图右)
+  function renderSanmei(c) {
+    const s = c.stars, j = c.jusei;
+    const main = (cap, st, center) => `<div class="sm-cell${center ? ' center' : ''}"><div class="cap">${cap}</div><div class="star">${st.star}</div><div class="hint">${esc(st.gist.split(':')[0])}</div></div>`;
+    const sub = (cap, st) => `<div class="sm-cell sub"><div class="cap">${cap}</div><div class="star">${st.star}</div><div class="hint">${st.stage}·${st.pts}点</div></div>`;
+    $('sm-grid').innerHTML =
+      '<div class="sm-cell blank"></div>' + main('頭 · 目上/初年心象', s.head) + sub('左肩 · 初年期', j.shoulder) +
+      main('右手 · 看家本领/配偶位', s.rightHand) + main('胸 · 中心星(本命)', s.chest, true) + main('左手 · 社交之用', s.leftHand) +
+      sub('右足 · 晚年期', j.rightFoot) + main('腹 · 后辈/晚境心象', s.belly) + sub('左足 · 中年期', j.leftFoot);
+    $('sm-sub').innerHTML = `中心星<b>${s.chest.star}</b>:${esc(s.chest.gist)}。<br>` +
+      `従星能量合计 <b>${c.energy.total}</b> 点(满36)——${esc(c.energy.band)}。<br>` +
+      `<b>${c.tenchusatsu.type}</b>(空亡${c.tenchusatsu.kong.join('、')}):${esc(c.tenchusatsu.note)}。`;
+  }
+
+  function wxSpan(ch, wx) { return `<span class="${WX_CLS[wx] || ''}">${ch}</span>`; }
+
+  function go() {
+    $('in-err').textContent = '';
+    const d = $('bdate').value, tm = $('btime').value || '12:00';
+    if (!d) { $('in-err').textContent = '请先填出生日期。'; return; }
+    const [Y, M, D] = d.split('-').map(Number);
+    const hourUnknown = !!($('bt-unknown') && $('bt-unknown').checked);
+    const [h, mi] = (hourUnknown ? '12:00' : tm).split(':').map(Number);
+    const birth = new Date(Y, M - 1, D, h, mi || 0);
+    if (isNaN(birth.getTime()) || Y < 1900 || Y > 2100) { $('in-err').textContent = '日期看起来不对,检查一下。'; return; }
+    let lon;
+    try { const p = window.Dili && Dili.find($('bplace').value.trim()); if (p) lon = p[2]; } catch (e) {}
+    curMarital = $('marital') ? $('marital').value : '';
+    try { localStorage.setItem(MKEY, curMarital); } catch (e) {}
+    curChart = Bazi.chart(birth, $('gender').value, lon);
+    renderStab(birth, $('gender').value, lon, hourUnknown);
+    renderMing(curChart);
+    try { curSanmei = Sanmei.chart(birth); renderSanmei(curSanmei); } catch (e) { curSanmei = null; }
+    renderYun(curChart, new Date());
+    renderDayun(curChart);
+    renderDashi(curChart);
+    syncQPickers();
+    $('qdate').value = todayStr();
+    ['sec-ming', 'sec-geju', 'sec-sanmei', 'sec-yun', 'sec-dayun', 'sec-dashi', 'sec-ai'].forEach(s => $(s).classList.remove('hidden'));
+    $('ai-out').classList.add('hidden'); $('ai-out').textContent = ''; $('ai-status').textContent = '';
+    $('sec-ming').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function todayStr() { const d = new Date(), z = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`; }
+
+  // ——— 结论稳不稳(v0.77)———
+  // 缘起:量出来 9.70% 的日子里,十二时辰中至少一个触发从格,而这些日子 **100%** 是「换个时辰喜忌就相反」。
+  // 对一个不知道确切钟点的人,程序照旧给一个确定的喜忌,等于替他掷了一次硬币还不告诉他。
+  // 所以:先把「下面这些话靠不靠得住」摆在命盘最前头,再说别的。**不偷偷改结论,只把话说清。**
+  let curStab = null;
+  function renderStab(birth, gender, lon, hourUnknown) {
+    const box = $('stab-box');
+    if (!box) return;
+    if (!hourUnknown) { curStab = null; box.innerHTML = ''; return; }
+    let r = null;
+    try { r = Dingshi.stability({ birth, gender, lon }); } catch (e) { box.innerHTML = ''; return; }
+    curStab = r;
+    const cls = r.level === '翻盘' ? 'warn' : (r.level === '不稳' ? 'warn' : (r.level === '小动' ? 'mid' : 'ok'));
+    const head = r.level === '翻盘' ? '底下这些话,有一半可能是反的'
+      : (r.level === '不稳' ? '底下这些话,方向会随时辰变'
+        : (r.level === '小动' ? '底下这些话方向不变,力度会有出入' : '时辰不用纠结'));
+    box.innerHTML = `<div class="stab ${cls}"><div class="st-h">${esc(head)}</div>${esc(r.note).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</div>`;
+  }
+
+  function renderMing(c) {
+    const P = c.pillars, cap = { year: '年柱', month: '月柱', day: '日柱', hour: '时柱' };
+    $('pillars').innerHTML = ['year', 'month', 'day', 'hour'].map(k => {
+      const p = P[k];
+      const cang = p.cang.map(x => `<span class="cg">${wxSpan(x.gan, x.wx)}<i>${esc(x.shen)}</i></span>`).join('');
+      return `<div class="pcol"><div class="cap">${cap[k]}</div>
+        <div class="ss top">${k === 'day' ? '日主' : esc(p.ganShen)}</div>
+        <div class="gz">${wxSpan(p.gan, p.ganWx)}${wxSpan(p.zhi, p.zhiWx)}${p.kong ? '<b class="kongmark" title="落空亡">空</b>' : ''}</div>
+        <div class="cangwrap">${cang}</div>
+        <div class="ss">星运 ${esc(p.xingyun)}</div>
+        <div class="ss">自坐 ${esc(p.zizuo)}</div>
+        <div class="ss">${esc(p.nayin)}</div></div>`;
+    }).join('');
+    const s = c.strength;
+    const yongTalk = s.strong
+      ? `你这人底子<b>${esc(Bazi.plainBand(s.band))}</b>,自己有劲、有主见。对你添彩的是能"用掉、花掉、管住你"那股劲的五行——也就是${xiPlain(c)};最怕再有人一个劲儿给你加码。`
+      : (s.band === '中和'
+        ? `你这人底子<b>中和</b>——不偏强也不偏弱,这种局扶抑都使不上大劲,取用要看寒暖与缺口:${xiPlain(c)}。`
+        : `你这人底子<b>${esc(Bazi.plainBand(s.band))}</b>,劲儿容易不够使。对你添力的是"生你、帮你"的五行——也就是${xiPlain(c)};最怕再被消耗、被压。`);
+    $('body-line').innerHTML = `你是<b>${c.dayGan}${c.dayWx}命</b>,底子<b>${esc(Bazi.plainBand(s.band))}</b>。`;
+
+    // —— 力量称重条:同党(比劫+印)对异党(食伤+财+官杀),两边都实打实称过 ——
+    const WXC = { 木: 'mu', 火: 'huo', 土: 'tu', 金: 'jin', 水: 'shui' };
+    const bar = ['木', '火', '土', '金', '水'].map(w =>
+      `<div class="wxrow"><span class="wxn ${WXC[w]}">${w}</span>
+        <span class="wxbar"><i class="${WXC[w]}b" style="width:${Math.min(100, s.pow[w] * 2)}%"></i></span>
+        <span class="wxv">${s.pow[w]}</span></div>`).join('');
+    const shen = ['比劫', '印', '食伤', '财', '官杀'].map(k => `${k}${s.detail[k]}`).join(' · ');
+    $('power-box').innerHTML =
+      `<div class="pwhead">同党(比劫+印)<b>${s.tong}</b> ⟺ <b>${s.yi}</b>异党(食伤+财+官杀) → <b>${esc(s.band)}</b></div>
+       <div class="wxgrid">${bar}</div>
+       <div class="note">十神力量:${esc(shen)}(百分制,月支最重,天干有根加力、虚透减力,三会三合另计)</div>`;
+
+    // —— 排盘明细:根、司令、胎元、空亡、刑冲合害会 ——
+    const rootTxt = s.roots.length
+      ? s.roots.map(r => `${r.pos}支${r.zhi}·${r.level}(${r.cs})`).join('、')
+      : '<b>四支无根</b>';
+    const rel = c.rel, relBits = [];
+    if (rel.sanhui.length) relBits.push('会方:' + rel.sanhui.map(x => x.text).join('、'));
+    if (rel.sanhe.length) relBits.push('合局:' + rel.sanhe.map(x => x.text).join('、'));
+    if (rel.chong.length) relBits.push('冲:' + rel.chong.join('、'));
+    if (rel.xing.length) relBits.push('刑:' + rel.xing.join('、'));
+    if (rel.he.length) relBits.push('六合:' + rel.he.join('、'));
+    if (rel.hai.length) relBits.push('害:' + rel.hai.join('、'));
+    if (rel.ganhe.length) relBits.push('干合:' + rel.ganhe.join('、'));
+    if (rel.ganchong.length) relBits.push('干冲:' + rel.ganchong.join('、'));
+    const cnt = c.wuxingCount;
+    const rows = [
+      ['日主之根', rootTxt + (s.hasStrongRoot ? '(有本气根,断不能作从格论)' : '')],
+      ['人元司令', `${c.siLing.gan}当令(节入后第${c.daysIntoJie}天,${esc(c.monthZhi)}月分野)`],
+      ['字面五行', ['木', '火', '土', '金', '水'].map(w => w + cnt[w]).join(' ') + (Object.values(cnt).some(v => v === 0) ? ' — 有缺' : '')],
+      ['空亡', c.kong.join('、') + '(旬空)' + (['year', 'month', 'day', 'hour'].some(k => P[k].kong) ? '(命局有柱落空)' : '')],
+      ['胎元', c.taiYuan],
+      ['干支关系', relBits.length ? relBits.join(' | ') : '四柱之间无刑冲合害会'],
+    ];
+    if (s.bonus.length) rows.push(['成局加权', s.bonus.join('、')]);
+    $('paipan-box').innerHTML = rows.map(r => `<div class="pprow"><span class="ppk">${r[0]}</span><span class="ppv">${esc(String(r[1])).replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>')}</span></div>`).join('');
+
+    // —— 格局(子平真诠一脉):与上面的扶抑法各说各的,都摊开给人看 ——
+    renderGeju(c);
+
+    const pro = [];
+    if (c.ziNote) pro.push(esc(c.ziNote));
+    if (c.dayun && c.dayun.startText) pro.push(`大运${c.dayun.forward ? '顺' : '逆'}行,${esc(c.dayun.startText)}(出生距节令${c.dayun.startDays}天,三日折一年)`);
+    if (c.geju) pro.push(`<b>${esc(c.geju)}</b>${c.cong && c.cong.type === '假从' ? '' : '——喜忌已按从格翻转'}`);
+    if (c.tiaohou) pro.push(esc(c.tiaohou.note));
+    if (c.neiChong && c.neiChong.length) c.neiChong.forEach(n => pro.push(esc(n)));
+    pro.push(`取用:${esc(c.yong.xiName)}`);
+    // pro 是行内话(取用、调候、从格这几行),原先不加标记就接在客人第一眼看的那行下面。
+    // 铁律八管的是「给客人看的成稿」,专业区另算——所以这里把界给划出来,而不是把内容删掉(v0.81)。
+    $('body-sub').innerHTML = `${yongTalk}<br><span style="opacity:.8">命盘:${esc(c.lunarText)} · ${esc(Bazi.plainDeLing(s.deLing))}</span>` +
+      (pro.length ? `<br><span style="opacity:.7">——以下是行内的说法,不懂可以跳过——</span><br>${pro.join('<br>')}` : '');
+  }
+  function xiPlain(c) {
+    const names = { 木: '木(青绿、东方、春木、生发)', 火: '火(红、南方、热闹、表达)', 土: '土(黄、稳、地产、诚信)', 金: '金(白、西方、金属、决断)', 水: '水(黑蓝、北方、流动、智慧)' };
+    return c.yong.xiWx.map(w => names[w]).join('、');
+  }
+
+  // ——— 人生大事年表 ———
+  let curDashi = null;
+  function renderDashi(c) {
+    const tl = Dashi.timeline(c, { nowYear: new Date().getFullYear(), marital: curMarital });
+    curDashi = tl;
+    const nowY = new Date().getFullYear();
+    $('ds-intro').textContent = `${tl.startText},大运${tl.forward ? '顺' : '逆'}行。${tl.childhood}`;
+    $('ds-steps').innerHTML = tl.steps.map(st => {
+      const on = nowY >= st.fromYear && nowY <= st.toYear;
+      return `<div class="dsrow${on ? ' now' : ''}"><span class="dsgz">${esc(st.gz)}</span>` +
+        `<span class="dsyr">${st.fromYear}-${st.toYear}(${Math.floor(st.fromAge)}-${Math.floor(st.toAge)}岁)</span>` +
+        `<span class="dstx">这十年当值的是${esc(st.shenPlain || st.shen)},整体${esc(st.dir)}${on ? ' · 当前这一步' : ''}</span></div>`;
+    }).join('');
+    const nodeHtml = n => {
+      const d = n.top.dirSum;
+      const cls = Math.abs(d) < 0.6 ? '' : (d > 0 ? 'good' : 'bad');
+      const soon = n.year >= nowY && n.year < nowY + 12;
+      return `<div class="dsnode ${cls}${n.big ? ' big' : ''}">
+        <div class="dh"><span class="dyr">${n.year}年</span><span class="dage">${n.age}岁 · ${esc(n.gz)}${n.dayunGz ? ' · 走' + esc(n.dayunGz) + '运' : ''}${soon ? '' : ''}</span>
+          <span class="dcat ${cls}">${esc(n.top.label)}</span>${n.big ? '<span class="dcat bad">大变之年</span>' : ''}${n.kong ? '<span class="dcat">空亡年</span>' : ''}</div>
+        <div class="dtx">${esc(n.text)}</div>
+        ${(n.hot || []).length ? `<div class="yhot"><b>应期落月</b>${n.hot.map(h => `<span>${h.idx}月(${esc(h.gz)})</span>`).join('')}<i>这几个月最集中</i></div>` : ''}
+        <div class="dwhy">依据:${n.top.reasons.map(esc).join(';')}${n.flags.length ? '。另:' + n.flags.map(esc).join(';') : ''}</div>
+      </div>`;
+    };
+    const past = tl.nodes.filter(n => n.year < nowY), future = tl.nodes.filter(n => n.year >= nowY);
+    $('ds-nodes').innerHTML =
+      (past.length ? `<details class="dspast"><summary>往年节点 ${past.length} 条(点开可拿去跟自己经历对账——对不上的当场驳回我)</summary>${past.map(nodeHtml).join('')}</details>` : '') +
+      (future.length ? future.map(nodeHtml).join('')
+        : '<div class="note">今后在设定门槛内没有凸出节点,按大运分段与近十年细账看即可。</div>');
+    // 逐年细账:每年列全部事型(不只主事)+ 应期落到月份 + 可展开十二流月
+    $('ds-ten').outerHTML = '<div id="ds-ten"></div>';
+    const yearRow = r => {
+      const cats = (r.cats || []).slice(0, 4).map(c => {
+        const d = c.dirSum, cl = Math.abs(d) < 0.6 ? '' : (d > 0 ? 'good' : 'bad');
+        return `<span class="ycat ${cl}">${esc(c.label)}<i>${c.score.toFixed(1)}</i></span>`;
+      }).join('') || '<span class="ycat">无凸出信号 · 按部就班之年</span>';
+      const hot = (r.hot || []).length
+        ? `<div class="yhot"><b>应期落月</b>${r.hot.map(h => `<span>${h.idx}月(${esc(h.gz)})</span>`).join('')}<i>这几个月是这一年该事最集中的当口</i></div>` : '';
+      // v1.04:逐年那一层原先摆的是**并列的三条理由**,谁也不接谁。改成一条因果链
+      // (结论→机制→并行的第二类→哪几个月→做法);串联走 Dashi.yearStory(§四:只取用不重造)。
+      // 叙事出得来就用叙事,出不来(信号太弱)才退回原来的三条理由——宁可少说,不留空白。
+      let story = '';
+      try { story = Dashi.yearStory(c, r) || ''; } catch (e) { story = ''; }
+      const why = story
+        ? `<div class="ywhy">${esc(story)}${r.kong ? '(此年落空亡)' : ''}</div>`
+        : (r.top ? `<div class="ywhy">${r.top.reasons.slice(0, 3).map(esc).join(';')}${r.kong ? ';此年落空亡' : ''}</div>` : '');
+      const mons = (r.months || []).map(m => {
+        const t = m.top;
+        const d = t ? t.dirSum : 0, cl = !t ? '' : (Math.abs(d) < 0.6 ? '' : (d > 0 ? 'good' : 'bad'));
+        return `<div class="ymon ${cl}"><span class="mn">${esc(m.name)}</span><span class="mg">${esc(m.gz)}</span>` +
+          `<span class="ms">${esc(m.span)}</span><span class="mt">${t ? esc(t.label) : '平'}${m.kong ? ' · 空' : ''}</span>` +
+          `<span class="mw">${t ? esc(t.reasons[0]) : '这个月没有凸出信号'}</span></div>`;
+      }).join('');
+      return `<div class="yrow${r.year === nowY ? ' now' : ''}">
+        <div class="yh"><span class="yy">${r.year}年</span><span class="ya">${r.age}岁 · ${esc(r.gz)}</span>${cats}</div>
+        ${why}${hot}
+        ${mons ? `<details class="ymons"><summary>展开这一年的十二个流月(应期精确到月)</summary>${mons}</details>` : ''}
+      </div>`;
+    };
+    $('ds-ten').innerHTML = tl.nextTen.map(yearRow).join('');
+    // —— 往年逐年细账(用户点名要的)——
+    // 摆在这里不只是「多给点内容」:已经发生过的年份,你自己知道对不对。
+    // 这是本程序唯一现成的反馈回路,所以措辞上明说「对不上就驳回我」。
+    const pastBox = $('ds-past');
+    if (pastBox) {
+      const py = (tl.pastYears || []).slice().reverse();   // 由近及远,最近的排前面
+      pastBox.innerHTML = py.length
+        ? `<details class="dspast"><summary>翻看往年:${py[py.length - 1].year}—${py[0].year} 共 ${py.length} 年,每年都能展开到十二个月</summary>` +
+          `<div class="note" style="margin:8px 0 10px">这一段是给你<b>对账</b>用的:这些年已经过去了,哪年顺哪年背你自己最清楚。` +
+          `对得上,后面的话才值得信;对不上,当场驳回我——我这套断法本来就还没验准,你的反馈比什么都值钱。</div>` +
+          py.map(yearRow).join('') + `</details>`
+        : '<div class="note">你还没起运,没有往年可翻。</div>';
+    }
+  }
+
+  function renderYun(c, target) {
+    // 年运叙事要吃流月(「一年之内并不平均」那一段靠它选月),流月走 Dashi(§四:只取用不重造)
+    let months = null;
+    try { months = Dashi.monthsOf(c, target.getFullYear(), null); } catch (e) { months = null; }
+    const y = Yunshi.all(c, target, { months });
+    aiContext = { c, target, y };
+    $('yun-cards').innerHTML = ['day', 'month', 'year'].map(k => card(y[k])).join('');
+  }
+  function card(cd) {
+    const good = cd.score >= 0;
+    const cls = cd.score >= 1 ? 'good' : (cd.score <= -1 ? 'bad' : '');
+    const lvcls = good ? 'g' : '';
+    return `<div class="yscard ${cls}">
+      <div class="yh"><span class="ylabel">${esc(cd.label)}</span>
+        <span class="ylv ${lvcls}" title="五档:大吉 / 吉 / 平顺 / 小凶 / 凶">${esc(cd.level)}</span>
+        <span class="yarea">${esc(cd.area)}</span></div>
+      <div class="ytext">${esc(cd.text)}</div>
+      ${cd.story ? `<div class="ytext" style="margin-top:.5em">${esc(cd.story)}</div>` : ''}
+      ${cd.realSpan ? `<div class="yspan">${esc(cd.realSpan)}</div>` : ''}
+      ${!cd.story && cd.lines && cd.lines.length ? `<div class="ytext" style="opacity:.88;font-size:.92em">${cd.lines.map(l => '· ' + esc(l)).join('<br>')}</div>` : ''}
+      ${(cd.yi && cd.yi.length) || (cd.ji && cd.ji.length) ? `<div class="yact">` +
+        (cd.yi && cd.yi.length ? `<div class="yl"><b>宜${esc(cd.when)}</b>${cd.yi.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '') +
+        (cd.ji && cd.ji.length ? `<div class="yl bad"><b>忌${esc(cd.when)}</b>${cd.ji.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : '') +
+        `</div>` : ''}
+      <div class="ymeta">${esc(cd.span)}${cd.gz ? ' · ' + esc(cd.gz) : ''}${cd.dayun ? ' · 正走 ' + esc(cd.dayun) : ''} · 五档里的第${['大吉', '吉', '平顺', '小凶', '凶'].indexOf(cd.level) + 1}档</div>
+    </div>`;
+  }
+  // 三档时间各自可选:日运看哪一天、月运看哪个月、年运看哪一年
+  function qday() {
+    if (!curChart) return;
+    const d = $('qdate').value;
+    const yv = parseInt($('qyear').value, 10), mv = parseInt($('qmonth').value, 10);
+    let Y, M, D;
+    if (d) { [Y, M, D] = d.split('-').map(Number); } else {
+      const n = new Date(); Y = n.getFullYear(); M = n.getMonth() + 1; D = n.getDate();
+    }
+    // 年/月单独改过就以它为准(日取该月中旬,避开节气交界的歧义)
+    let ty = yv || Y, tm = mv || M, td = D;
+    if ((yv && yv !== Y) || (mv && mv !== M)) { td = 15; }
+    const last = new Date(ty, tm, 0).getDate();
+    if (td > last) td = last;
+    const target = new Date(ty, tm - 1, td, 12, 0);
+    const iso = `${ty}-${String(tm).padStart(2, '0')}-${String(td).padStart(2, '0')}`;
+    $('qdate').value = iso; $('qyear').value = ty; $('qmonth').value = tm;
+    renderYun(curChart, target);
+    $('qhint').textContent = `现在看的是 ${iso} 这一天、以及它所在的月与年。改年月会自动取该月十五日(避开节气交界)。`;
+  }
+  function qtoday() {
+    const n = new Date();
+    $('qdate').value = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+    $('qyear').value = n.getFullYear(); $('qmonth').value = n.getMonth() + 1;
+    qday();
+  }
+  function syncQPickers(target) {
+    const d = target || new Date();
+    if (!$('qdate').value) $('qdate').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (!$('qyear').value) $('qyear').value = d.getFullYear();
+    if ($('qmonth')) $('qmonth').value = d.getMonth() + 1;
+  }
+
+  function renderDayun(c) {
+    const du = c.dayun;
+    $('dayun-dir').innerHTML = `排法:${du.forward ? '顺行' : '逆行'} · 约 <b style="color:var(--cinnabar)">${du.startAge}</b> 岁起运,每步管十年。`;
+    const nowAge = new Date().getFullYear() - c.birth.getFullYear();
+    $('dayun-head').innerHTML = '<th>起始</th>' + du.list.map(d => `<th>${d.fromAge}岁</th>`).join('');
+    $('dayun-body').innerHTML = '<td style="color:var(--dim)">大运</td>' + du.list.map(d => {
+      const now = nowAge >= d.fromAge && nowAge < d.fromAge + 10;
+      return `<td class="${now ? 'now' : ''}">${wxSpanGZ(d.gz)}</td>`;
+    }).join('');
+  }
+  function wxSpanGZ(gz) { return wxSpan(gz[0], Bazi.GAN_WX[gz[0]]) + wxSpan(gz[1], Bazi.ZHI_WX[gz[1]]); }
+
+  // —— AI 深批 ——
+  const SYS = `你是一位精通子平八字的命理师,道号「东玄」。依旺衰扶抑法看运势(得令得地得生得助定身强弱,身强喜耗泄、身弱喜生扶,流年为喜用则顺、忌神则不利,流年天干十神定所主之事)。批语要有精气神:每一路至少给一个具体场景或活的比喻,各路不许用同一句式,忌流水账式的"总体平稳注意健康";该重说的重说、该宽解的宽解,有一说一。
+【风格铁律——最重要】
+1. 全程大白话、接地气,像街坊里那个看得准的老先生当面跟人唠。真有本事的人能把玄的东西讲得外行秒懂;越是掉书袋、堆术语、拽文言文,越是没底气、存心让人听不懂。"日主""用神""十神""喜忌""生克"这些是你心里的算盘珠子,不许原样撂到客人面前——非得提就立刻翻成人话(别说"今年官杀为忌",要说"今年工作上压得慌、容易被管被挑刺")。
+2. 好就说好、差就说差,不打太极、不免责、不灌鸡汤。凶的年月照实说,但只就事论事,不借着凶运引申教育人、不上价值观。
+3. 具体落地:问财给该守该攻、大概进项方向;问工作给升降和压力来处;问感情给冷热聚散;都落到具体月份或时间段。禁止"因人而异""仅供参考""还得看个人"。
+4. 只断事不审人:命主的追求、标准照单全收,不评判、不替他/她预设没说过的立场,不贴标签。问啥答啥,不脑补人生观。
+5. 不用 markdown 标题符号,不用编号清单,像当面说话不是写报告。命盘与流年干支由程序算好且真实,直接据此断。
+6. 直断防空话:每一路开头一句就是硬结论(顺不顺/几成/哪几个月/什么数),把握度用"几成"说死;做法具体到动作和时间。禁句:"${Tijian.RULES['空话'].words.join('/')}";说教鸡汤同禁:"${Tijian.RULES['说教'].words.join('/')}"。哪句话放到随便谁的命上都成立,哪句就是车轱辘话,删了换成带数字带时间的实话;同一个意思不许换措辞说第二遍,字数靠新信息堆。
+【领域对照(心里用,落纸翻白话)】财星=钱与感情(男命兼女人缘);官杀=工作压力升迁与约束(女命兼正缘);印星=贵人文书房子长辈学习;比劫=朋友合伙竞争破财;食伤=才华表达投资副业子女跳槽。`;
+
+  function buildMaterial() {
+    const { c, target, y } = aiContext;
+    const P = c.pillars;
+    const four = ['year', 'month', 'day', 'hour'].map(k => `${k}=${P[k].gz}(${P[k].ganShen})`).join(' ');
+    const du = y.year.dayun || '未定';
+    const fm = gz => { try { return Bazi.flowMarks(c, gz[0], gz[1]); } catch (e) { return []; } };
+    const yM = fm(y.year.gz), mM = fm(y.month.gz), dM = fm(y.day.gz);
+    const kong = Bazi.kongOf(c.pillars.day.gz);
+    const tzYears = Bazi.tianZhongShaYears(c, new Date().getFullYear(), 12);
+    return `【命主】${c.gender},生于 ${c.lunarText}。
+四柱:${four}。逐柱明细:${['year', 'month', 'day', 'hour'].map(k => {
+      const p = c.pillars[k]; const nm = { year: '年', month: '月', day: '日', hour: '时' }[k];
+      return `${nm}柱${p.gz}(${k === 'day' ? '日主' : p.ganShen};藏干${p.cang.map(x => x.gan + x.shen).join('、')};纳音${p.nayin};日主行至此支为${p.xingyun};本柱自坐${p.zizuo}${p.kong ? ';落空亡' : ''})`;
+    }).join(' / ')}。
+人元司令:${c.siLing.gan}当令(节入后第${c.daysIntoJie}天)。胎元${c.taiYuan}。字面五行个数:${['木', '火', '土', '金', '水'].map(w => w + c.wuxingCount[w]).join('')}。
+【旺衰称重(百分制,同党异党两边都实算)】${['木', '火', '土', '金', '水'].map(w => w + c.strength.pow[w]).join(' ')};十神力量:${['比劫', '印', '食伤', '财', '官杀'].map(k => k + c.strength.detail[k]).join(' ')}。
+同党(比劫+印)${c.strength.tong} 对 异党(食伤+财+官杀)${c.strength.yi} → 判「${c.strength.band}」。
+日主之根:${c.strength.roots.length ? c.strength.roots.map(r => r.pos + '支' + r.zhi + r.level + '(' + r.cs + ')').join('、') : '四支无根'}。${c.strength.bonus.length ? '成局加权:' + c.strength.bonus.join('、') + '。' : ''}
+四柱刑冲合害会:${[...c.rel.sanhui.map(x => x.text), ...c.rel.sanhe.map(x => x.text), ...c.rel.chong, ...c.rel.xing, ...c.rel.he, ...c.rel.hai, ...c.rel.ganhe, ...c.rel.ganchong].join('、') || '无'}。
+喜用五行:${c.yong.xiWx.join('、')};忌神五行:${c.yong.jiWx.join('、')}。取用理由:${c.yong.xiName}。
+正走大运:${du}。空亡(天中殺)二支:${kong.join('、')};未来十二年中天中殺之年:${tzYears.join('、') || '(不在近窗)'}。
+${c.geju ? '【格局】' + c.geju + '——喜忌已按从格翻转,断语随之。' : ''}${c.tiaohou ? '【调候】' + c.tiaohou.note + '。' : ''}${c.neiChong && c.neiChong.length ? '【命局内冲】' + c.neiChong.join(';') + '。' : ''}
+【所看时段】
+今年(${y.year.span}):干支${y.year.gz},程序判为「${y.year.level}」,天干十神${y.year.shen}。${yM.length ? '\n今年星煞与动宫:' + yM.join(';') : ''}
+本月(${y.month.span}):干支${y.month.gz},判「${y.month.level}」,${y.month.shen}。${mM.length ? '\n本月星煞与动宫:' + mM.join(';') : ''}
+今日(${y.day.span}):干支${y.day.gz},判「${y.day.level}」,${y.day.shen}。${dM.length ? '\n今日星煞与动宫:' + dM.join(';') : ''}
+[程序算出的具体事宜,须原样用上、不许改成空话]
+今年宜:${(y.year.yi || []).join(';')}|今年忌:${(y.year.ji || []).join(';')}
+本月宜:${(y.month.yi || []).join(';')}|本月忌:${(y.month.ji || []).join(';')}
+今日宜:${(y.day.yi || []).join(';')}|今日忌:${(y.day.ji || []).join(';')}
+【今天是什么日子——所有"今年/本月/今日"以此为准】阳历 ${nowText()}。${y.year.span}就是今年,${y.month.span}就是本月,${y.day.span}就是今天。给时间点落在合理范围,问本月别飘到别的月去。
+【落笔硬要求】读者是外行只想听人话:回答里不许出现"日主/用神/十神/喜忌/生克/旺衰/天干地支干支/正财偏财官杀印比食伤"这些字眼,全翻成大白话(比如别说"今年官杀为忌",要说"今年工作上压得慌、容易被管被挑刺")。每段先甩人话结论再说为啥,不用编号清单和markdown,像老先生当面唠。
+${curDashi ? Dashi.material(c, curDashi) + '\n' : ''}${curSanmei ? Sanmei.material(curSanmei) + '\n【算命学用法】人体星図是性格与时期论的底盘:中心星定本质与行事路数;従星三期把人生分成初年/中年/晚年,批到哪个年纪就用哪期従星的星性与点数说话(点数高的时期扛得动大事,点数低的时期以巧以静取胜);天中殺之年月日按「运气之冬」断。星名可以直接说给客人听(貫索星、天将星这些名字本身就是看点),但每个星名后面必须紧跟一句大白话解释。\n' : ''}【断到事型——深断的硬要求】材料里给了十神、星煞与动宫,这是断"会发生什么事"的原料,必须用起来:①每一段都要点名事型——是情事(桃花红鸾)、是文书考试(文昌)、是奔波变动(驿马冲提纲)、是贵人露面(天乙)、是口舌冲动(羊刃)、还是守成清账(天中殺),对应到大白话的具体事上;②天中殺(空亡)所在的年月日,按"运气之冬"断:不宜立新根基(开业置产定亲),宜收尾学习养精神,并把回暖的时间点说出来;③材料给了未来十二年里的天中殺之年,看年运时提前打招呼;④十神所主之事要断细:管束认可(官)、突发压力小人(杀)、正路进财(正财)、外快与桃色(偏财)、文书长辈(印)、灵感失眠饭碗生变(枭)、口福才华(食)、顶撞出格文书坑(伤)、朋友分财(比劫)——哪个当值断哪个,喜则其吉象、忌则其凶象;⑤颜色方位只作末尾一句辅注,不许拿它凑深度。
+请分「今年 / 本月 / 今日」三段,各用大白话细说这个人的运势:钱财、工作、感情、健康、贵人各挑要紧的说,该攻该守都点明,给具体月份或时间段。开头一句先给这一年的总基调。`;
+  }
+  function nowText() {
+    const d = new Date(), wd = '日一二三四五六'[d.getDay()];
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 星期${wd}`;
+  }
+
+  const PROVIDERS = {
+    claude: { keyStore: 'dongxuan_api_key', modelStore: 'dongxuan_ai_model',
+      models: [['claude-fable-5', 'Claude Fable 5(顶配)'], ['claude-opus-4-8', 'Claude Opus 4.8']],
+      keyLabel: 'Anthropic API Key(仅存本机浏览器,直连官方接口)', ph: 'sk-ant-api03-…',
+      note: '在 platform.claude.com 创建 API Key。命盘与流年会发给模型按东玄风格细批,按 token 计费。' },
+    deepseek: { keyStore: 'dongxuan_ds_key', modelStore: 'dongxuan_ds_model',
+      models: [['deepseek-reasoner', 'DeepSeek R1 深度推理'], ['deepseek-chat', 'DeepSeek V3']],
+      keyLabel: 'DeepSeek API Key(仅存本机浏览器,直连 api.deepseek.com)', ph: 'sk-…',
+      note: '在 platform.deepseek.com 创建 API Key。按 token 计费。' },
+  };
+  const label = { claude: 'Claude', deepseek: 'DeepSeek' };
+  function prov() { return PROVIDERS[$('ai-provider').value]; }
+  function getKey() { return localStorage.getItem(prov().keyStore) || ''; }
+  function syncProv() {
+    const p = prov();
+    $('ai-model').innerHTML = p.models.map(m => `<option value="${m[0]}">${m[1]}</option>`).join('');
+    const sm = localStorage.getItem(p.modelStore); if (sm && p.models.some(m => m[0] === sm)) $('ai-model').value = sm;
+    $('key-label').textContent = p.keyLabel; $('api-key').placeholder = p.ph; $('key-note').textContent = p.note; $('api-key').value = getKey();
+  }
+  function setStatus(m, e) { $('ai-status').textContent = m; $('ai-status').classList.toggle('err', !!e); }
+
+  async function deepRead() {
+    if (aiBusy || !aiContext) { if (!aiContext) setStatus('先排盘。', true); return; }
+    const key = getKey(), pid = $('ai-provider').value;
+    if (!key) { setStatus(`请先设置 ${label[pid]} API Key。`, true); $('keybox').classList.remove('hidden'); return; }
+    const model = $('ai-model').value, material = buildMaterial();
+    let url, headers, body;
+    if (pid === 'deepseek') {
+      url = 'https://api.deepseek.com/chat/completions';
+      headers = { 'content-type': 'application/json', authorization: 'Bearer ' + key };
+      body = { model, stream: true, max_tokens: 8000, messages: [{ role: 'system', content: SYS }, { role: 'user', content: material }] };
+    } else {
+      url = 'https://api.anthropic.com/v1/messages';
+      headers = { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+      body = { model, max_tokens: 16000, stream: true, system: SYS, messages: [{ role: 'user', content: material }] };
+      if (model === 'claude-fable-5') { headers['anthropic-beta'] = 'server-side-fallback-2026-06-01'; body.fallbacks = [{ model: 'claude-opus-4-8' }]; }
+      else body.thinking = { type: 'adaptive' };
+    }
+    aiBusy = true; $('btn-ai').disabled = true; setStatus('东玄凝神看盘……');
+    const out = $('ai-out'); out.classList.remove('hidden'); out.innerHTML = '<span class="cursor">▍</span>';
+    let text = '', stop = null;
+    try {
+      const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+      if (!resp.ok) { let m = 'HTTP ' + resp.status; try { const j = await resp.json(); m = (j.error && (j.error.message || j.error)) || m; } catch (e) {} if (resp.status === 401) m = 'API Key 无效,请重设。'; if (resp.status === 402) m = 'DeepSeek 余额不足。'; throw new Error(m); }
+      const rd = resp.body.getReader(), dec = new TextDecoder(); let buf = '';
+      const feed = t => { text += t; out.textContent = text; out.insertAdjacentHTML('beforeend', '<span class="cursor">▍</span>'); };
+      while (true) {
+        const { done, value } = await rd.read(); if (done) break;
+        buf += dec.decode(value, { stream: true }); const parts = buf.split('\n\n'); buf = parts.pop();
+        for (const part of parts) {
+          const dl = part.split('\n').find(l => l.startsWith('data:')); if (!dl) continue;
+          const pl = dl.replace(/^data:\s*/, ''); if (pl === '[DONE]') continue;
+          let ev; try { ev = JSON.parse(pl); } catch (e) { continue; }
+          if (pid === 'deepseek') { const ch = ev.choices && ev.choices[0]; if (ch && ch.delta && ch.delta.content) feed(ch.delta.content); if (ch && ch.finish_reason) stop = ch.finish_reason; if (ev.error) throw new Error(ev.error.message || 'DeepSeek 出错'); }
+          else { if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') feed(ev.delta.text); else if (ev.type === 'message_delta' && ev.delta && ev.delta.stop_reason) stop = ev.delta.stop_reason; else if (ev.type === 'error') throw new Error((ev.error && ev.error.message) || '出错'); }
+        }
+      }
+      out.textContent = text;
+      if (stop === 'refusal' || stop === 'content_filter') setStatus('此问触发了模型安全过滤,换个问法再试。', true);
+      else if (!text) throw new Error('未收到内容');
+      else { setStatus('批毕。'); tijianBadge(out, text); }
+    } catch (e) {
+      if (text) out.textContent = text;
+      const hint = /Failed to fetch|NetworkError|TypeError/.test(String(e))
+        ? '网络被拦截:托管版禁止外联,请在桌面/本地版用深批。' : String(e.message || e);
+      setStatus('深批未成:' + hint, true); if (!text) out.classList.add('hidden');
+    } finally { aiBusy = false; $('btn-ai').disabled = false; }
+  }
+
+  // ——— 断语体检员:稿子出来之后机器回头查一遍(队列第 8 条)———
+  // 只报不改:一个字都不许替模型改,稿子照旧原样摆着。
+  // 拿得出手的对账事实:命盘的喜忌;姻缘方向留白时,还要盯住模型有没有自己补一个吉凶。
+  function tijianBadge(el, text) {
+    if (!el || typeof Tijian === 'undefined') return;
+    const facts = {};
+    try { if (curChart) { facts.xiWx = curChart.yong.xiWx; facts.jiWx = curChart.yong.jiWx; } } catch (e) {}
+    if (!curMarital) facts.held = true;
+    let res; try { res = Tijian.check(text, { facts }); } catch (e) { return; }
+    const old = el.parentNode && el.parentNode.querySelector('.tj-box');
+    if (old) old.remove();
+    if (res.pass && !res.hits.length) return;
+    const by = {};
+    for (const h of res.hits) (by[h.kind] = by[h.kind] || []).push(h.snippet || h.why);
+    const box = document.createElement('div');
+    box.className = 'tj-box' + (res.pass ? '' : ' bad');
+    box.innerHTML = `<div class="tj-h">${res.pass ? '这稿子能看,但有几处不干净' : '这稿子不合格'}<span class="tj-score">${res.score} 分</span></div>` +
+      Object.keys(by).map(k => `<div class="tj-row"><b>${esc(k)}</b>${esc([...new Set(by[k])].slice(0, 6).join('、'))}</div>`).join('');
+    el.parentNode.insertBefore(box, el.nextSibling);
+  }
+
+  // 事件
+  // ——— 生辰档案簿:多档留存,切换即重排(只存本机浏览器)———
+  const PKEY = 'dongxuan_profiles_v1', PCUR = 'dongxuan_profile_cur';
+  const readProfiles = () => { try { return JSON.parse(localStorage.getItem(PKEY) || '[]'); } catch (e) { return []; } };
+  const writeProfiles = a => { try { localStorage.setItem(PKEY, JSON.stringify(a)); } catch (e) {} };
+  function profMsg(t, bad) { const e = $('prof-msg'); if (!e) return; e.textContent = t; e.style.color = bad ? 'var(--cinnabar)' : 'var(--wx-mu)'; setTimeout(() => { e.textContent = ''; }, 2600); }
+  // 「不知道确切钟点」勾上时,钟点框停用——省得用户以为那个 12:00 是他自己填的
+  function syncHourUnknown() {
+    const cb = $('bt-unknown'), t = $('btime');
+    if (!cb || !t) return;
+    t.disabled = cb.checked;
+    t.style.opacity = cb.checked ? '.45' : '';
+  }
+  if ($('bt-unknown')) { $('bt-unknown').addEventListener('change', syncHourUnknown); syncHourUnknown(); }
+  if ($('marital')) $('marital').value = curMarital || '';
+
+  function renderProfiles(selId) {
+    const list = readProfiles(), sel = $('prof-sel');
+    if (!sel) return;
+    const cur = selId !== undefined ? selId : (localStorage.getItem(PCUR) || '');
+    sel.innerHTML = '<option value="">(未存档 · 手填)</option>' +
+      list.map(p => `<option value="${esc(p.id)}">${esc(p.name)} · ${esc(p.date)}${p.time ? ' ' + esc(p.time) : ''}</option>`).join('');
+    sel.value = list.some(p => p.id === cur) ? cur : '';
+  }
+  function applyProfile(id) {
+    const p = readProfiles().find(x => x.id === id);
+    if (!p) return;
+    $('bdate').value = p.date || '';
+    $('btime').value = p.time === '?' ? '12:00' : (p.time || '12:00');
+    if ($('bt-unknown')) { $('bt-unknown').checked = p.time === '?'; syncHourUnknown(); }
+    $('gender').value = p.gender || '男';
+    $('bplace').value = p.place || '';
+    $('prof-name').value = p.name || '';
+    try { localStorage.setItem(PCUR, id); } catch (e) {}
+    if (p.date) go();                     // 选中即重排,不用再点一次
+  }
+  if ($('prof-sel')) {
+    renderProfiles();
+    $('prof-sel').addEventListener('change', e => {
+      const v = e.target.value;
+      if (!v) { try { localStorage.removeItem(PCUR); } catch (err) {} $('prof-name').value = ''; return; }
+      applyProfile(v);
+    });
+    $('btn-prof-save').addEventListener('click', () => {
+      const date = $('bdate').value;
+      if (!date) { profMsg('先填出生日期再存档', true); return; }
+      const name = ($('prof-name').value || '').trim() || ('生辰' + date);
+      const list = readProfiles();
+      const cur = $('prof-sel').value;
+      const rec = { id: cur || ('p' + date.replace(/-/g, '') + '_' + list.length + '_' + name.length),
+        name, date,
+        time: ($('bt-unknown') && $('bt-unknown').checked) ? '?' : ($('btime').value || '12:00'),
+        gender: $('gender').value, place: $('bplace').value || '' };
+      const i = list.findIndex(x => x.id === rec.id);
+      if (i >= 0) list[i] = rec; else list.push(rec);
+      writeProfiles(list);
+      try { localStorage.setItem(PCUR, rec.id); } catch (e) {}
+      renderProfiles(rec.id);
+      profMsg(i >= 0 ? `「${name}」已更新` : `「${name}」已存档,下次直接选`);
+    });
+    $('btn-prof-del').addEventListener('click', () => {
+      const cur = $('prof-sel').value;
+      if (!cur) { profMsg('先在档案里选一份再删', true); return; }
+      const list = readProfiles(), rec = list.find(x => x.id === cur);
+      writeProfiles(list.filter(x => x.id !== cur));
+      try { localStorage.removeItem(PCUR); } catch (e) {}
+      renderProfiles('');
+      $('prof-name').value = '';
+      profMsg(`「${rec ? rec.name : ''}」已删除`);
+    });
+    // 开页自动套用上次那份
+    const cur = (() => { try { return localStorage.getItem(PCUR) || ''; } catch (e) { return ''; } })();
+    if (cur && readProfiles().some(p => p.id === cur)) setTimeout(() => applyProfile(cur), 0);
+  }
+
+  $('btn-go').addEventListener('click', go);
+  $('btn-qday').addEventListener('click', qday);
+  $('btn-qtoday').addEventListener('click', qtoday);
+  $('btn-ai').addEventListener('click', deepRead);
+  $('ai-provider').addEventListener('change', () => { localStorage.setItem('dongxuan_ai_provider', $('ai-provider').value); syncProv(); setStatus(''); });
+  $('btn-togglekey').addEventListener('click', () => { $('keybox').classList.toggle('hidden'); $('api-key').value = getKey(); });
+  $('btn-savekey').addEventListener('click', () => { const v = $('api-key').value.trim(); if (v) { localStorage.setItem(prov().keyStore, v); $('keybox').classList.add('hidden'); setStatus('Key 已存本机。'); } else setStatus('Key 为空。', true); });
+  $('btn-clearkey').addEventListener('click', () => { localStorage.removeItem(prov().keyStore); $('api-key').value = ''; setStatus('Key 已清除。'); });
+  $('ai-model').addEventListener('change', () => localStorage.setItem(prov().modelStore, $('ai-model').value));
+  if (localStorage.getItem('dongxuan_ai_provider') && PROVIDERS[localStorage.getItem('dongxuan_ai_provider')]) $('ai-provider').value = localStorage.getItem('dongxuan_ai_provider');
+  syncProv();
+
+  // 日间/夜间:与卜卦主程序共用 dongxuan_theme,单文件浮层里也跟着主程序走
+  const TKEY = 'dongxuan_theme';
+  let curTheme = 'light';
+  const applyTheme = t => {
+    if (t === 'dark') document.documentElement.dataset.theme = 'dark';
+    else delete document.documentElement.dataset.theme;
+    const tb = $('btn-theme');
+    if (tb) tb.textContent = t === 'dark' ? '☀ 日间' : '◐ 夜间';
+    const meta = document.querySelector('meta[name=theme-color]');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#171210' : '#f4eee1');
+  };
+  try { curTheme = localStorage.getItem(TKEY) === 'dark' ? 'dark' : 'light'; } catch (e) {}
+  if (document.documentElement.dataset.theme === 'dark') curTheme = 'dark';
+  applyTheme(curTheme);
+  const themeBtn = $('btn-theme');
+  if (themeBtn) themeBtn.addEventListener('click', e => {
+    e.preventDefault();
+    curTheme = curTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(curTheme);
+    try { localStorage.setItem(TKEY, curTheme); } catch (err) {}
+  });
+
+  const shareBtn = $('btn-share');
+  if (shareBtn) shareBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const url = location.href.split('#')[0], isFile = location.protocol === 'file:';
+    const data = { title: '东玄运势', text: '东玄运势:报生辰看今日/本月/今年运势,全大白话。', url };
+    if (!isFile && navigator.share) { try { await navigator.share(data); return; } catch (err) { if (err && err.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(isFile ? '(本地文件,分享请用网址版)' : url); shareBtn.textContent = isFile ? '本地文件无法分享' : '链接已复制 ✓'; }
+    catch (err) { shareBtn.textContent = url; }
+    setTimeout(() => { shareBtn.textContent = '分享给朋友 ⤴'; }, 2200);
+  });
+
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('./sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1918 @@
+{
+ "_meta": {
+  "用途": "事件层回测语料:程序说某年该有什么,拿真人真事去对",
+  "来源": "由用户的 DeepSeek 依本项目 docs/需要的资料清单.md 检索整理,每条带 source",
+  "时辰铁律": "仅出生证/教区登记簿/出生当日同期书信等档案记载者 hourKnown=true;命理占星倒推与家人事后回忆一律不采信",
+  "经度与时差": "lon/tzMin/tzNote 三项为本项目自补(原语料没有),按出生地与当年计时制度推定,可被推翻",
+  "人数": 33,
+  "有档案级时辰": 8,
+  "事件数": 176,
+  "补样": "2026-08 补入 5 位财运事件可精确到年的人(此前财运类表态为 0)"
+ },
+ "cases": [
+  {
+   "id": "case-001",
+   "name": "孙中山",
+   "gender": "男",
+   "birth": "1866-11-12",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "部分命理/纪念文章称『寅时』(约3-5点)，但无出生证、医院记录或同期父母书信日记佐证，属民间八字倒推，不采信。",
+   "place": "广东省香山县翠亨村(今中山市)",
+   "lon": 113.4,
+   "tzMin": 454,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "孙中山故居纪念馆(sunyat-sen.org)；维基百科「孙中山」",
+   "events": [
+    {
+     "year": 1884,
+     "type": "yinyuan",
+     "what": "与原配卢慕贞结婚",
+     "good": true,
+     "source": "中新网《孙中山的四次婚姻》(另有1885年5月说)"
+    },
+    {
+     "year": 1894,
+     "type": "shiye",
+     "what": "在檀香山创立兴中会",
+     "good": true,
+     "source": "维基百科「兴中会」；央广网"
+    },
+    {
+     "year": 1905,
+     "type": "shiye",
+     "what": "在东京与黄兴等创立中国同盟会",
+     "good": true,
+     "source": "维基百科「孙中山」"
+    },
+    {
+     "year": 1912,
+     "type": "shiye",
+     "what": "1月1日在南京就任中华民国临时大总统",
+     "good": true,
+     "source": "维基百科「孙中山」；央广网"
+    },
+    {
+     "year": 1915,
+     "type": "yinyuan",
+     "what": "在东京与宋庆龄结婚",
+     "good": true,
+     "source": "人民网；上海社科院《从档案文献看孙中山与宋庆龄的婚姻》"
+    },
+    {
+     "year": 1925,
+     "type": "jiankang",
+     "what": "3月12日在北京病逝(肝癌)",
+     "good": false,
+     "source": "宋庆龄陵园资料；维基百科「孙中山」"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "与卢慕贞结婚年份",
+     "detail": "多数资料作1884年，另有资料称1885年5月26日。",
+     "source": "中新网(1884) vs 部分资料(1885)"
+    },
+    {
+     "field": "出生时辰",
+     "detail": "命理文章称『寅时』，无档案佐证；正规传记不载时辰。",
+     "source": "命理类文章"
+    }
+   ]
+  },
+  {
+   "id": "case-002",
+   "name": "毛泽东",
+   "gender": "男",
+   "birth": "1893-12-26",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "《韶山毛氏族谱》记为『辰时』(约7-9点)，属同期宗族文献，比命理倒推可信度略高；但族谱非出生证/医院/父母日记，且另有戌时、申时、卯时等异说，故仍标不详、reliable=false。参考：辰时。",
+   "place": "湖南省湘潭县韶山冲",
+   "lon": 112.53,
+   "tzMin": 450,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "《韶山毛氏四修族谱》卷十五；cppcc.gov.cn官方传记；维基百科「毛泽东」",
+   "events": [
+    {
+     "year": 1920,
+     "type": "yinyuan",
+     "what": "与杨开慧结为夫妻",
+     "good": true,
+     "source": "杨开慧百度/维基条目；湖南政研网"
+    },
+    {
+     "year": 1921,
+     "type": "shiye",
+     "what": "作为代表参加中共一大，参与建党",
+     "good": true,
+     "source": "维基百科「毛泽东生平年表」"
+    },
+    {
+     "year": 1930,
+     "type": "yinyuan",
+     "what": "妻子杨开慧在长沙被捕并遇害",
+     "good": false,
+     "source": "杨开慧百度百科；湖南政研网(1930-11-14就义)"
+    },
+    {
+     "year": 1934,
+     "type": "biandong",
+     "what": "随中央红军开始长征",
+     "good": false,
+     "source": "维基百科「毛泽东生平年表」；cppcc.gov.cn"
+    },
+    {
+     "year": 1949,
+     "type": "shiye",
+     "what": "10月1日建立中华人民共和国，任中央人民政府主席",
+     "good": true,
+     "source": "cppcc.gov.cn毛泽东生平"
+    },
+    {
+     "year": 1976,
+     "type": "jiankang",
+     "what": "9月9日在北京逝世",
+     "good": false,
+     "source": "cppcc.gov.cn；维基百科「毛泽东」"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "《韶山毛氏族谱》作『辰时』，另有戌时、申时、卯时等民间说法，无法互证，不采信任一。",
+     "source": "族谱 vs 各民间说法"
+    }
+   ]
+  },
+  {
+   "id": "case-003",
+   "name": "周恩来",
+   "gender": "男",
+   "birth": "1898-03-05",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "权威传记与年谱未载出生时辰；网络『生辰八字』为民间推算，不足采信。",
+   "place": "江苏省淮安府山阳县(今淮安市)驸马巷",
+   "lon": 119.02,
+   "tzMin": 476,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "周恩来纪念网(zhouenlai.people.cn)；维基百科「周恩来」",
+   "events": [
+    {
+     "year": 1924,
+     "type": "shiye",
+     "what": "任黄埔军校政治部主任",
+     "good": true,
+     "source": "四川省情网；中新网"
+    },
+    {
+     "year": 1925,
+     "type": "yinyuan",
+     "what": "8月8日与邓颖超在广州结婚",
+     "good": true,
+     "source": "四川省情网；中新网《周恩来婚宴趣事》"
+    },
+    {
+     "year": 1927,
+     "type": "shiye",
+     "what": "8月1日领导南昌起义",
+     "good": true,
+     "source": "维基百科「南昌起义」；中国军网"
+    },
+    {
+     "year": 1949,
+     "type": "shiye",
+     "what": "10月1日任政务院总理(兼外长)",
+     "good": true,
+     "source": "中共党史研究(dswxyjy.org.cn)；cppcc.gov.cn"
+    },
+    {
+     "year": 1976,
+     "type": "jiankang",
+     "what": "1月8日因膀胱癌在北京逝世",
+     "good": false,
+     "source": "澎湃新闻；维基百科「周恩来」"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-004",
+   "name": "邓小平",
+   "gender": "男",
+   "birth": "1904-08-22",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "官方传记与档案未记载出生时辰。",
+   "place": "四川省广安州协兴乡牌坊村(今广安市广安区)",
+   "lon": 106.63,
+   "tzMin": 427,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "广安市人民政府(guang-an.gov.cn)；共产党员网(12371.cn)；维基百科「邓小平」",
+   "events": [
+    {
+     "year": 1939,
+     "type": "yinyuan",
+     "what": "8月在延安与卓琳结婚",
+     "good": true,
+     "source": "卓琳百度百科；中新网"
+    },
+    {
+     "year": 1966,
+     "type": "guanfei",
+     "what": "文革中受批判、被打倒(首次)",
+     "good": false,
+     "source": "维基百科「邓小平」；卓琳百度百科"
+    },
+    {
+     "year": 1969,
+     "type": "biandong",
+     "what": "10月被下放江西新建县拖拉机厂劳动",
+     "good": false,
+     "source": "卓琳百度百科；中新网"
+    },
+    {
+     "year": 1978,
+     "type": "shiye",
+     "what": "主导十一届三中全会，开启改革开放",
+     "good": true,
+     "source": "维基百科「邓小平」"
+    },
+    {
+     "year": 1997,
+     "type": "jiankang",
+     "what": "2月19日在北京逝世",
+     "good": false,
+     "source": "维基百科「邓小平」；新浪新闻"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-005",
+   "name": "蒋介石",
+   "gender": "男",
+   "birth": "1887-10-31",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "正规传记未载确切出生时辰；坊间八字说法无档案佐证，不采信。",
+   "place": "浙江省奉化县溪口镇(玉泰盐铺)",
+   "lon": 121.25,
+   "tzMin": 485,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "维基百科「蒋中正」；百度百科「蒋介石」",
+   "events": [
+    {
+     "year": 1927,
+     "type": "yinyuan",
+     "what": "12月1日在上海与宋美龄结婚(蔡元培证婚)",
+     "good": true,
+     "source": "宋美龄百度百科；六安市委党史室"
+    },
+    {
+     "year": 1928,
+     "type": "shiye",
+     "what": "领导北伐，名义上统一中国",
+     "good": true,
+     "source": "维基百科「蒋中正」"
+    },
+    {
+     "year": 1936,
+     "type": "guanfei",
+     "what": "12月12日西安事变中被张学良、杨虎城扣押",
+     "good": false,
+     "source": "维基百科「宋美龄」"
+    },
+    {
+     "year": 1949,
+     "type": "biandong",
+     "what": "国共内战失利，退守台湾",
+     "good": false,
+     "source": "维基百科；宋美龄百度百科"
+    },
+    {
+     "year": 1975,
+     "type": "jiankang",
+     "what": "4月5日在台北病逝",
+     "good": false,
+     "source": "网易专题；百度百科「蒋介石」"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-006",
+   "name": "宋庆龄",
+   "gender": "女",
+   "birth": "1893-01-27",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "传记与档案未记载出生时辰。",
+   "place": "上海",
+   "lon": 121.47,
+   "tzMin": 486,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "cppcc.gov.cn宋庆龄生平；维基百科「宋庆龄」；宋庆龄陵园资料",
+   "events": [
+    {
+     "year": 1913,
+     "type": "wenshu",
+     "what": "毕业于美国威斯里安女子学院，获学士学位",
+     "good": true,
+     "source": "chinatoday.com.cn；cppcc.gov.cn"
+    },
+    {
+     "year": 1915,
+     "type": "yinyuan",
+     "what": "10月在东京与孙中山结婚",
+     "good": true,
+     "source": "chinatoday.com.cn；上海社科院"
+    },
+    {
+     "year": 1925,
+     "type": "yinyuan",
+     "what": "3月12日孙中山逝世，成为其事业继承人",
+     "good": false,
+     "source": "宋庆龄陵园《从妻子到继承人》；维基百科"
+    },
+    {
+     "year": 1959,
+     "type": "shiye",
+     "what": "当选中华人民共和国副主席(至1975年)",
+     "good": true,
+     "source": "百度百科「宋庆龄」；cppcc.gov.cn"
+    },
+    {
+     "year": 1981,
+     "type": "jiankang",
+     "what": "5月加入中国共产党、获授名誉主席；5月29日在北京逝世",
+     "good": false,
+     "source": "cppcc.gov.cn；维基百科「宋庆龄」"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-007",
+   "name": "张学良",
+   "gender": "男",
+   "birth": "1901-06-03",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "传记与档案未记载确切出生时辰。",
+   "place": "辽宁省台安县(桑林子/詹家窝铺)",
+   "lon": 122.43,
+   "tzMin": 490,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "维基百科「张学良」；百度百科；太行英雄网",
+   "events": [
+    {
+     "year": 1928,
+     "type": "shiye",
+     "what": "皇姑屯事件父张作霖遇炸身亡后继任东北保安总司令；年底东北易帜",
+     "good": true,
+     "source": "维基百科「张学良」；百度百科"
+    },
+    {
+     "year": 1931,
+     "type": "shiye",
+     "what": "九一八事变，东北沦陷(执行不抵抗)",
+     "good": false,
+     "source": "抗日战争纪念网；华夏经纬网"
+    },
+    {
+     "year": 1936,
+     "type": "guanfei",
+     "what": "12月12日与杨虎城发动西安事变，扣押蒋介石",
+     "good": false,
+     "source": "维基百科「张学良」"
+    },
+    {
+     "year": 1937,
+     "type": "guanfei",
+     "what": "西安事变后遭蒋介石长期软禁",
+     "good": false,
+     "source": "百度百科「张学良」"
+    },
+    {
+     "year": 1990,
+     "type": "biandong",
+     "what": "恢复人身自由，1995年移居美国夏威夷",
+     "good": true,
+     "source": "百度百科「张学良」；维基百科"
+    },
+    {
+     "year": 2001,
+     "type": "jiankang",
+     "what": "10月14日在美国檀香山病逝，享年101岁",
+     "good": false,
+     "source": "百度百科「张学良」；维基百科"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生地",
+     "detail": "一般记为辽宁台安县，具体村落有『桑林子詹家窝铺』等说法，各源略有出入。",
+     "source": "各传记"
+    }
+   ]
+  },
+  {
+   "id": "case-008",
+   "name": "鲁迅(周树人，原名周樟寿，字豫才)",
+   "gender": "男",
+   "birth": "1881-09-25",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "未见出生证、医院记录或同期文献记载具体时辰；公开史料仅记至日期。",
+   "place": "浙江绍兴府会稽县(今绍兴)",
+   "lon": 120.58,
+   "tzMin": 482,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "维基百科「鲁迅」；爱上历史 m.3233.cn",
+   "events": [
+    {
+     "year": 1906,
+     "type": "yinyuan",
+     "what": "奉母命回国与朱安成婚(包办婚姻)",
+     "good": false,
+     "source": "维基百科「朱安」"
+    },
+    {
+     "year": 1918,
+     "type": "shiye",
+     "what": "在《新青年》发表《狂人日记》",
+     "good": true,
+     "source": "维基百科「鲁迅」"
+    },
+    {
+     "year": 1927,
+     "type": "yinyuan",
+     "what": "与许广平在上海同居结合",
+     "good": true,
+     "source": "维基百科「鲁迅」"
+    },
+    {
+     "year": 1936,
+     "type": "jiankang",
+     "what": "10月19日因肺结核在上海病逝",
+     "good": false,
+     "source": "维基百科「鲁迅」"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-009",
+   "name": "老舍(舒庆春，字舍予，满族)",
+   "gender": "男",
+   "birth": "1899-02-03",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "老舍在自传体小说《正红旗下》自述『腊月二十三酉时降生』，为本人书面自述，但出自半虚构文学作品而非出生档案，故不采用；参考：酉时(黄昏)。见conflicts。",
+   "place": "北京(前门外小羊圈胡同)",
+   "lon": 116.4,
+   "tzMin": 466,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "山东大学媒体 media.sdu.edu.cn；维基百科「老舍」；澎湃新闻",
+   "events": [
+    {
+     "year": 1930,
+     "type": "shiye",
+     "what": "自英国回国，任齐鲁大学教授",
+     "good": true,
+     "source": "维基百科「老舍」；百度百科"
+    },
+    {
+     "year": 1931,
+     "type": "yinyuan",
+     "what": "7月29日与胡絜青在北京结婚",
+     "good": true,
+     "source": "胡絜青百度百科；青岛新闻网"
+    },
+    {
+     "year": 1936,
+     "type": "shiye",
+     "what": "辞山东大学教职专事写作，《骆驼祥子》开始连载",
+     "good": true,
+     "source": "维基百科「老舍」"
+    },
+    {
+     "year": 1966,
+     "type": "jiankang",
+     "what": "8月24日在北京太平湖投水自尽(文革受迫害)",
+     "good": false,
+     "source": "澎湃新闻；CCTV news.cctv.com"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "《正红旗下》自述『腊月二十三酉时』，但源自半虚构自传体小说，非出生档案，未采信为确切时辰。",
+     "source": "老舍《正红旗下》"
+    }
+   ]
+  },
+  {
+   "id": "case-010",
+   "name": "巴金(李尧棠，字芾甘)",
+   "gender": "男",
+   "birth": "1904-11-25",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "未见出生证、医院记录或同期文献记载具体时辰。",
+   "place": "四川成都(祖籍浙江嘉兴)",
+   "lon": 104.07,
+   "tzMin": 416,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "光明网 gmw.cn；北京148；维基百科「巴金」",
+   "events": [
+    {
+     "year": 1927,
+     "type": "wenshu",
+     "what": "1月赴法国巴黎求学，创作长篇小说《灭亡》",
+     "good": true,
+     "source": "光明网巴金生平；四川省情网"
+    },
+    {
+     "year": 1933,
+     "type": "shiye",
+     "what": "长篇小说《家》出版，奠定文学地位",
+     "good": true,
+     "source": "四川省情网巴金生平大事记"
+    },
+    {
+     "year": 1944,
+     "type": "yinyuan",
+     "what": "5月与萧珊在贵阳花溪结婚",
+     "good": true,
+     "source": "维基百科「萧珊」；中国文化研究院"
+    },
+    {
+     "year": 1972,
+     "type": "jiankang",
+     "what": "8月13日妻子萧珊因直肠癌病逝(文革中未获及时治疗)",
+     "good": false,
+     "source": "维基百科「萧珊」；百度百科"
+    },
+    {
+     "year": 1981,
+     "type": "shiye",
+     "what": "当选中国作家协会主席",
+     "good": true,
+     "source": "光明网巴金生平"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-011",
+   "name": "徐志摩(谱名章垿，字志摩)",
+   "gender": "男",
+   "birth": "1897-01-15",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "未见出生证、医院记录或同期文献记载具体时辰。",
+   "place": "浙江海宁硖石镇",
+   "lon": 120.68,
+   "tzMin": 483,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "维基百科「徐志摩」；搜狐；杭州档案 hzarchives.org.cn",
+   "events": [
+    {
+     "year": 1915,
+     "type": "yinyuan",
+     "what": "10月回乡与张幼仪结婚(父母包办)",
+     "good": false,
+     "source": "维基百科「徐志摩」"
+    },
+    {
+     "year": 1922,
+     "type": "yinyuan",
+     "what": "3月与张幼仪在德国离婚，同年入剑桥大学国王学院",
+     "good": false,
+     "source": "维基百科「徐志摩」"
+    },
+    {
+     "year": 1923,
+     "type": "shiye",
+     "what": "发起成立『新月社』",
+     "good": true,
+     "source": "维基百科「徐志摩」"
+    },
+    {
+     "year": 1926,
+     "type": "yinyuan",
+     "what": "10月与陆小曼结婚",
+     "good": true,
+     "source": "维基百科「徐志摩」"
+    },
+    {
+     "year": 1931,
+     "type": "jiankang",
+     "what": "11月19日所乘邮政飞机在济南触山失事身亡",
+     "good": false,
+     "source": "维基百科「徐志摩」；搜狐"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-012",
+   "name": "胡适(原名嗣穈/洪骍，字适之)",
+   "gender": "男",
+   "birth": "1891-12-17",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "部分二手资料称『未时』，但无一手档案出处，故不采信；见conflicts。",
+   "place": "江苏松江府川沙县(今上海浦东；祖籍安徽绩溪)",
+   "lon": 121.7,
+   "tzMin": 487,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "香港中华文化促进会年表 cnhe-hk.org；维基百科「胡适」",
+   "events": [
+    {
+     "year": 1904,
+     "type": "yinyuan",
+     "what": "与江冬秀订婚(包办)，赴上海入梅溪学堂",
+     "good": false,
+     "source": "维基百科「胡适」；爱上历史"
+    },
+    {
+     "year": 1910,
+     "type": "wenshu",
+     "what": "考取庚款留美，入康奈尔大学",
+     "good": true,
+     "source": "维基百科「胡适」"
+    },
+    {
+     "year": 1917,
+     "type": "shiye",
+     "what": "回国任北京大学教授，倡导新文化运动与白话文",
+     "good": true,
+     "source": "维基百科「胡适」"
+    },
+    {
+     "year": 1962,
+     "type": "jiankang",
+     "what": "2月24日在台北中研院院长任上因心脏病猝逝",
+     "good": false,
+     "source": "维基百科「胡适」"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "多处二手资料称『未时』，但均无一手档案出处，来源不明，未采用。",
+     "source": "维基/知乎等转述"
+    },
+    {
+     "field": "出生地",
+     "detail": "出生于父亲任职地上海川沙(今浦东)，祖籍安徽绩溪；部分通俗资料混称『安徽绩溪人』(为祖籍非出生地)。",
+     "source": "各传记"
+    }
+   ]
+  },
+  {
+   "id": "case-013",
+   "name": "梅兰芳(名澜，字畹华)",
+   "gender": "男",
+   "birth": "1894-10-22",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "未见出生证、医院记录或同期文献记载具体时辰。",
+   "place": "北京(前门外李铁拐斜街；祖籍江苏泰州)",
+   "lon": 116.4,
+   "tzMin": 466,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "维基百科「梅兰芳」；中国文艺网 cflac.org.cn；中新网",
+   "events": [
+    {
+     "year": 1913,
+     "type": "shiye",
+     "what": "首赴上海演出《穆柯寨》等，轰动沪上成名",
+     "good": true,
+     "source": "中国文艺网；上海党史网"
+    },
+    {
+     "year": 1930,
+     "type": "shiye",
+     "what": "率团赴美演出，获荣誉文学博士",
+     "good": true,
+     "source": "人民网 dangshi.people.com.cn；中美印象"
+    },
+    {
+     "year": 1935,
+     "type": "shiye",
+     "what": "率团赴苏联演出",
+     "good": true,
+     "source": "人民网"
+    },
+    {
+     "year": 1938,
+     "type": "guanfei",
+     "what": "抗战期间蓄须明志、罢演拒为日伪演出",
+     "good": true,
+     "source": "蓄须明志百度百科；大众网"
+    },
+    {
+     "year": 1961,
+     "type": "jiankang",
+     "what": "8月8日因心脏病在北京逝世",
+     "good": false,
+     "source": "维基百科「梅兰芳」"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-014",
+   "name": "钱学森",
+   "gender": "男",
+   "birth": "1911-12-11",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "未见出生证、医院记录或同期文献记载具体时辰。",
+   "place": "上海(祖籍浙江杭州)",
+   "lon": 121.47,
+   "tzMin": 486,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "教育部『钱学森同志生平』moe.gov.cn；上海交大钱学森图书馆；维基百科",
+   "events": [
+    {
+     "year": 1934,
+     "type": "wenshu",
+     "what": "毕业于交通大学机械工程系，同年考取清华公费留美",
+     "good": true,
+     "source": "上海交大钱学森图书馆；教育部生平"
+    },
+    {
+     "year": 1935,
+     "type": "biandong",
+     "what": "8月赴美入麻省理工学院，后师从冯·卡门",
+     "good": true,
+     "source": "北京148；教育部生平"
+    },
+    {
+     "year": 1947,
+     "type": "yinyuan",
+     "what": "与蒋英结婚",
+     "good": true,
+     "source": "名人辞典；维基百科「钱学森」"
+    },
+    {
+     "year": 1950,
+     "type": "guanfei",
+     "what": "麦卡锡主义下被吊销机密资格并遭拘留、软禁约五年",
+     "good": false,
+     "source": "上海交大新闻网；美华史记"
+    },
+    {
+     "year": 1955,
+     "type": "biandong",
+     "what": "10月8日冲破阻挠回到中国",
+     "good": true,
+     "source": "维基百科「钱学森」；教育部生平"
+    },
+    {
+     "year": 1991,
+     "type": "shiye",
+     "what": "10月获授『国家杰出贡献科学家』荣誉称号",
+     "good": true,
+     "source": "国家航天局 cnsa.gov.cn"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-015",
+   "name": "温斯顿·丘吉尔 (Winston Churchill)",
+   "gender": "男",
+   "birth": "1874-11-30",
+   "hour": "01:30",
+   "hourKnown": true,
+   "hourNote": "Rodden A/AA。来源为出生当日父亲同时代书信(contemporaneous document)，属档案级依据。",
+   "place": "英国牛津郡伍德斯托克·布伦海姆宫",
+   "lon": -1.36,
+   "tzMin": 0,
+   "tzNote": "英国 1874 年铁路时已通行格林尼治时,按 GMT",
+   "source": "Britannica；International Churchill Society；Astro-Databank",
+   "events": [
+    {
+     "year": 1908,
+     "type": "yinyuan",
+     "what": "与克莱门汀结婚",
+     "good": true,
+     "source": "Blenheim Palace官网；Wikipedia"
+    },
+    {
+     "year": 1911,
+     "type": "shiye",
+     "what": "出任海军大臣",
+     "good": true,
+     "source": "Museum of the Prime Minister"
+    },
+    {
+     "year": 1915,
+     "type": "shiye",
+     "what": "加里波利战役失利后被降职辞职，声望受重创",
+     "good": false,
+     "source": "NobelPrize.org传记；Britannica"
+    },
+    {
+     "year": 1940,
+     "type": "shiye",
+     "what": "首次出任英国首相，领导二战",
+     "good": true,
+     "source": "History.com；Britannica"
+    },
+    {
+     "year": 1945,
+     "type": "shiye",
+     "what": "保守党大选失利，失去首相职位",
+     "good": false,
+     "source": "NobelPrize.org传记"
+    },
+    {
+     "year": 1953,
+     "type": "shiye",
+     "what": "获诺贝尔文学奖",
+     "good": true,
+     "source": "NobelPrize.org"
+    },
+    {
+     "year": 1965,
+     "type": "jiankang",
+     "what": "中风后于伦敦逝世，享年90岁",
+     "good": false,
+     "source": "Biography.com；History.com"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-016",
+   "name": "约翰·F·肯尼迪 (John F. Kennedy)",
+   "gender": "男",
+   "birth": "1917-05-29",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "Astro-Databank记15:00(下午3点)，Rodden A；但A级来源为其母Rose Kennedy日后口述回忆(记忆)，非出生证/医院记录等同期档案，按『只认档案』规则不计为可靠。参考：15:00。",
+   "place": "美国马萨诸塞州布鲁克莱恩",
+   "lon": -71.12,
+   "tzMin": -300,
+   "tzNote": "美东标准时 UTC-5;1917 年美国尚无夏令时",
+   "source": "Britannica；Astro-Databank",
+   "events": [
+    {
+     "year": 1943,
+     "type": "jiankang",
+     "what": "二战中PT-109鱼雷艇被撞沉，负伤率幸存者脱险",
+     "good": false,
+     "source": "History.com；White House Historical Association"
+    },
+    {
+     "year": 1953,
+     "type": "yinyuan",
+     "what": "与杰奎琳·布维尔结婚",
+     "good": true,
+     "source": "Biography.com"
+    },
+    {
+     "year": 1960,
+     "type": "shiye",
+     "what": "当选美国总统(击败尼克松)，史上最年轻当选总统",
+     "good": true,
+     "source": "History.com"
+    },
+    {
+     "year": 1961,
+     "type": "shiye",
+     "what": "批准猪湾入侵行动，以失败告终",
+     "good": false,
+     "source": "History.com"
+    },
+    {
+     "year": 1963,
+     "type": "jiankang",
+     "what": "11月22日在达拉斯遇刺身亡",
+     "good": false,
+     "source": "History.com；Britannica"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "Astro-Databank以其母口述回忆列为15:00(Rodden A)；因非出生档案，可靠性存疑，不同占星资料亦有采用其他钟点。",
+     "source": "Astro-Databank"
+    }
+   ]
+  },
+  {
+   "id": "case-017",
+   "name": "巴拉克·奥巴马 (Barack Obama)",
+   "gender": "男",
+   "birth": "1961-08-04",
+   "hour": "19:24",
+   "hourKnown": true,
+   "hourNote": "Rodden AA(源自出生证明)，最高可靠等级。",
+   "place": "美国夏威夷檀香山",
+   "lon": -157.86,
+   "tzMin": -600,
+   "tzNote": "夏威夷 1947 年起 UTC-10",
+   "source": "Wikipedia；Britannica；Astro-Databank",
+   "events": [
+    {
+     "year": 1992,
+     "type": "yinyuan",
+     "what": "与米歇尔结婚",
+     "good": true,
+     "source": "Obama Presidential Library；Britannica"
+    },
+    {
+     "year": 2004,
+     "type": "shiye",
+     "what": "当选伊利诺伊州联邦参议员",
+     "good": true,
+     "source": "Britannica；Miller Center"
+    },
+    {
+     "year": 2008,
+     "type": "shiye",
+     "what": "当选美国总统，首位非裔美国总统",
+     "good": true,
+     "source": "History.com；Britannica"
+    },
+    {
+     "year": 2009,
+     "type": "shiye",
+     "what": "获诺贝尔和平奖",
+     "good": true,
+     "source": "Nobel Prize；Britannica"
+    },
+    {
+     "year": 2012,
+     "type": "shiye",
+     "what": "击败罗姆尼，连任美国总统",
+     "good": true,
+     "source": "Britannica；Miller Center"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "早期网络曾报19:11(7:11 PM)，后以出生证明副本上的19:24为准并被Astro-Databank定为AA级。",
+     "source": "Astro-Databank"
+    }
+   ]
+  },
+  {
+   "id": "case-018",
+   "name": "伊丽莎白二世女王 (Queen Elizabeth II)",
+   "gender": "女",
+   "birth": "1926-04-21",
+   "hour": "02:40",
+   "hourKnown": true,
+   "hourNote": "Rodden AA(源自出生记录)。时间约凌晨2:40(GDT/BST)。",
+   "place": "英国伦敦梅费尔",
+   "lon": -0.15,
+   "tzMin": 60,
+   "tzNote": "1926 年英国夏令时 4/18-10/3 生效,UTC+1",
+   "source": "Britannica；Wikipedia；Astro-Databank",
+   "events": [
+    {
+     "year": 1947,
+     "type": "yinyuan",
+     "what": "与菲利普亲王(爱丁堡公爵)结婚",
+     "good": true,
+     "source": "Britannica；Open University时间线"
+    },
+    {
+     "year": 1952,
+     "type": "shiye",
+     "what": "父王乔治六世驾崩，2月6日继承王位",
+     "good": true,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 1953,
+     "type": "shiye",
+     "what": "加冕典礼(首次电视直播的加冕)",
+     "good": true,
+     "source": "Britannica"
+    },
+    {
+     "year": 1992,
+     "type": "yinyuan",
+     "what": "『可怕之年』：温莎城堡火灾、多起子女婚姻破裂",
+     "good": false,
+     "source": "Britannica；Open University时间线"
+    },
+    {
+     "year": 2022,
+     "type": "jiankang",
+     "what": "9月8日逝世，在位70年，英国史上在位最长君主",
+     "good": false,
+     "source": "Britannica；Al Jazeera时间线"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-019",
+   "name": "亚伯拉罕·林肯 (Abraham Lincoln)",
+   "gender": "男",
+   "birth": "1809-02-12",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "Rodden B(传记/日出推算)。接生婆称『约日出时分』出生，推算约LMT 06:54；属传记估算而非出生档案，标为不详。",
+   "place": "美国肯塔基州霍金斯维尔附近",
+   "lon": -85.74,
+   "tzMin": -343,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "Britannica；Astro-Databank",
+   "events": [
+    {
+     "year": 1842,
+     "type": "yinyuan",
+     "what": "11月4日与玛丽·托德结婚",
+     "good": true,
+     "source": "History.com；Wikipedia"
+    },
+    {
+     "year": 1860,
+     "type": "shiye",
+     "what": "11月6日当选美国总统",
+     "good": true,
+     "source": "Ballotpedia；Miller Center"
+    },
+    {
+     "year": 1863,
+     "type": "shiye",
+     "what": "1月1日颁布《解放黑奴宣言》",
+     "good": true,
+     "source": "Bill of Rights Institute；Miller Center"
+    },
+    {
+     "year": 1864,
+     "type": "shiye",
+     "what": "11月8日连任美国总统",
+     "good": true,
+     "source": "Ballotpedia"
+    },
+    {
+     "year": 1865,
+     "type": "jiankang",
+     "what": "4月14日在福特剧院遇刺，次日逝世",
+     "good": false,
+     "source": "American Battlefield Trust；Wikipedia"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-020",
+   "name": "拿破仑·波拿巴 (Napoleon Bonaparte)",
+   "gender": "男",
+   "birth": "1769-08-15",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "Astro-Databank采约11:00(据André Barbault引地方官回忆录)，Rodden C(存疑/晚出回忆)，非出生档案，标为不详。各资料在约10:55–11:30间不一。",
+   "place": "法国科西嘉岛阿雅克肖",
+   "lon": 8.74,
+   "tzMin": 35,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "Britannica；Wikipedia；Astro-Databank",
+   "events": [
+    {
+     "year": 1796,
+     "type": "yinyuan",
+     "what": "与约瑟芬·德·博阿尔内结婚",
+     "good": true,
+     "source": "Lumen Learning；History.com"
+    },
+    {
+     "year": 1804,
+     "type": "shiye",
+     "what": "12月2日于巴黎圣母院加冕称帝",
+     "good": true,
+     "source": "History.com；World History Encyclopedia"
+    },
+    {
+     "year": 1812,
+     "type": "shiye",
+     "what": "远征俄国惨败，损失惨重",
+     "good": false,
+     "source": "History.com"
+    },
+    {
+     "year": 1814,
+     "type": "biandong",
+     "what": "退位，被流放至厄尔巴岛",
+     "good": false,
+     "source": "History.com；World History Encyclopedia"
+    },
+    {
+     "year": 1815,
+     "type": "shiye",
+     "what": "百日王朝复辟，滑铁卢惨败后再度退位，流放圣赫勒拿岛",
+     "good": false,
+     "source": "History.com"
+    },
+    {
+     "year": 1821,
+     "type": "jiankang",
+     "what": "5月5日于圣赫勒拿岛逝世，享年51岁",
+     "good": false,
+     "source": "History.com；Biography.com"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "多种资料在约10:55–11:30之间；Astro-Databank采约11:00但评级仅C。",
+     "source": "Astro-Databank等"
+    }
+   ]
+  },
+  {
+   "id": "case-021",
+   "name": "阿道夫·希特勒 (Adolf Hitler)",
+   "gender": "男",
+   "birth": "1889-04-20",
+   "hour": "18:30",
+   "hourKnown": true,
+   "hourNote": "Rodden AA(源自布劳瑙教区出生登记簿)。",
+   "place": "奥地利布劳瑙(因河畔)",
+   "lon": 13.03,
+   "tzMin": 52,
+   "tzNote": "奥地利 1893 年才行中欧时,按地方平时",
+   "source": "Wikipedia；USHMM；Astro-Databank",
+   "events": [
+    {
+     "year": 1918,
+     "type": "shiye",
+     "what": "一战中作战获铁十字勋章",
+     "good": true,
+     "source": "Military-History Wiki；historic-figures.com"
+    },
+    {
+     "year": 1923,
+     "type": "guanfei",
+     "what": "11月啤酒馆政变失败，以叛国罪被捕",
+     "good": false,
+     "source": "USHMM；Wikipedia"
+    },
+    {
+     "year": 1924,
+     "type": "wenshu",
+     "what": "服刑期间撰写《我的奋斗》",
+     "good": true,
+     "source": "History.com；USHMM"
+    },
+    {
+     "year": 1933,
+     "type": "shiye",
+     "what": "被任命为德国总理",
+     "good": true,
+     "source": "USHMM；History.com"
+    },
+    {
+     "year": 1939,
+     "type": "shiye",
+     "what": "入侵波兰，引发第二次世界大战",
+     "good": false,
+     "source": "USHMM；History.com"
+    },
+    {
+     "year": 1945,
+     "type": "jiankang",
+     "what": "4月30日在柏林地堡自杀身亡",
+     "good": false,
+     "source": "USHMM；History.com"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-022",
+   "name": "阿尔伯特·爱因斯坦 (Albert Einstein)",
+   "gender": "男",
+   "birth": "1879-03-14",
+   "hour": "11:30",
+   "hourKnown": true,
+   "hourNote": "Rodden AA(源自出生证明/出生记录)。地点乌尔姆。",
+   "place": "德国乌尔姆",
+   "lon": 9.98,
+   "tzMin": 40,
+   "tzNote": "德国 1893 年才行中欧时,按地方平时",
+   "source": "Astro-Databank；Britannica",
+   "events": [
+    {
+     "year": 1905,
+     "type": "shiye",
+     "what": "奇迹年，发表狭义相对论、光电效应、布朗运动等论文",
+     "good": true,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 1919,
+     "type": "yinyuan",
+     "what": "与第一任妻子米列娃离婚，同年再娶表姐埃尔莎",
+     "good": false,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 1919,
+     "type": "shiye",
+     "what": "爱丁顿日食观测证实广义相对论，一举成名",
+     "good": true,
+     "source": "Britannica"
+    },
+    {
+     "year": 1921,
+     "type": "shiye",
+     "what": "因光电效应研究获诺贝尔物理学奖(1922年领取)",
+     "good": true,
+     "source": "NobelPrize.org；Britannica"
+    },
+    {
+     "year": 1933,
+     "type": "biandong",
+     "what": "纳粹上台后辞职，移居美国",
+     "good": false,
+     "source": "Britannica"
+    },
+    {
+     "year": 1955,
+     "type": "jiankang",
+     "what": "4月18日腹主动脉瘤破裂在普林斯顿去世，享年76岁",
+     "good": false,
+     "source": "Britannica；Wikipedia"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-023",
+   "name": "玛丽莲·梦露 (Marilyn Monroe)",
+   "gender": "女",
+   "birth": "1926-06-01",
+   "hour": "09:30",
+   "hourKnown": true,
+   "hourNote": "Rodden AA(源自出生证明)，时间09:30 PST(可能为助产士填写的近似整点，仍属档案记录)。",
+   "place": "美国洛杉矶",
+   "lon": -118.24,
+   "tzMin": -480,
+   "tzNote": "加州太平洋标准时;1926 年无夏令时",
+   "source": "Astro-Databank；Wikipedia",
+   "events": [
+    {
+     "year": 1946,
+     "type": "shiye",
+     "what": "与二十世纪福克斯签约，启用艺名Marilyn Monroe",
+     "good": true,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 1954,
+     "type": "yinyuan",
+     "what": "1月14日与乔·迪马乔结婚，同年即离婚",
+     "good": false,
+     "source": "Wikipedia；biography.com"
+    },
+    {
+     "year": 1956,
+     "type": "yinyuan",
+     "what": "6月29日与剧作家阿瑟·米勒结婚",
+     "good": true,
+     "source": "Wikipedia；encyclopedia.com"
+    },
+    {
+     "year": 1961,
+     "type": "yinyuan",
+     "what": "与阿瑟·米勒离婚",
+     "good": false,
+     "source": "Wikipedia"
+    },
+    {
+     "year": 1962,
+     "type": "jiankang",
+     "what": "8月4日于洛杉矶因药物过量去世，享年36岁",
+     "good": false,
+     "source": "Britannica；Wikipedia"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-024",
+   "name": "戴安娜王妃 (Diana, Princess of Wales)",
+   "gender": "女",
+   "birth": "1961-07-01",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "母亲陈述为19:45(下午7:45)，经信件确认，Rodden A；但来源为家人陈述而非出生证明/同期档案，按『只认档案』规则统一不计为可靠(与肯尼迪同标准)。另订婚时官方曾给14:00，存在分歧(见conflicts)。参考：19:45。",
+   "place": "英国桑德灵厄姆",
+   "lon": 0.51,
+   "tzMin": 60,
+   "tzNote": "1961 年英国夏令时生效,UTC+1",
+   "source": "Astro-Databank；Britannica",
+   "events": [
+    {
+     "year": 1981,
+     "type": "yinyuan",
+     "what": "7月29日于圣保罗大教堂与查尔斯王储结婚",
+     "good": true,
+     "source": "Britannica；royal.uk"
+    },
+    {
+     "year": 1982,
+     "type": "zinv",
+     "what": "6月21日长子威廉王子出生",
+     "good": true,
+     "source": "Britannica"
+    },
+    {
+     "year": 1984,
+     "type": "zinv",
+     "what": "9月15日次子哈里王子出生",
+     "good": true,
+     "source": "Britannica"
+    },
+    {
+     "year": 1996,
+     "type": "yinyuan",
+     "what": "与查尔斯王储正式离婚",
+     "good": false,
+     "source": "Britannica"
+    },
+    {
+     "year": 1997,
+     "type": "jiankang",
+     "what": "8月31日于巴黎车祸重伤去世",
+     "good": false,
+     "source": "Britannica"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "订婚公布时官方给出14:00(下午2:00)；后经母亲更正并以信件确认为19:45(下午7:45)，Astro-Databank采后者(A级)。",
+     "source": "Astro-Databank；astrolutely.com；star4cast.com"
+    }
+   ]
+  },
+  {
+   "id": "case-025",
+   "name": "史蒂夫·乔布斯 (Steve Jobs)",
+   "gender": "男",
+   "birth": "1955-02-24",
+   "hour": "19:15",
+   "hourKnown": true,
+   "hourNote": "Rodden AA(源自出生记录)。地点旧金山。",
+   "place": "美国旧金山",
+   "lon": -122.42,
+   "tzMin": -480,
+   "tzNote": "太平洋标准时 UTC-8",
+   "source": "Astro-Databank；vedastro.org；Wikipedia",
+   "events": [
+    {
+     "year": 1976,
+     "type": "shiye",
+     "what": "与沃兹尼亚克共同创立苹果公司",
+     "good": true,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 1985,
+     "type": "shiye",
+     "what": "权力斗争中失势，离开自己创办的苹果公司",
+     "good": false,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 1986,
+     "type": "shiye",
+     "what": "收购Pixar控股权，并创办NeXT公司",
+     "good": true,
+     "source": "Britannica"
+    },
+    {
+     "year": 1997,
+     "type": "shiye",
+     "what": "苹果收购NeXT后重返苹果并出任CEO",
+     "good": true,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 2007,
+     "type": "shiye",
+     "what": "在Macworld发布第一代iPhone",
+     "good": true,
+     "source": "allaboutstevejobs.com；Wikipedia"
+    },
+    {
+     "year": 2011,
+     "type": "jiankang",
+     "what": "辞去CEO后同年10月因胰腺癌于帕洛阿尔托去世，享年56岁",
+     "good": false,
+     "source": "Britannica；Wikipedia"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-026",
+   "name": "圣雄甘地 (Mahatma Gandhi)",
+   "gender": "男",
+   "birth": "1869-10-02",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "Rodden C(占星回推/rectified，注明『Rectified from approximative time』)。流传07:08/07:11:48等均为回推推测，无档案记录，按规则标不详。",
+   "place": "印度博尔本德尔",
+   "lon": 69.6,
+   "tzMin": 278,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "Astro-Databank；Britannica",
+   "events": [
+    {
+     "year": 1893,
+     "type": "biandong",
+     "what": "赴南非任法律顾问，亲历种族歧视，政治意识觉醒",
+     "good": false,
+     "source": "Britannica；biography.com"
+    },
+    {
+     "year": 1915,
+     "type": "biandong",
+     "what": "自南非返回印度，投身独立运动",
+     "good": true,
+     "source": "Britannica"
+    },
+    {
+     "year": 1930,
+     "type": "shiye",
+     "what": "领导食盐进军，非暴力抗议英国盐税",
+     "good": true,
+     "source": "Britannica；biography.com"
+    },
+    {
+     "year": 1942,
+     "type": "guanfei",
+     "what": "发起『退出印度』运动，遭英方逮捕入狱至1944年",
+     "good": false,
+     "source": "Britannica"
+    },
+    {
+     "year": 1948,
+     "type": "jiankang",
+     "what": "1月30日被刺杀身亡，享年78岁",
+     "good": false,
+     "source": "Britannica；biography.com"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "多数占星站给07:08 AM并标注回推(C级)；另有07:11:48 AM(带秒，明显rectified)。均为回推，无档案。",
+     "source": "astrotheme.com；skyscript"
+    }
+   ]
+  },
+  {
+   "id": "case-027",
+   "name": "特蕾莎修女 (Mother Teresa)",
+   "gender": "女",
+   "birth": "1910-08-26",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "Rodden DD(dirty data/来源存疑、有冲突)；流传的14:25等无可靠档案支撑，标不详。",
+   "place": "斯科普里(今北马其顿)",
+   "lon": 21.43,
+   "tzMin": 86,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "Astro-Databank；Nobelprize.org",
+   "events": [
+    {
+     "year": 1928,
+     "type": "biandong",
+     "what": "18岁加入洛雷托修女会，赴印度加尔各答立初愿",
+     "good": true,
+     "source": "Nobelprize.org；Britannica"
+    },
+    {
+     "year": 1948,
+     "type": "shiye",
+     "what": "获准离开修道院学校，投身加尔各答贫民窟服务",
+     "good": true,
+     "source": "Nobelprize.org；Wikipedia"
+    },
+    {
+     "year": 1950,
+     "type": "shiye",
+     "what": "10月7日获教廷批准创立『仁爱传教修女会』",
+     "good": true,
+     "source": "Nobelprize.org；Wikipedia"
+    },
+    {
+     "year": 1979,
+     "type": "shiye",
+     "what": "因人道主义工作获诺贝尔和平奖",
+     "good": true,
+     "source": "Nobelprize.org"
+    },
+    {
+     "year": 1997,
+     "type": "jiankang",
+     "what": "9月于加尔各答去世",
+     "good": false,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 2016,
+     "type": "shiye",
+     "what": "9月4日由教宗方济各封圣",
+     "good": true,
+     "source": "Wikipedia；Britannica"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生日期",
+     "detail": "多数来源采8月26日；本人常以8月27日(受洗日)为生日；另涉儒略历/格里历新旧历换算争议。",
+     "source": "Astro-Databank"
+    }
+   ]
+  },
+  {
+   "id": "case-028",
+   "name": "李小龙 (Bruce Lee / 李振藩)",
+   "gender": "男",
+   "birth": "1940-11-27",
+   "hour": "07:12",
+   "hourKnown": true,
+   "hourNote": "Rodden AA(源自出生证明)，地点旧金山。注意：民间『龙年龙时(辰时)』属占星传说，非档案；此07:12采用的是出生证明档案，与『龙时』传说无关。",
+   "place": "美国旧金山",
+   "lon": -122.42,
+   "tzMin": -480,
+   "tzNote": "太平洋标准时;1940 年美国无夏令时",
+   "source": "Astro-Databank；Britannica",
+   "events": [
+    {
+     "year": 1959,
+     "type": "biandong",
+     "what": "迁居美国西雅图，打工并入读华盛顿大学",
+     "good": true,
+     "source": "Wikipedia；historylink.org"
+    },
+    {
+     "year": 1964,
+     "type": "yinyuan",
+     "what": "与琳达·艾莫瑞结婚(1965年长子李国豪出生)",
+     "good": true,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 1971,
+     "type": "shiye",
+     "what": "返港主演《唐山大兄》，在亚洲成名",
+     "good": true,
+     "source": "Britannica；Wikipedia"
+    },
+    {
+     "year": 1973,
+     "type": "jiankang",
+     "what": "7月20日于香港因脑水肿猝逝，享年32岁",
+     "good": false,
+     "source": "history.com；Britannica"
+    }
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "case-029",
+   "name": "唐纳德·特朗普 (Donald Trump)",
+   "gender": "男",
+   "birth": "1946-06-14",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "候选10:54 AM，Astro-Databank评Rodden AA，但源为特朗普本人公布文件、须谨慎，且此前曾为9:51 AM(A级)版本冲突；非独立出生证，按铁律标不详。见conflicts。",
+   "place": "美国纽约州皇后区(牙买加医院)",
+   "lon": -73.79,
+   "tzMin": -240,
+   "tzNote": "纽约 1946 年夏令时 4/28-9/29 生效,EDT=UTC-4",
+   "source": "Astro-Databank；多方传记一致",
+   "events": [
+    {
+     "year": 1990,
+     "type": "caiyun",
+     "what": "斥资约10亿美元的大西洋城泰姬玛哈赌场开业(高息垃圾债融资)",
+     "good": true,
+     "source": "Forbes；ABI"
+    },
+    {
+     "year": 1991,
+     "type": "caiyun",
+     "what": "泰姬玛哈赌场无力偿息申请Chapter 11破产重组，让出一半个人股权、变卖游艇私人飞机",
+     "good": false,
+     "source": "Forbes；ABI"
+    },
+    {
+     "year": 2004,
+     "type": "caiyun",
+     "what": "Trump Hotels & Casino Resorts 申请Chapter 11破产重组(第二次)",
+     "good": false,
+     "source": "ABI；NBC News"
+    },
+    {
+     "year": 2009,
+     "type": "caiyun",
+     "what": "Trump Entertainment Resorts 2月申请Chapter 11破产，辞去董事长",
+     "good": false,
+     "source": "NBC News；ABI"
+    },
+    {
+     "year": 2024,
+     "type": "guanfei",
+     "what": "纽约民事欺诈案一审被判约3.55亿美元罚金(含息约4.54亿)并禁营三年(2025年被上诉法院推翻)",
+     "good": false,
+     "source": "The Hill；PBS；Al Jazeera"
+    },
+    {
+     "year": 2024,
+     "type": "guanfei",
+     "what": "E. Jean Carroll诽谤案1月被判赔8330万美元",
+     "good": false,
+     "source": "CBS News；NBC News"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "Astro-Databank现列10:54 AM(AA)但源为本人公布文件；历史上曾采9:51 AM(A)。版本冲突且非独立出生证，标不详。",
+     "source": "Astro-Databank；Kepler College"
+    }
+   ]
+  },
+  {
+   "id": "case-030",
+   "name": "约翰·D·洛克菲勒 (John D. Rockefeller Sr.)",
+   "gender": "男",
+   "birth": "1839-07-08",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "无出生证。多源冲突：一说『临近午夜』，Keene记3:47 PM，Discepolo记4:00 PM。按铁律标不详。",
+   "place": "美国纽约州里奇福德",
+   "lon": -76.19,
+   "tzMin": -305,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "Rockefeller Archive Center；Wikipedia；Astro-Databank",
+   "events": [
+    {
+     "year": 1864,
+     "type": "yinyuan",
+     "what": "9月8日在克利夫兰与劳拉·斯佩尔曼结婚",
+     "good": true,
+     "source": "Rockefeller Archive Center；Wikipedia"
+    },
+    {
+     "year": 1870,
+     "type": "shiye",
+     "what": "1月10日创立标准石油公司(Standard Oil)",
+     "good": true,
+     "source": "Library of Congress；Britannica Money"
+    },
+    {
+     "year": 1911,
+     "type": "guanfei",
+     "what": "最高法院裁定标准石油非法垄断，5月15日勒令拆分为34家公司(拆分后持股增值反使其财富近翻三倍)",
+     "good": false,
+     "source": "Standard Oil Co. v. United States, 221 U.S. 1 (1911)；ABA Journal"
+    },
+    {
+     "year": 1916,
+     "type": "caiyun",
+     "what": "身家突破10亿美元，被公认为世界首位亿万富翁",
+     "good": true,
+     "source": "lovemoney.com；TheCollector"
+    },
+    {
+     "year": 1937,
+     "type": "jiankang",
+     "what": "5月23日于佛罗里达逝世，享年97岁",
+     "good": false,
+     "source": "Rockefeller Archive Center；Find a Grave"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "多源冲突：『临近午夜』vs 3:47 PM(Keene) vs 4:00 PM(Discepolo)；无官方档案。",
+     "source": "Astro-Databank"
+    },
+    {
+     "field": "出生年",
+     "detail": "早期部分资料记1838年，主流权威确认1839年。",
+     "source": "Rockefeller Archive Center"
+    }
+   ]
+  },
+  {
+   "id": "case-031",
+   "name": "亨利·福特 (Henry Ford)",
+   "gender": "男",
+   "birth": "1863-07-30",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "Astro-Databank整体评Rodden B(传记)，非出生证。候选冲突：约1:45 PM(Lyndoe)/刚过2:00 PM/7:00 AM(Olson)。按铁律标不详。",
+   "place": "美国密歇根州斯普林韦尔斯镇(今Dearborn附近)",
+   "lon": -83.18,
+   "tzMin": -333,
+   "tzNote": "当地无法定标准时,按地方平太阳时(经度×4分)",
+   "source": "Wikipedia；Britannica Money；Astro-Databank",
+   "events": [
+    {
+     "year": 1888,
+     "type": "yinyuan",
+     "what": "4月11日与克拉拉·布莱恩特结婚",
+     "good": true,
+     "source": "Wikipedia；Detroit Historical Society"
+    },
+    {
+     "year": 1901,
+     "type": "caiyun",
+     "what": "首家汽车企业底特律汽车公司经营失败、1月解散",
+     "good": false,
+     "source": "Wikipedia；Yahoo Autos"
+    },
+    {
+     "year": 1903,
+     "type": "shiye",
+     "what": "创立福特汽车公司",
+     "good": true,
+     "source": "PBS American Experience；Ford Authority"
+    },
+    {
+     "year": 1908,
+     "type": "shiye",
+     "what": "10月推出T型车，奠定巨额财富基础",
+     "good": true,
+     "source": "PBS American Experience"
+    },
+    {
+     "year": 1919,
+     "type": "guanfei",
+     "what": "道奇兄弟诉福特案判决须派发约1900万美元股息(股东权益里程碑判例)",
+     "good": false,
+     "source": "Dodge v. Ford Motor Co., 170 N.W. 668 (1919)"
+    },
+    {
+     "year": 1947,
+     "type": "jiankang",
+     "what": "4月7日于密歇根Dearborn逝世，享年83岁",
+     "good": false,
+     "source": "Wikipedia；Britannica Money"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "三方冲突：约1:45 PM/刚过2:00 PM/7:00 AM；Astro-Databank整体仅Rodden B。",
+     "source": "Astro-Databank"
+    }
+   ]
+  },
+  {
+   "id": "case-032",
+   "name": "沃伦·巴菲特 (Warren Buffett)",
+   "gender": "男",
+   "birth": "1930-08-30",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "候选15:00(3:00 PM)，Rodden A但源为『友人提供』，非出生证/登记簿。按铁律标不详。",
+   "place": "美国内布拉斯加州奥马哈",
+   "lon": -95.94,
+   "tzMin": -360,
+   "tzNote": "内布拉斯加中部标准时 UTC-6;1930 年当地不行夏令时",
+   "source": "Wikipedia；Britannica Money；Astro-Databank",
+   "events": [
+    {
+     "year": 1952,
+     "type": "yinyuan",
+     "what": "与苏珊·汤普森在奥马哈结婚",
+     "good": true,
+     "source": "Wikipedia；CNN"
+    },
+    {
+     "year": 1965,
+     "type": "caiyun",
+     "what": "取得伯克希尔·哈撒韦控制权",
+     "good": true,
+     "source": "Britannica Money；finmasters.com"
+    },
+    {
+     "year": 1986,
+     "type": "caiyun",
+     "what": "身家约14亿美元、成为亿万富翁(时年56)",
+     "good": true,
+     "source": "finmasters.com；globalmastersfund.com"
+    },
+    {
+     "year": 1991,
+     "type": "caiyun",
+     "what": "所罗门兄弟国债竞标丑闻，出任临时董事长、赴国会作证稳住公司",
+     "good": false,
+     "source": "The Pop History Dig；thevalueinvestor.org"
+    },
+    {
+     "year": 1993,
+     "type": "caiyun",
+     "what": "登顶《福布斯》美国富豪榜首富(一生唯一一次)",
+     "good": true,
+     "source": "Yahoo Finance；finmasters.com"
+    },
+    {
+     "year": 2004,
+     "type": "yinyuan",
+     "what": "妻子苏珊·巴菲特逝世",
+     "good": false,
+     "source": "Encyclopedia.com；Wikipedia"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "唯一候选3:00 PM由友人提供(Rodden A，非出生证)，不足采信。",
+     "source": "Astro-Databank"
+    }
+   ]
+  },
+  {
+   "id": "case-033",
+   "name": "比尔·盖茨 (Bill Gates)",
+   "gender": "男",
+   "birth": "1955-10-28",
+   "hour": "",
+   "hourKnown": false,
+   "hourNote": "华盛顿州1949–1967年出生证不记录时间(King County证实)。候选10:00 PM(盖茨本人回忆)/刚过9:00 PM(传记《Hard Drive》1992)。均非官方档案，按铁律标不详。",
+   "place": "美国华盛顿州西雅图",
+   "lon": -122.33,
+   "tzMin": -480,
+   "tzNote": "西雅图太平洋标准时;1955 年夏令时已于 9 月底结束",
+   "source": "Wikipedia；Britannica Money；Astro-Databank",
+   "events": [
+    {
+     "year": 1975,
+     "type": "shiye",
+     "what": "从哈佛辍学，与保罗·艾伦共同创立微软",
+     "good": true,
+     "source": "Britannica Money；Wikipedia"
+    },
+    {
+     "year": 1986,
+     "type": "caiyun",
+     "what": "微软3月13日IPO上市，所持约45%股份市值约3.5亿美元",
+     "good": true,
+     "source": "CNBC；Fortune"
+    },
+    {
+     "year": 1987,
+     "type": "caiyun",
+     "what": "成为亿万富翁(时年31)，当时史上最年轻",
+     "good": true,
+     "source": "CNBC"
+    },
+    {
+     "year": 1994,
+     "type": "yinyuan",
+     "what": "1月1日与梅琳达·弗伦奇结婚",
+     "good": true,
+     "source": "Wikipedia；Britannica Money"
+    },
+    {
+     "year": 1995,
+     "type": "caiyun",
+     "what": "身家约129亿美元登顶世界首富，1995–2007及2009年长期居首",
+     "good": true,
+     "source": "Forbes；CNBC"
+    },
+    {
+     "year": 1998,
+     "type": "guanfei",
+     "what": "美国司法部联合20州起诉微软反垄断，2001年和解",
+     "good": false,
+     "source": "CNN；Forbes"
+    }
+   ],
+   "conflicts": [
+    {
+     "field": "出生时辰",
+     "detail": "10:00 PM(本人回忆)vs 刚过9:00 PM(传记《Hard Drive》)；华州该期出生证不载时间。",
+     "source": "Astro-Databank"
+    }
+   ]
+  }
+ ]
+}

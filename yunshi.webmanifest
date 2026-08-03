@@ -1,0 +1,16 @@
+{
+  "name": "东玄运势",
+  "short_name": "东玄运势",
+  "description": "按生辰排八字,看日运月运年运,全大白话。",
+  "lang": "zh-CN",
+  "start_url": "yunshi.html",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4eee1",
+  "theme_color": "#f4eee1",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

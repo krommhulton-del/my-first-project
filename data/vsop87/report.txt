@@ -1,0 +1,115 @@
+VSOP87D 系数表搬运报告
+========================
+搬运时间: 2026-08-02
+搬运方式: curl 从 raw.githubusercontent.com 直链下载
+仓库地址: https://github.com/ctdk/vsop87
+Commit:   faa11898fc4c683e068fc056a9a68c71534e0d42
+Commit 信息: "commit of the vsop87 ephemerides files" (2016-08-31, author: ctdk)
+
+IMCCE 官方源试过:
+  - https://ftp.imcce.fr/pub/ephem/planets/vsop87/  → 连接超时 (HTTPS, ~41s)
+  - ftp://ftp.imcce.fr/pub/ephem/planets/vsop87/     → 连接超时 (FTP, ~10s)
+  结论: 拿不到 (本机网络无法到达该服务器)
+
+Razican/vsop87-rs 也试过:
+  - https://raw.githubusercontent.com/Razican/vsop87-rs/master/data/VSOP87D.mer → 连接超时 (~22s)
+  结论: 拿不到 (raw.githubusercontent.com 对该仓库路径超时; 该仓库已 archived 且 master 分支可能已改名)
+
+最终来源: ctdk/vsop87 (GitHub), master 分支, raw 直链全部成功。
+
+================================================================================
+逐个文件明细
+================================================================================
+
+1. VSOP87D.mer (水星 Mercury)
+   来源 URL: https://raw.githubusercontent.com/ctdk/vsop87/master/VSOP87D.mer
+   字节数:   910,385
+   行数:     6,845
+   文件头 3 行:
+     VSOP87 VERSION D4    MERCURY   VARIABLE 1 (LBR)       *T**0   1380 TERMS    HELIOCENTRIC DYNAMICAL ECLIPTIC AND EQUINOX OF THE DATE
+     4110    1  0  0  0  0  0  0  0  0  0  0  0  0  0.00000000000     4.40250710144     4.40250710144 0.00000000000       0.00000000000
+     4110    2  1  0  0  0  0  0  0  0  0  0  0  0  0.09025255625    -0.39983457842     0.40989414976 1.48302034194   26087.90314157420
+
+2. VSOP87D.ven (金星 Venus)
+   来源 URL: https://raw.githubusercontent.com/ctdk/vsop87/master/VSOP87D.ven
+   字节数:   226,100
+   行数:     1,700
+   文件头 3 行:
+     VSOP87 VERSION D4    VENUS     VARIABLE 1 (LBR)       *T**0    367 TERMS    HELIOCENTRIC DYNAMICAL ECLIPTIC AND EQUINOX OF THE DATE
+     4210    1  0  0  0  0  0  0  0  0  0  0  0  0  0.00000000000     3.17614666774     3.17614666774 0.00000000000       0.00000000000
+     4210    2  0  1  0  0  0  0  0  0  0  0  0  0 -0.00897465236    -0.01013798120     0.01353968419 5.59313319619   10213.28554621100
+
+3. VSOP87D.ear (地球 Earth)
+   来源 URL: https://raw.githubusercontent.com/ctdk/vsop87/master/VSOP87D.ear
+   字节数:   324,786
+   行数:     2,442
+   文件头 3 行:
+     VSOP87 VERSION D4    EARTH     VARIABLE 1 (LBR)       *T**0    559 TERMS    HELIOCENTRIC DYNAMICAL ECLIPTIC AND EQUINOX OF THE DATE
+     4310    1  0  0  0  0  0  0  0  0  0  0  0  0  0.00000000000     1.75347045673     1.75347045673 0.00000000000       0.00000000000
+     4310    2  0  0  1  0  0  0  0  0  0  0  0  0 -0.00748171065    -0.03256824823     0.03341656456 4.66925680417    6283.07584999140
+
+4. VSOP87D.mar (火星 Mars)
+   来源 URL: https://raw.githubusercontent.com/ctdk/vsop87/master/VSOP87D.mar
+   字节数:   731,633
+   行数:     5,501
+   文件头 3 行:
+     VSOP87 VERSION D4    MARS      VARIABLE 1 (LBR)       *T**0   1217 TERMS    HELIOCENTRIC DYNAMICAL ECLIPTIC AND EQUINOX OF THE DATE
+     4410    1  0  0  0  0  0  0  0  0  0  0  0  0  0.00000000000     6.20347711583     6.20347711583 0.00000000000       0.00000000000
+     4410    2  0  0  0  1  0  0  0  0  0  0  0  0  0.17052441634     0.07567978926     0.18656368100 5.05037100303    3340.61242669980
+
+5. VSOP87D.jup (木星 Jupiter)
+   来源 URL: https://raw.githubusercontent.com/ctdk/vsop87/master/VSOP87D.jup
+   字节数:   465,633
+   行数:     3,501
+   文件头 3 行:
+     VSOP87 VERSION D4    JUPITER   VARIABLE 1 (LBR)       *T**0    760 TERMS    HELIOCENTRIC DYNAMICAL ECLIPTIC AND EQUINOX OF THE DATE
+     4510    1  0  0  0  0  0  0  0  0  0  0  0  0  0.00000000000     0.59954691495     0.59954691495 0.00000000000       0.00000000000
+     4510    2  0  0  0  0  1  0  0  0  0  0  0  0  0.09394434608    -0.02398968572     0.09695898711 5.06191793105     529.69096509460
+
+6. VSOP87D.sat (土星 Saturn)
+   来源 URL: https://raw.githubusercontent.com/ctdk/vsop87/master/VSOP87D.sat
+   字节数:   768,341
+   行数:     5,777
+   文件头 3 行:
+     VSOP87 VERSION D4    SATURN    VARIABLE 1 (LBR)       *T**0   1152 TERMS    HELIOCENTRIC DYNAMICAL ECLIPTIC AND EQUINOX OF THE DATE
+     4610    1  0  0  0  0  0  0  0  0  0  0  0  0  0.00000000000     0.87401354029     0.87401354029 0.00000000000       0.00000000000
+     4610    2  0  0  0  0  0  1  0  0  0  0  0  0 -0.00594625310    -0.11091732350     0.11107659780 3.96205090194     213.29909543800
+
+7. VSOP87D.ura (天王星 Uranus)
+   来源 URL: https://raw.githubusercontent.com/ctdk/vsop87/master/VSOP87D.ura
+   字节数:   532,665
+   行数:     4,005
+   文件头 3 行:
+     VSOP87 VERSION D4    URANUS    VARIABLE 1 (LBR)       *T**0    947 TERMS    HELIOCENTRIC DYNAMICAL ECLIPTIC AND EQUINOX OF THE DATE
+     4710    1  0  0  0  0  0  0  0  0  0  0  0  0  0.00000000000     5.48129294299     5.48129294299 0.00000000000       0.00000000000
+     4710    2  0  0  0  0  0  0  1  0  0  0  0  0 -0.09191398060    -0.01128433735     0.09260408252 0.89106421530      74.78159856730
+
+8. VSOP87D.nep (海王星 Neptune)
+   来源 URL: https://raw.githubusercontent.com/ctdk/vsop87/master/VSOP87D.nep
+   字节数:   258,818
+   行数:     1,946
+   文件头 3 行:
+     VSOP87 VERSION D4    NEPTUNE   VARIABLE 1 (LBR)       *T**0    423 TERMS    HELIOCENTRIC DYNAMICAL ECLIPTIC AND EQUINOX OF THE DATE
+     4810    1  0  0  0  0  0  0  0  0  0  0  0  0  0.00000000000     5.31188633047     5.31188633047 0.00000000000       0.00000000000
+     4810    2  0  0  0  0  0  0  0  1  0  0  0  0  0.01200312114    -0.01339315118     0.01798475509 2.90101273050      38.13303563780
+
+================================================================================
+汇总
+================================================================================
+  行星      文件名          行数     字节数      状态
+  ──────────────────────────────────────────────────
+  水星      VSOP87D.mer     6,845     910,385    ✓
+  金星      VSOP87D.ven     1,700     226,100    ✓
+  地球      VSOP87D.ear     2,442     324,786    ✓
+  火星      VSOP87D.mar     5,501     731,633    ✓
+  木星      VSOP87D.jup     3,501     465,633    ✓
+  土星      VSOP87D.sat     5,777     768,341    ✓
+  天王星    VSOP87D.ura     4,005     532,665    ✓
+  海王星    VSOP87D.nep     1,946     258,818    ✓
+  ──────────────────────────────────────────────────
+  合计                     32,217   4,218,361
+
+  要求 6 颗 (水金地火木土): ✓ 全部拿到
+  额外 2 颗 (天王海王):     ✓ 全部拿到
+  拿不到:                  无
+  编造:                    零
