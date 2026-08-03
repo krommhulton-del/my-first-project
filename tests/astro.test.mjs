@@ -22,6 +22,7 @@ const Tijian = require(join(ROOT, 'tijian.js'));
 let pass = 0, fail = 0;
 const t = (name, fn) => { try { fn(); pass++; console.log('  ✓', name); } catch (e) { fail++; console.log('  ✗', name, '\n     ', e.message); } };
 const ok = (c, m) => { if (!c) throw new Error(m || '断言失败'); };
+const eq = (a, b, m) => { if (a !== b) throw new Error((m || '') + ` 期望[${b}] 实得[${a}]`); };
 const RAD = Math.PI / 180, DEG = 180 / Math.PI;
 const norm = d => { d %= 360; return d < 0 ? d + 360 : d; };
 
@@ -405,8 +406,39 @@ t('UTC / 东八区 / 纽约 三种设备时区下,本命盘与行运首窗逐字
     execFileSync(process.execPath, ['-e', code], { env: { ...process.env, TZ: tz }, encoding: 'utf8' }));
   for (let i = 1; i < outs.length; i++) ok(outs[i] === outs[0], `设备时区一换结果就变了(第 ${i} 个)——排盘吃了设备时区`);
   const o = JSON.parse(outs[0]);
-  ok(o.asc.sign === '狮子', '1990-05-20 09:30 北京的上升应在狮子,实得 ' + o.asc.sign + o.asc.deg);
+  // v1.14 换口径:1990-05-20 在中国夏令时段内(1990 年 4/15–9/16),钟表 09:30 实为标准时 08:30,
+  // 上升因此从狮子回到巨蟹。**旧的「狮子」钉的正是带 bug 的行为**——八字那头一直在回拨,
+  // 星盘这头没拨,凡 1986–1991 年夏天出生的人上升整整错一个星座。这是用户报「星盘每次看都是错的」
+  // 的真因之一。改钉巨蟹,并同时钉住「非夏令时段不许误拨」。
+  ok(o.asc.sign === '巨蟹', '1990-05-20 09:30 北京(夏令时)的上升应在巨蟹,实得 ' + o.asc.sign + o.asc.deg);
   console.log(`      (四个时区逐字节一致;上升 ${o.asc.sign}${o.asc.deg}°、月亮 ${o.moon.sign}${o.moon.deg}°)`);
+});
+t('中国夏令时 1986–1991 必须回拨,且与八字同源(v1.14 修的真错)', () => {
+  // 缘起:用户「星盘每次去看都是错的」。查出八字 trueSolarDate 一直回拨夏令时,
+  // 而 astro.birthMoment 没拨——同一生辰两套系统各排各的,实测上升差 12°,足以换星座。
+  // 表现在收归 astro.CN_DST 只此一份,bazi 改调它(测试另钉八字行为逐盘不变)。
+  const iso = d => d.toISOString().slice(11, 16);
+  eq(iso(Astro.birthMoment(1988, 7, 15, 10, 0)), '01:00', '夏令时段内该按 UTC+9 折(10:00→01:00Z)');
+  eq(iso(Astro.birthMoment(1988, 11, 15, 10, 0)), '02:00', '非夏令时段该按 UTC+8 折(10:00→02:00Z)');
+  eq(iso(Astro.birthMoment(1985, 7, 15, 10, 0)), '02:00', '1985 年还没有夏令时,不许误拨');
+  eq(iso(Astro.birthMoment(1992, 7, 15, 10, 0)), '02:00', '1992 年已停用夏令时,不许误拨');
+  // 边界:起止日当天 2:00 换钟
+  eq(iso(Astro.birthMoment(1988, 4, 10, 1, 0)), '17:00', '起始日 2:00 前还不算夏令时');
+  eq(iso(Astro.birthMoment(1988, 4, 10, 3, 0)), '18:00', '起始日 2:00 后进入夏令时');
+  // 只对中国标准时成立:显式传别的时区不许套中国夏令时
+  eq(iso(Astro.birthMoment(1988, 7, 15, 10, 0, 0)), '10:00', '传 tz=0 时不该套中国夏令时');
+  // 与八字同源:两边用的是同一张表
+  ok(Astro.CN_DST && Object.keys(Astro.CN_DST).length === 6, '夏令时表该有 1986–1991 六年');
+});
+t('没填钟点时不许装精确:整盘标 timeAssumed,月亮那句话说实话', () => {
+  // 缘起:此前缺钟点只是不排上升,行星照旧按假定时刻算,还印着「月亮误差 ≤0.0149°」——
+  // 那个误差说的是给定时刻算得准不准,而时刻本身是猜的(同一天早晚月亮差约 5–6°,足以换星座)。
+  const g = Astro.chart(Astro.birthMoment(1990, 6, 15, 12, 0), { hourKnown: false });
+  ok(g.timeAssumed === true, '缺钟点该标 timeAssumed');
+  ok(/不作数|假定时刻/.test(g.moonNote), '月亮声明要说清时刻是假定的:' + g.moonNote);
+  ok(!/0\.0149/.test(g.moonNote), '缺钟点时不许再印那个精度数字');
+  const k = Astro.chart(Astro.birthMoment(1990, 6, 15, 9, 30), { lat: 39.9, lon: 116.4 });
+  ok(!k.timeAssumed && /0\.0149/.test(k.moonNote), '填了钟点该照常报实测精度');
 });
 t('birthMoment 是唯一入口:界面不许再自己 new Date 建出生时刻', () => {
   const html = readFileSync(join(ROOT, 'index.html'), 'utf8');

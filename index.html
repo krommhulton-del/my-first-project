@@ -4975,7 +4975,9 @@
         sr.cross.slice(0, 8).map(a => `<div class="hpv ypline">· 返照${esc(a.a)} × 本命${esc(a.b)} ${esc(a.asp)}(差${a.orb}°)——${esc(a.plain)}</div>`).join('') + `</div>` +
         `<div class="ypbox"><h4>返 照 那 一 刻 的 天 空</h4>` + planetRow(sr.chart) + `</div>`;
     }
-    if (!extra || extra.deep || extra.syn) h += `<div class="ypbox"><h4>${names ? esc(names[0]) + ' 的' : ''}本 命 盘</h4>` + planetRow(c) +
+    if (!extra || extra.deep || extra.syn) h += `<div class="ypbox"><h4>${names ? esc(names[0]) + ' 的' : ''}本 命 盘</h4>` +
+      (c.timeAssumed ? `<div class="hpv"><b class="v-warn">没填出生钟点——月亮、上升、宫位这三样这副盘给不了。</b><br><span class="dim">${esc(c.moonNote)}</span></div>` : '') +
+      planetRow(c) +
       (c.node ? `<div class="hpv ypline">· 北交点 落${esc(c.node.sign)} ${c.node.deg}°${c.node.house ? `,第 ${c.node.house} 宫` : ''}<br><span class="dim">要主动练出来的方向(对面的南交是走惯的旧路)${c.node.nearCusp ? ';离交界近,真交点有 ±0.23° 实测残差,两个星座都看' : ''}</span></div>` : '') +
       (c.asc ? `<div class="hpv ypline">· 上升 落${esc(c.asc.sign)} ${c.asc.deg}°(分宫制:${esc(c.houseSys || 'Placidus')})</div>` : '') +
       (c.pluNote ? `<div class="note ypflat">${esc(c.pluNote)}</div>` : '') +

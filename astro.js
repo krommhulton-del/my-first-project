@@ -45,9 +45,26 @@
   // 折成绝对时刻。此前界面直接 new Date(y,m-1,d,h,mi),那是**看盘设备**的时区——
   // 实测同一生辰在 UTC / 东八区 / 纽约三种设备时区下,上升点分别落天蝎、巨蟹、射手,
   // 月亮也换星座。这是真错,不是精度问题。tzMin 默认 480(东八区,坐标库为中国城市)。
+  // 中国夏令时(1986–1991):**这是本项目 v1.14 修的一个真错**。
+  // 八字那一头一直在回拨(bazi.trueSolarDate),星盘这一头没拨——于是同一个生辰,
+  // 两套系统各排各的:实测 1988-07-15 10:00 北京,上升差 **12 度**,足以换星座。
+  // 那几年夏天钟表拨快一小时(读数 10:00 实为标准时 9:00),用户报的是钟表读数,必须回拨。
+  // 表在这里只此一份(§四):bazi.js 起也改成调它,测试钉住两边同源。
+  // 数组含义 [起月,起日,止月,止日],换钟点在当地 2:00。
+  const CN_DST = { 1986: [5, 4, 9, 14], 1987: [4, 12, 9, 13], 1988: [4, 10, 9, 11], 1989: [4, 16, 9, 17], 1990: [4, 15, 9, 16], 1991: [4, 14, 9, 15] };
+  // 返回该「当地钟表时刻」要回拨的分钟数(不在夏令时段内即 0)。只对中国标准时(tz=480)成立。
+  function cnDstMin(y, mo, d, h, mi) {
+    const r = CN_DST[y];
+    if (!r) return 0;
+    const at = ((mo * 100 + d) * 100) + (h || 0);            // 月日时压成可比的整数
+    const s = (r[0] * 100 + r[1]) * 100 + 2, e = (r[2] * 100 + r[3]) * 100 + 2;
+    return (at >= s && at < e) ? 60 : 0;
+  }
   function birthMoment(y, mo, d, h, mi, tzMin) {
     const tz = tzMin == null ? 480 : tzMin;
-    return new Date(Date.UTC(y, mo - 1, d, h || 0, mi || 0) - tz * 60000);
+    const dst = tz === 480 ? cnDstMin(y, mo, d, h, mi) : 0;   // 只有按中国标准时折算时才谈中国夏令时
+    // 夏令时期间当地时区是 UTC+9,故减的是 (tz + dst);写成 (tz − dst) 就把钟拨反了(v1.14 当场修)
+    return new Date(Date.UTC(y, mo - 1, d, h || 0, mi || 0) - (tz + dst) * 60000);
   }
   // ── ΔT(TT−UT):v1.12 从写死的 69 秒改成逐年 ──
   // 缘起:69s 是 2020 年代的实值,但 1940 年代 ΔT 只有约 24 秒——差 45 秒。
@@ -294,8 +311,18 @@
     } else {
       ascNote = '没有钟点或出生地,上升排不了——星座那一层照给,第几宫这一层缺着(宫从上升定起点,起点没有就不硬造)。';
     }
-    return { date, jd: +jd.toFixed(5), planets, asc, houses, cusps, houseSys, node, ascNote, pluNote,
-      moonNote: planets.moon.approx
+    // **没钟点时不许装精确**(v1.14 修的第二个真错):此前缺钟点只是不排上升,
+    // 行星照旧按某个假定时刻(界面默认中午)算出来,还印着「月亮实测误差 ≤0.0149°」——
+    // 那个误差说的是**给定时刻**的算得准不准,而时刻本身是猜的:实测同一天 03:00 与 12:00
+    // 月亮差 4.9°,一天最多差约 6.6°,足以换星座。现在整盘标 timeAssumed,月亮那句话换成实话。
+    const timeAssumed = opts.hourKnown === false;
+    if (timeAssumed && planets.moon) planets.moon.nearCusp = true;
+    return { date, jd: +jd.toFixed(5), planets, asc, houses, cusps, houseSys, node, ascNote, pluNote, timeAssumed,
+      moonNote: timeAssumed
+        ? '没填出生钟点,这副盘是按一个假定时刻排的——**月亮位置不作数**:月亮一天要走十三度多,' +
+          '不知道钟点就可能整整差一个星座(实测同一天早晚可差六度以上)。太阳与外行星一天动得少,' +
+          '照旧可用;上升、宫位、月亮这三样要钟点才谈得上。'
+        : planets.moon.approx
         ? (planets.moon.nearCusp ? '月亮这一格离星座交界不到半度,而这里退用了低精度公式(±0.3°)——它到底落哪个星座定不死,照实说。'
           : '月亮位置退用了低精度公式,误差可达 ±0.3°(星历数据文件未载入)。')
         : (planets.moon.nearCusp ? '月亮离星座交界不到 0.05°,恰在本表实测误差(0.0149°)的边缘附近——两个星座的描述都对照看。'
@@ -831,5 +858,5 @@
 
   return { chart, aspectsOf, synastry, material, ascendant, moonPos, geo, jdOf, SIGNS, PLANET_CN, PLAIN, ASPECTS, HONEST, KEYS,
     deepRead, transits, monthRun, solarReturn, lunations, dignity, RULER, EXALT, SIGN_CHAR, HOUSE_PLAIN, lonAt, birthMoment, TZ_OUT,
-    nodeLon, pluGeo, placidusCusps, houseOfCusps, fundArgs, sunApparentLon, deltaT };
+    nodeLon, pluGeo, placidusCusps, houseOfCusps, fundArgs, sunApparentLon, deltaT, CN_DST, cnDstMin };
 }));

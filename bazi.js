@@ -74,8 +74,20 @@
   }
   function trueSolarDate(birth, lonDeg) {
     let t = birth.getTime();
+    // 夏令时表 v1.14 起收归 astro.js 只此一份(§四)——缘起是星盘那头没回拨,
+    // 同一生辰两套系统各排各的(上升差 12°)。取不到 astro 就走下面的本地表兜底,
+    // 两份的数值有测试钉住必须一致。
+    let rolled = false;
+    try {
+      const A = (typeof module === 'object' && module.exports) ? require('./astro.js')
+        : (typeof self !== 'undefined' ? self.Astro : null);
+      if (A && A.cnDstMin) {
+        t -= A.cnDstMin(birth.getFullYear(), birth.getMonth() + 1, birth.getDate(), birth.getHours(), birth.getMinutes()) * 60000;
+        rolled = true;
+      }
+    } catch (e) { /* 兜底走下面 */ }
     const y = birth.getFullYear(), d = DST[y];
-    if (d) {
+    if (!rolled && d) {
       const s = new Date(y, d[0] - 1, d[1], 2).getTime(), e = new Date(y, d[2] - 1, d[3], 2).getTime();
       if (t >= s && t < e) t -= 3600000; // 夏令时拨回
     }
