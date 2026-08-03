@@ -777,7 +777,7 @@
 <div class="wrap">
   <header>
     <h1>东玄卜卦</h1>
-    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.07</span></p>
+    <p>三枚铜钱 · 六掷成卦 · 密码学真随机 <span class="seal">内测 v1.08</span></p>
     <div class="nav">
       <a href="yunshi.html">看人运势</a>
       <a href="#" id="btn-share">分享</a>
@@ -1566,7 +1566,7 @@
   </div>
   </section>
 
-  <footer>东玄卜卦 v1.07 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
+  <footer>东玄卜卦 v1.08 内测版 · 六爻·梅花·小六壬·奇门遁甲 · 经文依《周易》通行本 · 随机源 crypto.getRandomValues</footer>
   </div><!-- /maincol -->
 
   <!-- ——— 命盘常驻侧栏 ———
@@ -1612,6 +1612,8 @@
 <script src="gaiyun.js"></script>
 <script src="zhaigua.js"></script>
 <script src="data/astro-vsop.js"></script>
+<script src="data/astro-moon.js"></script>
+<script src="data/astro-pluto.js"></script>
 <script src="astro.js"></script>
 <script src="tijian.js"></script>
 <script>
@@ -4851,7 +4853,9 @@
     }
     const put = (cc, rr, mark) => {
       for (const k of Astro.KEYS) {
-        const p = cc.planets[k], a = ang(p.lon);
+        const p = cc.planets[k];
+        if (!p) continue;
+        const a = ang(p.lon);
         g.fillText((mark || '') + p.name[0], cx + rr * Math.cos(a), cy - rr * Math.sin(a));
         g.beginPath(); g.arc(cx + R * 0.82 * Math.cos(a), cy - R * 0.82 * Math.sin(a), 2, 0, 7); g.fill();
       }
@@ -4875,8 +4879,9 @@
   function xzRender(c, syn, names, extra) {
     const planetRow = (cc) => Astro.KEYS.map(k => {
       const p = cc.planets[k];
+      if (!p) return '';
       const d = Astro.dignity(k, p.sign);
-      return `<div class="hpv ypline">· ${esc(p.name)} 落${esc(p.sign)} ${p.deg}°${p.retro ? '(逆行)' : ''}${cc.houses ? `,第 ${cc.houses[k]} 宫` : ''}${d ? ` <span class="dat">${esc(d.st)}</span>` : ''}<br><span class="dim">${esc(p.plain)}${d ? ' · ' + esc(d.plain) : ''}</span></div>`;
+      return `<div class="hpv ypline">· ${esc(p.name)} 落${esc(p.sign)} ${p.deg}°${p.retro ? '(逆行)' : ''}${cc.houses && cc.houses[k] ? `,第 ${cc.houses[k]} 宫` : ''}${d ? ` <span class="dat">${esc(d.st)}</span>` : ''}<br><span class="dim">${esc(p.plain)}${d ? ' · ' + esc(d.plain) : ''}</span></div>`;
     }).join('');
     let h = '';
     if (extra && extra.deep) {
@@ -4912,7 +4917,9 @@
         `<div class="ypbox"><h4>返 照 那 一 刻 的 天 空</h4>` + planetRow(sr.chart) + `</div>`;
     }
     if (!extra || extra.deep || extra.syn) h += `<div class="ypbox"><h4>${names ? esc(names[0]) + ' 的' : ''}本 命 盘</h4>` + planetRow(c) +
-      (c.asc ? `<div class="hpv ypline">· 上升 落${esc(c.asc.sign)} ${c.asc.deg}°(整星座制,第一宫从这里起)</div>` : '') +
+      (c.node ? `<div class="hpv ypline">· 北交点 落${esc(c.node.sign)} ${c.node.deg}°${c.node.house ? `,第 ${c.node.house} 宫` : ''}<br><span class="dim">要主动练出来的方向(对面的南交是走惯的旧路)${c.node.nearCusp ? ';离交界近,真交点有 ±0.23° 实测残差,两个星座都看' : ''}</span></div>` : '') +
+      (c.asc ? `<div class="hpv ypline">· 上升 落${esc(c.asc.sign)} ${c.asc.deg}°(分宫制:${esc(c.houseSys || 'Placidus')})</div>` : '') +
+      (c.pluNote ? `<div class="note ypflat">${esc(c.pluNote)}</div>` : '') +
       (c.ascNote ? `<div class="note ypflat">${esc(c.ascNote)}</div>` : '') +
       `<div class="note ypflat">${esc(c.moonNote)}</div></div>`;
     if (syn) {
@@ -4920,7 +4927,7 @@
         `<div class="hpv"><b class="key">${esc(syn.tone)}</b></div>` +
         syn.cross.slice(0, 12).map(a => `<div class="hpv ypline">· ${esc(a.a)}×${esc(a.b)} ${esc(a.asp)}(差${a.orb}°)——${esc(a.plain)}${a.approx ? '<span class="dim">(涉月亮,±0.3°)</span>' : ''}</div>`).join('') +
         `</div><div class="ypbox"><h4>组 合 盘(两人拼成的那副,逐星中点)</h4>` +
-        Astro.KEYS.map(k => `<span class="dat">${esc(syn.comp[k].name)}${esc(syn.comp[k].sign)}</span>`).join(' ') + `</div>`;
+        Astro.KEYS.filter(k => syn.comp[k]).map(k => `<span class="dat">${esc(syn.comp[k].name)}${esc(syn.comp[k].sign)}</span>`).join(' ') + `</div>`;
     } else {
       const asps = Astro.aspectsOf(c.planets);
       h += `<div class="ypbox"><h4>盘 内 相 位</h4>` +

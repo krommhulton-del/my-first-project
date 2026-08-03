@@ -58,8 +58,10 @@ t('随机 60 组时间×纬度,公式上升点与暴力搜索差 ≤0.5°', () =
     const jd = 2440000 + (i * 977) % 40000;
     const lat = -55 + (i * 13) % 110, lon = -160 + (i * 37) % 320;
     const f = Astro.ascendant(jd, lon, lat);
-    // 独立方法:黄道 β=0 逐点找「在地平线上且在东边升起」的那一点
-    const gmst = norm(280.46061837 + 360.98564736629 * (jd - 2451545));
+    // 独立方法:黄道 β=0 逐点找「在地平线上且在东边升起」的那一点。
+    // 恒星时按 **UT** 算(jd 是 TT,先减 ΔT=69s)——v1.08 修的真错:此前引擎与本测试
+    // 都拿 TT 喂 GMST,两边一起错 17.3′,测试照样绿,这正是「独立方法不独立」的教训。
+    const gmst = norm(280.46061837 + 360.98564736629 * (jd - 69 / 86400 - 2451545));
     const lst = norm(gmst + lon) * RAD, e = eps(jd), phi = lat * RAD;
     let best = null, bestAlt = 99;
     for (let lam = 0; lam < 360; lam += 0.05) {
@@ -88,17 +90,21 @@ t('水星 2020–2029 十年逐日扫:逆行天数占比在 15%–25% 之间(公
   console.log(`      (实测 ${(rate * 100).toFixed(1)}%)`);
 });
 
-console.log('【四】月亮的诚实:±0.3° 当面写,近交界必须喊');
-t('moonNote 永远带误差声明;近交界时换成「定不死」那段话', () => {
+console.log('【四】月亮的诚实:实测误差当面写,近交界必须喊');
+// v1.08 起月亮换 DE421 拟合式(实测 ≤0.0149°),±0.3° 那套话只留给数据缺失的退路。
+// 这条测试跟着换口径:声明必须报**新的实测数**,旧的 ±0.3° 不许再出现在正常路径上。
+t('moonNote 报实测误差(0.0149°);近交界(0.05° 阈)必须提示;±0.3° 旧话不许残留', () => {
   const c = Astro.chart(new Date(Date.UTC(1990, 4, 20, 1, 30)));
-  ok(/±0\.3°/.test(c.moonNote), 'moonNote 必须写明月亮误差:' + c.moonNote);
+  ok(!c.planets.moon.approx, '数据表在,月亮该走拟合式');
+  ok(/0\.0149/.test(c.moonNote), 'moonNote 必须写明实测误差:' + c.moonNote);
+  ok(!/±0\.3°/.test(c.moonNote), '正常路径不许再挂旧的 ±0.3°:' + c.moonNote);
   let cusp = null;
-  for (let d = 0; d < 60 && !cusp; d++) for (let h = 0; h < 24; h += 3) {
+  for (let d = 0; d < 400 && !cusp; d++) for (let h = 0; h < 24; h++) {
     const cc = Astro.chart(new Date(Date.UTC(2026, 0, 1 + d, h)));
     if (cc.planets.moon.nearCusp) { cusp = cc; break; }
   }
-  ok(cusp, '两个月里竟扫不到一次月亮近交界(每两三天该有一次)——nearCusp 是死条');
-  ok(/定不死/.test(cusp.moonNote), '近交界要说「定不死」:' + cusp.moonNote);
+  ok(cusp, '一年多里竟扫不到一次月亮近交界(阈 0.05°,月亮每小时走约 0.55°,逐时扫必中)——nearCusp 是死条');
+  ok(/交界|两个星座/.test(cusp.moonNote), '近交界要提示两个星座都看:' + cusp.moonNote);
 });
 
 console.log('【五】相位与组合盘的数学');
@@ -205,14 +211,17 @@ t('土星回归:1990 年生人,2019 年起扫 24 个月必须逮到「土星回�
   ok(ret, '土星回归没逮到——回归检测是死条');
   ok(/土星回归/.test(ret.plain) && /二十九年半/.test(ret.plain), '回归判语要写明周期:' + ret.plain);
 });
-t('压本命月亮的窗口必须带±0.3°放宽几天的声明——不许把糊的说成准的', () => {
+// v1.08 换口径:月亮改拟合式(≤0.0149°)后,本命月亮不再是「糊的」,压月亮的窗口
+// **不该再挂 ±0.3° 放宽声明**——旧声明反倒成了错话。这条测试从「必须带声明」
+// 反转为「不许再带」,并顺带钉住压月亮的窗口扫得到(扫描本身不是死条)。
+t('压本命月亮的窗口:拟合式月亮不再挂 ±0.3° 旧声明(位置已实测 ≤0.0149°)', () => {
   let found = null;
   for (let y = 2026; y <= 2032 && !found; y++) {
     const tr = Astro.transits(NATAL, new Date(Date.UTC(y, 0, 1)), 12);
     found = tr.wins.find(w => w.target === '本命月亮');
   }
   ok(found, '七年里竟无一个压月亮的窗口——扫描有漏');
-  ok(/±0\.3°/.test(found.plain) && /放宽/.test(found.plain), '缺月亮误差声明:' + found.plain);
+  ok(!/±0\.3°/.test(found.plain), '拟合式月亮不该再挂旧的 ±0.3° 声明:' + found.plain);
 });
 
 console.log('【十一】太阳返照:回归那一刻的太阳必须分毫不差(排盘层,可核)');
@@ -395,6 +404,90 @@ t('birthMoment 是唯一入口:界面不许再自己 new Date 建出生时刻', 
     .split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
   ok(!/new Date\(\s*y\s*,\s*m\s*-\s*1/.test(seg), '星盘那一段又出现了本地时区的 new Date(y,m-1,...)');
   ok(/Astro\.birthMoment/.test(seg), '出生时刻必须走 Astro.birthMoment');
+});
+
+console.log('【十五】v1.08 排盘二次体检:恒星时 UT、Placidus、月亮拟合式、冥王、北交');
+// 缘起:用户报「排盘一塌糊涂」。四个病各钉一条;客观标准是 JPL DE421(pypi jplephem+de421,
+// 量测与生成见 tools/build-astro-tables.py 与 tools/de421-ref.py,数字戳在 data/astro-moon.js 抬头)。
+t('恒星时按 UT:J2000.0(UT) 那一刻 GMST 必须 = 280.4606°(定义值)', () => {
+  // 此前 GMST 吃了带 ΔT 的 TT 儒略日,恒星时恒偏 17.3′、上升/中天偏约 0.3°——
+  // 引擎与地平线搜索测试两边一起错,照样全绿。定义锚死:jd(TT)=J2000.0+69s ⟺ UT=J2000.0。
+  const a = Astro.ascendant(2451545.0 + 69 / 86400, 0, 0);
+  ok(Math.abs(a.ramc - 280.4606) < 0.001, `GMST@J2000(UT)=${a.ramc.toFixed(4)},应为 280.4606`);
+});
+t('Placidus 宫尖满足定义不变量:赤经距 = 半弧份额(1/3、2/3、1、1+1/3、1+2/3)', () => {
+  const norm2 = d => { d %= 360; return d < 0 ? d + 360 : d; };
+  for (const [y, mo, d, la, lo] of [[1990, 5, 15, 39.9, 116.4], [1985, 1, 3, 23.1, 113.3], [2001, 10, 20, 45.8, 126.5], [1975, 8, 9, -33.9, 151.2]]) {
+    const jd = Astro.jdOf(new Date(Date.UTC(y, mo, d, 4, 30)));
+    const pl = Astro.placidusCusps(jd, lo, la);
+    ok(pl, `lat=${la} 不该退整宫`);
+    const eps = (23.439291 - 0.0130042 * ((jd - 2451545) / 36525)) * RAD, phi = la * RAD;
+    const raOf = L => norm2(Math.atan2(Math.sin(L * RAD) * Math.cos(eps), Math.cos(L * RAD)) * DEG);
+    const saOf = L => Math.acos(Math.max(-1, Math.min(1, -Math.tan(phi) * Math.tan(Math.asin(Math.sin(eps) * Math.sin(L * RAD)))))) * DEG;
+    for (const [h, frac] of [[11, 1 / 3], [12, 2 / 3], [1, 1], [2, 4 / 3], [3, 5 / 3]]) {
+      const L = pl.cusps[h], sa = saOf(L), t2 = frac <= 1 ? sa * frac : sa + (180 - sa) * (frac - 1);
+      let md = norm2(raOf(L) - pl.ramc); if (md > 180) md -= 360;
+      ok(Math.abs(md - t2) < 0.01, `宫${h} 赤经距 ${md.toFixed(3)} ≠ 份额 ${t2.toFixed(3)}`);
+    }
+    for (let h = 1; h <= 6; h++) ok(Math.abs(norm2(pl.cusps[h] + 180) - pl.cusps[(h + 5) % 12 + 1]) < 1e-9, `宫${h} 对宫不差 180°`);
+    ok(Math.abs(pl.cusps[1] - pl.asc) < 1e-9 && Math.abs(pl.cusps[10] - pl.mc) < 1e-9, '1 宫=上升、10 宫=天顶');
+  }
+  ok(Astro.placidusCusps(Astro.jdOf(new Date(Date.UTC(1990, 5, 15))), 20, 70) === null, '|纬|>66° 该退 null(极圈 Placidus 无定义)');
+});
+t('月亮拟合式:数据表误差戳 ≤0.02°,与旧低精度式全程相差 ≤0.35°(结构互核)', () => {
+  const MOD = JSON.parse('{"a":1}') && require(join(ROOT, 'data', 'astro-moon.js'));
+  ok(MOD.ERR.lonMax <= 0.02, '黄经误差戳超界:' + MOD.ERR.lonMax);
+  ok(MOD.ERR.nodeMax <= 0.25, '北交残差戳超界:' + MOD.ERR.nodeMax);
+  ok(MOD.LON_COEF.length === MOD.LON_ARGS.length && MOD.LAT_COEF.length === MOD.LAT_ARGS.length, '表长不齐');
+  // 与旧式互核:两套独立来源,若相差超过旧式自身的误差圈,必有一套接错
+  const sOld = (jd) => { const T = (jd - 2451545) / 36525, s = d2 => Math.sin(d2 * RAD);
+    return (218.32 + 481267.881 * T + 6.29 * s(135.0 + 477198.87 * T) - 1.27 * s(259.3 - 413335.36 * T)
+      + 0.66 * s(235.7 + 890534.22 * T) + 0.21 * s(269.9 + 954397.74 * T)
+      - 0.19 * s(357.5 + 35999.05 * T) - 0.11 * s(186.5 + 966404.03 * T)) % 360; };
+  for (let i = 0; i < 300; i++) {
+    const jd = 2440000 + i * 137.7;
+    let d2 = Math.abs(Astro.moonPos(jd).lon - ((sOld(jd) + 360) % 360)); if (d2 > 180) d2 = 360 - d2;
+    ok(d2 <= 0.35, `jd=${jd} 新旧月亮差 ${d2.toFixed(3)}°,超出旧式误差圈`);
+  }
+});
+t('冥王星:采样表连续、时代落座对(1990 天蝎/2000 射手/2020 摩羯)、逆行约四成', () => {
+  const c90 = Astro.chart(new Date(Date.UTC(1990, 5, 15))), c00 = Astro.chart(new Date(Date.UTC(2000, 5, 15))), c20 = Astro.chart(new Date(Date.UTC(2020, 5, 15)));
+  ok(c90.planets.plu && c90.planets.plu.sign === '天蝎', '1990 冥王该在天蝎:' + (c90.planets.plu && c90.planets.plu.sign));
+  ok(c00.planets.plu.sign === '射手', '2000 冥王该在射手:' + c00.planets.plu.sign);
+  ok(c20.planets.plu.sign === '摩羯', '2020 冥王该在摩羯:' + c20.planets.plu.sign);
+  let retro = 0, n = 0;
+  for (let d2 = 0; d2 < 3650; d2 += 5) { const cc = Astro.chart(new Date(Date.UTC(2015, 0, 1 + d2))); n++; if (cc.planets.plu.retro) retro++; }
+  const rate = retro / n;
+  ok(rate > 0.3 && rate < 0.55, `冥王逆行天数占比 ${(rate * 100).toFixed(1)}%,不合外行星公论(约四到五成)`);
+  // 出界照实不排:1880 年不在表内
+  const old = Astro.chart(new Date(Date.UTC(1880, 0, 1)));
+  ok(!old.planets.plu && /1900/.test(old.pluNote), '表外该不排并说明:' + old.pluNote);
+});
+t('真北交:围绕平交点摆动 ≤2°、十八年半退行一圈的速率对、正常在盘里带宫位', () => {
+  const norm2 = d2 => { d2 %= 360; return d2 < 0 ? d2 + 360 : d2; };
+  for (let i = 0; i < 200; i++) {
+    const jd = 2440000 + i * 180.5;
+    const nl = Astro.nodeLon(jd);
+    const T = (jd - 2451545) / 36525;
+    const om = norm2(125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + T * T * T / 467441);
+    let d2 = Math.abs(nl - om); if (d2 > 180) d2 = 360 - d2;
+    ok(d2 <= 2.0, `jd=${jd} 真交点偏离平交点 ${d2.toFixed(2)}°,超过实测摆幅`);
+  }
+  const c = Astro.chart(new Date(Date.UTC(1990, 5, 15, 4, 30)), { lat: 39.9, lon: 116.4 });
+  ok(c.node && c.node.sign && c.node.house >= 1 && c.node.house <= 12, '北交要有落座与宫位');
+});
+t('宫位跟着 Placidus 走:同一副盘 Placidus 与整宫的宫位该有差别(不然等于没换)', () => {
+  const c = Astro.chart(new Date(Date.UTC(1990, 5, 15, 4, 30)), { lat: 39.9, lon: 116.4 });
+  ok(c.houseSys === 'Placidus', '默认分宫制该是 Placidus:' + c.houseSys);
+  ok(c.cusps && c.cusps.length === 12, '要暴露 12 个宫尖');
+  const ascSign = Math.floor(c.asc.lon / 30);
+  let diff = 0;
+  for (const k of Astro.KEYS) {
+    if (!c.planets[k]) continue;
+    const ws = ((Math.floor(c.planets[k].lon / 30)) - ascSign + 12) % 12 + 1;
+    if (ws !== c.houses[k]) diff++;
+  }
+  ok(diff >= 1, 'Placidus 与整宫逐星宫位完全一致——多半没真换分宫制');
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

@@ -63,6 +63,8 @@ html = html
   .replace('<script src="gaiyun.js"></script>', '<script>\n' + read('gaiyun.js') + '\n</script>')
   .replace('<script src="zhaigua.js"></script>', '<script>\n' + read('zhaigua.js') + '\n</script>')
   .replace('<script src="data/astro-vsop.js"></script>', '<script>\n' + read('data/astro-vsop.js') + '\n</script>')
+  .replace('<script src="data/astro-moon.js"></script>', '<script>\n' + read('data/astro-moon.js') + '\n</script>')
+  .replace('<script src="data/astro-pluto.js"></script>', '<script>\n' + read('data/astro-pluto.js') + '\n</script>')
   .replace('<script src="astro.js"></script>', '<script>\n' + read('astro.js') + '\n</script>')
   // 桌面单文件版无 Service Worker 与 manifest(file:// 下不适用)
   .replace(/\n  \/\/ —— PWA[\s\S]*?\.catch\(\(\) => \{\}\);\n  \}\n/, '\n')

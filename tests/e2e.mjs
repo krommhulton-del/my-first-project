@@ -1103,9 +1103,9 @@ await t('双人合盘:两份档案合一盘,四种关系分开算,不许替人�
   await page.evaluate(() => { localStorage.removeItem('dongxuan_profiles_v1'); localStorage.removeItem('dongxuan_profile_cur'); });
 });
 
-await t('西洋星盘:本命九曜落座、月亮误差声明、合盘相位与组合盘、两套不互相计分(v0.94)', async () => {
+await t('西洋星盘:本命十曜落座、月亮误差声明、合盘相位与组合盘、两套不互相计分(v0.94;v1.08 冥王北交上盘)', async () => {
   // 缘起:板块 E 大工程。守四件事:本命盘无 Key 即出、星盘轮画出来、
-  // 月亮 ±0.3° 声明在、合盘出相位与组合盘且诚实横幅写明零回测。
+  // 月亮误差声明在(v1.08 起报实测 0.0149°,不再是 ±0.3°)、合盘出相位与组合盘且诚实横幅写明零回测。
   await page.evaluate(() => {
     localStorage.setItem('dongxuan_birth', '1990-05-20');
     localStorage.setItem('dongxuan_birth_hour', '09:30');
@@ -1123,9 +1123,10 @@ await t('西洋星盘:本命九曜落座、月亮误差声明、合盘相位与�
   await page.waitForTimeout(600);
   const out = await page.locator('#xz-out').innerText();
   ok(/本 命 盘/.test(out), '本命盘区要在');
-  for (const nm of ['太阳', '月亮', '水星', '土星']) ok(out.includes(nm), `九曜少了${nm}`);
-  ok(/±0\.3°/.test(out), '月亮误差声明必须在界面上');
-  ok(/上升/.test(out), '有钟点有地点该排出上升');
+  for (const nm of ['太阳', '月亮', '水星', '土星', '冥王星', '北交点']) ok(out.includes(nm), `十曜少了${nm}`);
+  ok(/0\.0149/.test(out), '月亮实测误差声明必须在界面上(v1.08 拟合式)');
+  ok(!/±0\.3°/.test(out), '旧的 ±0.3° 声明不许残留在界面上');
+  ok(/上升/.test(out) && /Placidus/.test(out), '有钟点有地点该排出上升,且分宫制标 Placidus');
   ok(!(await page.locator('#xz-wheel').isHidden()), '星盘轮该画出来');
   const honest = await page.locator('#xz-honest').innerText();
   ok(/零回测/.test(honest) && /不互相计分/.test(honest), '诚实横幅缺关键句:' + honest.slice(0, 60));

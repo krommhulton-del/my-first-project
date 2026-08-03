@@ -1,34 +1,43 @@
-// astro.js — 西洋星盘引擎(v0.94,板块 E):行星位置、本命盘、相位、双人合盘、组合盘
+// astro.js — 西洋星盘引擎(v0.94,板块 E;v1.08 排盘层二次体检):行星、本命盘、相位、合盘、行运
 //
-// ── 准确率分级(§三 的规矩,逐层照实)──
-//   排盘层·行星:VSOP87D 截断表(data/astro-vsop.js,机器生成),**全序列为客观标准,
-//     截断误差逐星实测 ≤2.0″**(1900–2100);太阳另与 najia.sunLongitude(已对公开历书核过节气)互核。
+// ── 准确率分级(§三 的规矩,逐层照实;v1.08 的客观标准升级为 JPL DE421)──
+//   排盘层·行星:VSOP87D 截断表(data/astro-vsop.js,机器生成),截断误差逐星实测 ≤2.0″(1900–2100);
+//     v1.08 又拿 **JPL DE421 官方历表**(pypi jplephem+de421)整场对照:八星与 DE421 差 0.8–4.5″。
 //     未做光行时与光行差(合计约 20″–1′ 量级),对「落在哪个星座哪一度」无碍,照实记。
-//   排盘层·月亮:天文年历低精度通行公式,**误差可达 ±0.3°**——月亮近星座交界时结论可能翻,
-//     程序会当面提示,不许装作精确。
-//   排盘层·上升与宫位:标准公式;**测试用独立方法(地平线搜索)回核**。宫位用整星座制
-//     (最古的一种,免去分宫制流派之争);缺钟点或出生地就不排上升,照实说。
+//   排盘层·月亮(v1.08 重做):论元结构为公开标准式、**各项振幅由 DE421 最小二乘拟合**
+//     (data/astro-moon.js,机器生成),留出集实测最大误差 **0.0149°**——旧低精度式 ±0.3° 废弃,
+//     仅当数据文件缺失时退回并照旧提示。
+//   排盘层·冥王星(v1.08 新增):DE421 日心采样表(data/astro-pluto.js,覆盖约 1900–2052),
+//     JS 端插值+VSOP 地球向量合成地心位置;**出界不排,照实说**。
+//   排盘层·真北交(v1.08 新增):平交点标准多项式 + DE421 拟合摆动项,实测残差 ≤0.23°。
+//   排盘层·上升与宫位:恒星时按 **UT** 算(v1.08 修:此前误用加了 ΔT 的儒略日,差 17.3′,
+//     上升/中天整体偏约 0.3°);宫位默认 **Placidus**(主流通行分宫制,v1.08 从整星座制换来——
+//     用户拿主流软件对照,整星座的宫位十有八九对不上,不是谁错,是流派;既然对照对象都是
+//     Placidus,就按 Placidus 排,高纬(>66°)无定义时照实退回整星座并注明)。
+//     缺钟点或出生地就不排上升,照实说。
 //   解读层:相位的「顺滑/拉扯」是**通行占星口径,零回测**,诚实分级与合盘同档,第一屏写明。
 //
 // ── §四 ──
-//   系数表只此一份(data/astro-vsop.js,生成器 tools/build-vsop.mjs);
+//   系数表只此三份(astro-vsop / astro-moon / astro-pluto,皆机器生成,生成器在 tools/);
 //   本模块不算任何中式断法;中西两套永不互相计分,只可并排摆。
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./data/astro-vsop.js'));
-  } else { root.Astro = factory(root.AstroVsop); }
-}(typeof self !== 'undefined' ? self : this, function (V) {
+    module.exports = factory(require('./data/astro-vsop.js'),
+      (function () { try { return require('./data/astro-moon.js'); } catch (e) { return null; } })(),
+      (function () { try { return require('./data/astro-pluto.js'); } catch (e) { return null; } })());
+  } else { root.Astro = factory(root.AstroVsop, root.AstroMoon, root.AstroPluto); }
+}(typeof self !== 'undefined' ? self : this, function (V, MO, PL) {
 
   const RAD = Math.PI / 180, DEG = 180 / Math.PI;
   const norm = d => { d %= 360; return d < 0 ? d + 360 : d; };
   const SIGNS = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼'];
-  const PLANET_CN = { sun: '太阳', moon: '月亮', mer: '水星', ven: '金星', mar: '火星', jup: '木星', sat: '土星', ura: '天王星', nep: '海王星' };
+  const PLANET_CN = { sun: '太阳', moon: '月亮', mer: '水星', ven: '金星', mar: '火星', jup: '木星', sat: '土星', ura: '天王星', nep: '海王星', plu: '冥王星' };
   const PLAIN = {
     sun: '自我、意志与人生主线', moon: '情绪、安全感与生活习惯',
     mer: '思维、语言与信息', ven: '感情、审美与人际吸引力',
     mar: '行动力、竞争与脾气', jup: '机会、扩张与信念',
     sat: '责任、限制与长期结构', ura: '突变、独立与反常规',
-    nep: '想象、直觉与迷失',
+    nep: '想象、直觉与迷失', plu: '深层执念、权力与推倒重来',
   };
 
   // ── 时间 ──
@@ -61,9 +70,26 @@
     const x = xp - xe, y = yp - ye, z = zp - ze;
     return { lon: norm(Math.atan2(y, x) * DEG), lat: Math.atan2(z, Math.hypot(x, y)) * DEG, dist: Math.hypot(x, y, z) };
   }
-  // 月亮:天文年历低精度式(±0.3°,当面标注)
+  // ── 月亮基本论元(公开标准式,Meeus ch.47;振幅不在这里——振幅全在 data/astro-moon.js,
+  //    由 DE421 拟合而来,留出集实测黄经 ≤0.0149°、黄纬 ≤0.0045°)──
+  function fundArgs(T) {
+    const D = 297.8501921 + 445267.1114034 * T - 0.0018819 * T * T + T * T * T / 545868 - T * T * T * T / 113065000;
+    const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T * T + T * T * T / 24490000;
+    const Mp = 134.9633964 + 477198.8675055 * T + 0.0087414 * T * T + T * T * T / 69699 - T * T * T * T / 14712000;
+    const F = 93.2720950 + 483202.0175233 * T - 0.0036539 * T * T - T * T * T / 3526000 + T * T * T * T / 863310000;
+    const Lp = 218.3164477 + 481267.88123421 * T - 0.0015786 * T * T + T * T * T / 538841 - T * T * T * T / 65194000;
+    return { D, M, Mp, F, Lp };
+  }
   function moonPos(jd) {
     const T = (jd - 2451545) / 36525;
+    if (MO) {
+      const { D, M, Mp, F, Lp } = fundArgs(T);
+      let lon = Lp, lat = 0;
+      for (let i = 0; i < MO.LON_ARGS.length; i++) { const a = MO.LON_ARGS[i]; lon += MO.LON_COEF[i] * Math.sin((a[0] * D + a[1] * M + a[2] * Mp + a[3] * F) * RAD); }
+      for (let i = 0; i < MO.LAT_ARGS.length; i++) { const a = MO.LAT_ARGS[i]; lat += MO.LAT_COEF[i] * Math.sin((a[0] * D + a[1] * M + a[2] * Mp + a[3] * F) * RAD); }
+      return { lon: norm(lon), lat, approx: false };
+    }
+    // 退路:数据文件缺失(旧缓存)才走的低精度式(±0.3°,照旧当面标注)
     const s = d => Math.sin(d * RAD);
     const lon = 218.32 + 481267.881 * T
       + 6.29 * s(135.0 + 477198.87 * T) - 1.27 * s(259.3 - 413335.36 * T)
@@ -73,11 +99,48 @@
       - 0.28 * s(318.3 + 6003.2 * T) - 0.17 * s(217.6 - 407332.2 * T);
     return { lon: norm(lon), lat, approx: true };
   }
+  // 真北交点(v1.08):平交点标准多项式 + DE421 拟合的摆动项(实测残差 ≤0.23°,拟合前摆幅 ±1.97°)
+  function nodeLon(jd) {
+    if (!MO) return null;
+    const T = (jd - 2451545) / 36525;
+    const { D, M, Mp, F } = fundArgs(T);
+    let om = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + T * T * T / 467441;
+    for (let i = 0; i < MO.NODE_ARGS.length; i++) { const a = MO.NODE_ARGS[i]; om += MO.NODE_COEF[i] * Math.sin((a[0] * D + a[1] * M + a[2] * Mp + a[3] * F) * RAD); }
+    return norm(om);
+  }
+  // 冥王星(v1.08):日心采样表插值(Catmull-Rom;黄经先展开再插,防 0°/360° 跨界),
+  // 再用 VSOP 地球向量合成地心位置。表覆盖约 1900–2052,出界返回 null(照实不排)。
+  function pluHelio(jd) {
+    if (!PL) return null;
+    const x = (jd - PL.J0) / PL.STEP, n = PL.ROWS.length;
+    if (x < 1 || x > n - 3) return null;
+    const i = Math.floor(x), u = x - i;
+    const row = j => PL.ROWS[j];
+    const un = (v, ref) => { let d = v - ref; if (d > 180) d -= 360; if (d < -180) d += 360; return ref + d; };
+    const p0 = row(i - 1)[0], p1 = un(row(i)[0], p0), p2 = un(row(i + 1)[0], p1), p3 = un(row(i + 2)[0], p2);
+    const cr = (a, b, c, d2, t) => b + 0.5 * t * (c - a + t * (2 * a - 5 * b + 4 * c - d2 + t * (3 * (b - c) + d2 - a)));
+    return { L: norm(cr(p0, p1, p2, p3, u)) * RAD,
+      B: cr(row(i - 1)[1], row(i)[1], row(i + 1)[1], row(i + 2)[1], u) * RAD,
+      R: cr(row(i - 1)[2], row(i)[2], row(i + 1)[2], row(i + 2)[2], u) };
+  }
+  function pluGeo(jd) {
+    const p = pluHelio(jd);
+    if (!p) return null;
+    const t = (jd - 2451545) / 365250;
+    const e = helio('ear', t);
+    const xe = e.R * Math.cos(e.B) * Math.cos(e.L), ye = e.R * Math.cos(e.B) * Math.sin(e.L), ze = e.R * Math.sin(e.B);
+    const xp = p.R * Math.cos(p.B) * Math.cos(p.L), yp = p.R * Math.cos(p.B) * Math.sin(p.L), zp = p.R * Math.sin(p.B);
+    const x = xp - xe, y = yp - ye, z = zp - ze;
+    return { lon: norm(Math.atan2(y, x) * DEG), lat: Math.atan2(z, Math.hypot(x, y)) * DEG, dist: Math.hypot(x, y, z) };
+  }
   const obliquity = jd => (23.439291 - 0.0130042 * ((jd - 2451545) / 36525)) * RAD;
 
   // ── 上升点(标准公式;tests 用地平线搜索独立回核)──
   function ascendant(jd, lonDeg, latDeg) {
-    const gmst = norm(280.46061837 + 360.98564736629 * (jd - 2451545));
+    // 恒星时必须按 **UT** 走(v1.08 修的真错):本模块的 jd 一律含 +69s 的 ΔT(那是行星历表要的 TT),
+    // 而地球自转的相位跟的是 UT——拿 TT 算 GMST 等于把地球多转 69 秒,恒星时偏 17.3′,
+    // 上升与中天整体偏约 0.3°。J2000.0(UT)那一刻 GMST=280.4606°,测试按定义钉死。
+    const gmst = norm(280.46061837 + 360.98564736629 * (jd - 69 / 86400 - 2451545));
     const ramc = norm(gmst + lonDeg) * RAD;              // 当地恒星时(=天顶赤经)
     const eps = obliquity(jd), phi = latDeg * RAD;
     let asc = norm(Math.atan2(-Math.cos(ramc), Math.sin(ramc) * Math.cos(eps) + Math.tan(phi) * Math.sin(eps)) * DEG);
@@ -91,43 +154,111 @@
     return { asc, mc: norm(mc), ramc: norm(ramc * DEG) };
   }
 
+  // ── Placidus 分宫(v1.08)——主流通行分宫制,按**定义**解宫尖:
+  //   宫尖是黄道上「赤经距(相对天顶)= 该宫应占的半弧份额」的那一点:
+  //   11 宫 = 昼半弧的 1/3,12 宫 = 2/3,1 宫(上升)= 全份,2 宫 = 昼半弧 + 夜半弧的 1/3,3 宫 = +2/3。
+  //   不背任何迭代式,直接对定义做二分——测试同样拿这个定义当不变量回核(定义即外部标准)。
+  //   极圈内(|纬| > 66°)半弧退化,Placidus 无定义,返回 null,由调用方退整星座并注明。
+  function placidusCusps(jd, lonDeg, latDeg) {
+    if (Math.abs(latDeg) > 66) return null;
+    const a = ascendant(jd, lonDeg, latDeg);
+    const eps = obliquity(jd), phi = latDeg * RAD;
+    const raOf = L => norm(Math.atan2(Math.sin(L * RAD) * Math.cos(eps), Math.cos(L * RAD)) * DEG);
+    const saOf = L => { const dec = Math.asin(Math.sin(eps) * Math.sin(L * RAD));
+      const x = -Math.tan(phi) * Math.tan(dec); return Math.acos(Math.max(-1, Math.min(1, x))) * DEG; };
+    const G = (L, frac) => {
+      const sa = saOf(L), t = frac <= 1 ? sa * frac : sa + (180 - sa) * (frac - 1);
+      let g = norm(raOf(L) - a.ramc) - t;
+      if (g > 180) g -= 360;
+      return g;
+    };
+    const solve = frac => {
+      let lo = null, hi = null;
+      for (let d2 = 2; d2 <= 180; d2 += 2) {
+        if (G(norm(a.mc + d2 - 2), frac) <= 0 && G(norm(a.mc + d2), frac) > 0) { lo = d2 - 2; hi = d2; break; }
+      }
+      if (lo == null) return null;
+      for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (G(norm(a.mc + mid), frac) <= 0) lo = mid; else hi = mid; }
+      return norm(a.mc + (lo + hi) / 2);
+    };
+    const c11 = solve(1 / 3), c12 = solve(2 / 3), c2 = solve(1 + 1 / 3), c3 = solve(1 + 2 / 3);
+    if ([c11, c12, c2, c3].some(x => x == null)) return null;
+    const cus = new Array(13);
+    cus[10] = a.mc; cus[11] = c11; cus[12] = c12; cus[1] = a.asc; cus[2] = c2; cus[3] = c3;
+    for (const h of [10, 11, 12, 1, 2, 3]) cus[(h + 5) % 12 + 1] = norm(cus[h] + 180);
+    return { cusps: cus, asc: a.asc, mc: a.mc, ramc: a.ramc };
+  }
+  const houseOfCusps = (lon, cus) => {
+    for (let h = 1; h <= 12; h++) {
+      const w = norm(cus[h % 12 + 1] - cus[h]);
+      if (norm(lon - cus[h]) < w) return h;
+    }
+    return 12;
+  };
+
   // ── 本命盘 ──
-  const KEYS = ['sun', 'moon', 'mer', 'ven', 'mar', 'jup', 'sat', 'ura', 'nep'];
+  const KEYS = ['sun', 'moon', 'mer', 'ven', 'mar', 'jup', 'sat', 'ura', 'nep', 'plu'];
   function chart(date, opts) {
     opts = opts || {};
     const jd = jdOf(date), t = (jd - 2451545) / 365250;
     const planets = {};
+    let pluNote = '';
     for (const k of KEYS) {
-      const p = k === 'moon' ? moonPos(jd) : geo(k, t);
+      const p = k === 'moon' ? moonPos(jd) : (k === 'plu' ? pluGeo(jd) : geo(k, t));
+      if (!p) { pluNote = '冥王星采样表只覆盖约 1900–2052,此时刻在界外,这一星照实不排。'; continue; }
       const sign = Math.floor(norm(p.lon) / 30);
+      const cuspTol = k === 'moon' ? (p.approx ? 0.5 : 0.05) : 0;
       planets[k] = {
         key: k, name: PLANET_CN[k], plain: PLAIN[k],
         lon: +norm(p.lon).toFixed(3), lat: +(p.lat || 0).toFixed(2),
         sign: SIGNS[sign], deg: +(norm(p.lon) - sign * 30).toFixed(1),
         approx: !!p.approx,
-        nearCusp: (norm(p.lon) % 30 < 0.5 || norm(p.lon) % 30 > 29.5) && !!p.approx,
+        nearCusp: cuspTol > 0 && (norm(p.lon) % 30 < cuspTol || norm(p.lon) % 30 > 30 - cuspTol),
       };
     }
     // 逆行:前后 12 小时黄经差(月亮太阳不论逆)
     for (const k of KEYS) {
-      if (k === 'sun' || k === 'moon') continue;
-      const a = geo(k, (jd - 0.5 - 2451545) / 365250).lon, b = geo(k, (jd + 0.5 - 2451545) / 365250).lon;
-      let d = b - a; if (d > 180) d -= 360; if (d < -180) d += 360;
+      if (k === 'sun' || k === 'moon' || !planets[k]) continue;
+      const pa = k === 'plu' ? pluGeo(jd - 0.5) : geo(k, (jd - 0.5 - 2451545) / 365250);
+      const pb = k === 'plu' ? pluGeo(jd + 0.5) : geo(k, (jd + 0.5 - 2451545) / 365250);
+      if (!pa || !pb) continue;
+      let d = pb.lon - pa.lon; if (d > 180) d -= 360; if (d < -180) d += 360;
       planets[k].retro = d < 0;
     }
-    let asc = null, houses = null, ascNote = '';
+    // 真北交点(有数据表才有;残差 ≤0.23° 实测,近交界照实提示)
+    let node = null;
+    const nl = nodeLon(jd);
+    if (nl != null) {
+      const si = Math.floor(nl / 30);
+      node = { lon: +nl.toFixed(2), sign: SIGNS[si], deg: +(nl - si * 30).toFixed(1),
+        nearCusp: nl % 30 < 0.25 || nl % 30 > 29.75 };
+    }
+    let asc = null, houses = null, ascNote = '', cusps = null, houseSys = '';
     if (opts.lat != null && opts.lon != null && opts.hourKnown !== false) {
       const a = ascendant(jd, opts.lon, opts.lat);
       const sign = Math.floor(a.asc / 30);
       asc = { lon: +a.asc.toFixed(2), sign: SIGNS[sign], deg: +(a.asc - sign * 30).toFixed(1), mc: +a.mc.toFixed(2) };
+      const pl = placidusCusps(jd, opts.lon, opts.lat);
       houses = {};
-      for (const k of KEYS) houses[k] = ((planets[k].sign ? SIGNS.indexOf(planets[k].sign) : 0) - sign + 12) % 12 + 1;
+      if (pl) {
+        cusps = pl.cusps.slice(1).map(x => +x.toFixed(2));   // 下标 0 起 = 第 1 宫尖
+        houseSys = 'Placidus';
+        for (const k of KEYS) { if (planets[k]) houses[k] = houseOfCusps(planets[k].lon, pl.cusps); }
+        if (node) node.house = houseOfCusps(node.lon, pl.cusps);
+      } else {
+        houseSys = '整星座(此纬度 Placidus 无定义,照实退回)';
+        for (const k of KEYS) { if (planets[k]) houses[k] = ((SIGNS.indexOf(planets[k].sign)) - sign + 12) % 12 + 1; }
+        if (node) node.house = ((Math.floor(node.lon / 30)) - sign + 12) % 12 + 1;
+      }
     } else {
-      ascNote = '没有钟点或出生地,上升排不了——星座那一层照给,第几宫这一层缺着(整星座制的宫从上升起,起点没有就不硬造)。';
+      ascNote = '没有钟点或出生地,上升排不了——星座那一层照给,第几宫这一层缺着(宫从上升定起点,起点没有就不硬造)。';
     }
-    return { date, jd: +jd.toFixed(5), planets, asc, houses, ascNote,
-      moonNote: planets.moon.nearCusp ? '月亮这一格离星座交界不到半度,而月亮用的是低精度公式(±0.3°)——它到底落哪个星座,这里定不死,照实说。' :
-        '月亮位置用的是低精度通行公式,误差可达 ±0.3°(其余行星 ≤2″,截断误差逐星实测,见数据文件抬头)。' };
+    return { date, jd: +jd.toFixed(5), planets, asc, houses, cusps, houseSys, node, ascNote, pluNote,
+      moonNote: planets.moon.approx
+        ? (planets.moon.nearCusp ? '月亮这一格离星座交界不到半度,而这里退用了低精度公式(±0.3°)——它到底落哪个星座定不死,照实说。'
+          : '月亮位置退用了低精度公式,误差可达 ±0.3°(星历数据文件未载入)。')
+        : (planets.moon.nearCusp ? '月亮离星座交界不到 0.05°,恰在本表实测误差(0.0149°)的边缘附近——两个星座的描述都对照看。'
+          : '月亮用 DE421 拟合式,留出集实测误差 ≤0.0149°;其余行星 ≤2″ 并与 DE421 对照过(0.8–4.5″),见数据文件抬头。') };
   }
 
   // ── 相位(通行占星口径:角度与容许度;解读零回测)──
@@ -165,6 +296,7 @@
     // 组合盘:逐星取短弧中点
     const comp = {};
     for (const k of KEYS) {
+      if (!c1.planets[k] || !c2.planets[k]) continue;
       const a = c1.planets[k].lon, b = c2.planets[k].lon;
       let d = b - a; if (d > 180) d -= 360; if (d < -180) d += 360;
       const mid = norm(a + d / 2), sign = Math.floor(mid / 30);
@@ -184,8 +316,8 @@
   // 病根自查:v0.94 的解读层只有「每星一句标签+每相位一句标签」——没有落座、没有庙旺、
   // 没有格局、没有失衡、没有任何预测。下面这一整层都是**程序按通行占星口径算死的**(§五),
   // 口径出处:庙旺陷落是托勒密传统表(客观可核的表);元素三态、图形相位、行运、返照是
-  // 现代占星通行做法。**解读层照旧零回测**,与中式永不互相计分。冥王星本程序未做,
-  // 天蝎主星取传统口径火星(照实说,不是漏)。
+  // 现代占星通行做法。**解读层照旧零回测**,与中式永不互相计分。冥王星 v1.08 起有位置
+  // (DE421 采样表),但庙旺与命主星仍按**传统托勒密表**走——天蝎主星取火星,是口径不是漏。
   const RULER = { 白羊: 'mar', 金牛: 'ven', 双子: 'mer', 巨蟹: 'moon', 狮子: 'sun', 处女: 'mer', 天秤: 'ven', 天蝎: 'mar', 射手: 'jup', 摩羯: 'sat', 水瓶: 'sat', 双鱼: 'jup' };
   const EXALT = { sun: '白羊', moon: '金牛', mer: '处女', ven: '双鱼', mar: '摩羯', jup: '巨蟹', sat: '天秤' };
   function dignity(key, sign) {
@@ -243,7 +375,7 @@
     const ec = { 火: 0, 土: 0, 风: 0, 水: 0 }, mc = { 开创: 0, 固定: 0, 变动: 0 };
     const vote = (sign, w) => { const i = SIGNS.indexOf(sign); ec[ELEM_OF(i)] += w; mc[MODE_OF(i)] += w; };
     for (const k of KEYS) {
-      if (k === 'ura' || k === 'nep') continue;
+      if (k === 'ura' || k === 'nep' || k === 'plu' || !P[k]) continue;   // 世代星不投票(冥王同理)
       vote(P[k].sign, (k === 'sun' || k === 'moon') ? 2 : 1);
     }
     if (c.asc) vote(c.asc.sign, 1);
@@ -257,7 +389,7 @@
     const modeOK = coreModes.includes(mSort[0][0]);
     // 二、庙旺陷落逐星(传统七曜;天海不论)
     const digs = [];
-    for (const k of KEYS) { const d = dignity(k, P[k].sign); if (d) digs.push({ key: k, name: P[k].name, sign: P[k].sign, ...d }); }
+    for (const k of KEYS) { if (!P[k]) continue; const d = dignity(k, P[k].sign); if (d) digs.push({ key: k, name: P[k].name, sign: P[k].sign, ...d }); }
     const good = digs.filter(d => d.st === '入庙' || d.st === '旺');
     const badd = digs.filter(d => d.st === '陷' || d.st === '落');
     const digOf = k => digs.find(d => d.key === k) || null;
@@ -274,7 +406,7 @@
     const asps = aspectsOf(P);
     const pat = [];
     const bySign = {};
-    for (const k of KEYS) (bySign[P[k].sign] = bySign[P[k].sign] || []).push(k);
+    for (const k of KEYS) { if (P[k]) (bySign[P[k].sign] = bySign[P[k].sign] || []).push(k); }
     for (const [sg, keys] of Object.entries(bySign)) {
       if (keys.length < 3) continue;
       const per = keys.filter(k => PERSONAL.includes(k));
@@ -345,12 +477,16 @@
     }
     if (modeOK && mSort[0][1] >= 5) story += `做事方式上,${MODE_PLAIN[mSort[0][0]]}。`;
     return { verdict, story, elems: ec, modes: mc, missing, domin, digs, pat, ruler, hard, combos, modeOK,
-      moonCaveat: moonP.nearCusp ? '月亮位置临近星座交界(公式误差±0.3°),与内在相关的判断请把相邻星座的描述也对照看。' : '' };
+      moonCaveat: moonP.nearCusp ? (moonP.approx
+        ? '月亮位置临近星座交界(退用低精度公式,±0.3°),与内在相关的判断请把相邻星座的描述也对照看。'
+        : '月亮离星座交界极近(实测误差 0.0149° 的边缘),与内在相关的判断请把相邻星座的描述也对照看。') : '' };
   }
 
   // ══════════ 行运(时空盘看未来):把任一天的天空叠在本命盘上,逐日扫出应期窗口 ══════════
   // 排盘层:行运星位置与本命同一套星历,可核可验。**应期解读是通行占星口径,零回测**。
-  const lonAt = (k, jd) => k === 'moon' ? moonPos(jd).lon : geo(k, (jd - 2451545) / 365250).lon;
+  const lonAt = (k, jd) => k === 'moon' ? moonPos(jd).lon
+    : k === 'plu' ? (pluGeo(jd) ? pluGeo(jd).lon : NaN)
+    : geo(k, (jd - 2451545) / 365250).lon;
   const dateOfJd = jd => new Date((jd - 2440587.5 - 69 / 86400) * 86400000);
   // **日期格式化按固定时区,不用设备本地时区**(v0.99 修的真错的另一半):
   // getFullYear/getMonth 取的是运行环境的本地字段,同一个绝对时刻在不同设备上会格式化成
@@ -358,7 +494,7 @@
   const TZ_OUT = 480;
   const fmtD = d => { const t = new Date(d.getTime() + TZ_OUT * 60000);
     return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-${String(t.getUTCDate()).padStart(2, '0')}`; };
-  const MOVER_TR = { jup: '木星', sat: '土星', ura: '天王星', nep: '海王星' };
+  const MOVER_TR = { jup: '木星', sat: '土星', ura: '天王星', nep: '海王星', plu: '冥王星' };
   const T_SHORT = { sun: '本命太阳', moon: '本命月亮', mer: '本命水星', ven: '本命金星', mar: '本命火星', asc: '上升点', mc: '天顶' };
   // 行运判语落到生活领域:每条 = 结论 + 通常表现 + 做法,不许拿比喻凑数
   const T_DOMAIN = { sun: '你本人的目标、状态与健康', moon: '情绪、家庭与居住', mer: '沟通、学业与文书合同', ven: '感情、金钱与合作', mar: '行动、竞争与冲突', asc: '个人整体际遇', mc: '事业方向与名声' };
@@ -379,6 +515,10 @@
       刑: '隐性损耗:{T}上有不易察觉的流失(精力、金钱、边界);对策具体到动作:定期对账,把不愿说出口的拒绝说出口',
       拱: '灵感段:{T}上感受力好用,因此适合把创作、学习、休整这类事排在这段;反过来,大额投入与重大承诺一律推到窗口之后再定',
       冲: '图景失真:对方或环境呈现给你的{T}与实际有出入;判断以可验证的行动为准,不以口头承诺为准' },
+    plu: { 合: '深层改造:{T}上的旧格局在这段被连根翻动,过程常伴随失控感,翻完之后回不到原样。这类行运历时一两年,硬顶无效——具体做法是主动清算:把这一块里早该结束的关系、安排、身份,自己动手收尾,比等它被动崩塌代价小得多',
+      刑: '权力摩擦:{T}上遇到控制与被控制的拉锯(强势人物、制度、把柄),正面硬碰讨不到好;对策是不争一时输赢,先把自己的把柄与漏洞清理干净,拖过窗口再谈',
+      拱: '深耕窗口:{T}上适合做彻底的重建——还清旧账、重组结构、把烂摊子一次清干净;此期下的狠手日后不反弹',
+      冲: '对面摊牌:{T}上有人把积压已久的账一次翻出来,回避只会加码;把底线想清楚再上桌,能谈的谈,不能谈的果断切割' },
   };
   const T_ASPS = [{ deg: 0, key: '合' }, { deg: 90, key: '刑' }, { deg: 120, key: '拱' }, { deg: 180, key: '冲' }];
   function transits(natal, fromDate, months) {
@@ -393,7 +533,8 @@
     if (rulerK && !targets.some(t => t.k === rulerK)) targets.push({ k: rulerK, lon: natal.planets[rulerK].lon, approx: natal.planets[rulerK].approx });
     // 回归两条(土星回归/木星回归)只认「合」
     const rets = [{ k: 'sat', lon: natal.planets.sat.lon }, { k: 'jup', lon: natal.planets.jup.lon }];
-    const movers = ['jup', 'sat', 'ura', 'nep'];
+    // 冥王星行运只在采样表覆盖范围内扫(约 1900–2052,出界照实少扫这一颗)
+    const movers = ['jup', 'sat', 'ura', 'nep', 'plu'].filter(m => !isNaN(lonAt(m, jd0)) && !isNaN(lonAt(m, jd0 + nDays)));
     const daily = {};                                   // mover → [逐日黄经]
     for (const m of movers) { daily[m] = []; for (let d = 0; d <= nDays; d++) daily[m].push(lonAt(m, jd0 + d)); }
     const wins = [];
@@ -436,7 +577,7 @@
           from: fmtD(dateOfJd(jd0 + g[0].d)), to: fmtD(dateOfJd(jd0 + g[g.length - 1].d)),
           exact: exact.map(d => fmtD(dateOfJd(jd0 + d))), passes: exact.length, ret: !!isRet,
           truncStart, isRuler, domain: T_DOMAIN[tk] || PLAIN[tk],
-          weight: (isRet ? 10 : { sat: 8, ura: 7, nep: 6, jup: 5 }[m]) + (tk === 'sun' || tk === 'moon' || tk === 'asc' ? 2 : 0) + (asp.key === '合' || asp.key === '冲' ? 1 : 0)
+          weight: (isRet ? 10 : { plu: 9, sat: 8, ura: 7, nep: 6, jup: 5 }[m]) + (tk === 'sun' || tk === 'moon' || tk === 'asc' ? 2 : 0) + (asp.key === '合' || asp.key === '冲' ? 1 : 0)
             + (isRuler ? 2 : 0) - (truncStart ? 6 : 0),
           plain: say + (isRuler ? '。这一条动的是命主星,牵动的是全盘而不只是这一块,分量要加重看' : '')
             + (truncStart ? '。(此窗在查询起点之前就已开始,当前处于尾段,余下日子按收尾安排)' : '')
@@ -592,8 +733,10 @@
   }
 
   const HONEST = '这一页的诚实分级分两层:行星落在哪个星座哪一度(含行运、返照的位置与应期日子)是排盘层,可核可验' +
-    '(截断误差逐星实测≤2″,月亮除外——低精度公式±0.3°,近交界当面提示);落座、庙旺、相位、行运的一切「说法」' +
-    '是通行占星口径,零回测,与中式那一套永不互相计分。窗口是窗口,不是保票。';
+    '(八星与 JPL DE421 官方历表对照差 0.8–4.5″;月亮为 DE421 拟合式,实测 ≤0.0149°,近交界当面提示;' +
+    '冥王星按 DE421 采样表,覆盖约 1900–2052;真北交实测残差 ≤0.23°;宫位按 Placidus——主流通行分宫制,' +
+    '流派之别不是对错之别)。落座、庙旺、相位、行运的一切「说法」是通行占星口径,零回测,' +
+    '与中式那一套永不互相计分。窗口是窗口,不是保票。';
 
   function material(c, syn, names, extra) {
     let s = '【西洋星盘·程序排定(位置已算死,勿另改)】\n';
@@ -601,10 +744,13 @@
       let x = label ? `【${label}】\n` : '';
       for (const k of KEYS) {
         const p = cc.planets[k];
+        if (!p) continue;
         const d = dignity(k, p.sign);
-        x += `${p.name} ${p.sign}${p.deg}°${p.retro ? '(逆行)' : ''}${cc.houses ? ` 第${cc.houses[k]}宫` : ''}${d ? `(${d.st})` : ''} —— ${p.plain}\n`;
+        x += `${p.name} ${p.sign}${p.deg}°${p.retro ? '(逆行)' : ''}${cc.houses && cc.houses[k] ? ` 第${cc.houses[k]}宫` : ''}${d ? `(${d.st})` : ''} —— ${p.plain}\n`;
       }
-      if (cc.asc) x += `上升 ${cc.asc.sign}${cc.asc.deg}°(整星座制,宫从上升起)\n`;
+      if (cc.node) x += `北交点 ${cc.node.sign}${cc.node.deg}°${cc.node.house ? ` 第${cc.node.house}宫` : ''} —— 要主动练出来的方向(对面的南交是走惯的旧路)\n`;
+      if (cc.asc) x += `上升 ${cc.asc.sign}${cc.asc.deg}°(分宫制:${cc.houseSys || 'Placidus'})\n`;
+      if (cc.pluNote) x += cc.pluNote + '\n';
       if (cc.ascNote) x += cc.ascNote + '\n';
       x += cc.moonNote + '\n';
       return x;
@@ -643,5 +789,6 @@
   }
 
   return { chart, aspectsOf, synastry, material, ascendant, moonPos, geo, jdOf, SIGNS, PLANET_CN, PLAIN, ASPECTS, HONEST, KEYS,
-    deepRead, transits, monthRun, solarReturn, lunations, dignity, RULER, EXALT, SIGN_CHAR, HOUSE_PLAIN, lonAt, birthMoment, TZ_OUT };
+    deepRead, transits, monthRun, solarReturn, lunations, dignity, RULER, EXALT, SIGN_CHAR, HOUSE_PLAIN, lonAt, birthMoment, TZ_OUT,
+    nodeLon, pluGeo, placidusCusps, houseOfCusps, fundArgs };
 }));
