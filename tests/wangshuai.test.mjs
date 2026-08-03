@@ -385,7 +385,12 @@ t('日干化气格默认关:默认输出与 hua:other 逐字节同,与 hua:all �
   const day = Bazi.judgeStrength(P, '丁', 15, { hua: 'all', huaChen: false });
   ok(JSON.stringify(dft.pow) !== JSON.stringify(day.pow), '这副盘 day 模式该有区别,说明开关是活的');
 });
-t('命例基线不许倒退:旺衰子集复现 ≥ 41/53(v0.96 合化落地后的数)', () => {
+// v1.13 换口径:旺衰标签洗过一遍(第三次撞上「标签本身是噪声」这个病)——
+// 53 例里 31 例是理论枚举/假设句/否定句/说的是上一造/「地旺天衰」那种分论两半的,
+// 逐例人工复核后只剩 22 例。**数字跟着标签走,不是断法退步**:
+// 旧的 41/53=77.4% 里有一半量的是噪声;洗净后 19/22=86.4%。
+// 地板按洗净后的数钉,并钉住样本量——样本量一变就说明抽取器又动了,该来这里对账。
+t('命例基线不许倒退:旺衰子集复现 ≥ 19/22(v1.13 洗净标签后的数)', () => {
   const DATA = JSON.parse(readFileSync(new URL('../data/mingli-cases.json', import.meta.url), 'utf8'));
   let n = 0, hit = 0;
   for (const c of DATA.cases) {
@@ -401,8 +406,8 @@ t('命例基线不许倒退:旺衰子集复现 ≥ 41/53(v0.96 合化落地后�
     const st = Bazi.judgeStrength(P, P.day.gan, days);
     if ((st.strong ? '旺' : '弱') === c.labels.band) hit++;
   }
-  ok(n === 53, '旺衰子集该 53 例,实得 ' + n);
-  ok(hit >= 41, `复现 ${hit}/53,倒退了(v0.96 基线 41)`);
+  ok(n === 22, '旺衰子集该 22 例(v1.13 洗净后),实得 ' + n);
+  ok(hit >= 19, `复现 ${hit}/22,倒退了(v1.13 基线 19)`);
 });
 
 console.log('【从格的根:v1.01 拿从象章命例定的口径】');
@@ -451,7 +456,8 @@ t('congRoot 口径可切换,且切换只动从格不动旺衰(改错地方当场
       const st = Bazi.judgeStrength(p, p.day.gan, 15, { congRoot: mode });
       n++; if ((st.strong ? '旺' : '弱') === c.labels.band) h++;
     }
-    ok(h === 41 && n === 53, `${mode} 口径下旺衰基线变成 ${h}/${n}——从格口径不该碰旺衰`);
+    // v1.13:标签洗净后样本 53→22、基线 41→19(数字跟着尺子走,不是断法动了)
+    ok(h === 19 && n === 22, `${mode} 口径下旺衰基线变成 ${h}/${n}——从格口径不该碰旺衰`);
   }
 });
 
