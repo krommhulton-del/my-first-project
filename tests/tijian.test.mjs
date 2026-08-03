@@ -8,7 +8,9 @@
 // 缘起(CLAUDE.md 待办第 8 条):本程序有一半的字是模型写的,而铁律一到八管的正是这些字,
 // 可在此之前**没有任何一处在出稿之后回查过**。更麻烦的是同一类禁词散在九处以上、内容还互不相同
 // (index.html 两份、yunshi.html 一份、六个测试各一份),于是「什么算空话」有九个互相冲突的答案。
+import { createRequire } from 'node:module';
 import Tijian from '../tijian.js';
+const require = createRequire(import.meta.url);
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -130,6 +132,49 @@ t('铁律级与警告级分得清,分数算得对', () => {
   eq(Tijian.FATAL.includes('铺垫'), false, '铺垫是扣分不是废稿');
   const r = Tijian.check('顺其自然。' + GOOD);
   eq(r.score, 88, '一条铁律级应扣 12 分');
+});
+
+console.log('【AI 腔的度量(v1.06,队列 26 第二期点名的那条)】');
+t('并列清单打高分、因果链打低分——尺子本身分得开', () => {
+  const list = '今年明面和底下两股力都向着你。今年明面上主要是才华。底下暗中走的是钱财。这一年与大运顶上了。';
+  const chain = '2027年这一年偏顺,重点在才华与投资。之所以是这个定性,是因为当值的两股力明面与底下都向着你,' +
+    '所以顺得比较整齐;而你正走的大运底下那一层也是帮你的,该办的大事往这一年靠最划算。' +
+    '一年之内并不平均:十月动得最重,冬月最静。这一年该做的是把手艺变成作品交出去。';
+  const a = Tijian.aiFlavor(list), b = Tijian.aiFlavor(chain);
+  ok(a.index > b.index + 15, `尺子分不开:清单 ${a.index} vs 因果链 ${b.index}`);
+  ok(!a.hasChain && b.hasChain, '因果链那一段该认出承接连词');
+  console.log(`      (清单 ${a.index}「${a.verdict}」 vs 因果链 ${b.index}「${b.verdict}」)`);
+});
+t('太短的不量(不许拿一句话的样本下结论);同一段量两次结果一样', () => {
+  ok(Tijian.aiFlavor('今天顺').index === 0, '太短的该直接不量');
+  const x = '2027年这一年偏顺,因为两股力都帮你,所以该办的事往这一年靠;十月最重。';
+  ok(JSON.stringify(Tijian.aiFlavor(x)) === JSON.stringify(Tijian.aiFlavor(x)), '同一段两次量不一致');
+});
+t('各板块程序生成的话:AI 腔指数不许回到「重」那一档(逐条量,不是拼在一起量)', () => {
+  // **量法要公平**:把十几条独立条目拼成一大段再量,当然「通篇没有承接连词」——
+  // 那是拼接的假象。按条目单独量才是公平的单位。头一版就栽在这,差点为了指标
+  // 在不相干的条目之间硬加连词——那正是 v0.99 查出过的假因果。
+  //
+  // **这是方向盘不是靶子**:门槛设在能抓住真回流的地方(板块均值 ≤60、三块回炉过的叙事 ≤35),
+  // 不逐分去追。为了刷分数硬塞连词,比并列短句更糟。
+  const Bazi = require('../bazi.js'), Mingpan = require('../mingpan.js'), Mingge = require('../mingge.js');
+  const c = Bazi.chart(new Date(1990, 4, 20, 9, 30), '女', { lon: 116.4 });
+  const mp = Mingpan.read(c, { age: 36 }), mg = Mingge.read(c, { age: 36 });
+  const avg = arr => { const xs = arr.filter(x => x && x.length >= 40).map(x => Tijian.aiFlavor(x).index);
+    return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0; };
+  const boards = {
+    '命盘·组合': avg(mp.combos.map(x => x.plain)),
+    '命盘·六亲': avg(mp.kin.map(x => x.plain)),
+    '命盘·大运': avg(mp.dayun.steps.map(x => x.plain)),
+    '命盘·性格': avg([mp.personality]),
+    '命格·钱路': avg(mg.money.map(x => x.plain)),
+    '命格·六路': avg(mg.roads.flatMap(x => x.ev.map(e => e.plain))),
+  };
+  for (const [k, v] of Object.entries(boards)) ok(v <= 60, `${k} 的 AI 腔指数 ${v.toFixed(0)} 回到「重」那一档了`);
+  // 三块回炉过的叙事是本项目的样板,不许退回去
+  ok(Tijian.aiFlavor(mp.story).index <= 35, '命盘骨架的叙事退化了:' + Tijian.aiFlavor(mp.story).index);
+  ok(Tijian.aiFlavor(mg.story).index <= 35, '命格叙事退化了:' + Tijian.aiFlavor(mg.story).index);
+  console.log('      (' + Object.entries(boards).map(([k, v]) => k + ' ' + v.toFixed(0)).join(' · ') + ')');
 });
 
 console.log(`\n结果:${pass} 通过,${fail} 失败`);

@@ -287,6 +287,66 @@
   }
 
   // ————————————————————————————————————————————————
+  //  五之二、AI 腔的度量(v1.06,队列 26 第二期点名的那条:「AI腔是可量的病」)
+  //
+  //  缘起(CLAUDE.md §十一 2026-08-02 用户原话):「口语化的解读也让人看着很膈应,
+  //  人一看就知道很 AI」。此前只能靠人眼看、靠手工改(v1.03–v1.05 三块核心板块的回炉),
+  //  **没有一把尺能量它到底改没改好**——改完到底降了多少,说不清就等于没改。
+  //
+  //  行家的判语是**因果链**(盘面→取用→组合→行运→应事,一路推下来);
+  //  AI 腔是**并列短句堆**:每条一句、互不勾连、句式重复。这三样都是可数的:
+  //    ① 并列度:短句(<18 字)且不带任何承接连词的比例——越高越像清单;
+  //    ② 因果链:全文有没有「因为/所以/因此/之所以/两者叠加/于是」这类真承接;
+  //    ③ 模板度:同一段里重复出现的 6 字片段占比——模板拼装的指纹;
+  //    ④ 具体度:落到数字/时间/动作的句子占比(借用上面已有的三条正则)。
+  //  合成一个 0–100 的「AI 腔指数」,**越低越好**。
+  //
+  //  **边界照实写**:这是内部一致性度量,判得了「这段像不像清单」,判不了「这段断得对不对」;
+  //  门槛(18 字、6 字片段、各项权重)是本项目自拟的,写明可吵。
+  // ————————————————————————————————————————————————
+  const LINK_RE = /(因为|所以|因此|之所以|于是|两者叠加|加上|再看|而(?!已)|同时|不过|反过来|正因|由此|接着|随后|一旦|只要|除非)/;
+  const SPLIT_RE = /[。;;!?\n]+/;
+  function aiFlavor(text) {
+    const raw = String(text || '');
+    if (raw.length < 30) return { n: 0, index: 0, note: '太短,不量' };
+    const sents = raw.split(SPLIT_RE).map(x => x.trim()).filter(x => x.length >= 2);
+    if (!sents.length) return { n: 0, index: 0, note: '切不出句子,不量' };
+    // ① 并列度:短且无承接连词的句子占比
+    const flat = sents.filter(x => x.length < 18 && !LINK_RE.test(x)).length;
+    const flatRate = flat / sents.length;
+    // ② 因果链:全文有几处真承接(按不同的连词计,同一个词重复不加分)
+    const links = new Set();
+    for (const m of raw.matchAll(new RegExp(LINK_RE.source, 'g'))) links.add(m[1]);
+    const hasChain = links.size >= 2;
+    // ③ 模板度:重复的 6 字片段(去掉标点后滑窗)
+    const flatTxt = raw.replace(/[\s，。、;;::？！,.?!「」『』()（）《》]/g, '');
+    const grams = new Map();
+    for (let i = 0; i + 6 <= flatTxt.length; i++) {
+      const g = flatTxt.slice(i, i + 6);
+      grams.set(g, (grams.get(g) || 0) + 1);
+    }
+    let dup = 0;
+    for (const [, v] of grams) if (v > 1) dup += v - 1;
+    const dupRate = grams.size ? dup / grams.size : 0;
+    // ④ 具体度:落到数字/时间/动作的句子占比
+    const solid = sents.filter(x => RE_NUM.test(x) || RE_TIME.test(x) || countAll(x, RE_ACT) >= 2).length;
+    const solidRate = solid / sents.length;
+    // 合成(权重自拟,写明可吵):并列度 40 · 无因果链 25 · 模板度 20 · 不具体 15
+    const index = Math.round(
+      flatRate * 40 + (hasChain ? 0 : 25) + Math.min(1, dupRate * 6) * 20 + (1 - solidRate) * 15);
+    const why = [];
+    if (flatRate > 0.5) why.push(`并列短句占 ${(flatRate * 100).toFixed(0)}%——像清单不像判语`);
+    if (!hasChain) why.push('通篇没有承接连词,句与句之间没有推理关系');
+    if (dupRate * 6 > 0.4) why.push(`重复片段偏多(${(dupRate * 100).toFixed(1)}%),模板拼装的痕迹`);
+    if (solidRate < 0.4) why.push(`只有 ${(solidRate * 100).toFixed(0)}% 的句子落到数字、时间或动作上`);
+    return {
+      n: sents.length, index, flatRate: +flatRate.toFixed(3), links: [...links],
+      hasChain, dupRate: +dupRate.toFixed(4), solidRate: +solidRate.toFixed(3), why,
+      verdict: index <= 30 ? '像判语' : index <= 55 ? '偏清单' : 'AI 腔重',
+    };
+  }
+
+  // ————————————————————————————————————————————————
   //  六、给提示词用的禁令句:提示词与检查器取同一份表(§四 一处算)
   // ————————————————————————————————————————————————
   function banLine(kinds) {
@@ -303,5 +363,5 @@
       '。把握度用「几成」说死,做法落到动作与时间。';
   }
 
-  return { check, banLine, rewriteHint, RULES, KINDS, FATAL, WARN, GUA64, stripQuoted };
+  return { check, aiFlavor, banLine, rewriteHint, RULES, KINDS, FATAL, WARN, GUA64, stripQuoted };
 }));

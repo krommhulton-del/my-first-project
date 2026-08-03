@@ -177,7 +177,7 @@
   }
 
   // ══════════ 二、钱从哪条路来 ══════════
-  function moneyPaths(chart) {
+  function moneyPaths(chart, dyr) {
     const sp = shenPower(chart), pr = presence(chart), P = chart.pillars;
     const items = [];
     const band = chart.strength.band;
@@ -243,7 +243,13 @@
     });
     if (!items.length) items.push({
       path: '没有哪条独大', tier: '直断',
-      plain: '财源不集中于某一类途径,没有哪条独大——收入结构随大运流年变化,以当段得力的路径为主;具体年月见运势页',
+      // v1.06:这一条原先只说「收入结构随大运流年变化,具体年月见运势页」——
+      // 把答案推给别页,而答案本来就在已经排好的大运里(同 v0.99 六路那一条的毛病)。
+      // 现在当场把未来三步大运各偏哪条钱路、起讫哪一年算出来摆上。
+      plain: '财源不集中于某一类途径:没有哪条路独大,所以收入结构是随大运走的。' +
+        (dyr && dyr.length
+          ? '未来三步分别是——' + dyr.map(x => x.plain.replace('这十年偏向', '偏向')).join(';') + '。按所在的那一段挑主路,比按格局挑准。'
+          : '而大运缺性别排不出,补上性别这一层才有具体年份。'),
       tech: '财官食伤俱不过阈', quote: '', src: '',
     });
     return items;
@@ -541,7 +547,8 @@
     if (!chart) return null;
     const age = opts && opts.age != null && isFinite(+opts.age) ? +opts.age : null;
     const roads = sixRoads(chart);
-    const money = moneyPaths(chart);
+    const dyr0 = dayunRoads(chart, age);
+    const money = moneyPaths(chart, dyr0);
     const zhi = directReads(chart);
     const guanxi = guanxiReads(chart);
     const mao = maoReads(chart);
@@ -550,7 +557,7 @@
     const top = roads[0], second = roads[1];
     const gap = top.score - (second ? second.score : 0);
     let verdict;
-    const dyr = dayunRoads(chart, age);
+    const dyr = dyr0;
     if (top.score < 25) {
       verdict = '六路中没有哪一路明显占优:这副命局的谋生方向不由格局决定,由大运定。' +
         (dyr.length ? '未来三步大运各自的指向是——' + dyr.map(x => x.plain).join(';') + '。按所在的那一段选路,比按格局选准。'
